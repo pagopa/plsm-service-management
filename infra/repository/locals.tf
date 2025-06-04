@@ -30,7 +30,7 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        "ARM_CLIENT_ID" = module.azure_federated_identity_with_github.federated_ci_identity.client_id
+        "ARM_CLIENT_ID" = module.infra_federated_identity.federated_ci_identity.client_id
       }
     }
     cd = {
@@ -40,7 +40,7 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        "ARM_CLIENT_ID" = module.azure_federated_identity_with_github.federated_cd_identity.client_id
+        "ARM_CLIENT_ID" = module.infra_federated_identity.federated_cd_identity.client_id
       }
     }
     app-ci = {
@@ -50,7 +50,7 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        ARM_CLIENT_ID = module.azure_federated_identity_with_github.federated_ci_identity.client_id
+        ARM_CLIENT_ID = module.app_federated_identity.federated_ci_identity.client_id
       }
     }
     app-cd = {
@@ -60,7 +60,7 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        ARM_CLIENT_ID = module.azure_federated_identity_with_github.federated_cd_identity.client_id
+        ARM_CLIENT_ID = module.app_federated_identity.federated_cd_identity.client_id
       }
     }
 
@@ -74,7 +74,7 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        "ARM_CLIENT_ID" = module.azure_federated_identity_with_github.federated_ci_identity.client_id
+        "ARM_CLIENT_ID" = module.infra_federated_identity.federated_ci_identity.client_id
       }
     }
     cd = {
@@ -84,7 +84,7 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        "ARM_CLIENT_ID" = module.azure_federated_identity_with_github.federated_cd_identity.client_id
+        "ARM_CLIENT_ID" = module.infra_federated_identity.federated_cd_identity.client_id
       }
     }
 
@@ -99,7 +99,7 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        ARM_CLIENT_ID = module.azure_federated_identity_with_github.federated_ci_identity.client_id
+        ARM_CLIENT_ID = module.app_federated_identity.federated_ci_identity.client_id
       }
     }
     app-cd = {
@@ -112,7 +112,7 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        ARM_CLIENT_ID = module.azure_federated_identity_with_github.federated_cd_identity.client_id
+        ARM_CLIENT_ID = module.app_federated_identity.federated_cd_identity.client_id
       }
     }
 

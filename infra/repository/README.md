@@ -4,7 +4,7 @@ Questo modulo Terraform configura l'integrazione tra **GitHub** e **Azure** tram
 
 1. **Secrets a livello di repository GitHub**
 2. **Ambienti GitHub separati per CI/CD**
-3. **Managed Identity in Azure con granularità CI vs CD**
+3. **Managed Identity in Azure con granularità CI vs CD separando le Identity per scope Infra e App**
 
 ## 🛠️ Cosa viene creato
 
@@ -27,6 +27,9 @@ Vengono creati degli ambienti con variabili/secrets specifici:
 | `prod-cd`   | Continuous Delivery (Prod)   | `ARM_SUBSCRIPTION_ID`         | `ARM_CLIENT_ID` (CD Identity) |
 
 ### 3. **Azure Identities (in AAD)**
+
+Vengono create 2 Federated Identity per CI/CD per Infra e App
+
 - **Federated Identity per CI**  
   Usata per: `terraform validate`, build, test  
   Scope: Solo lettura su risorse di staging  

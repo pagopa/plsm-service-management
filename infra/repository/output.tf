@@ -7,16 +7,30 @@ output "tenant_id" {
 }
 
 output "ci_identity_client_id" {
-  value       = module.azure_federated_identity_with_github.federated_ci_identity
+  value       = module.infra_federated_identity.federated_ci_identity
   description = "Client ID for GitHub CI workflows"
   sensitive   = true
 }
 
 output "cd_identity_client_id" {
-  value       = module.azure_federated_identity_with_github.federated_cd_identity
+  value       = module.infra_federated_identity.federated_cd_identity
   description = "Client ID for GitHub CD workflows"
   sensitive   = true
 }
+
+output "app_dev_identity_client_id" {
+  value       = module.app_federated_identity.federated_ci_identity
+  description = "Client ID for GitHub CI workflows"
+  sensitive   = true
+}
+
+output "app_prod_identity_client_id" {
+  value       = module.app_federated_identity.federated_cd_identity
+  description = "Client ID for GitHub CD workflows"
+  sensitive   = true
+}
+
+
 
 output "github_environments" {
   value = {
