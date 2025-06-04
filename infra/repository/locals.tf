@@ -1,13 +1,12 @@
 locals {
-  prefix         = "sm"  # Platform Service Management
-  env_short      = "p"   # Production
-  location_short = "itn" # Italy North
-  domain         = "sm"
-
-  # Per far girare in locale metti plsm al posto ${local.prefix}
-  project = "plsm-${local.env_short}-${local.location_short}"
-
-  location = "italynorth"
+  full_prefix    = "plsm"
+  prefix         = "sm"
+  module_prefix  = substr(local.full_prefix, 2, 2)
+  env_short      = "p"
+  location_short = "itn"
+  domain         = "core"
+  project        = "${local.full_prefix}-${local.env_short}-${local.location_short}"
+  location       = "italynorth"
 
   repository = {
     name  = "plsm-service-management"
@@ -19,103 +18,47 @@ locals {
     "ARM_TENANT_ID"       = data.azurerm_client_config.current.tenant_id
   }
 
-
-  # PROD: prod-cd, prod-ci, infra-prod, infra-prod-ci
-  # DEV: CI.Variables, CI.Secrets, CD.Variables, CD.secrets
-  dev = {
-    ci = {
-      protected_branches     = false
-      custom_branch_policies = false
+  # CONFIGURAZIONE SEMPLIFICATA: solo 4 ambienti
+  environments = {
+    # INFRA: CI/CD per gestione infrastruttura
+    infra-ci = {
       variables = {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
         "ARM_CLIENT_ID" = module.infra_federated_identity.federated_ci_identity.client_id
       }
+      protected_branches = false
     }
-    cd = {
-      protected_branches     = false
-      custom_branch_policies = false
+    infra-cd = {
       variables = {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
         "ARM_CLIENT_ID" = module.infra_federated_identity.federated_cd_identity.client_id
       }
-    }
-    app-ci = {
-      protected_branches     = false
-      custom_branch_policies = false
-      variables = {
-        "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
-      }
-      secrets = {
-        ARM_CLIENT_ID = module.app_federated_identity.federated_ci_identity.client_id
-      }
-    }
-    app-cd = {
-      protected_branches     = false
-      custom_branch_policies = false
-      variables = {
-        "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
-      }
-      secrets = {
-        ARM_CLIENT_ID = module.app_federated_identity.federated_cd_identity.client_id
-      }
+      protected_branches = true  # Solo apply su branch protetti
     }
 
-  }
-
-  prod = {
-    ci = {
-      protected_branches     = true
-      custom_branch_policies = false
+    # APP: Deploy applicazioni DEV/PROD
+    dev = {
       variables = {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        "ARM_CLIENT_ID" = module.infra_federated_identity.federated_ci_identity.client_id
+        "ARM_CLIENT_ID" = module.app_federated_identity.federated_ci_identity.client_id
       }
+      protected_branches = false
     }
-    cd = {
-      protected_branches     = true
-      custom_branch_policies = false
+    prod = {
       variables = {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        "ARM_CLIENT_ID" = module.infra_federated_identity.federated_cd_identity.client_id
+        "ARM_CLIENT_ID" = module.app_federated_identity.federated_cd_identity.client_id
       }
+      protected_branches = true
     }
-
-    # Ambiente per DEPLOY applicativo (non solo infra)
-    app-ci = {
-      protected_branches     = false
-      custom_branch_policies = false
-      variables = {
-        "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
-      }
-      variables = {
-        "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
-      }
-      secrets = {
-        ARM_CLIENT_ID = module.app_federated_identity.federated_ci_identity.client_id
-      }
-    }
-    app-cd = {
-      protected_branches     = true
-      custom_branch_policies = false
-      variables = {
-        "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
-      }
-      variables = {
-        "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
-      }
-      secrets = {
-        ARM_CLIENT_ID = module.app_federated_identity.federated_cd_identity.client_id
-      }
-    }
-
   }
 
   tags = {

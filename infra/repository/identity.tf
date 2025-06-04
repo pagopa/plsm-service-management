@@ -3,7 +3,7 @@ module "infra_federated_identity" {
   version = "~> 1.0"
 
   environment = {
-    prefix          = local.prefix
+    prefix          = local.module_prefix
     env_short       = local.env_short
     location        = local.location
     domain          = local.domain
@@ -45,7 +45,7 @@ module "app_federated_identity" {
   version = "~> 1.0"
 
   environment = {
-    prefix          = local.prefix
+    prefix          = local.module_prefix
     env_short       = local.env_short
     location        = local.location
     domain          = local.domain

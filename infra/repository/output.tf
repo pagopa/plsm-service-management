@@ -6,42 +6,34 @@ output "tenant_id" {
   value = data.azurerm_subscription.current.tenant_id
 }
 
-output "ci_identity_client_id" {
+output "infra_ci_identity" {
   value       = module.infra_federated_identity.federated_ci_identity
-  description = "Client ID for GitHub CI workflows"
+  description = "Identità per CI infrastruttura"
   sensitive   = true
 }
 
-output "cd_identity_client_id" {
+output "infra_cd_identity" {
   value       = module.infra_federated_identity.federated_cd_identity
-  description = "Client ID for GitHub CD workflows"
+  description = "Identità per CD infrastruttura"
   sensitive   = true
 }
 
-output "app_dev_identity_client_id" {
+output "app_ci_identity" {
   value       = module.app_federated_identity.federated_ci_identity
-  description = "Client ID for GitHub CI workflows"
+  description = "Identità per CI/DEV applicazioni"
   sensitive   = true
 }
 
-output "app_prod_identity_client_id" {
+output "app_cd_identity" {
   value       = module.app_federated_identity.federated_cd_identity
-  description = "Client ID for GitHub CD workflows"
+  description = "Identità per CD/PROD applicazioni"
   sensitive   = true
 }
-
-
 
 output "github_environments" {
   value = {
-    infra-dev-ci  = github_repository_environment.github_repository_environment_dev_ci.environment
-    infra-dev-cd  = github_repository_environment.github_repository_environment_dev_cd.environment
-    infra-prod-ci = github_repository_environment.github_repository_environment_prod_ci.environment
-    infra-prod-cd = github_repository_environment.github_repository_environment_prod_cd.environment
-    app-dev-ci    = github_repository_environment.app_dev_ci.environment
-    app-dev-cd    = github_repository_environment.app_dev_cd.environment
-    app-prod-ci   = github_repository_environment.app_prod_ci.environment
-    app-prod-cd   = github_repository_environment.app_prod_cd.environment
+    for env_name, env in github_repository_environment.environments :
+    env_name => env.environment
   }
-  description = "Created GitHub environments"
+  description = "Ambienti GitHub creati"
 }

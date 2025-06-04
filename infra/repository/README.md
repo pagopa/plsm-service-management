@@ -1,61 +1,88 @@
-# GitHub - Azure Federated Identity Setup
+# Integrazione GitHub-Azure con Federated Identity
 
-Questo modulo Terraform configura l'integrazione tra **GitHub** e **Azure** tramite **Federated Identity Credentials (OIDC)**, creando:
+Questo progetto Terraform configura l'integrazione tra GitHub e Azure tramite **Federated Identity Credentials (OIDC)**, creando:
 
-1. **Secrets a livello di repository GitHub**
-2. **Ambienti GitHub separati per CI/CD**
-3. **Managed Identity in Azure con granularità CI vs CD separando le Identity per scope Infra e App**
+1. **Ambienti GitHub** per CI/CD
+2. **Managed Identity in Azure** con ruoli RBAC specifici
+3. **Secrets e variabili** per l'autenticazione
 
-## 🛠️ Cosa viene creato
+## 🌐 **Risorse Create su GitHub**
 
-### 1. **GitHub Repository Secrets**
-- `ARM_TENANT_ID`: Tenant ID Azure (condiviso)  
-- `ARM_SUBSCRIPTION_ID`: Subscription ID Azure (condiviso)  
+### 🔒 Repository-Level Secrets
+| Secret Name | Tipo | Utilizzo |
+|-------------|------|----------|
+| `ARM_SUBSCRIPTION_ID` | Secret | Autenticazione Azure |
+| `ARM_TENANT_ID` | Secret | Autenticazione Azure |
 
-### 2. **GitHub Environments**
-Vengono creati degli ambienti con variabili/secrets specifici:
+### 🏗️ GitHub Environments
+| Environment | Tipo | Branch Policy | Variabili | Secrets |
+|------------|------|---------------|-----------|---------|
+| `dev` | App Dev | ❌ | `ARM_SUBSCRIPTION_ID` | `ARM_CLIENT_ID` |
+| `prod` | App Prod | ✅ (protected) | `ARM_SUBSCRIPTION_ID` | `ARM_CLIENT_ID` |
+| `infra-ci` | Infra CI | ❌ | `ARM_SUBSCRIPTION_ID` | `ARM_CLIENT_ID` |
+| `infra-cd` | Infra CD | ✅ (protected) | `ARM_SUBSCRIPTION_ID` | `ARM_CLIENT_ID` |
 
-| Environment | Purpose                      | Variables                     | Secrets                     |
-|-------------|------------------------------|-------------------------------|-----------------------------|
-| `infra-dev-ci`    | Infra Continuous Integration (Dev) | `ARM_SUBSCRIPTION_ID`         | `ARM_CLIENT_ID` (CI Identity) |
-| `infra-dev-cd`    | Infra Continuous Delivery (Dev)    | `ARM_SUBSCRIPTION_ID`         | `ARM_CLIENT_ID` (CD Identity) |
-| `infra-prod-ci`   | Infra Continuous Integration (Prod)| `ARM_SUBSCRIPTION_ID`         | `ARM_CLIENT_ID` (CI Identity) |
-| `infra-prod-cd`   | Infra Continuous Delivery (Prod)   | `ARM_SUBSCRIPTION_ID`         | `ARM_CLIENT_ID` (CD Identity) |
-| `dev-ci`   | Continuous Integration (Dev)   | `ARM_SUBSCRIPTION_ID`         | `ARM_CLIENT_ID` (CI Identity) |
-| `dev-cd`   | Continuous Delivery (Dev)   | `ARM_SUBSCRIPTION_ID`         | `ARM_CLIENT_ID` (CD Identity) |
-| `prod-ci`   | Continuous Integration (Prod)   | `ARM_SUBSCRIPTION_ID`         | `ARM_CLIENT_ID` (CI Identity) |
-| `prod-cd`   | Continuous Delivery (Prod)   | `ARM_SUBSCRIPTION_ID`         | `ARM_CLIENT_ID` (CD Identity) |
+## ☁️ **Risorse Create su Azure**
 
-### 3. **Azure Identities (in AAD)**
+### 🔑 Managed Identities
+| Identity Name | Tipo | Ruoli RBAC | Scope |
+|--------------|------|------------|-------|
+| `sm-p-itn-core-app-github-ci-id-01` | App CI | `Reader` (Subscription), `Storage Blob Data Contributor` (RG) | `/subscriptions/...` |
+| `sm-p-itn-core-app-github-cd-id-01` | App CD | `Contributor` (Subscription), `Storage Blob Data Contributor` (RG) | `/subscriptions/...` |
+| `sm-p-itn-core-infra-github-ci-id-01` | Infra CI | `Reader` (Subscription), `Storage Blob Data Contributor` (RG) | `/subscriptions/...` |
+| `sm-p-itn-core-infra-github-cd-id-01` | Infra CD | `Contributor` (Subscription), `Storage Blob Data Contributor` (RG) | `/subscriptions/...` |
 
-Vengono create 2 Federated Identity per CI/CD per Infra e App
+### 🔗 Federated Identity Credentials
+| Nome | Identity Associata | Subject GitHub |
+|------|--------------------|----------------|
+| `plsm-service-management-environment-app-prod-ci` | App CI | `repo:pagopa/plsm-service-management:environment:app-prod-ci` |
+| `plsm-service-management-environment-app-prod-cd` | App CD | `repo:pagopa/plsm-service-management:environment:app-prod-cd` |
+| `plsm-service-management-environment-infra-prod-ci` | Infra CI | `repo:pagopa/plsm-service-management:environment:infra-prod-ci` |
+| `plsm-service-management-environment-infra-prod-cd` | Infra CD | `repo:pagopa/plsm-service-management:environment:infra-prod-cd` |
 
-- **Federated Identity per CI**  
-  Usata per: `terraform validate`, build, test  
-  Scope: Solo lettura su risorse di staging  
+## 🛠️ **Workflow di Esempio**
 
-- **Federated Identity per CD**  
-  Usata per: `terraform apply`, deploy in produzione  
-  Scope: Permessi elevati (controllati via RBAC)  
-
-## 🔒 Security Design
-- **Separation of Duties**:  
-  - La CI **non può** fare deploy  
-  - La CD richiede approvazione manuale per `prod` (`protected_branches = true`)  
-
-- **Least Privilege**:  
-  - Ogni Identity ha solo i permessi necessari (definiti via Azure RBAC)  
-
-## 🚀 Come usare i secrets in GitHub Actions
-Esempio per workflow CI:
+### CI Applicativa (dev)
 ```yaml
 jobs:
-  validate:
+  build:
     runs-on: ubuntu-latest
-    environment: dev/ci
+    environment: dev
     steps:
       - uses: azure/login@v1
         with:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+```
+
+## 📊 Diagramma dei Permessi
+
+
+```mermaid
+graph TD
+  subgraph GitHub
+    A[dev] -->|ARM_CLIENT_ID| B(App CI Identity)
+    C[prod] -->|ARM_CLIENT_ID| D(App CD Identity)
+    E[infra-ci] -->|ARM_CLIENT_ID| F(Infra CI Identity)
+    G[infra-cd] -->|ARM_CLIENT_ID| H(Infra CD Identity)
+  end
+
+  subgraph Azure
+    B -->|Reader| I[Subscription]
+    D -->|Contributor| I
+    F -->|Reader| I
+    H -->|Contributor| I
+  end
+```
+
+🔄 Distruzione Risorse
+Eseguendo terraform destroy verranno rimossi:
+
+Tutti gli ambienti GitHub
+
+I secrets e variabili
+
+Le Managed Identity e ruoli RBAC in Azure
+
+⚠️ Attenzione: Le risorse Azure esterne (es. Resource Group) non gestite da questo Terraform non verranno eliminate.
