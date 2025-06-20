@@ -24,7 +24,7 @@ module "federated_identity" {
     roles = {
       subscription = ["Reader"]
       resource_groups = {
-        "${local.project}-${var.environment.domain}-rg" = ["Storage Blob Data Contributor"]
+        "${var.resource_group_name}" = ["Storage Blob Data Contributor"]
       }
     }
   }
@@ -34,7 +34,7 @@ module "federated_identity" {
     roles = {
       subscription = ["Contributor"]
       resource_groups = {
-        "${local.project}-${var.environment.domain}-rg" = ["Storage Blob Data Contributor"]
+        "${var.resource_group_name}" = ["Storage Blob Data Contributor"]
       }
     }
   }

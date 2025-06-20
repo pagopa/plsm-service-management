@@ -8,7 +8,7 @@ locals {
     location_short = "itn"
   }
 
-  project = "${local.environment.prefix}-${local.environment.env_short}"
+  project = "${local.environment.prefix}-${local.environment.env_short}-${local.environment.location_short}"
 
   repository = {
     name  = "plsm-service-management"
