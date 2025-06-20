@@ -34,3 +34,12 @@ provider "azurerm" {
 provider "github" {
   owner = "pagopa"
 }
+
+data "azurerm_subscription" "current" {}
+
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_resource_group" "rg" {
+  name     = "${local.project}-${local.environment.domain}-rg"
+  location = local.environment.location
+}
