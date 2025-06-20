@@ -20,7 +20,7 @@ terraform {
     resource_group_name  = "terraform-state-rg"
     storage_account_name = "plsmpitntfst001"
     container_name       = "terraform-state"
-    key                  = "plsm-prod.repository.tfstate"
+    key                  = "plsm-prod.identity.tfstate"
     use_azuread_auth     = true
   }
 }

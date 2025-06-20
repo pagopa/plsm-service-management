@@ -31,7 +31,7 @@ module "app_federated_identity" {
     location        = local.environment.location
     location_short  = local.environment.location_short
     domain          = local.environment.domain
-    instance_number = "02"
+    instance_number = "01"
   }
 
   resource_group_name = azurerm_resource_group.rg.name
