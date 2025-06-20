@@ -45,7 +45,7 @@ locals {
     }
 
     # APP: Deploy applicazioni DEV/PROD
-    dev = {
+    dev-ci = {
       variables = {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
@@ -54,7 +54,26 @@ locals {
       }
       protected_branches = false
     }
-    prod = {
+    dev-cd = {
+      variables = {
+        "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
+      }
+      secrets = {
+        "ARM_CLIENT_ID" = data.azurerm_user_assigned_identity.app_identity_prod_cd.client_id
+      }
+      protected_branches = true
+    }
+
+    prod-ci = {
+      variables = {
+        "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
+      }
+      secrets = {
+        "ARM_CLIENT_ID" = data.azurerm_user_assigned_identity.app_identity_prod_ci.client_id
+      }
+      protected_branches = false
+    }
+    prod-cd = {
       variables = {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
