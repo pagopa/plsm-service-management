@@ -1,12 +1,16 @@
 locals {
-  full_prefix    = "plsm"
-  prefix         = "sm"
-  module_prefix  = substr(local.full_prefix, 2, 2)
-  env_short      = "p"
-  location_short = "itn"
-  domain         = "core"
-  project        = "${local.full_prefix}-${local.env_short}-${local.location_short}"
-  location       = "italynorth"
+  environment = {
+    prefix         = "sm"
+    env_short      = "p"
+    env            = "prod"
+    domain         = "plsm-identity"
+    location       = "italynorth"
+    location_short = "itn"
+  }
+
+  project = "${local.environment.prefix}-${local.environment.env_short}-${local.environment.location_short}"
+
+  identity_resource_group_name = "${local.project}-plsm-identity-rg"
 
   repository = {
     name  = "plsm-service-management"
@@ -26,7 +30,7 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        "ARM_CLIENT_ID" = module.infra_federated_identity.federated_ci_identity.client_id
+        "ARM_CLIENT_ID" = data.azurerm_user_assigned_identity.infra_identity_prod_ci.client_id
       }
       protected_branches = false
     }
@@ -35,9 +39,9 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        "ARM_CLIENT_ID" = module.infra_federated_identity.federated_cd_identity.client_id
+        "ARM_CLIENT_ID" = data.azurerm_user_assigned_identity.infra_identity_prod_cd.client_id
       }
-      protected_branches = true  # Solo apply su branch protetti
+      protected_branches = true # Solo apply su branch protetti
     }
 
     # APP: Deploy applicazioni DEV/PROD
@@ -46,7 +50,7 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        "ARM_CLIENT_ID" = module.app_federated_identity.federated_ci_identity.client_id
+        "ARM_CLIENT_ID" = data.azurerm_user_assigned_identity.app_identity_prod_ci.client_id
       }
       protected_branches = false
     }
@@ -55,7 +59,7 @@ locals {
         "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
       }
       secrets = {
-        "ARM_CLIENT_ID" = module.app_federated_identity.federated_cd_identity.client_id
+        "ARM_CLIENT_ID" = data.azurerm_user_assigned_identity.app_identity_prod_cd.client_id
       }
       protected_branches = true
     }
