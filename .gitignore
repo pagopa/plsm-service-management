@@ -47,3 +47,5 @@ ignore_features.tf
 .vscode
 
 temp
+
+AzuriteConfig
