@@ -76,14 +76,5 @@ locals {
     UPLOAD_UAT                      = "https://webhook.site/212ad2c5-4937-4548-92ba-9e56afcdb04e"
   }
 
-  # Postgres
-  # naming_config = {
-  #   prefix          = local.environment.prefix,
-  #   environment     = local.environment.env_short,
-  #   location        = local.environment.location
-  #   domain          = local.environment.domain,
-  #   name            = "DatabasePS",
-  #   instance_number = tonumber(local.instance_number),
-  # }
 
 }

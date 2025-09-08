@@ -78,10 +78,14 @@ data "azurerm_key_vault_secret" "db_name" {
 }
 
 data "azurerm_key_vault_secret" "db_user" {
-  name         = "DB-USER"
+  name         = "postgres-username"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+data "azurerm_key_vault_secret" "db_password" {
+  name         = "postgres-password"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
 data "azurerm_key_vault_secret" "db_password_b64" {
   name         = "DB-PASSWORD-B64"
   key_vault_id = module.azure_core_infra.common_key_vault.id

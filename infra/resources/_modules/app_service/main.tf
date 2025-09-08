@@ -9,7 +9,7 @@ module "azure_app_service" {
     prefix          = var.environment.prefix
     env_short       = var.environment.env_short
     location        = var.environment.location
-    domain          = "pg" # var.environment.domain
+    # domain          = "sm" # var.environment.domain
     app_name        = var.environment.app_name
     instance_number = var.environment.instance_number
   }

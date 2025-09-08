@@ -67,8 +67,13 @@ module "certifica_function" {
   subnet_cidr   = dx_available_subnet_cidr.next_cidr.cidr_block
 
   health_check_path = "/api/v1/certificate-function/health"
-  app_settings = {
-    "EXAMPLE_SETTING" = "value1"
+  app_settings = {    
+    DB_HOST                      = "${data.azurerm_key_vault_secret.db_host.value}"
+    DB_NAME                      = "${data.azurerm_key_vault_secret.db_name.value}"
+    DB_USER                      = "${data.azurerm_key_vault_secret.db_user.value}"
+    DB_PASSWORD                  = "${data.azurerm_key_vault_secret.db_password.value}"
+    DB_SSL                       = true
+
   }
 
   depends_on = [module.azure_core_infra]
