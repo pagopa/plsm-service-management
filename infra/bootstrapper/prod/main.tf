@@ -7,12 +7,17 @@ terraform {
 
     dx = {
       source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
+      version = ">= 0.0.7, < 1.0.0"
     }
 
     azuread = {
       source  = "hashicorp/azuread"
       version = "~> 3.0"
+    }
+
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.0"
     }
   }
   backend "azurerm" {
@@ -35,7 +40,7 @@ provider "github" {
 
 module "azure-github-environment-bootstrap" {
   source      = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version     = "2.4.4"
+  version     = "3.0.1"
   environment = local.environment
 
   subscription_id = data.azurerm_subscription.current.id
