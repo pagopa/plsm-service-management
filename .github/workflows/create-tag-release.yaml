@@ -1,0 +1,40 @@
+# This GitHub Action workflow automates the creation of release tags.
+# It triggers on every push to the 'main' branch, creates a new version tag,
+# and generates a corresponding GitHub Release with automated release notes.
+
+name: "Create Release Tag"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create a release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set Release Version
+        id: set_version
+        run: echo "RELEASE_VERSION=$(date +'%Y.%m.%d').${{ github.run_number }}" >> $GITHUB_ENV
+
+      - name: Create Release and Auto-generate Changelog
+        uses: actions/create-release@v1
+        env:
+          # This token is automatically provided by GitHub Actions.
+          # It has the necessary permissions to create releases in your repository.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Creates a tag like v2025.09.11.1 (where .1 is the run number for that day)
+          tag_name: v${{ env.RELEASE_VERSION }}
+          release_name: Release ${{ env.RELEASE_VERSION }}
+          # This will automatically generate release notes based on the titles
+          # of the pull requests merged since the last release.
+          generate_release_notes: true
+
