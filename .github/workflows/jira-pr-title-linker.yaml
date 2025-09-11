@@ -23,9 +23,9 @@ jobs:
       - name: Validate PR Title
         uses: Slashgear/action-check-pr-title@860e8dc639f8e60335a6f5e8936ba67ed2536890
         id: lint
+        continue-on-error: true
         with:
           regexp: "\\[(#?[A-Z]*-[0-9]*( |, )?){1,}\\]" # Regex to find one or more Jira issues like [JIRA-123]
-          continue-on-error: true
 
       - name: Find Previous Jira Comment
         uses: peter-evans/find-comment@81e2da3af01c92f83cb927cf3ace0e085617c556
