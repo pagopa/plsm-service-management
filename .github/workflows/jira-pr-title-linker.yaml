@@ -1,6 +1,9 @@
 # This workflow validates that a Pull Request title starts with a Jira issue key
 # and then automatically posts a comment with a direct link to that issue.
 name: "Lint and Link PR title"
+permissions:
+  contents: read
+  pull-requests: write
 
 on:
   pull_request:
