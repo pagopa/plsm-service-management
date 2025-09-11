@@ -1,3 +1,5 @@
+# This workflow validates that a Pull Request title starts with a Jira issue key
+# and then automatically posts a comment with a direct link to that issue.
 name: "Lint and Link PR title"
 
 on:
@@ -17,9 +19,12 @@ jobs:
     steps:
       - uses: Slashgear/action-check-pr-title@860e8dc639f8e60335a6f5e8936ba67ed2536890
         id: lint
-        with:
-          regexp: "\\[(#?[A-Z]*-[0-9]*( |, )?){1,}\\]" # Regex the title should match.
+        # continue-on-error is a step-level keyword, not a 'with' parameter.
         continue-on-error: true
+        with:
+          # This regex checks that the title STARTS with a Jira ticket like [ISS-123] or [#PROJ-456]
+          # followed by a space and any other text.
+          regexp: "^\\[(#?[A-Z]+-[0-9]+(, ?)?)+\\] .+"
 
       - name: Find Jira Comment
         uses: peter-evans/find-comment@81e2da3af01c92f83cb927cf3ace0e085617c556
@@ -48,7 +53,7 @@ jobs:
 
           for ISSUE in "${ISSUES[@]}"
           do
-            JIRA_COMMENT_MARKDOWN+="$MARKDOWN_PREFIX [$ISSUE](https://pagopa.atlassian.net/browse/$ISSUE) $MARKDOWN_CARRIAGE_RETURN"
+            JIRA_COMMENT_MARKDOWN+=" $MARKDOWN_PREFIX [$ISSUE](https://pagopa.atlassian.net/browse/$ISSUE)$MARKDOWN_CARRIAGE_RETURN"
           done
 
           echo "JIRA_ISSUE=$JIRA_ISSUE" >> $GITHUB_ENV
@@ -64,6 +69,7 @@ jobs:
             ## Jira Pull Request Link ##
             ${{ env.JIRA_COMMENT_MARKDOWN }}
           edit-mode: replace
+          
       - name: Create Empty Jira Link comment
         if: steps.lint.outcome != 'success'
         uses: peter-evans/create-or-update-comment@5adcb0bb0f9fb3f95ef05400558bdb3f329ee808
@@ -75,8 +81,10 @@ jobs:
             It seems this Pull Request has no issues that refers to Jira!!!
             Please check it out.
           edit-mode: replace
+          
       - name: Failure message
         if: steps.lint.outcome != 'success'
         run: |
           echo "Pull request title (${{ github.event.pull_request.title }}) is not properly formatted or it is not related to any Jira issue"
           exit 1
+
