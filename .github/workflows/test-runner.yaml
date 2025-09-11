@@ -12,7 +12,7 @@ permissions:
 jobs:
   test-private-runner:
     runs-on: self-hosted
-    environment: app-prod-cd
+    environment: app-prod-ci
 
     steps:
       - name: Checkout repository
