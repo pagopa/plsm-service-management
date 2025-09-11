@@ -21,6 +21,7 @@ jobs:
       - name: Login to Azure using OIDC
         uses: azure/login@v1
         with:
+          # Usa i segreti configurati nell'ambiente GitHub di ci
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -29,17 +30,14 @@ jobs:
         run: |
           echo "Login avvenuto con successo per l'utente:"
           az account show
-        
-      - name: 2. Test - Risoluzione DNS Privato (Prova che sei nella VNet)
-        run: |
-          echo "Tentativo di risolvere l'hostname privato della Web App..."
-          nslookup sm-p-itn-smcr-app-01.azurewebsites.net
-          echo "Se l'indirizzo qui sopra è privato (es. 10.x.x.x), il DNS privato funziona!"
-        
-      - name: 3. Test - Accesso HTTP Privato (Prova che la rete funziona)
+
+      - name: 2. Test - Accesso HTTP Privato (Prova che la rete e il DNS funzionano)
+        # Questo step continuerà anche se quello precedente fallisce
+        if: always()
         run: |
           echo "Tentativo di contattare l'endpoint /health della Web App privata..."
-          STATUS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://sm-p-itn-smcr-app-01.azurewebsites.net/health)
+          # NOTA: Sostituisci il nome se hai cambiato il default
+          STATUS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://sm-p-itn-smcr-app-01.azurewebsites.net/api/health)
           echo "Codice di stato HTTP ricevuto: $STATUS_CODE"
           if [ "$STATUS_CODE" -ne 200 ]; then
             echo "Errore: la Web App non ha risposto come previsto!"
@@ -47,8 +45,10 @@ jobs:
           fi
           echo "Successo! La Web App è raggiungibile privatamente."
 
-      - name: 4. Test - Accesso al Key Vault (Prova permessi Data Plane)
+      - name: 3. Test - Accesso al Key Vault (Prova permessi Data Plane)
+        if: always()
         run: |
           echo "Tentativo di elencare i segreti nel Key Vault..."
+          # NOTA: Sostituisci il nome se hai cambiato il default
           az keyvault secret list --vault-name sm-p-itn-common-kv-01 --output table
           echo "Se vedi la lista dei segreti, i permessi RBAC funzionano!"
