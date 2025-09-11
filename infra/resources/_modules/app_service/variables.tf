@@ -38,7 +38,7 @@ variable "subnet_cidr" {
 
 variable "health_check_path" {
   type    = string
-  default = "/health"
+  default = "/api/health"
 }
 
 variable "app_settings" {
@@ -54,4 +54,10 @@ variable "slot_app_settings" {
 variable "tags" {
   type        = map(any)
   description = "Resources tags"
+}
+
+variable "node_version" {
+  type        = number
+  default = 20
+  description = "Versione di Node.js da utilizzare per la Function App."
 }

@@ -50,3 +50,9 @@ variable "health_check_path" {
   description = "Il path per l'health check della funzione."
   default     = null
 }
+
+variable "node_version" {
+  type        = number
+  default = 20
+  description = "Versione di Node.js da utilizzare per la Function App."
+}

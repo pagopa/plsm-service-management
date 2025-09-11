@@ -22,7 +22,35 @@ terraform {
 }
 
 provider "azurerm" {
+  storage_use_azuread = true
   features {}
+}
+
+
+# Calcola un CIDR per la Function App
+resource "dx_available_subnet_cidr" "function_subnet_cidr" {
+  virtual_network_id = module.azure_core_infra.common_vnet.id
+  prefix_length      = 24
+  depends_on         = [module.azure_core_infra]
+}
+
+# Calcola un ALTRO CIDR per l'App Service
+resource "dx_available_subnet_cidr" "app_service_subnet_cidr" {
+  virtual_network_id = module.azure_core_infra.common_vnet.id
+  prefix_length      = 24
+  depends_on         = [module.certifica_function]
+}
+
+resource "azurerm_role_assignment" "sp_kv_secrets_officer" {
+  scope = module.azure_core_infra.common_key_vault.id
+
+  role_definition_name = "Key Vault Secrets Officer"
+
+  principal_id = data.azurerm_client_config.current.object_id
+
+  depends_on = [
+    module.azure_core_infra
+  ]
 }
 
 module "azure_core_infra" {
@@ -38,15 +66,11 @@ module "azure_core_infra" {
 
   # virtual_network_cidr = "10.0.0.0/16"
 
+  vpn_enabled = true
+
   test_enabled = false
 
   tags = local.tags
-}
-
-resource "dx_available_subnet_cidr" "next_cidr" {
-  virtual_network_id = module.azure_core_infra.common_vnet.id
-  prefix_length      = 24 # For a /24 subnet
-  depends_on         = [module.azure_core_infra]
 }
 
 module "certifica_function" {
@@ -56,23 +80,26 @@ module "certifica_function" {
     app_name        = "cert",
     instance_number = "01"
   })
+
+
   resource_group_name = module.azure_core_infra.common_resource_group_name
   tags                = local.tags
 
   virtual_network = {
     name                = module.azure_core_infra.common_vnet.name
-    resource_group_name = module.azure_core_infra.common_resource_group_name
+    resource_group_name = module.azure_core_infra.network_resource_group_name
   }
   subnet_pep_id = module.azure_core_infra.common_pep_snet.id
-  subnet_cidr   = dx_available_subnet_cidr.next_cidr.cidr_block
+  subnet_cidr   = dx_available_subnet_cidr.function_subnet_cidr.cidr_block
 
   health_check_path = "/api/v1/certificate-function/health"
-  app_settings = {    
-    DB_HOST                      = "${data.azurerm_key_vault_secret.db_host.value}"
-    DB_NAME                      = "${data.azurerm_key_vault_secret.db_name.value}"
-    DB_USER                      = "${data.azurerm_key_vault_secret.db_user.value}"
-    DB_PASSWORD                  = "${data.azurerm_key_vault_secret.db_password.value}"
-    DB_SSL                       = true
+  node_version      = 22
+  app_settings = {
+    # DB_HOST                      = "${data.azurerm_key_vault_secret.db_host.value}"
+    # DB_NAME                      = "${data.azurerm_key_vault_secret.db_name.value}"
+    # DB_USER                      = "${data.azurerm_key_vault_secret.db_user.value}"
+    # DB_PASSWORD                  = "${data.azurerm_key_vault_secret.db_password.value}"
+    DB_SSL = true
 
   }
 
@@ -86,7 +113,8 @@ resource "azurerm_resource_group" "apps_rg" {
 }
 
 module "azure_app_service" {
-  source = "../_modules/app_service"
+  source       = "../_modules/app_service"
+  node_version = 22
 
   virtual_network = {
     resource_group_name = module.azure_core_infra.network_resource_group_name
@@ -95,7 +123,7 @@ module "azure_app_service" {
   resource_group_name = azurerm_resource_group.apps_rg.name #module.azure_core_infra.common_resource_group_name
 
   subnet_pep_id = module.azure_core_infra.common_pep_snet.id
-  subnet_cidr   = dx_available_subnet_cidr.next_cidr.cidr_block # "10.0.8.0/23" #
+  subnet_cidr   = dx_available_subnet_cidr.app_service_subnet_cidr.cidr_block
 
   environment = merge(local.environment, { app_name = "SMCR", instance_number = local.instance_number })
   # tier                = "l"
@@ -123,6 +151,9 @@ resource "azurerm_key_vault_secret" "postgres_username" {
   value        = "adminuser"
   key_vault_id = module.azure_core_infra.common_key_vault.id
   content_type = "text"
+  depends_on = [
+    azurerm_role_assignment.sp_kv_secrets_officer
+  ]
 }
 
 resource "azurerm_key_vault_secret" "postgres_password" {
@@ -131,6 +162,9 @@ resource "azurerm_key_vault_secret" "postgres_password" {
   value        = random_password.password.result
   key_vault_id = module.azure_core_infra.common_key_vault.id
   content_type = "password"
+  depends_on = [
+    azurerm_role_assignment.sp_kv_secrets_officer
+  ]
 }
 
 module "postgres" {

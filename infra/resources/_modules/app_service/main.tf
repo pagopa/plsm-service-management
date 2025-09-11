@@ -16,6 +16,7 @@ module "azure_app_service" {
 
   tier                = var.tier
   resource_group_name = var.resource_group_name
+  node_version = var.node_version
 
   virtual_network = {
     name                = var.virtual_network.name
