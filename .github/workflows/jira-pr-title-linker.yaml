@@ -40,8 +40,9 @@ jobs:
       - name: Extract Jira Issue to Link
         id: extract_jira_issue
         if: steps.lint.outcome == 'success'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          PR_TITLE=$(echo "${{ github.event.pull_request.title }}")
           ISSUES_STR=$(awk -F'\\[|\\]' '{print $2}' <<< "$PR_TITLE" | sed "s/#//g" | sed "s/,//g")
           ISSUES=($ISSUES_STR)
           JIRA_ISSUE=$(echo ${ISSUES_STR##* })
