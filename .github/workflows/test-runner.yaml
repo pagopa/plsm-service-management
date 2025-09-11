@@ -1,0 +1,54 @@
+name: Test Private Runner
+
+# Trigger per l'esecuzione:
+on:
+  workflow_dispatch:
+
+# Permessi necessari per l'autenticazione OIDC con Azure
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test-private-runner:
+    runs-on: self-hosted
+    environment: app-prod-cd
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Azure using OIDC
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: 1. Test - Esegui un comando Azure CLI base
+        run: |
+          echo "Login avvenuto con successo per l'utente:"
+          az account show
+        
+      - name: 2. Test - Risoluzione DNS Privato (Prova che sei nella VNet)
+        run: |
+          echo "Tentativo di risolvere l'hostname privato della Web App..."
+          nslookup sm-p-itn-smcr-app-01.azurewebsites.net
+          echo "Se l'indirizzo qui sopra è privato (es. 10.x.x.x), il DNS privato funziona!"
+        
+      - name: 3. Test - Accesso HTTP Privato (Prova che la rete funziona)
+        run: |
+          echo "Tentativo di contattare l'endpoint /health della Web App privata..."
+          STATUS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://sm-p-itn-smcr-app-01.azurewebsites.net/health)
+          echo "Codice di stato HTTP ricevuto: $STATUS_CODE"
+          if [ "$STATUS_CODE" -ne 200 ]; then
+            echo "Errore: la Web App non ha risposto come previsto!"
+            exit 1
+          fi
+          echo "Successo! La Web App è raggiungibile privatamente."
+
+      - name: 4. Test - Accesso al Key Vault (Prova permessi Data Plane)
+        run: |
+          echo "Tentativo di elencare i segreti nel Key Vault..."
+          az keyvault secret list --vault-name sm-p-itn-common-kv-01 --output table
+          echo "Se vedi la lista dei segreti, i permessi RBAC funzionano!"
