@@ -7,17 +7,18 @@
 
 name: Deploy Certificate Function
 
+
 on:
   # Trigger 1: Deploy automatico su staging al push su develop
   push:
     branches:
       - develop
     paths:
-      # IMPORTANTE: Questo percorso deve corrispondere alla cartella in cui si trova il codice della tua function app.
       - "apps/sm-certification-fn/**"
 
   # Trigger 2: Deploy manuale in produzione
   workflow_dispatch:
+
 
 jobs:
   deploy:
