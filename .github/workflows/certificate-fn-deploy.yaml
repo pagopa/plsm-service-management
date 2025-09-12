@@ -7,7 +7,6 @@
 
 name: Deploy Certificate Function
 
-
 on:
   # Trigger 1: Deploy automatico su staging al push su develop
   push:
@@ -18,7 +17,20 @@ on:
 
   # Trigger 2: Deploy manuale in produzione
   workflow_dispatch:
-
+    inputs:
+      resource_group_name:
+        description: Function App resource group name.
+        required: true
+        default: "sm-p-itn-common-rg-01"
+      azure_webapp_name:
+        description: Function App name.
+        required: true
+        default: "sm-p-itn-plsm-cert-func-01"
+      private_agent:
+        description: Use a private agent to deploy the built artifact.
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   deploy:
@@ -29,17 +41,16 @@ jobs:
       workspace_name: "sm-certification-fn"
 
       # L'ambiente GitHub da usare per i segreti e le regole di protezione
-      environment: "app-prod-cd"
+      environment: ${{ github.event_name == 'workflow_dispatch' && 'app-prod-cd' || 'app-prod-ci' }}
 
       # Dettagli specifici di Azure
-      app_name: "sm-p-itn-plsm-cert-func-01"
-      resource_group: "sm-p-itn-common-rg-01"
-
+      web_app_name: ${{ inputs.azure_webapp_name }}
+      resource_group_name: ${{ inputs.resource_group_name }}
       # Questa logica determina se si tratta di un deploy di staging o di produzione.
       # Imposta 'disable_auto_staging_deploy' a 'true' per i push automatici su develop,
       # e a 'false' per gli avvii manuali, che sono destinati alla produzione.
       disable_auto_staging_deploy: ${{ github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && false || true }}
-      use_private_agent: true
+      use_private_agent: ${{ inputs.private_agent }}
 
     # Passa tutti i segreti dall'ambiente GitHub selezionato al workflow riutilizzabile
     secrets: inherit
