@@ -75,3 +75,13 @@ module "azure-github-environment-bootstrap" {
 
   tags = local.tags
 }
+
+
+resource "azurerm_role_assignment" "app_ci_website_contributor" {
+  scope = data.azurerm_resource_group.common_rg.id
+
+  role_definition_name = "Website Contributor"
+
+  principal_id = module.azure-github-environment-bootstrap.identities.app.ci.principal_id
+
+}
