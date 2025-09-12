@@ -1,20 +1,44 @@
-name: Deploy Production Certificate Function App
+# Questo workflow gestisce il deploy della 'sm-certification-fn' chiamando un workflow centralizzato DX.
+# Implementa una strategia di deploy ibrida:
+# 1. Deploy Automatico su Staging: Si attiva al push su 'develop' se cambiano i file relativi alla function app.
+#    - 'disable_auto_staging_deploy' viene impostato a 'true', effettuando il deploy sullo slot di staging.
+# 2. Deploy Manuale in Produzione: Può essere avviato manualmente dall'interfaccia di GitHub Actions.
+#    - 'disable_auto_staging_deploy' viene impostato a 'false', effettuando il deploy sullo slot di produzione dopo uno swap.
+
+name: Deploy Certificate Function
 
 on:
+  # Trigger 1: Deploy automatico su staging al push su develop
   push:
     branches:
-      - main
+      - develop
     paths:
+      # IMPORTANTE: Questo percorso deve corrispondere alla cartella in cui si trova il codice della tua function app.
       - "apps/sm-certification-fn/**"
+
+  # Trigger 2: Deploy manuale in produzione
+  workflow_dispatch:
 
 jobs:
   deploy:
+    # Chiama un workflow centralizzato e riutilizzabile per il deploy di Azure App Services.
     uses: pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml@main
     with:
+      # Nome della cartella (workspace) che contiene il codice dell'app
       workspace_name: "sm-certification-fn"
+
+      # L'ambiente GitHub da usare per i segreti e le regole di protezione
       environment: "app-prod-cd"
+
+      # Dettagli specifici di Azure
       app_name: "sm-p-itn-plsm-cert-func-01"
       resource_group: "sm-p-itn-common-rg-01"
-      disable_auto_staging_deploy: false
+
+      # Questa logica determina se si tratta di un deploy di staging o di produzione.
+      # Imposta 'disable_auto_staging_deploy' a 'true' per i push automatici su develop,
+      # e a 'false' per gli avvii manuali, che sono destinati alla produzione.
+      disable_auto_staging_deploy: ${{ github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && false || true }}
       use_private_agent: true
+
+    # Passa tutti i segreti dall'ambiente GitHub selezionato al workflow riutilizzabile
     secrets: inherit
