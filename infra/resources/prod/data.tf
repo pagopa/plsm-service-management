@@ -67,25 +67,21 @@ data "azurerm_client_config" "current" {}
 #   key_vault_id = module.azure_core_infra.common_key_vault.id
 # }
 
-# data "azurerm_key_vault_secret" "db_host" {
-#   name         = "DB-HOST"
-#   key_vault_id = module.azure_core_infra.common_key_vault.id
-# }
+data "azurerm_key_vault_secret" "db_host" {
+  name         = "postgres-host"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
 
-# data "azurerm_key_vault_secret" "db_name" {
-#   name         = "DB-NAME"
-#   key_vault_id = module.azure_core_infra.common_key_vault.id
-# }
+data "azurerm_key_vault_secret" "db_user" {
+  name         = "postgres-username"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
 
-# data "azurerm_key_vault_secret" "db_user" {
-#   name         = "postgres-username"
-#   key_vault_id = module.azure_core_infra.common_key_vault.id
-# }
+data "azurerm_key_vault_secret" "db_password" {
+  name         = "postgres-password"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
 
-# data "azurerm_key_vault_secret" "db_password" {
-#   name         = "postgres-password"
-#   key_vault_id = module.azure_core_infra.common_key_vault.id
-# }
 # data "azurerm_key_vault_secret" "db_password_b64" {
 #   name         = "DB-PASSWORD-B64"
 #   key_vault_id = module.azure_core_infra.common_key_vault.id

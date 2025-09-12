@@ -95,10 +95,10 @@ module "certifica_function" {
   health_check_path = "/api/v1/certificate-function/health"
   node_version      = 22
   app_settings = {
-    # DB_HOST                      = "${data.azurerm_key_vault_secret.db_host.value}"
-    # DB_NAME                      = "${data.azurerm_key_vault_secret.db_name.value}"
-    # DB_USER                      = "${data.azurerm_key_vault_secret.db_user.value}"
-    # DB_PASSWORD                  = "${data.azurerm_key_vault_secret.db_password.value}"
+    DB_HOST                      = "${data.azurerm_key_vault_secret.db_host.value}"
+    DB_NAME                      = "certificati"
+    DB_USER                      = "${data.azurerm_key_vault_secret.db_user.value}"
+    DB_PASSWORD                  = "${data.azurerm_key_vault_secret.db_password.value}"
     DB_SSL = true
 
   }
