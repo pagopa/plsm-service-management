@@ -1,17 +1,20 @@
-name: Deploy Function App
+name: Deploy Production Certificate Function App
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "apps/sm-certification-fn/**"
 
 jobs:
   deploy:
     uses: pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml@main
     with:
       workspace_name: "sm-certification-fn"
-      environment: "prod"
+      environment: "app-prod-cd"
       app_name: "sm-p-itn-plsm-cert-func-01"
       resource_group: "sm-p-itn-common-rg-01"
-      disable_auto_staging_deploy: true
+      disable_auto_staging_deploy: false
+      use_private_agent: true
     secrets: inherit
