@@ -38,7 +38,9 @@ on:
         type: string
         required: false
         default: ""
-
+permissions:
+  contents: read
+  id-token: write
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch'
