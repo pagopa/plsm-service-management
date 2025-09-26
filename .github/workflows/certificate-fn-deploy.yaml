@@ -1,72 +1,55 @@
-# Questo workflow gestisce il deploy della 'sm-certification-fn'.
-# Implementa una strategia di deploy ibrida:
-# 1. Deploy Automatico su Staging: Si attiva al push su 'develop' se cambiano i file relativi alla function app.
-#    - Usa l'ambiente 'app-prod-ci' per i segreti.
-# 2. Deploy Manuale in Produzione: Può essere avviato manualmente dall'interfaccia di GitHub Actions.
-#    - Usa l'ambiente 'app-prod-cd' per i segreti.
-
 name: Deploy Certificate Function
 
 on:
-  # Trigger 1: Deploy automatico su staging al push su develop
-  push:
-    branches:
-      - develop
-    paths:
-      - "apps/sm-certification-fn/**"
-
-  # Trigger 2: Deploy manuale in produzione
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment where the artifact will be deployed.
+        type: string
+        required: true
+        default: 'app-prod'
+      resource_group_name:
+        description: "Function App resource group name"
+        type: string
+        required: true
+        default: "sm-p-itn-common-rg-01"
+      function_app_name:
+        description: "Function App name"
+        type: string
+        required: true
+        default: "sm-p-itn-plsm-cert-func-01"
+      use_staging_slot:
+        description: True if artifact should be deployed to staging slot
+        type: boolean
+        required: false
+        default: true
+      use_private_agent:
+        description: Use a private agent to deploy the built artifact.
+        type: boolean
+        required: false
+        default: true
+      use_labels:
+        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        type: boolean
+        required: false
+        default: false
+      override_labels:
+        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        type: string
+        required: false
+        default: ""
 
 jobs:
   deploy:
-    # Seleziona l'ambiente GitHub corretto in base al trigger.
-    # 'app-prod-cd' per i deploy manuali (produzione), 'app-prod-ci' per quelli automatici (staging).
-    environment: ${{ github.event_name == 'workflow_dispatch' && 'app-prod-cd' || 'app-prod-ci' }}
-    runs-on: self-hosted
-
-    steps:
-      - name: Checkout del codice
-        uses: actions/checkout@v4
-
-      - name: Login su Azure tramite OIDC
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant-id: ${{ secrets.ARM_TENANT_ID }}
-          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-
-      - name: Setup Node.js (se necessario)
-        uses: actions/setup-node@v3
-        with:
-          node-version: "22" # Usa la stessa versione della tua app
-
-      - name: Build e Pacchettizzazione della Function App
-        run: |
-          # Vai nella cartella della tua function app
-          cd apps/sm-certification-fn
-
-          # Installa le dipendenze
-          npm install
-
-          # Esegui il build (se il tuo progetto lo richiede)
-          npm run build --if-present
-
-          # Crea il pacchetto .zip per il deploy
-          zip -r deployment.zip .
-
-      - name: Deploy su Azure Function App
-        run: |
-          # Definisci il nome dello slot di deploy: staging per 'develop', produzione per 'main' (manuale)
-          SLOT_NAME="staging"
-          if [[ "${{ github.ref_name }}" == "main" && "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            SLOT_NAME="production"
-          fi
-
-          echo "Deploying to slot: $SLOT_NAME"
-
-          az functionapp deployment source config-zip \
-            --resource-group "sm-p-itn-common-rg-01" \
-            --name "sm-p-itn-plsm-cert-func-01" \
-            --src "apps/sm-certification-fn/deployment.zip" \
-            --slot "$SLOT_NAME"
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/function_app_cd.yaml
+    with:
+      workspace_name: sm-certification-fn
+      environment: ${{ inputs.environment }}
+      resource_group_name: ${{ inputs.resource_group_name }}
+      function_app_name: ${{ inputs.function_app_name }}
+      use_staging_slot: ${{ inputs.use_staging_slot }}
+      use_private_agent:  ${{ inputs.use_private_agent }}
+      use_labels: ${{ inputs.use_labels }}
+      override_labels: ${{ inputs.override_labels }}
+    secrets: inherit
