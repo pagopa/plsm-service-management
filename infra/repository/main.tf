@@ -24,7 +24,7 @@ provider "github" {
 
 module "github_environment_bootstrap" {
   source  = "pagopa-dx/github-environment-bootstrap/github"
-  version = "1.1.1"
+  version = "1.1.2"
 
   repository = {
     name                = "plsm-service-management"
@@ -32,7 +32,7 @@ module "github_environment_bootstrap" {
     topics              = ["terraform", "github", "servicemanagement"]
     default_branch_name = "main"
     jira_boards_ids     = ["ISS"]
-    reviewers_teams     = ["plsm-admins"]
+    reviewers_teams     = ["plsm-team-admins", "plsm-team-members", "plsm-team-externals"]
   }
 
 }

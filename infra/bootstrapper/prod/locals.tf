@@ -1,13 +1,13 @@
 locals {
   environment = {
-    prefix          = "sm" # Prefisso per team service management
-    env_short       = "p"  # 'd' per dev, 'u' per uat, 'p' per prod
-    location        = "italynorth"
-    app_name        = "smcr" # Nome dell'applicazione
-    instance_number = "001"  # Numero di istanza (utile se ne hai più di una)
-    domain          = "servicemanagement"
+    prefix    = "plsm" # Prefisso per team service management
+    env_short = "p"  # 'd' per dev, 'u' per uat, 'p' per prod
+    location  = "italynorth"
+    # app_name        = "smcr" # Nome dell'applicazione
+    instance_number = "01" # Numero di istanza (utile se ne hai più di una)
+    domain          = "sm"
   }
-
+#plsm-p-itn-plsm-service-man-caj-01
   adgroups = {
     admins_name    = "plsm-p-adgroup-admin"
     devs_name      = "plsm-p-adgroup-developers"
