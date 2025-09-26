@@ -15,6 +15,9 @@ const configSchema = z.object({
   dbname: z
     .string()
     .min(1, "Il name del database non può essere una stringa vuota"),
+  dbtable: z
+    .string()
+    .min(1, "Il name della tabella non può essere una stringa vuota"),
   dbuser: z
     .string()
     .min(1, "Il name dell'utente non può essere una stringa vuota"),
