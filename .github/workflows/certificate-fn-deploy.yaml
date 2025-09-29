@@ -44,7 +44,7 @@ permissions:
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch'
-    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml
+    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@latest
     with:
       workspace_name: sm-certification-fn
       environment: ${{ inputs.environment }}
