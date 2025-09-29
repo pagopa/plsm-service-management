@@ -16,7 +16,7 @@ on:
 permissions:
   contents: read
   id-token: write
-  
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -30,7 +30,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'yarn'
+          cache: "yarn"
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies with Yarn
         run: yarn install --frozen-lockfile
