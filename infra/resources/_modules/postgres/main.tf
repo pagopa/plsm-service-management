@@ -8,7 +8,7 @@ module "postgres" {
     prefix          = var.environment.prefix
     env_short       = var.environment.env_short
     location        = var.environment.location
-    app_name        = var.environment.domain
+    app_name        = var.app_name
     instance_number = "01"
   }
   pgbouncer_enabled = false

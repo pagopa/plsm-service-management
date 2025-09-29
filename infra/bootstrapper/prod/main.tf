@@ -51,6 +51,8 @@ module "azure-github-environment-bootstrap" {
     resource_group_name = "terraform-state-rg"
   }
 
+  
+
   github_private_runner = {
     container_app_environment_id       = data.azurerm_container_app_environment.runner.id
     container_app_environment_location = data.azurerm_container_app_environment.runner.location
@@ -58,7 +60,10 @@ module "azure-github-environment-bootstrap" {
     key_vault = {
       name                = data.azurerm_key_vault.common_kv.name
       resource_group_name = data.azurerm_key_vault.common_kv.resource_group_name
+      use_rbac            = true
     }
+
+    labels = ["prod"]
   }
 
   entraid_groups = {
