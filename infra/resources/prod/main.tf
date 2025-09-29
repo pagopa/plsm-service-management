@@ -41,36 +41,43 @@ resource "dx_available_subnet_cidr" "app_service_subnet_cidr" {
   depends_on         = [module.certifica_function]
 }
 
-resource "azurerm_role_assignment" "sp_kv_secrets_officer" {
-  scope = module.azure_core_infra.common_key_vault.id
+resource "dx_available_subnet_cidr" "core_infra_subnet_cidr" {
+  virtual_network_id = module.azure_core_infra.common_vnet.id
+  prefix_length      = 24
+}
 
+
+resource "azurerm_role_assignment" "terraform_sp_kv_secrets_officer" {
+  scope                = module.azure_core_infra.common_key_vault.id
   role_definition_name = "Key Vault Secrets Officer"
-
-  principal_id = data.azurerm_client_config.current.object_id
-
-  depends_on = [
-    module.azure_core_infra
-  ]
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 
 module "azure_core_infra" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "2.1.1"
+  version = "2.2.1"
 
   environment = merge(local.environment, {
     app_name        = "smcr",
     instance_number = "01"
   })
 
+
   nat_enabled = false
 
   # virtual_network_cidr = "10.0.0.0/16"
+  virtual_network_cidr = "dx_available_subnet_cidr.core_infra_subnet_cidr.cidr_block"
 
   vpn_enabled = true
 
   test_enabled = false
 
   tags = local.tags
+}
+
+resource "azurerm_resource_group" "fn_rg" {
+  name     = "plsm-p-itn-fn-rg-01"
+  location = "Italy North"
 }
 
 module "certifica_function" {
@@ -82,7 +89,7 @@ module "certifica_function" {
   })
 
 
-  resource_group_name = module.azure_core_infra.common_resource_group_name
+  resource_group_name = azurerm_resource_group.fn_rg.name #module.azure_core_infra.common_resource_group_name
   tags                = local.tags
 
   virtual_network = {
@@ -92,7 +99,7 @@ module "certifica_function" {
   subnet_pep_id = module.azure_core_infra.common_pep_snet.id
   subnet_cidr   = dx_available_subnet_cidr.function_subnet_cidr.cidr_block
 
-  health_check_path = "/api/v1/certificate-function/health"
+  health_check_path = "/api/v1/health"
   node_version      = 22
   app_settings = {
     # DB_HOST                      = "${data.azurerm_key_vault_secret.db_host.value}"
@@ -108,11 +115,11 @@ module "certifica_function" {
 
 # App Service
 resource "azurerm_resource_group" "apps_rg" {
-  name     = "sm-p-itn-apps-rg-01"
+  name     = "plsm-p-itn-apps-rg-01"
   location = "Italy North"
 }
 
-module "azure_app_service" {
+module "azure_app_service_smcr" {
   source       = "../_modules/app_service"
   node_version = 22
 
@@ -133,7 +140,7 @@ module "azure_app_service" {
   slot_app_settings = local.common_app_settings
 
 
-  health_check_path = "/health"
+  health_check_path = "/api/v1/health"
   tags              = local.tags
   depends_on = [
     module.azure_core_infra
@@ -152,7 +159,7 @@ resource "azurerm_key_vault_secret" "postgres_username" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
   content_type = "text"
   depends_on = [
-    azurerm_role_assignment.sp_kv_secrets_officer
+    azurerm_role_assignment.terraform_sp_kv_secrets_officer
   ]
 }
 
@@ -163,11 +170,11 @@ resource "azurerm_key_vault_secret" "postgres_password" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
   content_type = "password"
   depends_on = [
-    azurerm_role_assignment.sp_kv_secrets_officer
+    azurerm_role_assignment.terraform_sp_kv_secrets_officer
   ]
 }
 
-module "postgres" {
+module "postgres_apps" {
   source = "../_modules/postgres"
 
   environment         = local.environment
@@ -182,4 +189,5 @@ module "postgres" {
   postgres_password = azurerm_key_vault_secret.postgres_password.value
 
   depends_on = [module.azure_core_infra]
+  app_name   = "apps"
 }

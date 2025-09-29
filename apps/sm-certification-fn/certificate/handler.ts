@@ -22,9 +22,9 @@ export const timerTrigger =
     const certificates = await getSpidCertificates();
 
     if (certificates) {
-      insertCertificatesIntoDb(certificates, clientDB);
+      insertCertificatesIntoDb(config)(certificates, clientDB);
       console.log(
-        "✅ Certificati recuperati e raggruppati per data di scadenza:"
+        "✅ Certificati recuperati e raggruppati per data di scadenza:",
       );
       // for (const [date, certs] of certificates.entries()) {
       //   console.log(`\nScadenza: ${date} (${certs.length} certificati)`);
