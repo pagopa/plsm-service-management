@@ -7,7 +7,7 @@ on:
         description: Environment where the artifact will be deployed.
         type: string
         required: true
-        default: 'app-prod'
+        default: "app-prod"
       resource_group_name:
         description: "Function App resource group name"
         type: string
@@ -44,14 +44,14 @@ permissions:
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch'
-    uses: ./.github/workflows/function_app_cd.yaml
+    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml
     with:
       workspace_name: sm-certification-fn
       environment: ${{ inputs.environment }}
       resource_group_name: ${{ inputs.resource_group_name }}
       function_app_name: ${{ inputs.function_app_name }}
       use_staging_slot: ${{ inputs.use_staging_slot }}
-      use_private_agent:  ${{ inputs.use_private_agent }}
+      use_private_agent: ${{ inputs.use_private_agent }}
       use_labels: ${{ inputs.use_labels }}
       override_labels: ${{ inputs.override_labels }}
     secrets: inherit
