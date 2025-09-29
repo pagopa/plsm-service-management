@@ -1,11 +1,11 @@
 locals {
   environment = {
-    prefix          = "sm" # Prefisso per team service management
+    prefix          = "plsm" # Prefisso per team service management
     env_short       = "p"  # 'd' per dev, 'u' per uat, 'p' per prod
     location        = "italynorth"
-    instance_number = "001" # Numero di istanza (utile se ne hai più di una)
-    domain          = "plsm"
-  }
+    instance_number = "01" # Numero di istanza (utile se ne hai più di una)
+    # domain          = "sm"
+  } 
 
   instance_number = "01"
 
@@ -20,7 +20,7 @@ locals {
 
   # App Service
   common_app_settings = {
-    
+
     DiagnosticServices_EXTENSION_VERSION            = "~3"
     InstrumentationEngine_EXTENSION_VERSION         = "disabled"
     SnapshotDebugger_EXTENSION_VERSION              = "disabled"
