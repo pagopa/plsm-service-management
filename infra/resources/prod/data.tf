@@ -95,3 +95,13 @@ data "azurerm_key_vault_secret" "db_password" {
 #   name         = "NEXT-PUBLIC-MSAL-TENANT-ID"
 #   key_vault_id = module.azure_core_infra.common_key_vault.id
 # }
+
+data "azurerm_user_assigned_identity" "github_cd_identity" {
+  # Assicurati che questo sia il resource group dove hai creato le identità
+  resource_group_name = "plsm-p-itn-sm-rg-01"
+  name                = "plsm-p-itn-sm-app-github-cd-id-01"
+}
+data "azurerm_function_app" "plsm_cert_func" {
+  name                = "plsm-p-itn-cert-func-01"
+  resource_group_name = "plsm-p-itn-fn-rg-01"
+}

@@ -80,6 +80,12 @@ resource "azurerm_resource_group" "fn_rg" {
   location = "Italy North"
 }
 
+resource "azurerm_role_assignment" "cd_identity_website_contributor_on_func" {
+  scope                = data.azurerm_function_app.plsm_cert_func.id
+  role_definition_name = "Website Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
+}
+
 module "certifica_function" {
   source = "../_modules/function_app"
 
