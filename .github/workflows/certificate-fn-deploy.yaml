@@ -12,12 +12,12 @@ on:
         description: "Function App resource group name"
         type: string
         required: true
-        default: "sm-p-itn-common-rg-01"
+        default: "plsm-p-itn-fn-rg-01"
       function_app_name:
         description: "Function App name"
         type: string
         required: true
-        default: "sm-p-itn-plsm-cert-func-01"
+        default: "plsm-p-itn-cert-func-01"
       use_staging_slot:
         description: True if artifact should be deployed to staging slot
         type: boolean
