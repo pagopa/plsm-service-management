@@ -51,6 +51,8 @@ module "azure-github-environment-bootstrap" {
     resource_group_name = "terraform-state-rg"
   }
 
+  
+
   github_private_runner = {
     container_app_environment_id       = data.azurerm_container_app_environment.runner.id
     container_app_environment_location = data.azurerm_container_app_environment.runner.location
@@ -58,7 +60,10 @@ module "azure-github-environment-bootstrap" {
     key_vault = {
       name                = data.azurerm_key_vault.common_kv.name
       resource_group_name = data.azurerm_key_vault.common_kv.resource_group_name
+      use_rbac            = true
     }
+
+    labels = ["prod"]
   }
 
   entraid_groups = {
@@ -74,4 +79,14 @@ module "azure-github-environment-bootstrap" {
 
 
   tags = local.tags
+}
+
+
+resource "azurerm_role_assignment" "app_ci_website_contributor" {
+  scope = data.azurerm_resource_group.common_rg.id
+
+  role_definition_name = "Website Contributor"
+
+  principal_id = module.azure-github-environment-bootstrap.identities.app.ci.principal_id
+
 }

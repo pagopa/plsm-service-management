@@ -1,13 +1,15 @@
 import { Client } from "pg";
 import { CertificateInfo } from "../models/certificate"; // Assumiamo che CertificateInfo sia il tipo di un singolo certificato
+import { AppConfig } from "../../utils/checkConfig";
 
 // Assumiamo che il tipo in ingresso sia una Map, come nello script precedente
 type CertificatesByExpiration = Map<string, CertificateInfo[]>;
 
-export async function insertCertificatesIntoDb(
-  certificatesByExpiration: CertificatesByExpiration,
-  client: Client
-): Promise<void> {
+export const insertCertificatesIntoDb = (
+  config: AppConfig) => 
+  async ( certificatesByExpiration: CertificatesByExpiration,
+  client: Client,
+): Promise<void> => {
   // 1. Appiattisci tutti i certificati in un unico array
   const allCerts = Array.from(certificatesByExpiration.values()).flat();
 
@@ -38,17 +40,17 @@ export async function insertCertificatesIntoDb(
   ]);
 
   const queryText = `
-    INSERT INTO certificates (idp, use, expiration_date, days_remaining, certificate)
+    INSERT INTO ${config.dbtable} (idp, use, expiration_date, days_remaining, certificate)
     VALUES ${values}
   `;
 
   try {
     await client.query("BEGIN");
-    await client.query("TRUNCATE TABLE certificates RESTART IDENTITY");
+    await client.query(`TRUNCATE TABLE ${config.dbtable} RESTART IDENTITY`);
     await client.query(queryText, params); // 4. Esegui UNA SOLA query di inserimento
     await client.query("COMMIT");
     console.log(
-      `${allCerts.length} certificati inseriti nel database con successo.`
+      `${allCerts.length} certificati inseriti nel database con successo.`,
     );
   } catch (err) {
     await client.query("ROLLBACK");
