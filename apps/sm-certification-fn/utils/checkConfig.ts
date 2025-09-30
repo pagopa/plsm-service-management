@@ -9,7 +9,7 @@ const configSchema = z.object({
     z
       .number()
       .int()
-      .positive({ message: "Il numero di porta deve essere positivo." })
+      .positive({ message: "Il numero di porta deve essere positivo." }),
   ),
   host: z.string().min(1, "L'host non può essere una stringa vuota"),
   dbname: z
@@ -24,7 +24,7 @@ const configSchema = z.object({
   dbpassword: z.string().min(1, "La password non può essere una stringa vuota"),
   dbssl: z.preprocess(
     (val) => String(val).trim().toLowerCase() === "true",
-    z.boolean()
+    z.boolean(),
   ),
 });
 
@@ -53,7 +53,7 @@ function validateConfig(config: unknown): AppConfig {
     }
     // Lancia di nuovo qualsiasi altro tipo di errore imprevisto.
     throw new Error(
-      "Errore sconosciuto durante la validazione della configurazione."
+      "Errore sconosciuto durante la validazione della configurazione.",
     );
   }
 }
@@ -68,6 +68,7 @@ export function getConfigOrThrow() {
       port: process.env.DB_PORT,
       dbname: process.env.DB_NAME,
       dbuser: process.env.DB_USER,
+      dbtable: process.env.DB_TABLE,
       dbpassword: process.env.DB_PASSWORD,
       dbssl: process.env.DB_SSL,
     };
@@ -84,7 +85,7 @@ export function getConfigOrThrow() {
     }
 
     throw new Error(
-      `ERRORE CRITICO: Configurazione non valida. Dettagli: ${errorMessage}`
+      `ERRORE CRITICO: Configurazione non valida. Dettagli: ${errorMessage}`,
     );
   }
 }
