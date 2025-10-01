@@ -158,7 +158,17 @@ module "onboarding_function" {
   health_check_path = "/api/v1/health"
   node_version      = 22
   app_settings = {
-
+    CONTRACTS_TOPIC_CONSUMER_GROUP        = "$Default"
+    CONTRACTS_CONSUMER_CONNECTION_STRING  = "${data.azurerm_key_vault_secret.sc_contracts_conn_string.value}"
+    CONTRACTS_TOPIC_NAME                  = "sc-contracts"
+    SLACK_WEBHOOK_LOG                     = "${data.azurerm_key_vault_secret.slack_webhook_log.value}"
+    SLACK_WEBHOOK_ONBOARDING_IO           = "${data.azurerm_key_vault_secret.slack_webhook_onboarding_io.value}"
+    SLACK_WEBHOOK_ONBOARDING_IO_PREMIUM   = "${data.azurerm_key_vault_secret.slack_webhook_onboarding_io_premium.value}"
+    SLACK_WEBHOOK_ONBOARDING_PN           = "${data.azurerm_key_vault_secret.slack_webhook_onboarding_pn.value}"
+    SLACK_WEBHOOK_ONBOARDING_INTEROP      = "${data.azurerm_key_vault_secret.slack_webhook_onboarding_interop.value}"
+    SLACK_WEBHOOK_ONBOARDING_PAGOPA       = "${data.azurerm_key_vault_secret.slack_webhook_onboarding_pagopa.value}"
+    OCP_APIM_SUBSCRIPTION_KEY             = "${data.azurerm_key_vault_secret.ocp_apim_subscription_key.value}"
+    ENDPOINT_GET_INSTITUTION_FROM_TAXCODE = "https://api.selfcare.pagopa.it/external/v2/institutions/?taxCode="
 
   }
 
