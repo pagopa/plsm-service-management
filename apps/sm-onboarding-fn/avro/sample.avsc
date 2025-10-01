@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "Sample",
+  "namespace": "it.pagopa.test",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "default": "undefined"
+    }
+  ]
+}
