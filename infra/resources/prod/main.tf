@@ -81,7 +81,7 @@ resource "azurerm_resource_group" "fn_rg" {
 }
 
 resource "azurerm_role_assignment" "cd_identity_website_contributor_on_func" {
-  scope                = data.azurerm_function_app.plsm_cert_func.id
+  scope                = data.azurerm_linux_function_app.plsm_cert_func.id
   role_definition_name = "Website Contributor"
   principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
 }
@@ -115,6 +115,50 @@ module "certifica_function" {
     DB_PASSWORD = "${data.azurerm_key_vault_secret.db_password.value}"
     DB_PORT     = 5432
     DB_SSL      = true
+
+  }
+
+  depends_on = [module.azure_core_infra]
+}
+
+# Azure Function per Onboarding
+
+resource "dx_available_subnet_cidr" "onboarding_fa_subnet_cidr" {
+  virtual_network_id = module.azure_core_infra.common_vnet.id
+  prefix_length      = 24
+  depends_on         = [module.azure_app_service_smcr]
+}
+
+resource "azurerm_role_assignment" "cd_identity_website_contrib_onboardng_fa" {
+  scope = module.onboarding_function.function_app_id
+  role_definition_name = "Website Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
+  depends_on           = [module.onboarding_function]
+}
+
+module "onboarding_function" {
+  source = "../_modules/function_app"
+
+  environment = merge(local.environment, {
+    app_name        = "onboarding",
+    instance_number = "01"
+  })
+
+
+  resource_group_name = azurerm_resource_group.fn_rg.name
+  tags                = local.tags
+
+  virtual_network = {
+    name                = module.azure_core_infra.common_vnet.name
+    resource_group_name = module.azure_core_infra.network_resource_group_name
+  }
+  subnet_pep_id = module.azure_core_infra.common_pep_snet.id
+  subnet_cidr   = dx_available_subnet_cidr.onboarding_fa_subnet_cidr.cidr_block
+
+  health_check_path = "/api/v1/health"
+  node_version      = 22
+  app_settings = {
+
 
   }
 

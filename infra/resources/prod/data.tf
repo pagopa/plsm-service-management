@@ -101,7 +101,7 @@ data "azurerm_user_assigned_identity" "github_cd_identity" {
   resource_group_name = "plsm-p-itn-sm-rg-01"
   name                = "plsm-p-itn-sm-app-github-cd-id-01"
 }
-data "azurerm_function_app" "plsm_cert_func" {
+data "azurerm_linux_function_app" "plsm_cert_func" {
   name                = "plsm-p-itn-cert-func-01"
   resource_group_name = "plsm-p-itn-fn-rg-01"
 }

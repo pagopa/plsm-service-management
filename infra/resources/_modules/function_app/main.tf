@@ -1,6 +1,6 @@
-module "certifica_function" {
+module "azurerm_linux_function_app" {
   source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 2.0.2"
+  version = "~> 3.0.0"
 
   environment         = var.environment
   resource_group_name = var.resource_group_name
@@ -15,4 +15,6 @@ module "certifica_function" {
   }
   subnet_pep_id = var.subnet_pep_id
   subnet_cidr   = var.subnet_cidr
+  tier          = "l"
+
 }
