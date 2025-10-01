@@ -5859,7 +5859,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^7.15.0":
+"eslint@npm:^7.15.0, eslint@npm:^7.32.0":
   version: 7.32.0
   resolution: "eslint@npm:7.32.0"
   dependencies:
@@ -14182,9 +14182,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sm-certification-fn@workspace:.":
+"sm-onboarding-fn@workspace:.":
   version: 0.0.0-use.local
-  resolution: "sm-certification-fn@workspace:."
+  resolution: "sm-onboarding-fn@workspace:."
   dependencies:
     "@azure/functions": "npm:^3.5.0"
     "@chasdevs/avro-to-typescript": "npm:^1.4.0"
@@ -14207,6 +14207,7 @@ __metadata:
     danger: "npm:^10.3.0"
     dependency-check: "npm:^4.1.0"
     dotenv-cli: "npm:^3.1.0"
+    eslint: "npm:^7.32.0"
     eslint-plugin-prettier: "npm:^3.3.1"
     express: "npm:^4.15.3"
     fp-ts: "npm:^2.10.5"
