@@ -8,4 +8,3 @@ output "function_app_id" {
   description = "The ID of the Azure Function App created by the inner module."
   value       = module.azurerm_linux_function_app.function_app.function_app.id
 }
-
