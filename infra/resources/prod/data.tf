@@ -105,3 +105,46 @@ data "azurerm_linux_function_app" "plsm_cert_func" {
   name                = "plsm-p-itn-cert-func-01"
   resource_group_name = "plsm-p-itn-fn-rg-01"
 }
+
+
+# Function Onboarding
+
+data "azurerm_key_vault_secret" "sc_contracts_conn_string" {
+  name         = "fa-onboarding-sc-contracts-conn-string"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "slack_webhook_log" {
+  name         = "fa-onboarding-slack-webhook-log"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "slack_webhook_onboarding_io" {
+  name         = "fa-onboarding-slack-webhook-onboarding-io"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "slack_webhook_onboarding_pn" {
+  name         = "fa-onboarding-slack-webhook-onboarding-pn"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "slack_webhook_onboarding_interop" {
+  name         = "fa-onboarding-slack-webhook-onboarding-interop"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "ocp_apim_subscription_key" {
+  name         = "fa-onboarding-ocp-apim-subscription-key"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "slack_webhook_onboarding_io_premium" {
+  name         = "fa-onboarding-slack-webhook-onboarding-io-premium"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "slack_webhook_onboarding_pagopa" {
+  name         = "fa-onboarding-slack-webhook-onboarding-pagopa"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
