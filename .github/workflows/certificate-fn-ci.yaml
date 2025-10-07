@@ -1,6 +1,8 @@
 name: CI - Certification Function
 
 on:
+  
+  workflow_dispatch:
   push:
     branches:
       - develop
