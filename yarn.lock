@@ -2343,16 +2343,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^24.1.0":
-  version: 24.5.2
-  resolution: "@types/node@npm:24.5.2"
-  dependencies:
-    undici-types: "npm:~7.12.0"
-  checksum: 10c0/96baaca6564d39c6f7f6eddd73ce41e2a7594ef37225cd52df3be36fad31712af8ae178387a72d0b80f2e2799e7fd30c014bc0ae9eb9f962d9079b691be00c48
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:>= 8":
+"@types/node@npm:*, @types/node@npm:>= 8, @types/node@npm:^24.1.0":
   version: 24.6.1
   resolution: "@types/node@npm:24.6.1"
   dependencies:
@@ -6312,7 +6303,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^7.15.0":
+"eslint@npm:^7.15.0, eslint@npm:^7.32.0":
   version: 7.32.0
   resolution: "eslint@npm:7.32.0"
   dependencies:
@@ -15021,6 +15012,7 @@ __metadata:
     danger: "npm:^10.3.0"
     dependency-check: "npm:^4.1.0"
     dotenv-cli: "npm:^3.1.0"
+    eslint: "npm:^7.32.0"
     eslint-plugin-prettier: "npm:^3.3.1"
     express: "npm:^4.15.3"
     fp-ts: "npm:^2.10.5"
@@ -16564,13 +16556,6 @@ __metadata:
   version: 1.13.7
   resolution: "underscore@npm:1.13.7"
   checksum: 10c0/fad2b4aac48847674aaf3c30558f383399d4fdafad6dd02dd60e4e1b8103b52c5a9e5937e0cc05dacfd26d6a0132ed0410ab4258241240757e4a4424507471cd
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~7.12.0":
-  version: 7.12.0
-  resolution: "undici-types@npm:7.12.0"
-  checksum: 10c0/326e455bbc0026db1d6b81c76a1cf10c63f7e2f9821db2e24fdc258f482814e5bfa8481f8910d07c68e305937c5c049610fdc441c5e8b7bb0daca7154fb8a306
   languageName: node
   linkType: hard
 
