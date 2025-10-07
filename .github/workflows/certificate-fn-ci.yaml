@@ -38,14 +38,24 @@ jobs:
           corepack enable
           corepack prepare yarn@4.10.3 --activate
 
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/install-state.gz
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
       - name: Install dependencies with Yarn
-        run: yarn install --immutable-cache
+        run: yarn install --immutable
 
       - name: Run linter with Turbo
-        run: yarn turbo lint --filter=...[origin/develop]
+        run: yarn turbo lint --filter=...[HEAD~1]
 
       - name: Run tests with Turbo
-        run: yarn turbo test --filter=...[origin/develop]
+        run: yarn turbo test --filter=...[HEAD~1]
 
       - name: Build app with Turbo
         run: yarn turbo build --filter=sm-certification-fn
