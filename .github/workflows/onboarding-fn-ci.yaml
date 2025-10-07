@@ -32,10 +32,10 @@ jobs:
         with:
           node-version: 22
 
-      - name: Enable Corepack
+      - name: Enable Corepack & set Yarn version
         run: |
           corepack enable
-          corepack prepare yarn@4.6.0 --activate  
+          corepack prepare yarn@4.10.3 --activate
 
       - name: Install dependencies with Yarn
         run: yarn install --immutable-cache
