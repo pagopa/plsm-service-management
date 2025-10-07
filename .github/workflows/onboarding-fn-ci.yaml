@@ -50,6 +50,9 @@ jobs:
       - name: Install dependencies with Yarn
         run: yarn install --immutable
 
+      - name: Generate types for sm-onboarding-fn
+        run: yarn workspace sm-onboarding-fn generate
+
       - name: Run linter with Turbo
         run: yarn turbo lint --filter=...[HEAD~1]
 
