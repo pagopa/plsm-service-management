@@ -47,6 +47,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+      - name: Verify installation
+        run: |
+          yarn --version
+          yarn workspaces list
+          ls -la
+
       - name: Run linter with Turbo
         run: yarn turbo lint --filter=...[HEAD~1]
 
