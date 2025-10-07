@@ -36,7 +36,7 @@ jobs:
         run: |
           corepack enable
           corepack prepare yarn@4.10.3 --activate
-          
+
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
         with:
@@ -47,18 +47,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      - name: Cache Turbo
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-turbo-
-      - name: Verify installation
-        run: |
-          yarn --version
-          yarn workspaces list
-          ls -la
+      - name: Install dependencies with Yarn
+        run: yarn install --immutable
 
       - name: Run linter with Turbo
         run: yarn turbo lint --filter=...[HEAD~1]
