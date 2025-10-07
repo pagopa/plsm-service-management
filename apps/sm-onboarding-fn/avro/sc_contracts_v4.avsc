@@ -1,0 +1,181 @@
+{
+  "type": "record",
+  "name": "ScContracts",
+  "namespace": "it.pagopa.selfcare",
+  "fields": [{
+      "name": "billing",
+      "type": ["null",{
+          "type": "record",
+          "name": "Billing",
+          "fields": [{
+              "name": "publicServices",
+              "type": ["null","boolean"],
+              "default": null
+          }, {
+              "name": "recipientCode",
+              "type": ["null", "string"],
+              "default": null
+          }, {
+              "name": "vatNumber",
+              "type": ["null", "string"],
+              "default": null
+          }, {
+            "name": "taxCodeInvoicing",
+            "type": ["null", "string"],
+            "default": null
+          }]
+      }],
+  "default": null
+  }, {
+      "name": "contentType",
+      "type": ["null","string"],
+  "default": null
+  }, {
+      "name": "fileName",
+      "type": ["null", "string"],
+  "default": null
+  },{
+      "name": "filePath",
+      "type": ["null", "string"],
+  "default": null
+  },{
+      "name": "pricingPlan",
+      "type": ["null","string"],
+  "default": null
+  }, {
+      "name": "id",
+      "type": "string"
+  }, {
+      "name": "institution",
+      "type": {
+          "type": "record",
+          "name": "Institution",
+          "fields": [{
+              "name": "address",
+              "type": "string"
+          }, {
+              "name": "city",
+              "type": ["null", "string"],
+              "default": null
+          }, {
+              "name": "country",
+              "type": ["null", "string"],
+              "default": null
+          }, {
+              "name": "county",
+              "type": ["null", "string"],
+              "default": null
+          },{
+              "name": "category",
+              "type": ["null", "string"],
+              "default": null
+          }, {
+              "name": "description",
+              "type": "string"
+          }, {
+              "name": "digitalAddress",
+              "type": "string"
+          }, {
+              "name": "institutionType",
+              "type": "string"
+          }, {
+              "name": "istatCode",
+              "type": ["null", "string"],
+              "default": null
+          }, {
+              "name": "origin",
+              "type": "string"
+          }, {
+              "name": "originId",
+              "type": ["null", "string"],
+              "default": null
+          }, {
+              "name": "paymentServiceProvider",
+              "type": ["null", {
+                  "type": "record",
+                  "name": "PaymentServiceProvider",
+                  "fields": [{
+                      "name": "abiCode",
+                      "type": ["null", "string"],
+                      "default": null
+                  }, {
+                      "name": "businessRegisterNumber",
+                      "type": ["null", "string"],
+                      "default": null
+                  }, {
+                      "name": "legalRegisterName",
+                      "type": ["null", "string"],
+                      "default": null
+                  }, {
+                      "name": "legalRegisterNumber",
+                      "type": ["null", "string"],
+                      "default": null
+                  }, {
+                      "name": "vatNumberGroup",
+                      "type": ["null", "boolean"],
+                      "default": null
+                  }]
+              }],
+              "default": null
+          }, {
+              "name": "rootParent",
+              "type": ["null", {
+                  "type": "record",
+                  "name": "RootParent",
+                  "fields": [{
+                      "name": "description",
+                      "type": "string"
+                  }, {
+                      "name": "id",
+                      "type": "string"
+                  }, {
+                      "name": "originId",
+                      "type": "string"
+                  }]
+              }],
+              "default": null
+          }, {
+              "name": "subUnitCode",
+              "type": ["null", "string"],
+              "default": null
+          }, {
+              "name": "subUnitType",
+              "type": ["null", "string"],
+              "default": null
+          }, {
+              "name": "taxCode",
+              "type": ["null", "string"],
+              "default": null
+          }, {
+              "name": "zipCode",
+              "type": ["null", "string"],
+              "default": null
+          }]
+      }
+  }, {
+      "name": "internalIstitutionID",
+      "type": "string"
+  }, {
+      "name": "notificationType",
+      "type": "string"
+  }, {
+      "name": "onboardingTokenId",
+      "type": "string"
+  }, {
+      "name": "product",
+      "type": "string"
+  }, {
+      "name": "state",
+      "type": "string"
+  }, {
+      "name": "updatedAt",
+      "type": "string"
+  }, {
+      "name": "createdAt",
+      "type": "string"
+  }, {
+      "name": "closedAt",
+      "type": ["null","string"],
+      "default": null
+  }]
+}
