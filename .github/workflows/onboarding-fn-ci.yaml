@@ -51,7 +51,8 @@ jobs:
         run: yarn install --immutable
 
       - name: Generate types for sm-onboarding-fn
-        run: yarn workspace sm-onboarding-fn generate
+        run: |
+          yarn workspace sm-onboarding-fn generate:avro
 
       - name: Run linter with Turbo
         run: yarn turbo lint --filter=...[HEAD~1]
