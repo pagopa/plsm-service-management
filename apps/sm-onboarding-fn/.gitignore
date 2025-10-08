@@ -1,63 +1,60 @@
-bin
-obj
-csx
-.vs
-edge
-Publish
+  bin
+  obj
+  csx
+  .vs
+  edge
+  Publish
 
-**/.DS_Store
+  **/.DS_Store
 
-*.user
-*.suo
-*.cscfg
-*.Cache
-project.lock.json
+  *.user
+  *.suo
+  *.cscfg
+  *.Cache
+  project.lock.json
 
-/packages
-/TestResults
+  /packages
+  /TestResults
 
-/tools/NuGet.exe
-/App_Data
-/secrets
-/data
-.secrets
-appsettings.json
-local.settings.json
+  /tools/NuGet.exe
+  /App_Data
+  /secrets
+  /data
+  .secrets
+  appsettings.json
+  local.settings.json
 
-node_modules
-dist
+  node_modules
+  dist
 
-# Local python packages
-.python_packages/
+  # Local python packages
+  .python_packages/
 
-# Python Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+  # Python Environments
+  .env
+  .venv
+  env/
+  venv/
+  ENV/
+  env.bak/
+  venv.bak/
 
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+  # Byte-compiled / optimized / DLL files
+  __pycache__/
+  *.py[cod]
+  *$py.class
 
-coverage
+  coverage
 
-yarn-error.log
+  yarn-error.log
 
-generated
-*.zip
+  #generated
+  *.zip
 
-*.js
-!jest.config.js
-!.release-it.js
+  *.js
+  !jest.config.js
+  !.release-it.js
 
-# ESLint files
-!.eslintrc.js
-.eslintcache
-
-azure-functions-core-tools
-!.identity/env/
+  # ESLint files
+  !.eslintrc.js
+  .eslintcache

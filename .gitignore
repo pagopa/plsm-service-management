@@ -49,6 +49,3 @@ ignore_features.tf
 temp
 
 AzuriteConfig
-
-generated/
-!apps/sm-onboarding-fn/generated/**
