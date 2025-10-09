@@ -1,4 +1,4 @@
-import { DecodedContract } from "./messageslack";
+import { DecodedContract } from './messageslack';
 
 /*
 ADD: the difference between updatedAt and createdAt is lesser or equal than 5 minutes
@@ -14,5 +14,6 @@ export const isAdd = (contract: DecodedContract): boolean => {
 };
 
 export const getCurrentDate = (date: Date): string =>
-  `${date.getDate()}/${date.getMonth() +
-    1}/${date.getFullYear()} - ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+  `${date.getDate()}/${
+    date.getMonth() + 1
+  }/${date.getFullYear()} - ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;

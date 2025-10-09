@@ -55,10 +55,10 @@ jobs:
           yarn workspace sm-onboarding-fn generate:avro
 
       - name: Run linter with Turbo
-        run: yarn turbo lint --filter=...[HEAD~1]
+        run: yarn turbo lint --filter=sm-onboarding-fn
 
       - name: Run tests with Turbo
-        run: yarn turbo test --filter=...[HEAD~1]
+        run: yarn turbo test --filter=sm-onboarding-fn
 
       - name: Build app with Turbo
         run: yarn turbo build --filter=sm-onboarding-fn
