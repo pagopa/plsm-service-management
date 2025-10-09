@@ -27,6 +27,10 @@ variable "app_settings" {
   default     = {}
 }
 
+variable "slot_app_settings" {
+  type        = map(any)
+  description = "Le impostazioni dell'applicazione per la Function App per lo slot stage."
+}
 variable "virtual_network" {
   type = object({
     name                = string

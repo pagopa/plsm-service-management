@@ -7,6 +7,7 @@ module "azurerm_linux_function_app" {
   tags                = var.tags
   health_check_path   = var.health_check_path
   app_settings        = var.app_settings
+  slot_app_settings   = var.app_settings
   node_version        = var.node_version
 
   virtual_network = {
