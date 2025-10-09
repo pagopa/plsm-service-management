@@ -1,28 +1,27 @@
-import { readableReport } from "@pagopa/ts-commons/lib/reporters";
+import { readableReport } from '@pagopa/ts-commons/lib/reporters';
 import {
   common as azurestorageCommon,
   createBlobService,
   createFileService,
   createQueueService,
-  createTableService
-} from "azure-storage";
+  createTableService,
+} from 'azure-storage';
 
-import * as A from "fp-ts/lib/Array";
-import * as E from "fp-ts/lib/Either";
-import { pipe } from "fp-ts/lib/function";
-import * as RA from "fp-ts/lib/ReadonlyArray";
-import * as T from "fp-ts/lib/Task";
-import * as TE from "fp-ts/lib/TaskEither";
+import * as A from 'fp-ts/lib/Array';
+import * as E from 'fp-ts/lib/Either';
+import { pipe } from 'fp-ts/lib/function';
+import * as RA from 'fp-ts/lib/ReadonlyArray';
+import * as T from 'fp-ts/lib/Task';
+import * as TE from 'fp-ts/lib/TaskEither';
 
-import fetch from "node-fetch";
-import { getConfig, IConfig } from "./config";
+import fetch from 'node-fetch';
+import { getConfig, IConfig } from './config';
 
-type ProblemSource = "AzureStorage" | "Config" | "Url";
-// eslint-disable-next-line functional/prefer-readonly-type, @typescript-eslint/naming-convention
+type ProblemSource = 'AzureStorage' | 'Config' | 'Url';
 export type HealthProblem<S extends ProblemSource> = string & { __source: S };
 export type HealthCheck<
   S extends ProblemSource = ProblemSource,
-  True = true
+  True = true,
 > = TE.TaskEither<ReadonlyArray<HealthProblem<S>>, True>;
 
 // format and cast a problem message with its source
@@ -32,24 +31,24 @@ const formatProblem = <S extends ProblemSource>(
 ): HealthProblem<S> => `${source}|${message}` as HealthProblem<S>;
 
 // utility to format an unknown error to an arry of HealthProblem
-const toHealthProblems = <S extends ProblemSource>(source: S) => (
-  e: unknown
-): ReadonlyArray<HealthProblem<S>> => [
-  formatProblem(source, E.toError(e).message)
-];
+const toHealthProblems =
+  <S extends ProblemSource>(source: S) =>
+  (e: unknown): ReadonlyArray<HealthProblem<S>> => [
+    formatProblem(source, E.toError(e).message),
+  ];
 
 /**
  * Check application's configuration is correct
  *
  * @returns either true or an array of error messages
  */
-export const checkConfigHealth = (): HealthCheck<"Config", IConfig> =>
+export const checkConfigHealth = (): HealthCheck<'Config', IConfig> =>
   pipe(
     TE.fromEither(getConfig()),
-    TE.mapLeft(errors =>
-      errors.map(e =>
+    TE.mapLeft((errors) =>
+      errors.map((e) =>
         // give each problem its own line
-        formatProblem("Config", readableReport([e]))
+        formatProblem('Config', readableReport([e]))
       )
     )
   );
@@ -63,10 +62,10 @@ export const checkConfigHealth = (): HealthCheck<"Config", IConfig> =>
  */
 export const checkAzureStorageHealth = (
   connStr: string
-): HealthCheck<"AzureStorage"> => {
+): HealthCheck<'AzureStorage'> => {
   const applicativeValidation = TE.getApplicativeTaskValidation(
     T.ApplicativePar,
-    RA.getSemigroup<HealthProblem<"AzureStorage">>()
+    RA.getSemigroup<HealthProblem<'AzureStorage'>>()
   );
 
   // try to instantiate a client for each product of azure storage
@@ -75,28 +74,27 @@ export const checkAzureStorageHealth = (
       createBlobService,
       createFileService,
       createQueueService,
-      createTableService
+      createTableService,
     ]
       // for each, create a task that wraps getServiceProperties
-      .map(createService =>
+      .map((createService) =>
         TE.tryCatch(
           () =>
-            new Promise<
-              azurestorageCommon.models.ServicePropertiesResult.ServiceProperties
-            >((resolve, reject) =>
-              createService(connStr).getServiceProperties((err, result) => {
-                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                err
-                  ? reject(err.message.replace(/\n/gim, " ")) // avoid newlines
-                  : resolve(result);
-              })
+            new Promise<azurestorageCommon.models.ServicePropertiesResult.ServiceProperties>(
+              (resolve, reject) =>
+                createService(connStr).getServiceProperties((err, result) => {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                  err
+                    ? reject(err.message.replace(/\n/gim, ' ')) // avoid newlines
+                    : resolve(result);
+                })
             ),
-          toHealthProblems("AzureStorage")
+          toHealthProblems('AzureStorage')
         )
       ),
     // run each taskEither and gather validation errors from each one of them, if any
     A.sequence(applicativeValidation),
-    TE.map(_ => true)
+    TE.map((_) => true)
   );
 };
 
@@ -107,10 +105,10 @@ export const checkAzureStorageHealth = (
  *
  * @returns either true or an array of error messages
  */
-export const checkUrlHealth = (url: string): HealthCheck<"Url", true> =>
+export const checkUrlHealth = (url: string): HealthCheck<'Url', true> =>
   pipe(
-    TE.tryCatch(() => fetch(url, { method: "HEAD" }), toHealthProblems("Url")),
-    TE.map(_ => true)
+    TE.tryCatch(() => fetch(url, { method: 'HEAD' }), toHealthProblems('Url')),
+    TE.map((_) => true)
   );
 
 /**
@@ -122,6 +120,6 @@ export const checkApplicationHealth = (): HealthCheck<ProblemSource, true> =>
   pipe(
     void 0,
     TE.of,
-    TE.chain(_ => checkConfigHealth()),
-    TE.map(_ => true)
+    TE.chain((_) => checkConfigHealth()),
+    TE.map((_) => true)
   );

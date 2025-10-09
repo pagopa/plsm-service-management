@@ -5,13 +5,13 @@
  * The configuration is evaluate eagerly at the first access to the module. The module exposes convenient methods to access such value.
  */
 
-import * as t from "io-ts";
+import * as t from 'io-ts';
 
-import * as E from "fp-ts/Either";
-import * as O from "fp-ts/Option";
-import { pipe } from "fp-ts/lib/function";
-import { readableReport } from "@pagopa/ts-commons/lib/reporters";
-import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
+import * as E from 'fp-ts/Either';
+import * as O from 'fp-ts/Option';
+import { pipe } from 'fp-ts/lib/function';
+import { readableReport } from '@pagopa/ts-commons/lib/reporters';
+import { NonEmptyString } from '@pagopa/ts-commons/lib/strings';
 
 // global app configuration
 export type IConfig = t.TypeOf<typeof IConfig>;
@@ -33,7 +33,7 @@ export const IConfig = t.type({
   SLACK_WEBHOOK_ONBOARDING_PAGOPA: NonEmptyString,
   SLACK_WEBHOOK_ONBOARDING_PN: NonEmptyString,
 
-  isProduction: t.boolean
+  isProduction: t.boolean,
 });
 
 export const envConfig = {
@@ -41,9 +41,9 @@ export const envConfig = {
   CONTRACTS_TOPIC_CONSUMER_GROUP: pipe(
     process.env.CONTRACTS_TOPIC_CONSUMER_GROUP,
     O.fromNullable,
-    O.getOrElse(() => "$Default")
+    O.getOrElse(() => '$Default')
   ),
-  isProduction: process.env.NODE_ENV === "production"
+  isProduction: process.env.NODE_ENV === 'production',
 };
 
 // No need to re-evaluate this object for each call

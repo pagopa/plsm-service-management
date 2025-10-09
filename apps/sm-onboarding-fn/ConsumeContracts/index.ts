@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { Context } from "@azure/functions";
+import { Context } from '@azure/functions';
 
-import { initTelemetryClient } from "../utils/appinsights";
-import { getConfigOrThrow } from "../utils/config";
-import { handle } from "./handler";
+import { initTelemetryClient } from '../utils/appinsights';
+import { getConfigOrThrow } from '../utils/config';
+import { handle } from './handler';
 
 const config = getConfigOrThrow();
 
