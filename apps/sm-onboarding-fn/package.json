@@ -18,7 +18,7 @@
     "pretest": "yarn generate",
     "test": "jest",
     "test:coverage": "yarn test --coverage",
-    "lint": "eslint '**/*.{ts,tsx}'",
+    "lint": "eslint '**/*.{ts,tsx}' --fix",
     "lint-api": "oval validate -p openapi/index.yaml",
     "dist:modules": "modclean -r -n default:safe && yarn install --production",
     "predeploy": "npm-run-all build dist:*",
