@@ -10,7 +10,7 @@ const app = express();
 secureExpressApp(app);
 
 // Add express route
-app.get('/api/v1/health', Info());
+app.get('/v1/health', Info());
 
 const azureFunctionHandler = createAzureFunctionHandler(app);
 
