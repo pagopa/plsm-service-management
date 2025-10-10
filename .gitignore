@@ -49,3 +49,5 @@ ignore_features.tf
 temp
 
 AzuriteConfig
+
+terraform.tfvars
