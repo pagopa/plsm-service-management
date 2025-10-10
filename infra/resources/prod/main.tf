@@ -221,6 +221,13 @@ resource "azurerm_resource_group" "apps_rg" {
   location = "Italy North"
 }
 
+resource "azurerm_role_assignment" "cd_identity_website_contrib_smcr" {
+  scope                = module.azure_app_service_smcr.web_app_id
+  role_definition_name = "Website Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
+  depends_on           = [module.azure_app_service_smcr]
+}
+
 module "azure_app_service_smcr" {
   source       = "../_modules/app_service"
   node_version = 22
