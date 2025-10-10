@@ -214,7 +214,7 @@ module "askmebot_function" {
   subnet_pep_id = module.azure_core_infra.common_pep_snet.id
   subnet_cidr   = dx_available_subnet_cidr.askmebot_fa_subnet_cidr.cidr_block
 
-  health_check_path = "/v1/info"
+  health_check_path = "/api/v1/info"
   node_version      = 22
   app_settings      = local.common_askmebot_func_app_settings
   slot_app_settings = local.common_askmebot_func_app_settings
