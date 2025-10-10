@@ -8,12 +8,12 @@ on:
       - develop
       - feature/**
     paths:
-      - "apps/sm-ask-me-anything-fn/**"
+      - "apps/sm-ask-me-fn/**"
   pull_request:
     branches:
       - develop
     paths:
-      - "apps/sm-ask-me-anything-fn/**"
+      - "apps/sm-ask-me-fn/**"
 
 permissions:
   contents: read
@@ -52,10 +52,10 @@ jobs:
         run: yarn install --immutable
 
       - name: Run linter with Turbo
-        run: yarn turbo lint --filter=sm-ask-me-anything-fn
+        run: yarn turbo lint --filter=sm-ask-me-fn
 
       - name: Run tests with Turbo
-        run: yarn turbo test --filter=sm-ask-me-anything-fn
+        run: yarn turbo test --filter=sm-ask-me-fn
 
       - name: Build app with Turbo
-        run: yarn turbo build --filter=sm-ask-me-anything-fn
+        run: yarn turbo build --filter=sm-ask-me-fn
