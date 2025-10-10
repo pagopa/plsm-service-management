@@ -2,6 +2,11 @@ data "azurerm_subscription" "current" {}
 
 data "azurerm_client_config" "current" {}
 
+data "azurerm_key_vault_secret" "appinsights_connection_string" {
+  name         = "APPINSIGHTS-CONNECTION-STRING"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
 # data "azurerm_resource_group" "common_rg" {
 #   name = "sm-p-itn-common-rg-01"
 # }
@@ -146,5 +151,48 @@ data "azurerm_key_vault_secret" "slack_webhook_onboarding_io_premium" {
 
 data "azurerm_key_vault_secret" "slack_webhook_onboarding_pagopa" {
   name         = "fa-onboarding-slack-webhook-onboarding-pagopa"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+
+# Function Ask Me Bot
+
+data "azurerm_key_vault_secret" "askmebot_slack_bot_token" {
+  name         = "fa-askmebot-slack-bot-token"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "askmebot_slack_signing_secret" {
+  name         = "fa-askmebot-slack-signing-secret"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "askmebot_enabled_emails_secret" {
+  name         = "fa-askmebot-enabled-emails-secret"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "askmebot_legal_enabled_emails_secret" {
+  name         = "fa-askmebot-legal-enabled-emails-secret"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "askmebot_ocp_apim_subscription_key" {
+  name         = "fa-askmebot-ocp-apim-subscription-key"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "askmebot_users_apim_subscription_key" {
+  name         = "fa-askmebot-users-apim-subscription-key"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "askmebot_contract_apim_subscription_key" {
+  name         = "fa-askmebot-contract-apim-subscription-key"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "askmebot_smtp_password" {
+  name         = "fa-askmebot-smtp-password"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
