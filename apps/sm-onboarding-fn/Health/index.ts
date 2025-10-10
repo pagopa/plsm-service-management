@@ -1,22 +1,39 @@
-import { AzureFunction, Context } from '@azure/functions';
-import createAzureFunctionHandler from '@pagopa/express-azure-functions/dist/src/createAzureFunctionsHandler';
-import { secureExpressApp } from '@pagopa/io-functions-commons/dist/src/utils/express';
-import { setAppContext } from '@pagopa/io-functions-commons/dist/src/utils/middlewares/context_middleware';
-import * as express from 'express';
-import { Info } from './handler';
+import { AzureFunction, Context, HttpRequest } from '@azure/functions';
 
-// Setup Express
-const app = express();
-secureExpressApp(app);
+interface IHttpResponse {
+  status: number;
+  headers?: { [key: string]: string };
+}
 
-// Add express route
-app.get('/api/v1/health', Info());
+async function myHandlerLogic(
+  req: HttpRequest,
+  context: Context
+): Promise<IHttpResponse> {
+  context.log('Eseguo la logica principale in stile Express...');
 
-const azureFunctionHandler = createAzureFunctionHandler(app);
+  // Restituisci l'oggetto di successo
+  return {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  };
+}
 
-const httpStart: AzureFunction = (context: Context): void => {
-  setAppContext(app, context);
-  azureFunctionHandler(context);
+const createHandler = (
+  handler: (req: HttpRequest, context: Context) => Promise<IHttpResponse>
+): AzureFunction => {
+  return async (context: Context, req: HttpRequest): Promise<void> => {
+    try {
+      const result = await handler(req, context);
+
+      context.res = result;
+    } catch (error) {
+      context.log.error("Errore non gestito nell'handler:", error);
+      context.res = {
+        status: 500,
+        body: 'Errore interno del server.',
+      };
+    }
+  };
 };
 
-export default httpStart;
+export default createHandler(myHandlerLogic);

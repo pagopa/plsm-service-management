@@ -1,34 +1,36 @@
-import * as express from 'express';
+import { AzureFunction, Context, HttpRequest } from '@azure/functions';
 
-import { wrapRequestHandler } from '@pagopa/io-functions-commons/dist/src/utils/request_middleware';
-import {
-  IResponseErrorInternal,
-  IResponseSuccessAccepted,
-  ResponseErrorInternal,
-  ResponseSuccessAccepted,
-} from '@pagopa/ts-commons/lib/responses';
-import { pipe } from 'fp-ts/lib/function';
-import * as TE from 'fp-ts/lib/TaskEither';
-import { checkApplicationHealth, HealthCheck } from '../utils/healthcheck';
+const httpTrigger: AzureFunction = async function (
+  context: Context,
+  req: HttpRequest
+): Promise<void> {
+  // Logga l'inizio dell'esecuzione per il debugging.
+  context.log('HTTP trigger function processed a request.');
 
-type InfoHandler = () => Promise<
-  IResponseSuccessAccepted<unknown> | IResponseErrorInternal
->;
+  // Cerca il parametro 'name' prima nella query string (es. ?name=Mondo)
+  // e poi nel corpo della richiesta (es. { "name": "Mondo" }).
+  const name = req.query.name || (req.body && req.body.name);
 
-export function InfoHandler(healthCheck: HealthCheck): InfoHandler {
-  return () =>
-    pipe(
-      healthCheck,
-      TE.bimap(
-        (problems) => ResponseErrorInternal(problems.join('\n\n')),
-        (_) => ResponseSuccessAccepted()
-      ),
-      TE.toUnion
-    )();
-}
+  // Prepara un messaggio di risposta standard.
+  const responseMessage = name
+    ? 'Ciao, ' + name + '. La funzione è stata eseguita con successo!'
+    : "Questa funzione HTTP è stata eseguita con successo. Passa un 'name' nella query string o nel corpo della richiesta per una risposta personalizzata.";
 
-export function Info(): express.RequestHandler {
-  const handler = InfoHandler(checkApplicationHealth());
+  // Se il nome è stato fornito, rispondi con successo (200 OK).
+  if (name) {
+    context.res = {
+      // Status: 200 OK
+      status: 200,
+      body: responseMessage,
+    };
+  }
+  // Altrimenti, rispondi con un errore (400 Bad Request) indicando il parametro mancante.
+  else {
+    context.res = {
+      status: 400,
+      body: "Per favore, passa un 'name' nella query string o nel corpo della richiesta.",
+    };
+  }
+};
 
-  return wrapRequestHandler(handler);
-}
+export default httpTrigger;
