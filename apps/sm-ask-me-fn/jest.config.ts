@@ -6,6 +6,7 @@ const config: Config = {
   coverageDirectory: 'coverage',
   coverageProvider: 'v8',
   preset: 'ts-jest',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-node',
   testPathIgnorePatterns: ['<rootDir>/dist/'], // Ignora la cartella dist
 }
