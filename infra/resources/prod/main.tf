@@ -180,6 +180,41 @@ resource "azurerm_private_endpoint" "onboarding_func_to_selc_eventhub" {
   }
 }
 
+# Ask Me Everything BOT
+
+resource "dx_available_subnet_cidr" "askmebot_fa_subnet_cidr" {
+  virtual_network_id = module.azure_core_infra.common_vnet.id
+  prefix_length      = 24
+  depends_on         = [module.azure_app_service_smcr]
+}
+
+module "askmebot_function" {
+  source = "../_modules/function_app"
+
+  environment = merge(local.environment, {
+    app_name        = "askmebot",
+    instance_number = "01"
+  })
+
+
+  resource_group_name = azurerm_resource_group.fn_rg.name
+  tags                = local.tags
+
+  virtual_network = {
+    name                = module.azure_core_infra.common_vnet.name
+    resource_group_name = module.azure_core_infra.network_resource_group_name
+  }
+  subnet_pep_id = module.azure_core_infra.common_pep_snet.id
+  subnet_cidr   = dx_available_subnet_cidr.askmebot_fa_subnet_cidr.cidr_block
+
+  health_check_path = "/api/v1/health"
+  node_version      = 22
+  app_settings      = local.common_askmebot_func_app_settings
+  slot_app_settings = local.common_askmebot_func_app_settings
+
+  depends_on = [module.azure_core_infra]
+}
+
 # App Service
 resource "azurerm_resource_group" "apps_rg" {
   name     = "plsm-p-itn-apps-rg-01"
