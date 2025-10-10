@@ -188,6 +188,13 @@ resource "dx_available_subnet_cidr" "askmebot_fa_subnet_cidr" {
   depends_on         = [module.azure_app_service_smcr]
 }
 
+resource "azurerm_role_assignment" "cd_identity_website_contrib_askmebot_fa" {
+  scope                = module.askmebot_function.function_app_id
+  role_definition_name = "Website Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
+  depends_on           = [module.askmebot_function]
+}
+
 module "askmebot_function" {
   source = "../_modules/function_app"
 
@@ -207,7 +214,7 @@ module "askmebot_function" {
   subnet_pep_id = module.azure_core_infra.common_pep_snet.id
   subnet_cidr   = dx_available_subnet_cidr.askmebot_fa_subnet_cidr.cidr_block
 
-  health_check_path = "/api/v1/health"
+  health_check_path = "/api/v1/info"
   node_version      = 22
   app_settings      = local.common_askmebot_func_app_settings
   slot_app_settings = local.common_askmebot_func_app_settings
