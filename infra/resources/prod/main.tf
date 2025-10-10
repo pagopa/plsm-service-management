@@ -196,7 +196,7 @@ resource "azurerm_role_assignment" "cd_identity_website_contrib_askmebot_fa" {
 }
 
 module "askmebot_function" {
-  source = "../_modules/function_app"
+  source = "../_modules/function_app_exposed"
 
   environment = merge(local.environment, {
     app_name        = "askmebot",
@@ -206,13 +206,6 @@ module "askmebot_function" {
 
   resource_group_name = azurerm_resource_group.fn_rg.name
   tags                = local.tags
-
-  virtual_network = {
-    name                = module.azure_core_infra.common_vnet.name
-    resource_group_name = module.azure_core_infra.network_resource_group_name
-  }
-  subnet_pep_id = module.azure_core_infra.common_pep_snet.id
-  subnet_cidr   = dx_available_subnet_cidr.askmebot_fa_subnet_cidr.cidr_block
 
   health_check_path = "/api/v1/info"
   node_version      = 22
