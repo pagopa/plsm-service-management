@@ -7,6 +7,11 @@ data "azurerm_key_vault_secret" "appinsights_connection_string" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+data "azurerm_key_vault_secret" "appinsights_instrumentationkey" {
+  name         = "APPINSIGHTS-INSTRUMENTATIONKEY"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
 # data "azurerm_resource_group" "common_rg" {
 #   name = "sm-p-itn-common-rg-01"
 # }

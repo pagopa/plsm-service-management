@@ -1,18 +1,19 @@
-name: CI - Certification Function
+name: CI - Ask Me Anything Function
 
 on:
+  
   workflow_dispatch:
   push:
     branches:
       - develop
       - feature/**
     paths:
-      - "apps/sm-certification-fn/**"
+      - "apps/sm-ask-me-anything-fn/**"
   pull_request:
     branches:
       - develop
     paths:
-      - "apps/sm-certification-fn/**"
+      - "apps/sm-ask-me-anything-fn/**"
 
 permissions:
   contents: read
@@ -51,10 +52,10 @@ jobs:
         run: yarn install --immutable
 
       - name: Run linter with Turbo
-        run: yarn turbo lint --filter=sm-certification-fn
+        run: yarn turbo lint --filter=sm-ask-me-anything-fn
 
       - name: Run tests with Turbo
-        run: yarn turbo test --filter=sm-certification-fn
+        run: yarn turbo test --filter=sm-ask-me-anything-fn
 
       - name: Build app with Turbo
-        run: yarn turbo build --filter=sm-certification-fn
+        run: yarn turbo build --filter=sm-ask-me-anything-fn
