@@ -18,11 +18,7 @@ on:
         type: string
         required: true
         default: "plsm-p-itn-smcr-app-01"
-      use_staging_slot:
-        description: True if artifact should be deployed to staging slot
-        type: boolean
-        required: false
-        default: true
+
       use_private_agent:
         description: Use a private agent to deploy the built artifact.
         type: boolean
@@ -50,8 +46,8 @@ jobs:
       environment: ${{ inputs.environment }}
       resource_group_name: ${{ inputs.resource_group_name }}
       web_app_name: ${{ inputs.web_app_name }}
-      use_staging_slot: ${{ inputs.use_staging_slot }}
       use_private_agent: ${{ inputs.use_private_agent }}
       use_labels: ${{ inputs.use_labels }}
       override_labels: ${{ inputs.override_labels }}
+      disable_auto_staging_deploy: true
     secrets: inherit
