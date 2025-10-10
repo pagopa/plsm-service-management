@@ -1,0 +1,13 @@
+import type { Config } from 'jest'
+
+const config: Config = {
+  clearMocks: true,
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageProvider: 'v8',
+  preset: 'ts-jest',
+  testEnvironment: 'jest-environment-node',
+  testPathIgnorePatterns: ['<rootDir>/dist/'], // Ignora la cartella dist
+}
+
+export default config

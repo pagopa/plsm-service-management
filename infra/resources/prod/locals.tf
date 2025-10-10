@@ -1,11 +1,11 @@
 locals {
   environment = {
     prefix          = "plsm" # Prefisso per team service management
-    env_short       = "p"  # 'd' per dev, 'u' per uat, 'p' per prod
+    env_short       = "p"    # 'd' per dev, 'u' per uat, 'p' per prod
     location        = "italynorth"
     instance_number = "01" # Numero di istanza (utile se ne hai più di una)
     # domain          = "sm"
-  } 
+  }
 
   instance_number = "01"
 
@@ -19,7 +19,7 @@ locals {
   }
 
   # Function Certificates - Common
-  common_certificates_func_app_settings ={
+  common_certificates_func_app_settings = {
     DB_HOST     = "${data.azurerm_key_vault_secret.db_host.value}"
     DB_NAME     = "certificates"
     DB_TABLE    = "certificates"
@@ -30,7 +30,8 @@ locals {
   }
 
   # Function Onboarding - Common
-  common_onboarding_func_app_settings ={
+  common_onboarding_func_app_settings = {
+    APPINSIGHTS_INSTRUMENTATIONKEY        = "${data.azurerm_key_vault_secret.appinsights-instrumentationkey.value}"
     CONTRACTS_TOPIC_CONSUMER_GROUP        = "$Default"
     CONTRACTS_CONSUMER_CONNECTION_STRING  = "${data.azurerm_key_vault_secret.sc_contracts_conn_string.value}"
     CONTRACTS_TOPIC_NAME                  = "sc-contracts"
@@ -45,28 +46,28 @@ locals {
 
   }
 
-  common_askmebot_func_app_settings ={
-    SERVICENAME                         = "Ask Me Bot"
-    SLACK_BOT_TOKEN                     = "${data.azurerm_key_vault_secret.askmebot_slack_bot_token.value}"
-    SLACK_SIGNING_SECRET                = "${data.azurerm_key_vault_secret.askmebot_slack_signing_secret.value}"
-    ENABLED_EMAILS_SECRET               = "${data.azurerm_key_vault_secret.askmebot_enabled_emails_secret.value}"
-    LEGAL_ENABLED_EMAILS_SECRET         = "${data.azurerm_key_vault_secret.askmebot_legal_enabled_emails_secret.value}"
-    OCP_APIM_SUBSCRIPTION_KEY           = "${data.azurerm_key_vault_secret.askmebot_ocp_apim_subscription_key.value}"
-    SLACK_API_URL                       = "https://slack.com/api"
-    INSTITUTION_URL                     = "https://api.selfcare.pagopa.it/external/support/v1/institutions"
-    USERS_URL                           = "https://api.selfcare.pagopa.it/external/internal/v1/institutions"
-    CONTRACT_URL                        = "https://api.selfcare.pagopa.it/external/support/v1/institutions"
-    USERS_APIM_SUBSCRIPTION_KEY         = "${data.azurerm_key_vault_secret.askmebot_users_apim_subscription_key.value}"
-    CONTRACT_APIM_SUBSCRIPTION_KEY      = "${data.azurerm_key_vault_secret.askmebot_contract_apim_subscription_key.value}"
-    SMTP_HOST                           = "smtp.gmail.com"
-    SMTP_PORT                           = "587"
-    SMTP_SECURE                         = false
-    SMTP_USERNAME                       = "noreply@pagopa.it"
-    SMTP_PASSWORD                       = "${data.azurerm_key_vault_secret.askmebot_smtp_password.value}"
-    FROM_EMAIL                          = "noreply@pagopa.it"
-    CCN_EMAIL                           = "Bot_Selfcare@pagopa.it"
-    MAX_DATA_LENGTH                     = "10"
-    APPINSIGHTS_CONNECTION_STRING       = "${data.azurerm_key_vault_secret.appinsights_connection_string.value}"
+  common_askmebot_func_app_settings = {
+    SERVICENAME                    = "Ask Me Bot"
+    SLACK_BOT_TOKEN                = "${data.azurerm_key_vault_secret.askmebot_slack_bot_token.value}"
+    SLACK_SIGNING_SECRET           = "${data.azurerm_key_vault_secret.askmebot_slack_signing_secret.value}"
+    ENABLED_EMAILS_SECRET          = "${data.azurerm_key_vault_secret.askmebot_enabled_emails_secret.value}"
+    LEGAL_ENABLED_EMAILS_SECRET    = "${data.azurerm_key_vault_secret.askmebot_legal_enabled_emails_secret.value}"
+    OCP_APIM_SUBSCRIPTION_KEY      = "${data.azurerm_key_vault_secret.askmebot_ocp_apim_subscription_key.value}"
+    SLACK_API_URL                  = "https://slack.com/api"
+    INSTITUTION_URL                = "https://api.selfcare.pagopa.it/external/support/v1/institutions"
+    USERS_URL                      = "https://api.selfcare.pagopa.it/external/internal/v1/institutions"
+    CONTRACT_URL                   = "https://api.selfcare.pagopa.it/external/support/v1/institutions"
+    USERS_APIM_SUBSCRIPTION_KEY    = "${data.azurerm_key_vault_secret.askmebot_users_apim_subscription_key.value}"
+    CONTRACT_APIM_SUBSCRIPTION_KEY = "${data.azurerm_key_vault_secret.askmebot_contract_apim_subscription_key.value}"
+    SMTP_HOST                      = "smtp.gmail.com"
+    SMTP_PORT                      = "587"
+    SMTP_SECURE                    = false
+    SMTP_USERNAME                  = "noreply@pagopa.it"
+    SMTP_PASSWORD                  = "${data.azurerm_key_vault_secret.askmebot_smtp_password.value}"
+    FROM_EMAIL                     = "noreply@pagopa.it"
+    CCN_EMAIL                      = "Bot_Selfcare@pagopa.it"
+    MAX_DATA_LENGTH                = "10"
+    APPINSIGHTS_CONNECTION_STRING  = "${data.azurerm_key_vault_secret.appinsights_connection_string.value}"
   }
 
   # App Service
