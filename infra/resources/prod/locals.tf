@@ -31,7 +31,7 @@ locals {
 
   # Function Onboarding - Common
   common_onboarding_func_app_settings = {
-    APPINSIGHTS_INSTRUMENTATIONKEY        = "${data.azurerm_key_vault_secret.appinsights-instrumentationkey.value}"
+    APPINSIGHTS_INSTRUMENTATIONKEY        = "${data.azurerm_key_vault_secret.appinsights_instrumentationkey.value}"
     CONTRACTS_TOPIC_CONSUMER_GROUP        = "$Default"
     CONTRACTS_CONSUMER_CONNECTION_STRING  = "${data.azurerm_key_vault_secret.sc_contracts_conn_string.value}"
     CONTRACTS_TOPIC_NAME                  = "sc-contracts"
@@ -68,6 +68,7 @@ locals {
     CCN_EMAIL                      = "Bot_Selfcare@pagopa.it"
     MAX_DATA_LENGTH                = "10"
     APPINSIGHTS_CONNECTION_STRING  = "${data.azurerm_key_vault_secret.appinsights_connection_string.value}"
+    APPINSIGHTS_INSTRUMENTATIONKEY = "${data.azurerm_key_vault_secret.appinsights_instrumentationkey.value}"
   }
 
   # App Service
