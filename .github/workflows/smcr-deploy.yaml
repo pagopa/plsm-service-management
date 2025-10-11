@@ -37,6 +37,7 @@ on:
 permissions:
   contents: read
   id-token: write
+  attestations: write
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch'
