@@ -111,6 +111,12 @@ data "azurerm_user_assigned_identity" "github_cd_identity" {
   resource_group_name = "plsm-p-itn-sm-rg-01"
   name                = "plsm-p-itn-sm-app-github-cd-id-01"
 }
+data "azurerm_user_assigned_identity" "github_ci_identity" {
+  # Assicurati che questo sia il resource group dove hai creato le identità
+  resource_group_name = "plsm-p-itn-sm-rg-01"
+  name                = "plsm-p-itn-sm-app-github-ci-id-01"
+}
+
 data "azurerm_linux_function_app" "plsm_cert_func" {
   name                = "plsm-p-itn-cert-func-01"
   resource_group_name = "plsm-p-itn-fn-rg-01"
