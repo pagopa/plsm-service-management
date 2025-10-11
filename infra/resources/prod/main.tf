@@ -257,7 +257,7 @@ module "azure_app_service_smcr" {
   slot_app_settings = local.common_app_settings
 
 
-  health_check_path = "/api/v1/health"
+  health_check_path = "/api/health"
   tags              = local.tags
   depends_on = [
     module.azure_core_infra
