@@ -228,6 +228,14 @@ resource "azurerm_role_assignment" "cd_identity_website_contrib_smcr" {
   depends_on           = [module.azure_app_service_smcr]
 }
 
+resource "azurerm_role_assignment" "ci_identity_website_contrib_smcr" {
+  scope = module.azure_app_service_smcr.web_app_id
+  # Questo è il nome corretto da usare in Terraform, ANCHE se il tuo portale è in italiano.
+  role_definition_name = "Website Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
+  depends_on           = [module.azure_app_service_smcr]
+}
+
 module "azure_app_service_smcr" {
   source       = "../_modules/app_service"
   node_version = 22
