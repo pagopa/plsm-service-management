@@ -58,17 +58,20 @@ jobs:
           cp -r apps/smcr/.next/standalone/* standalone/
           cp -r apps/smcr/public standalone/
           find standalone/ -name "node_modules" -type d -exec rm -rf {} + 2>/dev/null || true
-          zip -FSr $GITHUB_WORKSPACE/smcr.zip standalone/
+
+          mkdir -p /tmp/artifacts
+          cd standalone
+          zip -r /tmp/artifacts/smcr.zip .
       - name: Verify zip file
         run: |
           ls -la $GITHUB_WORKSPACE/smcr.zip
           unzip -l $GITHUB_WORKSPACE/smcr.zip
 
-      - name: Upload fixed artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: smcr
-          path: smcr.zip
+          path: /tmp/artifacts/smcr.zip
 
   deploy:
     needs: prepare
