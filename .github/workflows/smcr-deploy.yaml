@@ -63,7 +63,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: smcr.zip
-          path: apps/smcr/.next/standalone/smcr.zip
+          path: smcr.zip
       - name: Verify zip file
         run: |
           ls -la apps/smcr/.next/standalone/smcr.zip
