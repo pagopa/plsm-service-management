@@ -38,7 +38,7 @@ permissions:
   attestations: write
 jobs:
   prepare:
-    name: Fix Next.js standalone paths
+    name: Build Next.js standalone paths
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -57,8 +57,9 @@ jobs:
           mkdir -p .next/standalone/apps/smcr/.next
           mv .next/static .next/standalone/apps/smcr/.next/
           cp -r public .next/standalone/apps/smcr/public || true
-          cd .next/standalone && zip -r smcr.zip .
-          ls -la
+          cd .next/standalone && zip -r ../../../../smcr.zip *  # <-- Zippa solo il contenuto
+          ls -la ../../../../smcr.zip
+
       - name: Upload fixed artifact
         uses: actions/upload-artifact@v4
         with:
