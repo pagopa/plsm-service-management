@@ -68,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: smcr
-          path: $GITHUB_WORKSPACE/smcr.zip
+          path: smcr.zip
 
   deploy:
     needs: prepare
