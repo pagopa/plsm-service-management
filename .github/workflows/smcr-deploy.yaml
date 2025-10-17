@@ -58,15 +58,14 @@ jobs:
           cp -r apps/smcr/.next/standalone/* standalone/
           cp -r apps/smcr/public standalone/
           find standalone/ -name "node_modules" -type d -exec rm -rf {} + 2>/dev/null || true
-          mkdir -p /tmp/artifacts
           cd standalone
-          zip -r /tmp/artifacts/smcr.zip .
+          zip -r ../smcr.zip .
 
-      - name: Upload artifact
+      - name: Upload fixed artifact
         uses: actions/upload-artifact@v4
         with:
           name: smcr
-          path: /tmp/artifacts/smcr.zip
+          path: smcr.zip
 
   deploy:
     needs: prepare
