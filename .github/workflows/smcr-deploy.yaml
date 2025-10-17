@@ -52,20 +52,29 @@ jobs:
       - name: Build SMCR app (using PagoPA action)
         run: yarn turbo run build --filter=smcr
 
-      - name: Prepare Next.js standalone structure
+      - name: Create standalone bundle
+        id: make-smcr-artifact
         run: |
-          mkdir -p standalone
-          cp -r apps/smcr/.next/standalone/* standalone/
-          cp -r apps/smcr/public standalone/
-          find standalone/ -name "node_modules" -type d -exec rm -rf {} + 2>/dev/null || true
-          cd standalone
-          zip -r ../smcr.zip .
+          cd apps/smcr
 
-      - name: Upload fixed artifact
+          mkdir -p ../../tmp_artifact/standalone
+          cp -r .next/standalone/* ../../tmp_artifact/standalone/
+          cp -r public ../../tmp_artifact/standalone/
+          cp server.js ../../tmp_artifact/standalone/
+          cp package.json ../../tmp_artifact/standalone/
+
+          cd ../../tmp_artifact
+          zip -r smcr.zip standalone/
+          mv smcr.zip $GITHUB_WORKSPACE/
+          echo "artifact-path=$GITHUB_WORKSPACE/smcr.zip" >> $GITHUB_OUTPUT
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: smcr
-          path: smcr.zip
+          path: ${{ steps.make-smcr-artifact.outputs.artifact-path }}
+          if-no-files-found: error
+          retention-days: 7
 
   deploy:
     needs: prepare
