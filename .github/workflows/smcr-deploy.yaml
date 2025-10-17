@@ -51,24 +51,27 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: Build SMCR app (using PagoPA action)
         run: yarn turbo run build --filter=smcr
+
       - name: Prepare Next.js standalone structure
         run: |
           cd apps/smcr
-          mkdir -p .next/standalone/apps/smcr/.next
-          mv .next/static .next/standalone/apps/smcr/.next/
-          cp -r public .next/standalone/apps/smcr/public || true
-          cd .next/standalone && zip -r ../../../../smcr.zip *  # <-- Zippa solo il contenuto
-          ls -la ../../../../smcr.zip
+          # Prepara la struttura corretta per Next.js standalone
+          mkdir -p .next/standalone
+          mv .next/static .next/standalone/
+          cp -r public .next/standalone/
+          cd .next && zip -r ../standalone.zip standalone/
+          mv ../standalone.zip $GITHUB_WORKSPACE/smcr.zip
 
+      - name: Verify zip file
+        run: |
+          ls -la $GITHUB_WORKSPACE/smcr.zip
+          unzip -l $GITHUB_WORKSPACE/smcr.zip
       - name: Upload fixed artifact
         uses: actions/upload-artifact@v4
         with:
           name: smcr.zip
           path: smcr.zip
-      - name: Verify zip file
-        run: |
-          ls -la apps/smcr/.next/standalone/smcr.zip
-          unzip -l apps/smcr/.next/standalone/smcr.zip
+
   deploy:
     needs: prepare
     if: github.event_name == 'workflow_dispatch'
