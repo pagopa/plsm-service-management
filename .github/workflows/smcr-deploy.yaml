@@ -57,12 +57,12 @@ jobs:
 
       - name: Create standalone bundle
         run: |
-          mkdir -p /tmp/artifacts
+          mkdir -p /tmp/artifacts/.next
           cd apps/smcr
           cp -r .next/standalone /tmp/artifacts/standalone
-          cp -r public /tmp/artifacts/public
+          cp -r public /tmp/artifacts/public || echo "no public dir"
           cp package.json /tmp/artifacts/
-          cp -r .next/static /tmp/artifacts/.next/static
+          cp -r .next/static /tmp/artifacts/.next/static || echo "no static dir found"
 
       - name: Verify artifact content
         run: |
