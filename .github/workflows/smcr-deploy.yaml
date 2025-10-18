@@ -57,24 +57,20 @@ jobs:
 
       - name: Create standalone bundle
         run: |
-          mkdir -p /tmp/artifacts/.next
+          mkdir -p /tmp/artifacts
           cd apps/smcr
-          cp -r .next/standalone /tmp/artifacts/standalone
-          cp -r public /tmp/artifacts/public || echo "no public dir"
+          cp -r .next/standalone /tmp/artifacts/
+          cp -r public /tmp/artifacts/ || echo "no public dir"
           cp package.json /tmp/artifacts/
-          cp -r .next/static /tmp/artifacts/.next/static || echo "no static dir found"
-
-      - name: Verify artifact content
-        run: |
-          unzip -l tmp_artifact/smcr.zip | grep server.js || true
-          unzip -l tmp_artifact/smcr.zip | grep public || true
+          cp -r .next/static /tmp/artifacts/.next/ || echo "no static dir found"
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: smcr
+          name: smcr.zip
           path: /tmp/artifacts
           if-no-files-found: error
           retention-days: 7
+
   deploy:
     needs: prepare
     if: github.event_name == 'workflow_dispatch'
