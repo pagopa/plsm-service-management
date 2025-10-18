@@ -43,38 +43,39 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-      - name: Build SMCR app (using PagoPA action)
+
+      - name: Build SMCR app
         run: yarn turbo run build --filter=smcr
 
-      - name: Create standalone bundle
-        id: make-smcr-artifact
+      - name: Prepare Next.js standalone structure
         run: |
           cd apps/smcr
-
           mkdir -p ../../tmp_artifact/standalone
           cp -r .next/standalone/* ../../tmp_artifact/standalone/
-          cp -r public ../../tmp_artifact/standalone/
-          cp server.js ../../tmp_artifact/standalone/
-          cp package.json ../../tmp_artifact/standalone/
-
+          mkdir -p ../../tmp_artifact/standalone/apps/smcr/public
+          cp -r public/* ../../tmp_artifact/standalone/apps/smcr/public/
           cd ../../tmp_artifact
           zip -r smcr.zip standalone/
-          mv smcr.zip $GITHUB_WORKSPACE/
-          echo "artifact-path=$GITHUB_WORKSPACE/smcr.zip" >> $GITHUB_OUTPUT
 
-      - name: Upload Artifact
+      - name: Verify artifact content
+        run: |
+          unzip -l tmp_artifact/smcr.zip | grep server.js || true
+          unzip -l tmp_artifact/smcr.zip | grep public || true
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: smcr
-          path: ${{ steps.make-smcr-artifact.outputs.artifact-path }}
+          path: tmp_artifact/smcr.zip
           if-no-files-found: error
-          retention-days: 7
 
   deploy:
     needs: prepare
