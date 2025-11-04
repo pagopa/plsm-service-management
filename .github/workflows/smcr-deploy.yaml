@@ -1,4 +1,5 @@
 name: Deploy SMCR
+
 on:
   workflow_dispatch:
     inputs:
@@ -17,6 +18,7 @@ on:
         type: string
         required: true
         default: "plsm-p-itn-smcr-app-01"
+
       use_private_agent:
         description: Use a private agent to deploy the built artifact.
         type: boolean
@@ -37,42 +39,7 @@ permissions:
   id-token: write
   attestations: write
 jobs:
-  prepare:
-    name: Build Next.js standalone paths
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Build SMCR app
-        run: yarn turbo run build --filter=smcr
-
-      - name: Create standalone bundle
-        run: |
-          mkdir -p /tmp/artifacts
-          cd apps/smcr
-          cp -r .next/standalone /tmp/artifacts/
-          cp -r public /tmp/artifacts/ || echo "no public dir"
-          cp package.json /tmp/artifacts/
-          cp -r .next/static /tmp/artifacts/.next/ || echo "no static dir found"
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: smcr.zip
-          path: /tmp/artifacts
-          if-no-files-found: error
-          retention-days: 7
-
   deploy:
-    needs: prepare
     if: github.event_name == 'workflow_dispatch'
     uses: pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml@main
     with:
