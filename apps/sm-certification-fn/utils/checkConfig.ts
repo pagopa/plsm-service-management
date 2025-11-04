@@ -26,6 +26,7 @@ const configSchema = z.object({
     (val) => String(val).trim().toLowerCase() === "true",
     z.boolean(),
   ),
+  apiKey: z.string().min(6, "La API key non può essere una stringa vuota"),
 });
 
 // Esporta il tipo TypeScript inferito automaticamente da Zod.
@@ -71,9 +72,11 @@ export function getConfigOrThrow() {
       dbtable: process.env.DB_TABLE,
       dbpassword: process.env.DB_PASSWORD,
       dbssl: process.env.DB_SSL,
+      apiKey: process.env.API_KEY,
     };
 
     // Valida la configurazione
+    console.log(configFromEnv);
     configValues = validateConfig(configFromEnv);
 
     return configValues;

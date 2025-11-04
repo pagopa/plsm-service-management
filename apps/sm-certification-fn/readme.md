@@ -1,32 +1,46 @@
-# Certification Function
+# 🧾 Certification Function
 
-This function is triggered by a timer every ...
+Azure Function per la gestione e il monitoraggio dei certificati SPID.
 
-## Starting the Function locally
+La funzione:
 
-After cloning the repo, navigate to this folder and run:
+- recupera periodicamente (ogni 10 secondi) tutti i certificati SPID da [https://api.is.eng.pagopa.it/idp-keys/spid/latest](https://api.is.eng.pagopa.it/idp-keys/spid/latest),
+- ne calcola la data di scadenza,
+- li salva su un database Postgres nella tabella `certificates`,
+- espone endpoint HTTP/GET per **elenco dei certificati**.
 
-`npm run build`
+---
 
-locally start Azurite from VSCode otherwise you get error like:
+## ⚙️ Endpoint disponibili
 
+### **GET /api/v1/health**
+
+Health check per warm-up e monitoraggio.
+
+**Esempio:**
+
+```bash
+curl https://<your-func-app>.azurewebsites.net/api/v1/health
 ```
-Connection refused (127.0.0.1:10000)) (Connection refused (127.0.0.1:10000)) (Connection refused (127.0.0.1:10000)). Azure.Core: Connection refused (127.0.0.1:10000). System.Net.Http: Connection refused (127.0.0.1:10000). System.Net.Sockets: Connection refused.
+
+### **GET /api/v1/listAll**
+
+Header: inserisci API_KEY con il valore definito in ambiente.
+
+Restituisce l'elenco di tutti i certificati SPID.
+
+**Esempio:**
+```bash
+curl https://<your-func-app>.azurewebsites.net/api/v1/listAll
 ```
 
-Load you environment variables from `.env` file:
+---
 
-with `fish` shell: `loadenv`
-with `bash` or `zsh` shell: `export $(cat .env | xargs)`
+## **Funzione Timer**
 
-then start with: `func start`
+Il trigger temporizzato (timerTrigger) viene eseguito ogni 10 secondi (cron: _/10 _ \* \* \* \*).
 
-You will see output like:
-
-```
-...
-15 certificati inseriti nel database con successo.
-Executing 'Functions.timerTrigger'...
-Timer function processed request.
-...
-```
+- Recupera i certificati SPID pubblici.
+- Analizza le date di scadenza.
+- Inserisce i dati nella tabella Postgres definita da DB_TABLE.
+- Svuota la tabella prima di ogni inserimento (truncate + insert bulk).
