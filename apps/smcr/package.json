@@ -1,5 +1,6 @@
 {
   "name": "smcr",
+  "main": ".next/standalone/apps/web/server.js",
   "version": "0.1.0",
   "private": true,
   "scripts": {
