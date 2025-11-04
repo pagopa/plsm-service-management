@@ -76,7 +76,6 @@ export function getConfigOrThrow() {
     };
 
     // Valida la configurazione
-    console.log(configFromEnv);
     configValues = validateConfig(configFromEnv);
 
     return configValues;
