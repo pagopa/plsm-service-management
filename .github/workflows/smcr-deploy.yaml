@@ -41,7 +41,8 @@ permissions:
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch'
-    uses: pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml@main
+    # uses: pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml@main
+    uses: pagopa/plsm-service-management/.github/workflows/release-azure-appsvc-v1.yaml@main
     with:
       workspace_name: smcr
       environment: ${{ inputs.environment }}
