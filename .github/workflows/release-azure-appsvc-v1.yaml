@@ -42,7 +42,6 @@ on:
 permissions:
   contents: read
   id-token: write
-  attestations: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ inputs.web_app_name }}-cd
@@ -63,7 +62,6 @@ jobs:
       cancel-in-progress: false
     permissions:
       id-token: write
-      attestations: write
     env:
       WORKSPACE_NAME: ${{ inputs.workspace_name }}
 
@@ -156,50 +154,6 @@ jobs:
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
           bundle_name: ${{ env.BUNDLE_NAME }}
 
-      # Se l'artifact esiste già in questo run, riscaricalo per poterlo attestare
-      - name: Download existing artifact (for attestation)
-        if: ${{ steps.check-artifact.outputs.exists == 'true' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.BUNDLE_NAME }}
-          path: .
-
-      - name: Locate artifact path (existing)
-        if: ${{ steps.check-artifact.outputs.exists == 'true' }}
-        id: locate-existing
-        run: |
-          set -euo pipefail
-          CANDIDATE="${BUNDLE_NAME}.zip"
-          if [ -f "$CANDIDATE" ]; then
-            echo "artifact-path=$(realpath "$CANDIDATE")" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          found=$(find . -maxdepth 2 -type f -name "${BUNDLE_NAME}.zip" | head -n1 || true)
-          if [ -z "$found" ]; then
-            found=$(find . -maxdepth 2 -type f -name "*.zip" | head -n1 || true)
-          fi
-          if [ -z "$found" ]; then
-            echo "::error::Artifact ZIP not found after download."
-            exit 1
-          fi
-          echo "artifact-path=$(realpath "$found")" >> "$GITHUB_OUTPUT"
-
-      # Attesta il bundle appena creato
-      - name: Generate artifact attestation (build provenance) - fresh
-        if: ${{ steps.check-artifact.outputs.exists != 'true' }}
-        uses: actions/attest-build-provenance@v3
-        with:
-          subject-path: ${{ steps.make-artifact.outputs.artifact-path }}
-          show-summary: false
-
-      # Attesta il bundle riusato in questo run
-      - name: Generate artifact attestation (build provenance) - existing
-        if: ${{ steps.check-artifact.outputs.exists == 'true' }}
-        uses: actions/attest-build-provenance@v3
-        with:
-          subject-path: ${{ steps.locate-existing.outputs.artifact-path }}
-          show-summary: false
-
   validate:
     name: Validate Web App
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
@@ -279,16 +233,6 @@ jobs:
             exit 1
           fi
           echo "path=$found" >> "$GITHUB_OUTPUT"
-
-      - name: Validate artifact attestation
-        run: |
-          gh attestation verify "${ARTIFACT_PATH}" \
-            --repo "$REPOSITORY" \
-            --signer-workflow "pagopa/plsm-service-management/.github/workflows/release-azure-appsvc-v1.yaml@main"
-        env:
-          ARTIFACT_PATH: ${{ steps.artifact-path.outputs.path }}
-          REPOSITORY: ${{ github.repository }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
