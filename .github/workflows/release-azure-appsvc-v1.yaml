@@ -1,3 +1,4 @@
+name: Reusable — Release Azure App Service
 on:
   workflow_call:
     inputs:
@@ -38,6 +39,11 @@ on:
         required: false
         default: ""
 
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ inputs.web_app_name }}-cd
   cancel-in-progress: true
@@ -52,16 +58,12 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-
-    # Ensure only one build for the same workspace runs at a time within the same run
     concurrency:
       group: ${{ format('{0}-build-{1}', github.run_id, inputs.workspace_name) }}
       cancel-in-progress: false
-
     permissions:
       id-token: write
       attestations: write
-
     env:
       WORKSPACE_NAME: ${{ inputs.workspace_name }}
 
@@ -80,7 +82,7 @@ jobs:
           if echo "${names}" | grep -qx "${BUNDLE_NAME}"; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "### Artifact already exists ✅" >> "$GITHUB_STEP_SUMMARY"
-            echo "Skipping build and upload in this invocation." >> "$GITHUB_STEP_SUMMARY"
+            echo "Skipping build/upload in this invocation." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
@@ -103,32 +105,34 @@ jobs:
           PACKAGE_MANAGER: ${{ steps.build-package.outputs.package-manager }}
         working-directory: ${{ steps.build-package.outputs.workspace-path }}
         run: |
+          set -euo pipefail
+
           if grep -rq --include='next.config.*' -E "output:\s*['\"]standalone['\"]" .; then
-            set -euo pipefail
+            echo "::debug::The workspace contains a Next.js standalone app"
             mkdir -p .next/standalone/.next
             [ -d .next/static ] && rsync -a .next/static/ .next/standalone/.next/static/
             [ -d public ] && rsync -a public/ .next/standalone/public/
 
+            # package.json minimale per far partire npm start -> node server.js
             printf '%s\n' \
-          '{' \
-          '  "name": "smcr-standalone",' \
-          '  "private": true,' \
-          '  "scripts": {' \
-          '    "start": "node server.js"' \
-          '  }' \
-          '}' > .next/standalone/package.json
+              '{' \
+              '  "name": "smcr-standalone",' \
+              '  "private": true,' \
+              '  "scripts": {' \
+              '    "start": "node server.js"' \
+              '  }' \
+              '}' > .next/standalone/package.json
 
             (cd .next/standalone && zip -yr "$BUNDLE_NAME.zip" .)
             echo "artifact-path=$(realpath .next/standalone/$BUNDLE_NAME.zip)" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-
           if [ "$PACKAGE_MANAGER" = "pnpm" ]; then
             echo "::debug::The workspace uses pnpm"
-            pnpm --filter $WORKSPACE_NAME deploy --prod bundle
-            cd bundle && zip -yr $BUNDLE_NAME.zip .
-            echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> $GITHUB_OUTPUT
+            pnpm --filter "$WORKSPACE_NAME" deploy --prod bundle
+            cd bundle && zip -yr "$BUNDLE_NAME.zip" .
+            echo "artifact-path=$(realpath "$BUNDLE_NAME.zip")" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -137,8 +141,8 @@ jobs:
             yarn config set nodeLinker node-modules
             yarn config set nmHoistingLimits workspaces
             yarn workspaces focus --production
-            zip -r $BUNDLE_NAME.zip .
-            echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> $GITHUB_OUTPUT
+            zip -yr "$BUNDLE_NAME.zip" .
+            echo "artifact-path=$(realpath "$BUNDLE_NAME.zip")" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -152,11 +156,48 @@ jobs:
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
           bundle_name: ${{ env.BUNDLE_NAME }}
 
-      - name: Generate artifact attestation (build provenance)
+      # Se l'artifact esiste già in questo run, riscaricalo per poterlo attestare
+      - name: Download existing artifact (for attestation)
+        if: ${{ steps.check-artifact.outputs.exists == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.BUNDLE_NAME }}
+          path: .
+
+      - name: Locate artifact path (existing)
+        if: ${{ steps.check-artifact.outputs.exists == 'true' }}
+        id: locate-existing
+        run: |
+          set -euo pipefail
+          CANDIDATE="${BUNDLE_NAME}.zip"
+          if [ -f "$CANDIDATE" ]; then
+            echo "artifact-path=$(realpath "$CANDIDATE")" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          found=$(find . -maxdepth 2 -type f -name "${BUNDLE_NAME}.zip" | head -n1 || true)
+          if [ -z "$found" ]; then
+            found=$(find . -maxdepth 2 -type f -name "*.zip" | head -n1 || true)
+          fi
+          if [ -z "$found" ]; then
+            echo "::error::Artifact ZIP not found after download."
+            exit 1
+          fi
+          echo "artifact-path=$(realpath "$found")" >> "$GITHUB_OUTPUT"
+
+      # Attesta il bundle appena creato
+      - name: Generate artifact attestation (build provenance) - fresh
         if: ${{ steps.check-artifact.outputs.exists != 'true' }}
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        uses: actions/attest-build-provenance@v3
         with:
           subject-path: ${{ steps.make-artifact.outputs.artifact-path }}
+          show-summary: false
+
+      # Attesta il bundle riusato in questo run
+      - name: Generate artifact attestation (build provenance) - existing
+        if: ${{ steps.check-artifact.outputs.exists == 'true' }}
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: ${{ steps.locate-existing.outputs.artifact-path }}
           show-summary: false
 
   validate:
@@ -164,10 +205,8 @@ jobs:
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     if: ${{ !github.event.act }}
     environment: ${{ inputs.environment }}-ci
-
     permissions:
       id-token: write
-
     outputs:
       use_staging_slot: ${{ steps.query-staging-slot.outputs.use_staging_slot }}
 
@@ -196,7 +235,7 @@ jobs:
             echo "No staging slot is configured for this web app. The deployment will proceed to the production slot." >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: Check if the custom warm-up is configured
+      - name: Check warm-up configuration (if slot present)
         if: ${{ steps.query-staging-slot.outputs.use_staging_slot == 'true' }}
         run: |
           IS_WARMUP_CONFIGURED=$(az webapp config appsettings list \
@@ -204,10 +243,8 @@ jobs:
             --name "$WEB_APP_NAME" \
             --query 'length([?name==`WEBSITE_SWAP_WARMUP_PING_STATUSES`||name==`WEBSITE_SWAP_WARMUP_PING_PATH`]) == `2`')
           if [ "$IS_WARMUP_CONFIGURED" == "false" ]; then
-            echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set. Please update the webapp module to the latest version to continue."
+            echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set."
             echo "### Custom warm-up configuration needed ❌" >> $GITHUB_STEP_SUMMARY
-            echo "The custom warm-up configuration is not set for the staging slot. This is required to ensure a smooth swap between slots." >> $GITHUB_STEP_SUMMARY
-            echo "Check out the [documentation](https://dx.pagopa.it/docs/pipelines/release-azure-appsvc#safe-swapping) for more details on safe slot swapping." >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
@@ -217,7 +254,6 @@ jobs:
     needs: [validate, build]
     if: ${{ !github.event.act }}
     environment: ${{ inputs.environment }}-cd
-
     permissions:
       id-token: write
       contents: read
@@ -228,13 +264,29 @@ jobs:
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
 
+      - name: Determine artifact file path
+        id: artifact-path
+        run: |
+          set -euo pipefail
+          CANDIDATE="${BUNDLE_NAME}.zip"
+          if [ -f "$CANDIDATE" ]; then
+            echo "path=$CANDIDATE" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          found=$(find . -maxdepth 3 -type f -name "${BUNDLE_NAME}.zip" -o -name "*.zip" | head -n1 || true)
+          if [ -z "$found" ]; then
+            echo "::error::ZIP artifact not found"
+            exit 1
+          fi
+          echo "path=$found" >> "$GITHUB_OUTPUT"
+
       - name: Validate artifact attestation
         run: |
-          gh attestation verify "$ARTIFACT_PATH" \
+          gh attestation verify "${ARTIFACT_PATH}" \
             --repo "$REPOSITORY" \
             --signer-workflow "pagopa/plsm-service-management/.github/workflows/release-azure-appsvc-v1.yaml@main"
         env:
-          ARTIFACT_PATH: ${{ format('{0}.zip', env.BUNDLE_NAME) }}
+          ARTIFACT_PATH: ${{ steps.artifact-path.outputs.path }}
           REPOSITORY: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -248,20 +300,22 @@ jobs:
       - name: Deploy
         env:
           USE_STAGING_SLOT: ${{ needs.validate.outputs.use_staging_slot }}
+          ZIP_PATH: ${{ steps.artifact-path.outputs.path }}
         run: |
+          set -euo pipefail
           cmd=(
-              "az" "webapp" "deploy"
-              "--resource-group" "$RESOURCE_GROUP_NAME"
-              "--name" "$WEB_APP_NAME"
-              "--src-path" "$BUNDLE_NAME.zip"
-              "--type" "zip"
-              "--async" "false"
+            "az" "webapp" "deploy"
+            "--resource-group" "$RESOURCE_GROUP_NAME"
+            "--name" "$WEB_APP_NAME"
+            "--src-path" "$ZIP_PATH"
+            "--type" "zip"
+            "--async" "false"
           )
           if [[ "$USE_STAGING_SLOT" == "true" ]]; then
-              echo "::debug::Deploying to staging slot"
-              cmd+=("--slot" "staging")
+            echo "::debug::Deploying to staging slot"
+            cmd+=("--slot" "staging")
           else
-              echo "::debug::Deploying to production (no slot)"
+            echo "::debug::Deploying to production (no slot)"
           fi
           "${cmd[@]}"
 
@@ -269,9 +323,7 @@ jobs:
     name: Approve Staging Deployment
     runs-on: ubuntu-latest
     needs: [validate]
-    # If auto approve fails, the approval can be retried manually
     continue-on-error: true
-
     if: ${{ !github.event.act && fromJSON(needs.validate.outputs.use_staging_slot) && !inputs.disable_auto_staging_deploy }}
 
     steps:
@@ -284,32 +336,20 @@ jobs:
             echo "::error::GH_TOKEN_DEPLOYMENT_APPROVAL secret is not set."
             exit 1
           fi
-
-          deployments=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments)
-
+          deployments=$(gh api -H "Accept: application/vnd.github+json" /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments)
           environment=$(echo "$deployments" | jq -r '.[].environment.name')
-
           if [ "$environment" != "$REQUIRED_ENVIRONMENT" ]; then
             echo "::error::Environment $REQUIRED_ENVIRONMENT not found."
-            echo "::warning::Check if the deployment was already approved by one of the reviewers."
             exit 1
           fi
-
           current_user_can_approve=$(echo "$deployments" | jq -r '.[].current_user_can_approve')
-
           if [ "$current_user_can_approve" != true ]; then
             GITHUB_USER=$(gh api user | jq -r '.login')
             echo "::error::$GITHUB_USER is not a reviewer"
-            echo "::warning::Auto Approval not available, the user is not a reviewer of the environment $REQUIRED_ENVIRONMENT."
             exit 1
           fi
-
           env_id=$(echo "$deployments" | jq -r '.[].environment.id')
-
-          gh api \
-            --method POST \
+          gh api --method POST \
             -H "Accept: application/vnd.github+json" \
             /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments \
             -F "environment_ids[]=$env_id" \
@@ -322,7 +362,6 @@ jobs:
     needs: [validate, deploy]
     if: ${{ !github.event.act && fromJson(needs.validate.outputs.use_staging_slot) }}
     environment: ${{ inputs.environment }}-cd
-
     permissions:
       id-token: write
       contents: read
