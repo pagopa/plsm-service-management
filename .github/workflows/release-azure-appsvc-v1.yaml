@@ -105,26 +105,59 @@ jobs:
         run: |
           set -euo pipefail
 
+          # 1) Detect standalone + prepara struttura
           if grep -rq --include='next.config.*' -E "output:\s*['\"]standalone['\"]" .; then
-            echo "::debug::The workspace contains a Next.js standalone app"
-            mkdir -p .next/standalone/.next
-            [ -d .next/static ] && rsync -a .next/static/ .next/standalone/.next/static/
-            [ -d public ] && rsync -a public/ .next/standalone/public/
+            echo "::debug::Next.js standalone detected"
+            # la cartella generata da Next
+            STAND=".next/standalone"
+            mkdir -p "$STAND"
 
-            # package.json minimale per far partire npm start -> node server.js
-            printf '%s\n' \
-              '{' \
-              '  "name": "smcr-standalone",' \
-              '  "private": true,' \
-              '  "scripts": {' \
-              '    "start": "node server.js"' \
-              '  }' \
-              '}' > .next/standalone/package.json
+            # 2) Trova l'entrypoint (server.js / server.mjs) e la sua dir
+            ENTRY=$(find "$STAND" -maxdepth 5 -type f \( -name "server.js" -o -name "server.mjs" \) | head -n1 || true)
+            if [ -z "$ENTRY" ]; then
+              echo "::error::Entrypoint (server.js/mjs) non trovato dentro $STAND"
+              exit 1
+            fi
+            ENTRY_DIR=$(dirname "$ENTRY")
+            REL="${ENTRY#$STAND/}"                 # path relativo alla root del bundle
+            echo "Entrypoint: $REL"
+            echo "Entry dir : ${ENTRY_DIR#$STAND/}"
 
-            (cd .next/standalone && zip -yr "$BUNDLE_NAME.zip" .)
-            echo "artifact-path=$(realpath .next/standalone/$BUNDLE_NAME.zip)" >> "$GITHUB_OUTPUT"
+            # 3) Copia gli statici e la public NELLA CARTELLA dell'entrypoint
+            if [ -d .next/static ]; then
+              mkdir -p "$ENTRY_DIR/.next"
+              rsync -av --delete .next/static/ "$ENTRY_DIR/.next/static/"
+            else
+              echo "::warning::.next/static non trovato"
+            fi
+
+            if [ -d public ]; then
+              rsync -av --delete public/ "$ENTRY_DIR/public/"
+            fi
+
+            # 4) package.json che avvia quell'entry
+            cat > "$STAND/package.json" <<EOF
+          {
+            "name": "smcr-standalone",
+            "private": true,
+            "scripts": {
+              "start": "node \"$REL\""
+            }
+          }
+          EOF
+
+            # (debug)
+            echo "TREE entry dir:"
+            ls -la "$ENTRY_DIR" | sed 's/^/  /'
+            echo "TREE entry .next:"
+            ls -la "$ENTRY_DIR/.next" | sed 's/^/  /' || true
+
+            # 5) Zippa dalla root di standalone
+            (cd "$STAND" && zip -yr "$BUNDLE_NAME.zip" .)
+            echo "artifact-path=$(realpath "$STAND/$BUNDLE_NAME.zip")" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
 
           if [ "$PACKAGE_MANAGER" = "pnpm" ]; then
             echo "::debug::The workspace uses pnpm"
