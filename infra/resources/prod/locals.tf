@@ -73,6 +73,12 @@ locals {
   }
 
   # App Service
+
+  # App Service
+  backend_app_settings = {
+  }
+  frontend_app_settings = {
+  }
   common_app_settings = {
 
     DiagnosticServices_EXTENSION_VERSION            = "~3"
