@@ -14,7 +14,7 @@ variable "environment" {
     prefix    = string
     env_short = string
     location  = string
-    domain          = optional(string)
+    domain    = optional(string)
   })
 
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
@@ -23,6 +23,11 @@ variable "environment" {
 variable "app_name" {
   type        = string
   description = "App Name"
+}
+
+variable "replica_location" {
+  type    = string
+  default = "Italy North"
 }
 
 variable "subnet_pep_id" {
