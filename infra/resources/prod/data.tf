@@ -12,6 +12,16 @@ data "azurerm_key_vault_secret" "appinsights_instrumentationkey" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+# data "azurerm_storage_account" "portalefatturazione_storage" {
+#   name                = "fatppublic"         # qui devo farmi dare il name dello storage
+#   resource_group_name = "fat-p-analytics-rg" # qui invece inserisco il resource group dello storage
+# }
+
+# data "azurerm_storage_container" "portalefatturazione_container" {
+#   name               = "example-container-name"
+#   storage_account_id = data.azurerm_storage_account.example.id
+# }
+
 # data "azurerm_resource_group" "common_rg" {
 #   name = "sm-p-itn-common-rg-01"
 # }

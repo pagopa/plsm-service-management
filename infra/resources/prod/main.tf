@@ -279,11 +279,32 @@ resource "azurerm_role_assignment" "cd_identity_website_contrib_backend_smcr" {
 }
 
 resource "azurerm_role_assignment" "ci_identity_website_contrib_backend_smcr" {
-  scope = module.azure_app_service_backend_smcr.web_app_id
-  # I ruoli in Azure sono sempre in inglese anche se ho l'interfaccia italiana!
+  scope                = module.azure_app_service_backend_smcr.web_app_id
   role_definition_name = "Website Contributor"
   principal_id         = data.azurerm_user_assigned_identity.github_ci_identity.principal_id
   depends_on           = [module.azure_app_service_backend_smcr]
+}
+# resource "azurerm_role_assignment" "ci_identity_website_contrib_backend_smcr" {
+#   scope = module.azure_app_service_backend_smcr.web_app_id
+#   # I ruoli in Azure sono sempre in inglese anche se ho l'interfaccia italiana!
+#   role_definition_name = "Website Contributor"
+#   principal_id         = data.azurerm_user_assigned_identity.github_ci_identity.principal_id
+#   depends_on           = [module.azure_app_service_backend_smcr]
+# }
+
+resource "azurerm_role_assignment" "smcr_portalefatturazione_storage_contributor" {
+  # RISORSE SU CUI APPLICO LA MANAGED IDENTITY
+  principal_id = module.azure_app_service_backend_smcr.principal_id
+  # Questo dovrebbe essere l'ID della Web APP a cui lego la Managed Identity. ATTENZIONE ora ho messo smcr ma dovrà essere fsmcr o bsmcr in quanto smcr la togliamo!
+  scope = var.container_pf #data.azurerm_storage_account.portalefatturazione_storage.id   # Questo definisce dove applico la Managed Identity - Se volessi puntare solo ad un container specifico dovrei usare il suo ID ?
+
+  # VERIFICA IL RUOLO
+  role_definition_name = "Storage Blob Data Contributor" # o dobbiamo solo leggere? In quel caso sarebbe "Storage Blob Data Reader"
+
+  # VERIFICA LE DIPENDENZE
+  depends_on = [
+    module.azure_app_service_backend_smcr, # VERIFICA se è fsmcr oppure bsmcr. Smcr la togliamo!
+  ]
 }
 
 module "azure_app_service_backend_smcr" {
