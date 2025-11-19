@@ -12,6 +12,11 @@ data "azurerm_key_vault_secret" "appinsights_instrumentationkey" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+data "azuread_group" "keyvault_admin_group" {
+  # Usa il nome visualizzato per recuperare l'Object ID
+  display_name = "plsm-p-adgroup-admin" 
+}
+
 # data "azurerm_storage_account" "portalefatturazione_storage" {
 #   name                = "fatppublic"         # qui devo farmi dare il name dello storage
 #   resource_group_name = "fat-p-analytics-rg" # qui invece inserisco il resource group dello storage
