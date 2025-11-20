@@ -47,10 +47,11 @@ resource "dx_available_subnet_cidr" "core_infra_subnet_cidr" {
 }
 
 
-resource "azurerm_role_assignment" "terraform_sp_kv_secrets_officer" {
+resource "azurerm_role_assignment" "kv_group_secrets_officer" {  
   scope                = module.azure_core_infra.common_key_vault.id
   role_definition_name = "Key Vault Secrets Officer"
-  principal_id         = data.azurerm_client_config.current.object_id
+  
+  principal_id         = data.azuread_group.keyvault_admin_group.object_id
 }
 
 module "azure_core_infra" {
@@ -397,7 +398,7 @@ resource "azurerm_key_vault_secret" "postgres_username" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
   content_type = "text"
   depends_on = [
-    azurerm_role_assignment.terraform_sp_kv_secrets_officer
+    azurerm_role_assignment.kv_group_secrets_officer
   ]
 }
 
@@ -408,7 +409,7 @@ resource "azurerm_key_vault_secret" "postgres_password" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
   content_type = "password"
   depends_on = [
-    azurerm_role_assignment.terraform_sp_kv_secrets_officer
+    azurerm_role_assignment.kv_group_secrets_officer
   ]
 }
 
