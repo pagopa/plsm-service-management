@@ -1,1 +1,1 @@
-# Monorepo for Service Management
+# Monorepo for SMCR
