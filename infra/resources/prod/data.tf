@@ -43,7 +43,7 @@ data "azuread_group" "keyvault_admin_group" {
 
 
 # SMCR WEB APP
-# data "azurerm_key_vault_secret" "slack_report_hook" {
+# data "azurerm_key_vault_secret" "FE_SMCR_API_SLACK_REPORT_HOOK" {
 #   name         = "SLACK-REPORT-HOOK"
 #   key_vault_id = module.azure_core_infra.common_key_vault.id
 # }
@@ -52,12 +52,12 @@ data "azuread_group" "keyvault_admin_group" {
 #   key_vault_id = module.azure_core_infra.common_key_vault.id
 # }
 
-# data "azurerm_key_vault_secret" "users_api_key" {
+# data "azurerm_key_vault_secret" "FE_SMCR_USERS_API_KEY" {
 #   name         = "USERS-API-KEY"
 #   key_vault_id = module.azure_core_infra.common_key_vault.id
 # }
 
-# data "azurerm_key_vault_secret" "ocp_apim_subscription_key" {
+# data "azurerm_key_vault_secret" "FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY" {
 #   name         = "OCP-APIM-SUBSCRIPTION-KEY"
 #   key_vault_id = module.azure_core_infra.common_key_vault.id
 # }
@@ -67,7 +67,7 @@ data "azuread_group" "keyvault_admin_group" {
 #   key_vault_id = module.azure_core_infra.common_key_vault.id
 # }
 
-# data "azurerm_key_vault_secret" "api_key_institution" {
+# data "azurerm_key_vault_secret" "FE_SMCR_API_KEY_INSTITUTION" {
 #   name         = "API-KEY-INSTITUTION"
 #   key_vault_id = module.azure_core_infra.common_key_vault.id
 # }
@@ -87,7 +87,7 @@ data "azuread_group" "keyvault_admin_group" {
 #   key_vault_id = module.azure_core_infra.common_key_vault.id
 # }
 
-# data "azurerm_key_vault_secret" "api_key_prod_get_users" {
+# data "azurerm_key_vault_secret" "FE_SMCR_API_KEY_PROD_GET_USERS" {
 #   name         = "API-KEY-PROD-GET-USERS"
 #   key_vault_id = module.azure_core_infra.common_key_vault.id
 # }
@@ -165,7 +165,7 @@ data "azurerm_key_vault_secret" "slack_webhook_onboarding_interop" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
-data "azurerm_key_vault_secret" "ocp_apim_subscription_key" {
+data "azurerm_key_vault_secret" "FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY" {
   name         = "fa-onboarding-ocp-apim-subscription-key"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
@@ -203,7 +203,7 @@ data "azurerm_key_vault_secret" "askmebot_legal_enabled_emails_secret" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
-data "azurerm_key_vault_secret" "askmebot_ocp_apim_subscription_key" {
+data "azurerm_key_vault_secret" "askmebot_FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY" {
   name         = "fa-askmebot-ocp-apim-subscription-key"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }

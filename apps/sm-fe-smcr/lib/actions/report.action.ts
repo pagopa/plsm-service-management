@@ -42,10 +42,10 @@ export async function reportError(
     return { fields: input, errors };
   }
 
-  const webhook = process.env.SLACK_REPORT_HOOK;
+  const webhook = process.env.FE_SMCR_API_SLACK_REPORT_HOOK;
   if (!webhook) {
     console.error(
-      "Errore durante l'invio della segnalazione, env SLACK_REPORT_HOOK mancante.",
+      "Errore durante l'invio della segnalazione, env FE_SMCR_API_SLACK_REPORT_HOOK mancante.",
     );
     return {
       fields: validation.data,

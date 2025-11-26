@@ -41,7 +41,7 @@ locals {
     SLACK_WEBHOOK_ONBOARDING_PN           = "${data.azurerm_key_vault_secret.slack_webhook_onboarding_pn.value}"
     SLACK_WEBHOOK_ONBOARDING_INTEROP      = "${data.azurerm_key_vault_secret.slack_webhook_onboarding_interop.value}"
     SLACK_WEBHOOK_ONBOARDING_PAGOPA       = "${data.azurerm_key_vault_secret.slack_webhook_onboarding_pagopa.value}"
-    OCP_APIM_SUBSCRIPTION_KEY             = "${data.azurerm_key_vault_secret.ocp_apim_subscription_key.value}"
+    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY             = "${data.azurerm_key_vault_secret.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY.value}"
     ENDPOINT_GET_INSTITUTION_FROM_TAXCODE = "https://api.selfcare.pagopa.it/external/v2/institutions/?taxCode="
 
   }
@@ -52,7 +52,7 @@ locals {
     SLACK_SIGNING_SECRET            = "${data.azurerm_key_vault_secret.askmebot_slack_signing_secret.value}"
     ENABLED_EMAILS_SECRET           = "${data.azurerm_key_vault_secret.askmebot_enabled_emails_secret.value}"
     LEGAL_ENABLED_EMAILS_SECRET     = "${data.azurerm_key_vault_secret.askmebot_legal_enabled_emails_secret.value}"
-    OCP_APIM_SUBSCRIPTION_KEY       = "${data.azurerm_key_vault_secret.askmebot_ocp_apim_subscription_key.value}"
+    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY       = "${data.azurerm_key_vault_secret.askmebot_FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY.value}"
     SLACK_API_URL                   = "https://slack.com/api"
     INSTITUTION_URL                 = "https://api.selfcare.pagopa.it/external/support/v1/institutions"
     USERS_URL                       = "https://api.selfcare.pagopa.it/external/internal/v1/institutions"
@@ -95,16 +95,16 @@ locals {
     # WEBSITES_PORT        = 3000
 
     # # Secrets da Key Vault
-    # SLACK_REPORT_HOOK            = data.azurerm_key_vault_secret.slack_report_hook.value
+    # FE_SMCR_API_SLACK_REPORT_HOOK            = data.azurerm_key_vault_secret.FE_SMCR_API_SLACK_REPORT_HOOK.value
     # USER_APIM_SUBSCRIPTION_KEY   = data.azurerm_key_vault_secret.user_apim_subscription_key.value
-    # USERS_API_KEY                = data.azurerm_key_vault_secret.users_api_key.value
-    # OCP_APIM_SUBSCRIPTION_KEY    = data.azurerm_key_vault_secret.ocp_apim_subscription_key.value
+    # FE_SMCR_USERS_API_KEY                = data.azurerm_key_vault_secret.FE_SMCR_USERS_API_KEY.value
+    # FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY    = data.azurerm_key_vault_secret.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY.value
     # SUBSCRIPTION_KEY_SELFCARE    = data.azurerm_key_vault_secret.subscription_key_selfcare.value
-    # API_KEY_INSTITUTION          = data.azurerm_key_vault_secret.api_key_institution.value
+    # FE_SMCR_API_KEY_INSTITUTION          = data.azurerm_key_vault_secret.FE_SMCR_API_KEY_INSTITUTION.value
     # API_KEY_PROD_GET_INFOCAMERE  = data.azurerm_key_vault_secret.api_key_prod_get_infocamere.value
     # API_KEY_PROD_GET_INSTITUTION = data.azurerm_key_vault_secret.api_key_prod_get_institution.value
     # API_KEY_PROD_GET_IPA         = data.azurerm_key_vault_secret.api_key_prod_get_ipa.value
-    # API_KEY_PROD_GET_USERS       = data.azurerm_key_vault_secret.api_key_prod_get_users.value
+    # FE_SMCR_API_KEY_PROD_GET_USERS       = data.azurerm_key_vault_secret.FE_SMCR_API_KEY_PROD_GET_USERS.value
     # DB_HOST                      = data.azurerm_key_vault_secret.db_host.value
     # DB_NAME                      = data.azurerm_key_vault_secret.db_name.value
     # DB_USER                      = data.azurerm_key_vault_secret.db_user.value

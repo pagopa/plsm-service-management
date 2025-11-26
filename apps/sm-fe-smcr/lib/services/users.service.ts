@@ -39,7 +39,7 @@ export async function getUsersByInstitutionId(
     {
       headers: {
         "Ocp-Apim-Subscription-Key": process.env
-          .OCP_APIM_SUBSCRIPTION_KEY as string,
+          .FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY as string,
       },
       output: z.array(UserSchema),
       next: {
@@ -61,7 +61,7 @@ export async function getUsersPNPGByInstitutionId(institutionId: string) {
     `https://api.selfcare.pagopa.it/external/pn-pg/support/v1/institutions/${institutionId}/users`,
     {
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_PNPG as string,
+        "Ocp-Apim-Subscription-Key": process.env.FE_SMCR_API_KEY_PNPG as string,
       },
       output: z.array(UserSchema),
       next: {
@@ -95,7 +95,8 @@ export async function createUser(input: {
     {
       method: "POST",
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key": process.env
+          .FE_SMCR_API_KEY_INSTITUTION as string,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -137,7 +138,7 @@ export async function createUserPNPG(input: {
     {
       method: "POST",
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_PNPG as string,
+        "Ocp-Apim-Subscription-Key": process.env.FE_SMCR_API_KEY_PNPG as string,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -182,7 +183,8 @@ export async function readUser(input: {
     {
       method: "GET",
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key": process.env
+          .FE_SMCR_API_KEY_INSTITUTION as string,
       },
       output: readUserOutput,
     },
@@ -202,7 +204,8 @@ export async function updateUser(input: {
     {
       method: "PUT",
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.USERS_API_KEY as string,
+        "Ocp-Apim-Subscription-Key": process.env
+          .FE_SMCR_API_KEY_INSTITUTION as string,
       },
     },
   );

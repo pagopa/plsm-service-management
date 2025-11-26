@@ -1,5 +1,5 @@
-import { z } from 'zod'
-import 'dotenv/config'
+import { z } from "zod";
+import "dotenv/config";
 
 const envSchema = z.object({
   APPINSIGHTS_CONNECTION_STRING: z.string(),
@@ -14,16 +14,16 @@ const envSchema = z.object({
   INSTITUTION_URL: z.string(),
   USERS_URL: z.string(),
   CONTRACT_URL: z.string(),
-  OCP_APIM_SUBSCRIPTION_KEY: z.string(),
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY: z.string(),
   USERS_APIM_SUBSCRIPTION_KEY: z.string(),
   CONTRACT_APIM_SUBSCRIPTION_KEY: z.string(),
   ENABLED_EMAILS_SECRET: z
     .string()
-    .transform((value) => value.split(';'))
+    .transform((value) => value.split(";"))
     .transform((value) => value.map((item) => item.trim())),
   LEGAL_ENABLED_EMAILS_SECRET: z
     .string()
-    .transform((value) => value.split(';'))
+    .transform((value) => value.split(";"))
     .transform((value) => value.map((item) => item.trim())),
   SMTP_HOST: z.string(),
   SMTP_PORT: z.preprocess(
@@ -42,7 +42,7 @@ const envSchema = z.object({
     (a) => parseInt(a as string, 10),
     z.number().positive(),
   ),
-})
+});
 
 const envParse = envSchema.safeParse({
   APPINSIGHTS_CONNECTION_STRING: process.env.APPINSIGHTS_CONNECTION_STRING,
@@ -54,7 +54,8 @@ const envParse = envSchema.safeParse({
   INSTITUTION_URL: process.env.INSTITUTION_URL,
   USERS_URL: process.env.USERS_URL,
   CONTRACT_URL: process.env.CONTRACT_URL,
-  OCP_APIM_SUBSCRIPTION_KEY: process.env.OCP_APIM_SUBSCRIPTION_KEY,
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY:
+    process.env.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY,
   USERS_APIM_SUBSCRIPTION_KEY: process.env.USERS_APIM_SUBSCRIPTION_KEY,
   CONTRACT_APIM_SUBSCRIPTION_KEY: process.env.CONTRACT_APIM_SUBSCRIPTION_KEY,
   ENABLED_EMAILS_SECRET: process.env.ENABLED_EMAILS_SECRET,
@@ -67,11 +68,11 @@ const envParse = envSchema.safeParse({
   FROM_EMAIL: process.env.FROM_EMAIL,
   CCN_EMAIL: process.env.CCN_EMAIL,
   MAX_DATA_LENGTH: process.env.MAX_DATA_LENGTH,
-})
+});
 
 if (!envParse.success) {
-  console.error(envParse.error.issues)
-  throw new Error('Error on you env configuration')
+  console.error(envParse.error.issues);
+  throw new Error("Error on you env configuration");
 }
 
-export const envData = envParse.data
+export const envData = envParse.data;

@@ -90,7 +90,8 @@ export async function getFirmaConIoInstitution(
       method: "POST",
       output: FirmaConIOSchema,
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_FIRMA_CON_IO as string,
+        "Ocp-Apim-Subscription-Key": process.env
+          .FE_SMCR_API_KEY_FIRMA_CON_IO as string,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
