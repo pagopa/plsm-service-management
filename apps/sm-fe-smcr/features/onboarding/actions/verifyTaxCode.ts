@@ -20,7 +20,7 @@ import { SubunitOption } from "../types/subunitOptionsType";
 import { isIpaAOOData, isIpaUOData } from "../utils/helpers";
 import { isEmptyObj } from "../utils/isNotEmptyObj";
 const API_KEY_PROD_GET_INSTITUTION = process.env.API_KEY_PROD_GET_INSTITUTION;
-const API_KEY_PROD_GET_INFOCAMERE = process.env.API_KEY_PROD_GET_INFOCAMERE;
+const OCP_APIM_SUBSCRIPTION_KEY = process.env.OCP_APIM_SUBSCRIPTION_KEY;
 
 const GET_INSTITUTION = process.env.GET_INSTITUTION;
 const GET_IPA = process.env.GET_IPA;
@@ -112,7 +112,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
         };
       case "infocamere":
         return {
-          apikey: `${API_KEY_PROD_GET_INFOCAMERE}`,
+          apikey: `${OCP_APIM_SUBSCRIPTION_KEY}`,
           schema: getInfocamereSchema,
           url: `${GET_INFOCAMERE}${code}`,
           endpoint,
