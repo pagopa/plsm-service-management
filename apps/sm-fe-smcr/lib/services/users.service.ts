@@ -205,7 +205,7 @@ export async function updateUser(input: {
       method: "PUT",
       headers: {
         "Ocp-Apim-Subscription-Key": process.env
-          .FE_SMCR_API_KEY_INSTITUTION as string,
+          .FE_SMCR_USERS_API_KEY as string,
       },
     },
   );
