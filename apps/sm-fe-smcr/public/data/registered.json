@@ -1,0 +1,13 @@
+{
+  "description": "description_CENSITO",
+  "origin": "origin_CENSITO",
+  "originId": "originId_CENSITO",
+  "digitalAddress": "digitalAddress_CENSITO",
+  "address": "address_CENSITO",
+  "zipcode": "12345",
+  "onboarding": [
+    {
+      "productId": "IO"
+    }
+  ]
+}
