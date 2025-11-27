@@ -59,6 +59,13 @@ jobs:
       NEXT_PUBLIC_MSAL_TENANT_ID: ${{ secrets.NEXT_PUBLIC_MSAL_TENANT_ID }}
       NEXT_PUBLIC_MSAL_REDIRECT_URI: ${{ secrets.NEXT_PUBLIC_MSAL_REDIRECT_URI }}
       NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+      MSAL_CLIENT_ID: ${{ secrets.MSAL_CLIENT_ID }}
+      MSAL_TENANT_ID: ${{ secrets.MSAL_TENANT_ID }}
+      MSAL_REDIRECT_URI: ${{ secrets.MSAL_REDIRECT_URI }}
+      CLIENT_ID: ${{ secrets.MSAL_CLIENT_ID }}
+      TENANT_ID: ${{ secrets.MSAL_TENANT_ID }}
+      REDIRECT_URI: ${{ secrets.MSAL_REDIRECT_URI }}
+      BASE_PATH: ""
 
     steps:
       - name: Checkout repository
