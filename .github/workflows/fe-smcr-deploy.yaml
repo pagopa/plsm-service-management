@@ -52,14 +52,7 @@ jobs:
   # ===============================================
   build:
     name: 🏗 Build & Package Artifact
-    runs-on: ${{ 
-      inputs.use_labels && inputs.use_private_agent
-      ? (inputs.override_labels != '' 
-          ? inputs.override_labels 
-          : inputs.environment)
-      : (inputs.use_private_agent 
-          ? 'self-hosted' 
-          : 'ubuntu-latest')}}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.environment }} 
 
     env:
@@ -108,14 +101,7 @@ jobs:
   deploy_to_staging:
     name: 🚀 Deploy a Staging
     needs: build
-    runs-on: ${{ 
-      inputs.use_labels && inputs.use_private_agent
-      ? (inputs.override_labels != '' 
-          ? inputs.override_labels 
-          : inputs.environment)
-      : (inputs.use_private_agent 
-          ? 'self-hosted' 
-          : 'ubuntu-latest')}}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.environment }}-cd 
 
     env:
@@ -151,14 +137,7 @@ jobs:
   swap_to_production:
     name: ✨ Swap Staging -> Production
     needs: deploy_to_staging
-    runs-on: ${{ 
-      inputs.use_labels && inputs.use_private_agent
-      ? (inputs.override_labels != '' 
-          ? inputs.override_labels 
-          : inputs.environment)
-      : (inputs.use_private_agent 
-          ? 'self-hosted' 
-          : 'ubuntu-latest')}}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.environment }}-cd 
 
     # Segreti di Azure per l'autenticazione OIDC
