@@ -1,4 +1,4 @@
-name: Deploy - SM-FE-SMCR (MODE A - Safe Deploy)
+name: Deploy - SM-FE-SMCR
 
 on:
   workflow_dispatch:
@@ -22,11 +22,13 @@ on:
         default: "app-prod"
 
       resource_group_name:
+        description: "Web App Resource Group"
         type: string
         required: true
         default: "plsm-p-itn-apps-rg-01"
 
       web_app_name:
+        description: "Web App Name"
         type: string
         required: true
         default: "plsm-p-itn-fsmcr-app-01"
@@ -36,6 +38,18 @@ on:
         type: boolean
         required: false
         default: true
+
+      use_labels:
+        description: Use labels to start the right environment's GitHub runner.
+        type: boolean
+        required: false
+        default: false
+
+      override_labels:
+        description: Custom runner label override
+        type: string
+        required: false
+        default: ""
 
 permissions:
   id-token: write
@@ -50,8 +64,9 @@ env:
   WEB_APP_NAME: ${{ inputs.web_app_name }}
 
 jobs:
+
   # --------------------------------------------------------------------
-  # BUILD
+  # 🏗 BUILD & PACKAGE
   # --------------------------------------------------------------------
   build:
     name: 🏗 Build & Package Artifact
@@ -59,13 +74,16 @@ jobs:
     environment: ${{ inputs.environment }}
 
     env:
-      MSAL_CLIENT_ID: ${{ secrets.MSAL_CLIENT_ID }}
-      MSAL_TENANT_ID: ${{ secrets.MSAL_TENANT_ID }}
-      MSAL_REDIRECT_URI: ${{ secrets.MSAL_REDIRECT_URI }}
+      # NEXT PUBLIC ENV
       NEXT_PUBLIC_MSAL_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_MSAL_CLIENT_ID }}
       NEXT_PUBLIC_MSAL_TENANT_ID: ${{ secrets.NEXT_PUBLIC_MSAL_TENANT_ID }}
       NEXT_PUBLIC_MSAL_REDIRECT_URI: ${{ secrets.NEXT_PUBLIC_MSAL_REDIRECT_URI }}
       NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+
+      # SERVER ENV
+      MSAL_CLIENT_ID: ${{ secrets.MSAL_CLIENT_ID }}
+      MSAL_TENANT_ID: ${{ secrets.MSAL_TENANT_ID }}
+      MSAL_REDIRECT_URI: ${{ secrets.MSAL_REDIRECT_URI }}
 
     steps:
       - uses: actions/checkout@v4
@@ -84,20 +102,33 @@ jobs:
       - name: Build (Turbo - monorepo)
         run: yarn turbo build --filter=${{ env.WORKSPACE_NAME }}
 
-      # --- IMPORTANTISSIMO ---
-      # Next.js Standalone bundle COMPLETO (static + public)
+      # ------------------------
+      # 🌐 PACKAGE NEXT STEPS
+      # ------------------------
       - name: Prepare Next.js Standalone Bundle
         working-directory: ${{ env.NEXT_APP_PATH }}
         run: |
-          mkdir bundle
-          cp -R .next/standalone/* bundle/
-          cp -R public bundle/ || true
-          cp -R .next/static bundle/.next/static || true
+          rm -rf build
+          mkdir -p build
+
+          # Standalone server (server.js, chunks, node_modules trimmed)
+          cp -R .next/standalone/* build/
+
+          # Static assets
+          mkdir -p build/.next/static
+          if [ -d ".next/static" ]; then
+            cp -R .next/static/* build/.next/static/
+          fi
+
+          # Public folder
+          if [ -d "public" ]; then
+            cp -R public build/
+          fi
 
       - name: Create ZIP Artifact
+        working-directory: ${{ env.NEXT_APP_PATH }}/build
         run: |
-          cd ${{ env.NEXT_APP_PATH }}/bundle
-          zip -r ../../${{ env.BUNDLE_NAME }}.zip .
+          zip -r ../${{ env.BUNDLE_NAME }}.zip .
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v5
@@ -106,13 +137,13 @@ jobs:
           path: ${{ env.NEXT_APP_PATH }}/${{ env.BUNDLE_NAME }}.zip
 
   # --------------------------------------------------------------------
-  # DEPLOY TO STAGING SLOT
+  # 🚀 DEPLOY TO STAGING SLOT
   # --------------------------------------------------------------------
   deploy:
-    name: 🚀 Deploy a Staging
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    name: 🚀 Deploy to Staging
     needs: build
     environment: ${{ inputs.environment }}-cd
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
 
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -144,13 +175,13 @@ jobs:
             --async false
 
   # --------------------------------------------------------------------
-  # SWAP STAGING → PRODUCTION
+  # ✨ SWAP → PRODUCTION
   # --------------------------------------------------------------------
   swap:
-    name: ✨ Swap Staging -> Production
+    name: ✨ Swap Staging → Production
     needs: deploy
+    environment: ${{ inputs.environment }}-cd
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    environment: ${{ inputs.environment }}-cd 
 
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -172,5 +203,3 @@ jobs:
             --name "${{ env.WEB_APP_NAME }}" \
             --slot staging \
             --target-slot production
-
-
