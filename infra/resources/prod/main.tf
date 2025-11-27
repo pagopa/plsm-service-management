@@ -47,11 +47,11 @@ resource "dx_available_subnet_cidr" "core_infra_subnet_cidr" {
 }
 
 
-resource "azurerm_role_assignment" "kv_group_secrets_officer" {  
+resource "azurerm_role_assignment" "kv_group_secrets_officer" {
   scope                = module.azure_core_infra.common_key_vault.id
   role_definition_name = "Key Vault Secrets Officer"
-  
-  principal_id         = data.azuread_group.keyvault_admin_group.object_id
+
+  principal_id = data.azuread_group.keyvault_admin_group.object_id
 }
 
 module "azure_core_infra" {
@@ -63,11 +63,7 @@ module "azure_core_infra" {
     instance_number = "01"
   })
 
-
   nat_enabled = false
-
-  # virtual_network_cidr = "10.0.0.0/16"
-  # virtual_network_cidr = "dx_available_subnet_cidr.core_infra_subnet_cidr.cidr_block"
 
   vpn_enabled = true
 
@@ -87,6 +83,8 @@ resource "azurerm_role_assignment" "cd_identity_website_contributor_on_func" {
   principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
 }
 
+# Azure Function per Certificati
+
 module "certifica_function" {
   source = "../_modules/function_app"
 
@@ -96,7 +94,7 @@ module "certifica_function" {
   })
 
 
-  resource_group_name = azurerm_resource_group.fn_rg.name #module.azure_core_infra.common_resource_group_name
+  resource_group_name = azurerm_resource_group.fn_rg.name
   tags                = local.tags
 
   virtual_network = {
@@ -108,8 +106,50 @@ module "certifica_function" {
 
   health_check_path = "/api/v1/health"
   node_version      = 22
-  app_settings      = local.common_certificates_func_app_settings
-  slot_app_settings = local.common_certificates_func_app_settings
+  app_settings      = merge(local.common_app_settings, local.certificates_func_app_settings)
+  slot_app_settings = merge(local.common_app_settings, local.certificates_slot_func_app_settings)
+
+  depends_on = [module.azure_core_infra]
+}
+
+# Azure Function per Portale Fatturazione
+
+resource "dx_available_subnet_cidr" "pf_fa_subnet_cidr" {
+  virtual_network_id = module.azure_core_infra.common_vnet.id
+  prefix_length      = 24
+  depends_on         = [module.onboarding_function]
+}
+
+resource "azurerm_role_assignment" "cd_identity_website_contrib_pf_fa" {
+  scope                = module.portalefatturazione_function.function_app_id
+  role_definition_name = "Website Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
+  depends_on           = [module.portalefatturazione_function]
+}
+
+module "portalefatturazione_function" {
+  source = "../_modules/function_app"
+
+  environment = merge(local.environment, {
+    app_name        = "pfatt",
+    instance_number = "01"
+  })
+
+
+  resource_group_name = azurerm_resource_group.fn_rg.name
+  tags                = local.tags
+
+  virtual_network = {
+    name                = module.azure_core_infra.common_vnet.name
+    resource_group_name = module.azure_core_infra.network_resource_group_name
+  }
+  subnet_pep_id = module.azure_core_infra.common_pep_snet.id
+  subnet_cidr   = dx_available_subnet_cidr.pf_fa_subnet_cidr.cidr_block
+
+  health_check_path = "/api/v1/health"
+  node_version      = 22
+  app_settings      = merge(local.common_app_settings, local.pf_app_settings)
+  slot_app_settings = merge(local.common_app_settings, local.pf_slot_app_settings)
 
   depends_on = [module.azure_core_infra]
 }
@@ -150,8 +190,8 @@ module "onboarding_function" {
 
   health_check_path = "/api/v1/health"
   node_version      = 22
-  app_settings      = local.common_onboarding_func_app_settings
-  slot_app_settings = local.common_onboarding_func_app_settings
+  app_settings      = merge(local.common_app_settings, local.onboarding_func_app_settings)
+  slot_app_settings = merge(local.common_app_settings, local.onboarding_slot_func_app_settings)
 
   depends_on = [module.azure_core_infra]
 }
@@ -210,8 +250,8 @@ module "askmebot_function" {
 
   health_check_path = "/api/v1/info"
   node_version      = 22
-  app_settings      = local.common_askmebot_func_app_settings
-  slot_app_settings = local.common_askmebot_func_app_settings
+  app_settings      = merge(local.common_app_settings, local.askmebot_func_app_settings)
+  slot_app_settings = merge(local.common_app_settings, local.askmebot_func_slot_app_settings)
 
   depends_on = [module.azure_core_infra]
 }
@@ -326,7 +366,7 @@ module "azure_app_service_backend_smcr" {
 
 
   app_settings      = merge(local.common_app_settings, local.backend_app_settings)
-  slot_app_settings = merge(local.common_app_settings, local.backend_app_settings)
+  slot_app_settings = merge(local.common_app_settings, local.backend_slot_app_settings)
 
 
   health_check_path = "/api/health"
@@ -376,7 +416,7 @@ module "azure_app_service_frontend_smcr" {
 
 
   app_settings      = merge(local.common_app_settings, local.frontend_app_settings)
-  slot_app_settings = merge(local.common_app_settings, local.frontend_app_settings)
+  slot_app_settings = merge(local.common_app_settings, local.frontend_slot_app_settings)
 
 
   health_check_path = "/api/health"

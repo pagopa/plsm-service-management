@@ -24,7 +24,7 @@ export const IConfig = t.type({
 
   ENDPOINT_GET_INSTITUTION_FROM_TAXCODE: NonEmptyString,
 
-  OCP_APIM_SUBSCRIPTION_KEY: NonEmptyString,
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY: NonEmptyString,
 
   SLACK_WEBHOOK_LOG: NonEmptyString,
   SLACK_WEBHOOK_ONBOARDING_INTEROP: NonEmptyString,

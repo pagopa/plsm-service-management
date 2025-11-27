@@ -56,14 +56,14 @@ export async function sendToSlackAction(
   }
 
   const webhooks = {
-    test: process.env.SLACK_CALL_MANAGEMENT_HOOK_TEST,
-    prod: process.env.SLACK_CALL_MANAGEMENT_HOOK_PROD,
+    test: process.env.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST,
+    prod: process.env.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD,
   };
   const webhook = webhooks[validation.data.target];
 
   if (!webhook) {
     console.error(
-      "Errore durante l'invio del messaggio, env SLACK_CALL_MANAGEMENT_HOOK mancante.",
+      "Errore durante l'invio del messaggio, env FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK mancante.",
     );
     return {
       fields: validation.data,

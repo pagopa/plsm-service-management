@@ -9,7 +9,7 @@ export async function verifyContract(product: string) {
     {
       headers: {
         "Ocp-Apim-Subscription-Key": process.env
-          .OCP_APIM_SUBSCRIPTION_KEY as string,
+          .FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY as string,
       },
       output: z.object({
         cades: z.boolean(),
@@ -36,7 +36,7 @@ export async function getOnboardingByProduct(
       {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env
-            .API_KEY_INSTITUTION as string,
+            .FE_SMCR_API_KEY_INSTITUTION as string,
         },
         output: z.array(
           z.object({
@@ -68,7 +68,8 @@ export async function sendQueueMessage(onboarding: string) {
     {
       method: "PUT",
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key": process.env
+          .FE_SMCR_API_KEY_INSTITUTION as string,
         "content-type": "application/json",
       },
       body: JSON.stringify({}),

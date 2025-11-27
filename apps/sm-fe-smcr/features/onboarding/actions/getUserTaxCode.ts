@@ -6,7 +6,8 @@ import { TAXCODE_PRIVATE_LENGTH } from "../utils/constants";
 const GET_USERS_PATH = process.env.GET_USERS_PATH;
 
 const ONBOARDING_BASE_PATH = process.env.ONBOARDING_BASE_PATH;
-const API_KEY_PROD_GET_USERS = process.env.API_KEY_PROD_GET_USERS;
+const FE_SMCR_API_KEY_PROD_GET_USERS =
+  process.env.FE_SMCR_API_KEY_PROD_GET_USERS;
 
 export async function getUserTaxCode(state: any, formData: FormData) {
   const taxCodeFormData = formData.get("taxCode") as string;
@@ -23,7 +24,7 @@ export async function getUserTaxCode(state: any, formData: FormData) {
       method: "POST",
       baseURL: ONBOARDING_BASE_PATH,
       headers: {
-        "Ocp-Apim-Subscription-Key": `${API_KEY_PROD_GET_USERS}`,
+        "Ocp-Apim-Subscription-Key": `${FE_SMCR_API_KEY_PROD_GET_USERS}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
