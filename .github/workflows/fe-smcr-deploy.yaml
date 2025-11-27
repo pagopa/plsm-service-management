@@ -52,7 +52,14 @@ jobs:
   # ===============================================
   build:
     name: 🏗 Build & Package Artifact
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ 
+      inputs.use_labels && inputs.use_private_agent
+      ? (inputs.override_labels != '' 
+          ? inputs.override_labels 
+          : inputs.environment)
+      : (inputs.use_private_agent 
+          ? 'self-hosted' 
+          : 'ubuntu-latest')}}
     environment: ${{ inputs.environment }} 
 
     env:
@@ -63,10 +70,10 @@ jobs:
       
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb5a8aa832014cc9ca43ce
+        uses: actions/checkout@0a0ada5f284e3650c538c869d0d38139bd65451e
 
       - name: Setup Node.js
-        uses: actions/setup-node@60ed7c593809618b175788417534c01d4a5c4e8e
+        uses: actions/setup-node@1a4442b6c1c036635a9f22be1f887ccb66f4d3c2
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -101,7 +108,14 @@ jobs:
   deploy_to_staging:
     name: 🚀 Deploy a Staging
     needs: build
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ 
+      inputs.use_labels && inputs.use_private_agent
+      ? (inputs.override_labels != '' 
+          ? inputs.override_labels 
+          : inputs.environment)
+      : (inputs.use_private_agent 
+          ? 'self-hosted' 
+          : 'ubuntu-latest')}}
     environment: ${{ inputs.environment }}-cd 
 
     env:
@@ -137,7 +151,14 @@ jobs:
   swap_to_production:
     name: ✨ Swap Staging -> Production
     needs: deploy_to_staging
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ 
+      inputs.use_labels && inputs.use_private_agent
+      ? (inputs.override_labels != '' 
+          ? inputs.override_labels 
+          : inputs.environment)
+      : (inputs.use_private_agent 
+          ? 'self-hosted' 
+          : 'ubuntu-latest')}}
     environment: ${{ inputs.environment }}-cd 
 
     # Segreti di Azure per l'autenticazione OIDC
