@@ -63,7 +63,7 @@ jobs:
       
     steps:
       - name: Checkout repository
-        uses: actions/checkout@0a0ada5f284e3650c538c869d0d38139bd65451e
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Setup Node.js
         uses: actions/setup-node@1a4442b6c1c036635a9f22be1f887ccb66f4d3c2
@@ -89,7 +89,7 @@ jobs:
           echo "artifact-path=$(realpath ${{ env.ARTIFACT_NAME }}.zip)" >> "$GITHUB_OUTPUT"
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@a8a3f890c52f20a7751965c4974020a5de914197
+        uses: actions/upload-artifact@834a144ee48ff5b87718190bbb38fa7dbbfc2f79
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ steps.package-artifact.outputs.artifact-path }}
@@ -111,20 +111,20 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: actions/download-artifact@a8a3f890c52f20a7751965c4974020a5de914197
+        uses: actions/download-artifact@834a144ee48ff5b87718190bbb38fa7dbbfc2f79
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: .
           
       - name: Login to Azure (OIDC)
-        uses: azure/login@f318991490215c0e2a2221b33b0066914619d854
+        uses: azure/login@888cc4cd5e86b9a384a74c08225df890f2288890
         with:
           client-id: ${{ env.ARM_CLIENT_ID }}
           tenant-id: ${{ env.ARM_TENANT_ID }}
           subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure WebApp (Staging Slot)
-        uses: azure/webapps-deploy@031c6a273b5b1114c000c0f865fdd2224d08b3c9
+        uses: azure/webapps-deploy@406becef3f993fb27df65dac9486c2bb0e16a5c7
         with:
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           app-name: ${{ env.WEB_APP_NAME }}
@@ -148,7 +148,7 @@ jobs:
       
     steps:
       - name: Login to Azure (OIDC)
-        uses: azure/login@v2.5.0
+        uses: azure/login@888cc4cd5e86b9a384a74c08225df890f2288890
         with:
           client-id: ${{ env.ARM_CLIENT_ID }}
           tenant-id: ${{ env.ARM_TENANT_ID }}
