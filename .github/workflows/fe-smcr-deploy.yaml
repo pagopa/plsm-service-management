@@ -1,0 +1,166 @@
+name: Deploy - SM-FE-SMCR to Azure App Service
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment where the artifact will be deployed.
+        type: string
+        required: true
+        default: "app-prod"
+      resource_group_name:
+        description: "Web App resource group name"
+        type: string
+        required: true
+        default: "plsm-p-itn-apps-rg-01"
+      web_app_name:
+        description: "Web App name"
+        type: string
+        required: true
+        default: "plsm-p-itn-fsmcr-app-01"
+      use_private_agent:
+        description: Use a private agent to deploy the built artifact.
+        type: boolean
+        required: false
+        default: true
+      use_labels:
+        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        type: boolean
+        required: false
+        default: false
+      override_labels:
+        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        type: string
+        required: false
+        default: ""
+permissions:
+  id-token: write # Necessario per l'Azure Login (OIDC)
+  contents: read # Necessario per il checkout del codice
+  attestations: write
+
+env:
+  NODE_VERSION: "22"
+  NEXT_APP_PATH: "./apps/sm-fe-smcr"
+  ARTIFACT_NAME: 'bundle'
+  RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }} 
+  WEB_APP_NAME: ${{ inputs.web_app_name }} 
+
+jobs:
+
+  # ===============================================
+  # JOB 1: BUILD - Compila Next.js iniettando le ENV
+  # ===============================================
+  build:
+    name: 🏗 Build & Package Artifact
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    environment: ${{ inputs.environment }} 
+
+    env:
+      NEXT_PUBLIC_MSAL_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_MSAL_CLIENT_ID }}
+      NEXT_PUBLIC_MSAL_TENANT_ID: ${{ secrets.NEXT_PUBLIC_MSAL_TENANT_ID }}
+      NEXT_PUBLIC_MSAL_REDIRECT_URI: ${{ secrets.NEXT_PUBLIC_MSAL_REDIRECT_URI }}
+      NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb5a8aa832014cc9ca43ce
+
+      - name: Setup Node.js
+        uses: actions/setup-node@60ed7c593809618b175788417534c01d4a5c4e8e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        working-directory: ${{ env.NEXT_APP_PATH }}
+        run: yarn install --immutable
+
+      - name: Build Next.js Application
+        working-directory: ${{ env.NEXT_APP_PATH }}
+        run: yarn build
+
+      - name: Create Standalone Bundle (zip)
+        id: package-artifact
+        working-directory: ${{ env.NEXT_APP_PATH }}
+        run: |
+          zip -r ${{ env.ARTIFACT_NAME }}.zip .next/standalone/
+          echo "artifact-path=$(realpath ${{ env.ARTIFACT_NAME }}.zip)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@a8a3f890c52f20a7751965c4974020a5de914197
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ steps.package-artifact.outputs.artifact-path }}
+          retention-days: 7
+          
+  # ===============================================
+  # JOB 2: DEPLOY A STAGING
+  # ===============================================
+  deploy_to_staging:
+    name: 🚀 Deploy a Staging
+    needs: build
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    environment: ${{ inputs.environment }}-cd 
+
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@a8a3f890c52f20a7751965c4974020a5de914197
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: .
+          
+      - name: Login to Azure (OIDC)
+        uses: azure/login@f318991490215c0e2a2221b33b0066914619d854
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure WebApp (Staging Slot)
+        uses: azure/webapps-deploy@031c6a273b5b1114c000c0f865fdd2224d08b3c9
+        with:
+          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
+          app-name: ${{ env.WEB_APP_NAME }}
+          package: ${{ env.ARTIFACT_NAME }}.zip
+          slot-name: 'staging'
+
+  # ===============================================
+  # JOB 3: SWAP DA STAGING A PRODUCTION
+  # ===============================================
+  swap_to_production:
+    name: ✨ Swap Staging -> Production
+    needs: deploy_to_staging
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    environment: ${{ inputs.environment }}-cd 
+
+    # Segreti di Azure per l'autenticazione OIDC
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      
+    steps:
+      - name: Login to Azure (OIDC)
+        uses: azure/login@v2.5.0
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Swap Staging to Production
+        run: |
+          echo "Eseguo lo swap dello slot 'staging' nello slot 'production'..."
+          az webapp deployment slot swap \
+            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
+            --name "${{ env.WEB_APP_NAME }}" \
+            --slot staging \
+            --target-slot production \
+            --output none
+          echo "Swap completato. Il nuovo codice è ora in Produzione."
