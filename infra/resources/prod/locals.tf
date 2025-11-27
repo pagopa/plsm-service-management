@@ -88,7 +88,7 @@ locals {
     SLACK_WEBHOOK_ONBOARDING_PN           = "${data.azurerm_key_vault_secret.slack_webhook_onboarding_pn.value}"
     SLACK_WEBHOOK_ONBOARDING_INTEROP      = "${data.azurerm_key_vault_secret.slack_webhook_onboarding_interop.value}"
     SLACK_WEBHOOK_ONBOARDING_PAGOPA       = "${data.azurerm_key_vault_secret.slack_webhook_onboarding_pagopa.value}"
-    OCP_APIM_SUBSCRIPTION_KEY             = "${data.azurerm_key_vault_secret.ocp_apim_subscription_key.value}"
+    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY             = "${data.azurerm_key_vault_secret.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY.value}"
     ENDPOINT_GET_INSTITUTION_FROM_TAXCODE = "https://api.selfcare.pagopa.it/external/v2/institutions/?taxCode="
 
   }
@@ -101,7 +101,7 @@ locals {
     SLACK_SIGNING_SECRET            = "${data.azurerm_key_vault_secret.askmebot_slack_signing_secret.value}"
     ENABLED_EMAILS_SECRET           = "${data.azurerm_key_vault_secret.askmebot_enabled_emails_secret.value}"
     LEGAL_ENABLED_EMAILS_SECRET     = "${data.azurerm_key_vault_secret.askmebot_legal_enabled_emails_secret.value}"
-    OCP_APIM_SUBSCRIPTION_KEY       = "${data.azurerm_key_vault_secret.askmebot_ocp_apim_subscription_key.value}"
+    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY       = "${data.azurerm_key_vault_secret.askmebot_FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY.value}"
     SLACK_API_URL                   = "https://slack.com/api"
     INSTITUTION_URL                 = "https://api.selfcare.pagopa.it/external/support/v1/institutions"
     USERS_URL                       = "https://api.selfcare.pagopa.it/external/internal/v1/institutions"

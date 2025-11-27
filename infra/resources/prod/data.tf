@@ -147,7 +147,7 @@ data "azurerm_key_vault_secret" "slack_webhook_onboarding_interop" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
-data "azurerm_key_vault_secret" "ocp_apim_subscription_key" {
+data "azurerm_key_vault_secret" "FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY" {
   name         = "fa-onboarding-ocp-apim-subscription-key"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
@@ -185,7 +185,7 @@ data "azurerm_key_vault_secret" "askmebot_legal_enabled_emails_secret" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
-data "azurerm_key_vault_secret" "askmebot_ocp_apim_subscription_key" {
+data "azurerm_key_vault_secret" "askmebot_FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY" {
   name         = "fa-askmebot-ocp-apim-subscription-key"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }

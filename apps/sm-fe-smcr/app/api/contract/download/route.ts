@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     const apiRes = await fetch(apiUrl, {
       method: "GET",
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_INSTITUTION!,
+        "Ocp-Apim-Subscription-Key": process.env.FE_SMCR_API_KEY_INSTITUTION!,
       },
     });
 

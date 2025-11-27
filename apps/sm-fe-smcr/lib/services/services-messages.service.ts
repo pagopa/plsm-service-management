@@ -40,7 +40,7 @@ export async function getServices(query: string) {
     {
       method: "GET",
       headers: {
-        "x-api-key": process.env.API_KEY_SERVICES as string,
+        "x-api-key": process.env.FE_SMCR_API_KEY_SERVICES as string,
       },
       output: z.object({
         items: z.array(

@@ -88,7 +88,7 @@ export const handle =
                     {
                       headers: {
                         'Ocp-Apim-Subscription-Key':
-                          config.OCP_APIM_SUBSCRIPTION_KEY,
+                          config.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY,
                       },
                       method: 'GET',
                     }

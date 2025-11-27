@@ -89,7 +89,8 @@ export async function getInstitution(taxCode: string) {
     {
       output: z.array(InstitutionSchema),
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key": process.env
+          .FE_SMCR_API_KEY_INSTITUTION as string,
       },
     },
   );
@@ -112,7 +113,8 @@ export async function getInstitutionWithSubunits(
     {
       output: z.object({ institutions: z.array(InstitutionSchema) }),
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key": process.env
+          .FE_SMCR_API_KEY_INSTITUTION as string,
       },
     },
   );
@@ -137,7 +139,7 @@ export async function getInstitutionPNPG(
     {
       output: z.object({ institutions: z.array(InstitutionSchema) }),
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_PNPG as string,
+        "Ocp-Apim-Subscription-Key": process.env.FE_SMCR_API_KEY_PNPG as string,
       },
     },
   );
@@ -227,7 +229,8 @@ export async function updateInstitutionInfo(input: UpdateInsitutionInfoInput) {
         zipCode: input.zipCode,
       }),
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key": process.env
+          .FE_SMCR_API_KEY_INSTITUTION as string,
         "Content-Type": "application/json",
       },
     },
@@ -266,7 +269,7 @@ export async function updateInstitutionInfoPNPG(
         zipCode: input.zipCode,
       }),
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_PNPG as string,
+        "Ocp-Apim-Subscription-Key": process.env.FE_SMCR_API_KEY_PNPG as string,
         "Content-Type": "application/json",
       },
     },
@@ -351,7 +354,8 @@ export async function getUserGroups(input: { institution: string }) {
     {
       method: "GET",
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key": process.env
+          .FE_SMCR_API_KEY_INSTITUTION as string,
       },
       output: UserGroupsSchema,
     },
