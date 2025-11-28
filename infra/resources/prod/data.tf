@@ -45,6 +45,12 @@ data "azurerm_key_vault_secret" "db_password" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+data "azurerm_key_vault_secret" "db_password_b64" {
+  name         = "db-password-b64"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+
 
 
 data "azurerm_user_assigned_identity" "github_cd_identity" {
