@@ -123,6 +123,18 @@ jobs:
           echo "1. Copia il contenuto Standalone da .next/standalone/$NEXT_APP_PATH/."
           cp -R $NEXT_APP_PATH/.next/standalone/$NEXT_APP_PATH/. $BUILD_DIR/
 
+      - name: Copy Standalone Node Modules
+        run: |
+          # Il node_modules per lo standalone è spesso un livello più alto nel monorepo
+          NODE_MODULES_SRC="$NEXT_APP_PATH/.next/standalone/node_modules"
+          
+          if [ -d "$NODE_MODULES_SRC" ]; then
+              echo "Copia node_modules standalone da $NODE_MODULES_SRC"
+              cp -R $NODE_MODULES_SRC $BUILD_DIR/
+          else
+              echo "AVVISO: Node_modules standalone non trovato in $NODE_MODULES_SRC. La build potrebbe fallire."
+          fi
+      
       - name: Copy Static Assets (.next/static)
         run: |
           STATIC_SRC="$NEXT_APP_PATH/.next/static"
