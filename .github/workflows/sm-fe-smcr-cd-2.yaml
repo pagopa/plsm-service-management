@@ -120,10 +120,11 @@ jobs:
           rm -rf $BUILD_DIR
           mkdir -p $BUILD_DIR
 
-          # 1. Copia il server standalone (server.js, node_modules)
-          cp -R .next/standalone/* $BUILD_DIR/
+          # 1. Copia SOLO il contenuto dell'app standalone (non tutto il monorepo!)
+          #    Next.js standalone mette l'app in .next/standalone/apps/sm-fe-smcr/
+          cp -R .next/standalone/${{ env.NEXT_APP_PATH }}/* $BUILD_DIR/
 
-          # 2. Copia gli asset statici
+          # 2. Copia gli asset statici nella posizione corretta
           if [ -d ".next/static" ]; then
             mkdir -p $BUILD_DIR/.next/static
             cp -R .next/static/* $BUILD_DIR/.next/static/
@@ -134,18 +135,18 @@ jobs:
             cp -R public $BUILD_DIR/
           fi
           
-          # 4. Crea lo ZIP DENTRO bundle-root (no ../)
+          # 4. Crea lo ZIP
           cd $BUILD_DIR
           zip -r ${{ env.BUNDLE_NAME }}.zip .
           
-          # 5. Output del path assoluto DENTRO bundle-root
+          # 5. Output del path
           ARTIFACT_PATH="$(pwd)/${{ env.BUNDLE_NAME }}.zip"
           echo "artifact-path=$ARTIFACT_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 #v4.6.0
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.BUNDLE_NAME }}   
+          name: ${{ env.BUNDLE_NAME }}
           path: ${{ steps.create-artifact.outputs.artifact-path }}
           retention-days: 7
 
@@ -246,7 +247,7 @@ jobs:
 
       - name: Deploy to production slot
         if: ${{ !fromJSON(needs.validate.outputs.use_staging_slot) }}
-        uses: azure/webapps-deploy@de617f46172a906d0617bb0e50d81e9e3aec24c8 # v3.0.1
+        uses: azure/webapps-deploy@4bfb30bef2c330e36be280cb1e5726d0fac06233 #v2.2.13
         with:
           app-name: ${{ env.WEB_APP_NAME }}
           package: ${{ env.BUNDLE_NAME }}.zip
