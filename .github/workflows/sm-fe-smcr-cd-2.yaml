@@ -285,7 +285,6 @@ jobs:
             --name "${{ env.WEB_APP_NAME }}" \
             --slot staging \
             --target-slot production \
-            --no-wait
           
           echo "✅ Slot swap initiated (non-blocking)."
 
