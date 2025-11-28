@@ -111,37 +111,44 @@ jobs:
       # -----------------------------------------------------
       # 🛠️ PACKAGING
       # -----------------------------------------------------
-      - name: Create ZIP Artifact
-        id: create-artifact
-        working-directory: ${{ env.NEXT_APP_PATH }}
+      - name: Create Standalone Bundle Directory
         run: |
-          BUILD_DIR="bundle-root"
-          
+          # Pulisce e crea la directory di staging
           rm -rf $BUILD_DIR
           mkdir -p $BUILD_DIR
-
-          # 1. Copia SOLO il contenuto dell'app standalone (non tutto il monorepo!)
-          #    Next.js standalone mette l'app in .next/standalone/apps/sm-fe-smcr/
-          cp -R .next/standalone/${{ env.NEXT_APP_PATH }}/* $BUILD_DIR/
-
-          # 2. Copia gli asset statici nella posizione corretta
-          if [ -d ".next/static" ]; then
-            mkdir -p $BUILD_DIR/.next/static
-            cp -R .next/static/* $BUILD_DIR/.next/static/
-          fi
           
-          # 3. Copia la cartella public
-          if [ -d "public" ]; then
-            cp -R public $BUILD_DIR/
+          # Copia il bundle standalone dalla sottodirectory interna
+          # Corrisponde a: cp -R apps/sm-fe-smcr/.next/standalone/apps/sm-fe-smcr/. bundle-root/
+          echo "1. Copia il contenuto Standalone da .next/standalone/$NEXT_APP_PATH/."
+          cp -R $NEXT_APP_PATH/.next/standalone/$NEXT_APP_PATH/. $BUILD_DIR/
+
+      - name: Copy Static Assets (.next/static)
+        run: |
+          STATIC_SRC="$NEXT_APP_PATH/.next/static"
+          STATIC_DEST="$BUILD_DIR/.next/static"
+          if [ -d "$STATIC_SRC" ]; then
+            echo "2. Copia gli asset statici da $STATIC_SRC"
+            mkdir -p $STATIC_DEST
+            cp -R $STATIC_SRC/* $STATIC_DEST/
+          else
+            echo "Nessuna cartella .next/static trovata, salto la copia."
           fi
-          
-          # 4. Crea lo ZIP
+
+      - name: Copy Public Directory
+        run: |
+          PUBLIC_SRC="$NEXT_APP_PATH/public"
+          if [ -d "$PUBLIC_SRC" ]; then
+            echo "3. Copia la cartella public da $PUBLIC_SRC"
+            cp -R $PUBLIC_SRC $BUILD_DIR/
+          else
+            echo "Nessuna cartella public trovata, salto la copia."
+          fi
+
+      - name: Create Deployment ZIP
+        run: |
           cd $BUILD_DIR
-          zip -r ${{ env.BUNDLE_NAME }}.zip .
-          
-          # 5. Output del path
-          ARTIFACT_PATH="$(pwd)/${{ env.BUNDLE_NAME }}.zip"
-          echo "artifact-path=$ARTIFACT_PATH" >> "$GITHUB_OUTPUT"
+          zip -r ../${BUNDLE_NAME}.zip .
+          echo "ZIP artifact created: ${BUNDLE_NAME}.zip"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
