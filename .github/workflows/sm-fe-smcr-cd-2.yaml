@@ -108,39 +108,40 @@ jobs:
       - name: Build (Turbo - monorepo)
         run: yarn turbo build --filter=${{ env.WORKSPACE_NAME }}
 
-      # ------------------------
-      # 🌐 PACKAGE NEXT STEPS
-      # ------------------------
+      # -----------------------------------------------------
+      # 🛠️ PACKAGING ROBUSTO PER STANDALONE (Corretto)
+      # -----------------------------------------------------
       - name: Prepare Next.js Standalone Bundle
-        working-directory: ${{ env.NEXT_APP_PATH }}
+        working-directory: ${{ env.NEXT_APP_PATH }} # Lavora nella cartella dell'app
         run: |
-          rm -rf build
-          mkdir -p build
+          BUILD_DIR="bundle-root"
+          BUNDLE_ZIP="../${{ env.ARTIFACT_NAME }}.zip"
+          
+          rm -rf $BUILD_DIR
+          mkdir -p $BUILD_DIR
 
-          # Standalone server (server.js, chunks, node_modules trimmed)
-          cp -R .next/standalone/* build/
+          # 1. Copia il server standalone (server.js, node_modules)
+          cp -R .next/standalone/* $BUILD_DIR/
 
-          # Static assets
-          mkdir -p build/.next/static
+          # 2. Copia gli asset statici
           if [ -d ".next/static" ]; then
-            cp -R .next/static/* build/.next/static/
+            cp -R .next/static $BUILD_DIR/.next/static
           fi
 
-          # Public folder
+          # 3. Copia la cartella public
           if [ -d "public" ]; then
-            cp -R public build/
+            cp -R public $BUILD_DIR/
           fi
-
-      - name: Create ZIP Artifact
-        working-directory: ${{ env.NEXT_APP_PATH }}/build
-        run: |
-          zip -r ../${{ env.BUNDLE_NAME }}.zip .
+          
+          # 4. Crea lo ZIP dalla cartella bundle-root
+          cd $BUILD_DIR
+          zip -r $BUNDLE_ZIP .
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 #v4.6.0
         with:
-          name: ${{ env.BUNDLE_NAME }}
-          path: ${{ env.NEXT_APP_PATH }}/${{ env.BUNDLE_NAME }}.zip
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.NEXT_APP_PATH }}/${{ env.ARTIFACT_NAME }}.zip # Usa il percorso assoluto
           retention-days: 7
 
   # --------------------------------------------------------------------
@@ -160,7 +161,7 @@ jobs:
 
     steps:
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
         with:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
@@ -217,13 +218,13 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: ${{ env.BUNDLE_NAME }}
           path: .
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
         with:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
@@ -231,7 +232,7 @@ jobs:
 
       - name: Deploy to staging slot
         if: fromJSON(needs.validate.outputs.use_staging_slot)
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@de617f46172a906d0617bb0e50d81e9e3aec24c8 # v3.0.1
         with:
           app-name: ${{ env.WEB_APP_NAME }}
           slot-name: staging
@@ -239,7 +240,7 @@ jobs:
 
       - name: Deploy to production slot
         if: ${{ !fromJSON(needs.validate.outputs.use_staging_slot) }}
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@de617f46172a906d0617bb0e50d81e9e3aec24c8 # v3.0.1
         with:
           app-name: ${{ env.WEB_APP_NAME }}
           package: ${{ env.BUNDLE_NAME }}.zip
@@ -260,7 +261,7 @@ jobs:
 
     steps:
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
         with:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
@@ -276,9 +277,10 @@ jobs:
             --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
             --name "${{ env.WEB_APP_NAME }}" \
             --slot staging \
-            --target-slot production
+            --target-slot production \
+            --no-wait
           
-          echo "✅ Slot swap completed successfully"
+          echo "✅ Slot swap initiated (non-blocking)."
 
       - name: Verify production deployment
         run: |
