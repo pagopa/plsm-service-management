@@ -51,6 +51,12 @@ on:
         required: false
         default: ""
 
+      disable_auto_staging_deploy:
+        description: Disable automatic deployments to the staging slot
+        type: boolean
+        required: false
+        default: false
+
 permissions:
   id-token: write
   contents: read
@@ -80,7 +86,7 @@ jobs:
       NEXT_PUBLIC_MSAL_REDIRECT_URI: ${{ secrets.NEXT_PUBLIC_MSAL_REDIRECT_URI }}
       NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
 
-      # SERVER ENV
+      # SERVER ENV (opzionali in build, saranno in Azure App Settings)
       MSAL_CLIENT_ID: ${{ secrets.MSAL_CLIENT_ID }}
       MSAL_TENANT_ID: ${{ secrets.MSAL_TENANT_ID }}
       MSAL_REDIRECT_URI: ${{ secrets.MSAL_REDIRECT_URI }}
@@ -131,75 +137,197 @@ jobs:
           zip -r ../${{ env.BUNDLE_NAME }}.zip .
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BUNDLE_NAME }}
           path: ${{ env.NEXT_APP_PATH }}/${{ env.BUNDLE_NAME }}.zip
+          retention-days: 7
 
   # --------------------------------------------------------------------
-  # 🚀 DEPLOY TO STAGING SLOT
+  # 🔍 VALIDATE WEB APP
+  # --------------------------------------------------------------------
+  validate:
+    name: 🔍 Validate Web App Configuration
+    needs: build
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    environment: ${{ inputs.environment }}-ci
+
+    permissions:
+      id-token: write
+
+    outputs:
+      use_staging_slot: ${{ steps.query-staging-slot.outputs.use_staging_slot }}
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Check for existing staging slot
+        id: query-staging-slot
+        run: |
+          echo "::debug::Checking for existing deployment slots..."
+          USE_STAGING_SLOT=$(az webapp deployment slot list \
+            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
+            --name "${{ env.WEB_APP_NAME }}" \
+            --query 'length([?name == `staging`]) > `0`')
+          echo "use_staging_slot=$USE_STAGING_SLOT" >> "$GITHUB_OUTPUT"
+          
+          if [ "$USE_STAGING_SLOT" == "true" ]; then
+            echo "### ✅ Staging slot found" >> $GITHUB_STEP_SUMMARY
+            echo "Deployment will proceed to staging slot, then swap to production." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ⚠️ No staging slot found" >> $GITHUB_STEP_SUMMARY
+            echo "Deployment will proceed directly to production slot." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check custom warm-up configuration
+        if: ${{ steps.query-staging-slot.outputs.use_staging_slot == 'true' }}
+        run: |
+          IS_WARMUP_CONFIGURED=$(az webapp config appsettings list \
+            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
+            --name "${{ env.WEB_APP_NAME }}" \
+            --query 'length([?name==`WEBSITE_SWAP_WARMUP_PING_STATUSES`||name==`WEBSITE_SWAP_WARMUP_PING_PATH`]) == `2`')
+          
+          if [ "$IS_WARMUP_CONFIGURED" == "false" ]; then
+            echo "::warning::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set."
+            echo "### ⚠️ Recommended: Configure custom warm-up" >> $GITHUB_STEP_SUMMARY
+            echo "For safer slot swapping, consider setting:" >> $GITHUB_STEP_SUMMARY
+            echo "- WEBSITE_SWAP_WARMUP_PING_PATH=/api/health" >> $GITHUB_STEP_SUMMARY
+            echo "- WEBSITE_SWAP_WARMUP_PING_STATUSES=200,302" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ✅ Custom warm-up configured" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # --------------------------------------------------------------------
+  # 🚀 DEPLOY TO STAGING SLOT (using Kudu API like PagoPA)
   # --------------------------------------------------------------------
   deploy:
-    name: 🚀 Deploy to Staging
-    needs: build
+    name: ${{ fromJSON(needs.validate.outputs.use_staging_slot) && '🚀 Deploy to Staging' || '🚀 Deploy to Production' }}
+    needs: [validate]
     environment: ${{ inputs.environment }}-cd
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
 
-    env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Download Artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v4
         with:
-          name: bundle
+          name: ${{ env.BUNDLE_NAME }}
           path: .
 
       - name: Azure Login
         uses: azure/login@v2
         with:
-          client-id: ${{ env.ARM_CLIENT_ID }}
-          tenant-id: ${{ env.ARM_TENANT_ID }}
-          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: Deploy ZIP with CLI
+      - name: Deploy to staging slot (Kudu API)
+        if: fromJSON(needs.validate.outputs.use_staging_slot)
         run: |
-          az webapp deploy \
+          echo "🚀 Deploying to staging slot using Kudu API..."
+          
+          # Get publishing credentials
+          CREDS=$(az webapp deployment list-publishing-profiles \
             --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
             --name "${{ env.WEB_APP_NAME }}" \
             --slot staging \
-            --src-path bundle.zip \
-            --type zip \
-            --async false
+            --query "[?publishMethod=='MSDeploy'] | [0].[userName, userPWD]" \
+            --output tsv)
+          
+          USERNAME=$(echo "$CREDS" | cut -f1)
+          PASSWORD=$(echo "$CREDS" | cut -f2)
+          
+          # Deploy via Kudu ZipDeploy API
+          curl -X POST \
+            -u "$USERNAME:$PASSWORD" \
+            --data-binary @"${{ env.BUNDLE_NAME }}.zip" \
+            "https://${{ env.WEB_APP_NAME }}-staging.scm.azurewebsites.net/api/zipdeploy?isAsync=false"
+          
+          echo "✅ Deployment to staging completed"
+
+      - name: Deploy to production slot (Kudu API)
+        if: ${{ !fromJSON(needs.validate.outputs.use_staging_slot) }}
+        run: |
+          echo "🚀 Deploying to production slot using Kudu API..."
+          
+          # Get publishing credentials
+          CREDS=$(az webapp deployment list-publishing-profiles \
+            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
+            --name "${{ env.WEB_APP_NAME }}" \
+            --query "[?publishMethod=='MSDeploy'] | [0].[userName, userPWD]" \
+            --output tsv)
+          
+          USERNAME=$(echo "$CREDS" | cut -f1)
+          PASSWORD=$(echo "$CREDS" | cut -f2)
+          
+          # Deploy via Kudu ZipDeploy API
+          curl -X POST \
+            -u "$USERNAME:$PASSWORD" \
+            --data-binary @"${{ env.BUNDLE_NAME }}.zip" \
+            "https://${{ env.WEB_APP_NAME }}.scm.azurewebsites.net/api/zipdeploy?isAsync=false"
+          
+          echo "✅ Deployment to production completed"
 
   # --------------------------------------------------------------------
   # ✨ SWAP → PRODUCTION
   # --------------------------------------------------------------------
   swap:
     name: ✨ Swap Staging → Production
-    needs: deploy
+    needs: [validate, deploy]
+    if: ${{ fromJSON(needs.validate.outputs.use_staging_slot) }}
     environment: ${{ inputs.environment }}-cd
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
 
-    env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Azure Login
         uses: azure/login@v2
         with:
-          client-id: ${{ env.ARM_CLIENT_ID }}
-          tenant-id: ${{ env.ARM_TENANT_ID }}
-          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Swap staging → production
         run: |
+          echo "🔄 Starting slot swap: staging → production"
+          
           az webapp deployment slot swap \
             --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
             --name "${{ env.WEB_APP_NAME }}" \
             --slot staging \
             --target-slot production
+          
+          echo "✅ Slot swap completed successfully"
+
+      - name: Verify production deployment
+        run: |
+          echo "⏳ Waiting 30s for production slot to stabilize..."
+          sleep 30
+          
+          PROD_URL="https://${{ env.WEB_APP_NAME }}.azurewebsites.net"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL" || echo "000")
+          
+          echo "Production URL: $PROD_URL"
+          echo "HTTP Status: $HTTP_STATUS"
+          
+          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
+            echo "### ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
+            echo "Production is live at: $PROD_URL" >> $GITHUB_STEP_SUMMARY
+            echo "HTTP Status: $HTTP_STATUS" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ⚠️ Deployment needs verification" >> $GITHUB_STEP_SUMMARY
+            echo "Production URL: $PROD_URL" >> $GITHUB_STEP_SUMMARY
+            echo "HTTP Status: $HTTP_STATUS" >> $GITHUB_STEP_SUMMARY
+            echo "Please verify manually." >> $GITHUB_STEP_SUMMARY
+          fi
