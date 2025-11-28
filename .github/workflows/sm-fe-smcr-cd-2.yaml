@@ -1,4 +1,4 @@
-name: Deploy - SM-FE-SMCR
+name: Deploy - SM-FE-SMCR 2
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ on:
         description: "Web App Name"
         type: string
         required: true
-        default: "plsm-p-itn-fsmcr-app-01"
+        default: "plsm-p-itn-fe-smcr-app-01"
 
       use_private_agent:
         description: Use a private agent to deploy the built artifact.
@@ -229,52 +229,20 @@ jobs:
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: Deploy to staging slot (Kudu API)
+      - name: Deploy to staging slot
         if: fromJSON(needs.validate.outputs.use_staging_slot)
-        run: |
-          echo "🚀 Deploying to staging slot using Kudu API..."
-          
-          # Get publishing credentials
-          CREDS=$(az webapp deployment list-publishing-profiles \
-            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
-            --name "${{ env.WEB_APP_NAME }}" \
-            --slot staging \
-            --query "[?publishMethod=='MSDeploy'] | [0].[userName, userPWD]" \
-            --output tsv)
-          
-          USERNAME=$(echo "$CREDS" | cut -f1)
-          PASSWORD=$(echo "$CREDS" | cut -f2)
-          
-          # Deploy via Kudu ZipDeploy API
-          curl -X POST \
-            -u "$USERNAME:$PASSWORD" \
-            --data-binary @"${{ env.BUNDLE_NAME }}.zip" \
-            "https://${{ env.WEB_APP_NAME }}-staging.scm.azurewebsites.net/api/zipdeploy?isAsync=false"
-          
-          echo "✅ Deployment to staging completed"
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.WEB_APP_NAME }}
+          slot-name: staging
+          package: ${{ env.BUNDLE_NAME }}.zip
 
-      - name: Deploy to production slot (Kudu API)
+      - name: Deploy to production slot
         if: ${{ !fromJSON(needs.validate.outputs.use_staging_slot) }}
-        run: |
-          echo "🚀 Deploying to production slot using Kudu API..."
-          
-          # Get publishing credentials
-          CREDS=$(az webapp deployment list-publishing-profiles \
-            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
-            --name "${{ env.WEB_APP_NAME }}" \
-            --query "[?publishMethod=='MSDeploy'] | [0].[userName, userPWD]" \
-            --output tsv)
-          
-          USERNAME=$(echo "$CREDS" | cut -f1)
-          PASSWORD=$(echo "$CREDS" | cut -f2)
-          
-          # Deploy via Kudu ZipDeploy API
-          curl -X POST \
-            -u "$USERNAME:$PASSWORD" \
-            --data-binary @"${{ env.BUNDLE_NAME }}.zip" \
-            "https://${{ env.WEB_APP_NAME }}.scm.azurewebsites.net/api/zipdeploy?isAsync=false"
-          
-          echo "✅ Deployment to production completed"
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.WEB_APP_NAME }}
+          package: ${{ env.BUNDLE_NAME }}.zip
 
   # --------------------------------------------------------------------
   # ✨ SWAP → PRODUCTION
@@ -298,6 +266,8 @@ jobs:
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
+
+      # swap staging to production
       - name: Swap staging → production
         run: |
           echo "🔄 Starting slot swap: staging → production"
