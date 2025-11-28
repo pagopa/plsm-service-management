@@ -109,13 +109,14 @@ jobs:
         run: yarn turbo build --filter=${{ env.WORKSPACE_NAME }}
 
       # -----------------------------------------------------
-      # 🛠️ PACKAGING ROBUSTO PER STANDALONE (Corretto)
+      # 🛠️ PACKAGING
       # -----------------------------------------------------
-      - name: Prepare Next.js Standalone Bundle
+      - name: Create ZIP Artifact
+        id: create-artifact
         working-directory: ${{ env.NEXT_APP_PATH }} # Lavora nella cartella dell'app
         run: |
           BUILD_DIR="bundle-root"
-          BUNDLE_ZIP="../${{ env.ARTIFACT_NAME }}.zip"
+          BUNDLE_ZIP="../${{ env.BUNDLE_NAME }}.zip"
           
           rm -rf $BUILD_DIR
           mkdir -p $BUILD_DIR
@@ -123,11 +124,9 @@ jobs:
           # 1. Copia il server standalone (server.js, node_modules)
           cp -R .next/standalone/* $BUILD_DIR/
 
+          # 2. Copia gli asset statici (FIX: Creiamo la directory di destinazione prima)
           if [ -d ".next/static" ]; then
-            # Creazione della cartella padre che mancava
-            mkdir -p $BUILD_DIR/.next/static 
-            
-            # Copia i file statici (es. JS, CSS, Media)
+            mkdir -p $BUILD_DIR/.next/static
             cp -R .next/static/* $BUILD_DIR/.next/static/
           fi
           
@@ -139,13 +138,19 @@ jobs:
           # 4. Crea lo ZIP dalla cartella bundle-root (il server.js è nella root del ZIP)
           cd $BUILD_DIR
           zip -r $BUNDLE_ZIP .
+          
+          # 5. Emette il percorso assoluto per l'upload
+          # USIAMO $PWD PER RISOLVERE IL PERCORSO CORRETTO DALLA SHELL
+          ARTIFACT_PATH="$(pwd)/$BUNDLE_ZIP"
+          echo "artifact-path=$ARTIFACT_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 #v4.6.0
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.NEXT_APP_PATH }}/${{ env.ARTIFACT_NAME }}.zip
+          path: ${{ steps.create-artifact.outputs.artifact-path }}
           retention-days: 7
+
 
   # --------------------------------------------------------------------
   # 🔍 VALIDATE WEB APP
