@@ -26,26 +26,65 @@ provider "azurerm" {
   features {}
 }
 
+# CALCOLO DEI CIDR
 
-# Calcola un CIDR per la Function App
+# Calcola un CIDR per l'Infrastruttura CORE
+resource "dx_available_subnet_cidr" "core_infra_subnet_cidr" {
+  virtual_network_id = module.azure_core_infra.common_vnet.id
+  prefix_length      = 24
+}
+
+# Calcola un CIDR per la Function App: Certificati
 resource "dx_available_subnet_cidr" "function_subnet_cidr" {
   virtual_network_id = module.azure_core_infra.common_vnet.id
   prefix_length      = 24
   depends_on         = [module.azure_core_infra]
 }
 
-# Calcola un ALTRO CIDR per l'App Service
-resource "dx_available_subnet_cidr" "app_service_subnet_cidr" {
+# Calcola un CIDR per la Function App: Onboarding
+resource "dx_available_subnet_cidr" "onboarding_fa_subnet_cidr" {
   virtual_network_id = module.azure_core_infra.common_vnet.id
   prefix_length      = 24
+  # depends_on         = [module.azure_app_service_smcr]
   depends_on         = [module.certifica_function]
 }
 
-resource "dx_available_subnet_cidr" "core_infra_subnet_cidr" {
+# Calcola un CIDR per la Function App: Portale Fatturazione
+resource "dx_available_subnet_cidr" "pf_fa_subnet_cidr" {
   virtual_network_id = module.azure_core_infra.common_vnet.id
   prefix_length      = 24
+  depends_on         = [module.onboarding_function]
 }
 
+# Calcola un CIDR per la Function App: ASK ME Everything
+resource "dx_available_subnet_cidr" "askmebot_fa_subnet_cidr" {
+  virtual_network_id = module.azure_core_infra.common_vnet.id
+  prefix_length      = 24
+  depends_on         = [module.portalefatturazione_function]
+}
+
+# Calcola un CIDR per la WEB APP di Backend b-smcr
+resource "dx_available_subnet_cidr" "app_backend_service_subnet_cidr" {
+  virtual_network_id = module.azure_core_infra.common_vnet.id
+  prefix_length      = 24
+  depends_on         = [module.askmebot_function]
+}
+
+# Calcola un CIDR per la WEB APP di Fronted f-smcr
+# resource "dx_available_subnet_cidr" "app_frontend_service_subnet_cidr" {
+#   virtual_network_id = module.azure_core_infra.common_vnet.id
+#   prefix_length      = 24
+#   depends_on         = [module.azure_app_service_backend_smcr]
+# }
+
+# Calcola un CIDR per l'App Service fe-smcr
+resource "dx_available_subnet_cidr" "app_service_subnet_cidr" {
+  virtual_network_id = module.azure_core_infra.common_vnet.id
+  prefix_length      = 24
+  depends_on         = [module.azure_app_service_backend_smcr]
+}
+
+# ROLE ASSIGNMENT
 
 resource "azurerm_role_assignment" "kv_group_secrets_officer" {
   scope                = module.azure_core_infra.common_key_vault.id
@@ -74,6 +113,11 @@ module "azure_core_infra" {
 
 resource "azurerm_resource_group" "fn_rg" {
   name     = "plsm-p-itn-fn-rg-01"
+  location = "Italy North"
+}
+
+resource "azurerm_resource_group" "apps_rg" {
+  name     = "plsm-p-itn-apps-rg-01"
   location = "Italy North"
 }
 
@@ -114,12 +158,6 @@ module "certifica_function" {
 
 # Azure Function per Portale Fatturazione
 
-resource "dx_available_subnet_cidr" "pf_fa_subnet_cidr" {
-  virtual_network_id = module.azure_core_infra.common_vnet.id
-  prefix_length      = 24
-  depends_on         = [module.onboarding_function]
-}
-
 resource "azurerm_role_assignment" "cd_identity_website_contrib_pf_fa" {
   scope                = module.portalefatturazione_function.function_app_id
   role_definition_name = "Website Contributor"
@@ -155,12 +193,6 @@ module "portalefatturazione_function" {
 }
 
 # Azure Function per Onboarding
-
-resource "dx_available_subnet_cidr" "onboarding_fa_subnet_cidr" {
-  virtual_network_id = module.azure_core_infra.common_vnet.id
-  prefix_length      = 24
-  depends_on         = [module.azure_app_service_smcr]
-}
 
 resource "azurerm_role_assignment" "cd_identity_website_contrib_onboardng_fa" {
   scope                = module.onboarding_function.function_app_id
@@ -223,12 +255,6 @@ resource "azurerm_private_endpoint" "onboarding_func_to_selc_eventhub" {
 
 # Ask Me Everything BOT
 
-resource "dx_available_subnet_cidr" "askmebot_fa_subnet_cidr" {
-  virtual_network_id = module.azure_core_infra.common_vnet.id
-  prefix_length      = 24
-  depends_on         = [module.azure_app_service_smcr]
-}
-
 resource "azurerm_role_assignment" "cd_identity_website_contrib_askmebot_fa" {
   scope                = module.askmebot_function.function_app_id
   role_definition_name = "Website Contributor"
@@ -256,62 +282,8 @@ module "askmebot_function" {
   depends_on = [module.azure_core_infra]
 }
 
-# App Service
-resource "azurerm_resource_group" "apps_rg" {
-  name     = "plsm-p-itn-apps-rg-01"
-  location = "Italy North"
-}
-
-resource "azurerm_role_assignment" "cd_identity_website_contrib_smcr" {
-  scope                = module.azure_app_service_smcr.web_app_id
-  role_definition_name = "Website Contributor"
-  principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
-  depends_on           = [module.azure_app_service_smcr]
-}
-
-resource "azurerm_role_assignment" "ci_identity_website_contrib_smcr" {
-  scope = module.azure_app_service_smcr.web_app_id
-  # I ruoli in Azure sono sempre in inglese anche se ho l'interfaccia italiana!
-  role_definition_name = "Website Contributor"
-  principal_id         = data.azurerm_user_assigned_identity.github_ci_identity.principal_id
-  depends_on           = [module.azure_app_service_smcr]
-}
-
-module "azure_app_service_smcr" {
-  source       = "../_modules/app_service"
-  node_version = 22
-
-  virtual_network = {
-    resource_group_name = module.azure_core_infra.network_resource_group_name
-    name                = module.azure_core_infra.common_vnet.name
-  }
-  resource_group_name = azurerm_resource_group.apps_rg.name #module.azure_core_infra.common_resource_group_name
-
-  subnet_pep_id = module.azure_core_infra.common_pep_snet.id
-  subnet_cidr   = dx_available_subnet_cidr.app_service_subnet_cidr.cidr_block
-
-  environment = merge(local.environment, { app_name = "SMCR", instance_number = local.instance_number })
-  # tier                = "l"
-
-
-  app_settings      = local.common_app_settings
-  slot_app_settings = local.common_app_settings
-
-
-  health_check_path = "/api/health"
-  tags              = local.tags
-  depends_on = [
-    module.azure_core_infra
-  ]
-}
-
 # App Service Backend
 
-resource "dx_available_subnet_cidr" "app_backend_service_subnet_cidr" {
-  virtual_network_id = module.azure_core_infra.common_vnet.id
-  prefix_length      = 24
-  depends_on         = [module.askmebot_function]
-}
 resource "azurerm_role_assignment" "cd_identity_website_contrib_backend_smcr" {
   scope                = module.azure_app_service_backend_smcr.web_app_id
   role_definition_name = "Website Contributor"
@@ -376,29 +348,69 @@ module "azure_app_service_backend_smcr" {
   ]
 }
 
-# App Service Frontend
+# App Service Frontend F-SMCR
 
-resource "dx_available_subnet_cidr" "app_frontend_service_subnet_cidr" {
-  virtual_network_id = module.azure_core_infra.common_vnet.id
-  prefix_length      = 24
-  depends_on         = [module.azure_app_service_backend_smcr]
-}
-resource "azurerm_role_assignment" "cd_identity_website_contrib_frontend_smcr" {
-  scope                = module.azure_app_service_frontend_smcr.web_app_id
+# resource "azurerm_role_assignment" "cd_identity_website_contrib_frontend_smcr" {
+#   scope                = module.azure_app_service_frontend_smcr.web_app_id
+#   role_definition_name = "Website Contributor"
+#   principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
+#   depends_on           = [module.azure_app_service_frontend_smcr]
+# }
+
+# resource "azurerm_role_assignment" "ci_identity_website_contrib_frontend_smcr" {
+#   scope = module.azure_app_service_frontend_smcr.web_app_id
+#   # I ruoli in Azure sono sempre in inglese anche se ho l'interfaccia italiana!
+#   role_definition_name = "Website Contributor"
+#   principal_id         = data.azurerm_user_assigned_identity.github_ci_identity.principal_id
+#   depends_on           = [module.azure_app_service_frontend_smcr]
+# }
+
+# module "azure_app_service_frontend_smcr" {
+#   source       = "../_modules/app_service"
+#   node_version = 22
+
+#   virtual_network = {
+#     resource_group_name = module.azure_core_infra.network_resource_group_name
+#     name                = module.azure_core_infra.common_vnet.name
+#   }
+#   resource_group_name = azurerm_resource_group.apps_rg.name
+
+#   subnet_pep_id = module.azure_core_infra.common_pep_snet.id
+#   subnet_cidr   = dx_available_subnet_cidr.app_frontend_service_subnet_cidr.cidr_block
+
+#   environment = merge(local.environment, { app_name = "FSMCR", instance_number = local.instance_number })
+#   # tier                = "l"
+
+
+#   app_settings      = merge(local.common_app_settings, local.frontend_app_settings)
+#   slot_app_settings = merge(local.common_app_settings, local.frontend_slot_app_settings)
+
+
+#   health_check_path = "/api/health"
+#   tags              = local.tags
+#   depends_on = [
+#     module.azure_core_infra
+#   ]
+# }
+
+# App Service FE-SMCR
+
+resource "azurerm_role_assignment" "cd_identity_website_contrib_smcr" {
+  scope                = module.azure_fe_app_service_smcr.web_app_id
   role_definition_name = "Website Contributor"
   principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
-  depends_on           = [module.azure_app_service_frontend_smcr]
+  depends_on           = [module.azure_fe_app_service_smcr]
 }
 
-resource "azurerm_role_assignment" "ci_identity_website_contrib_frontend_smcr" {
-  scope = module.azure_app_service_frontend_smcr.web_app_id
+resource "azurerm_role_assignment" "ci_identity_website_contrib_smcr" {
+  scope = module.azure_fe_app_service_smcr.web_app_id
   # I ruoli in Azure sono sempre in inglese anche se ho l'interfaccia italiana!
   role_definition_name = "Website Contributor"
   principal_id         = data.azurerm_user_assigned_identity.github_ci_identity.principal_id
-  depends_on           = [module.azure_app_service_frontend_smcr]
+  depends_on           = [module.azure_fe_app_service_smcr]
 }
 
-module "azure_app_service_frontend_smcr" {
+module "azure_fe_app_service_smcr" {
   source       = "../_modules/app_service"
   node_version = 22
 
@@ -406,17 +418,15 @@ module "azure_app_service_frontend_smcr" {
     resource_group_name = module.azure_core_infra.network_resource_group_name
     name                = module.azure_core_infra.common_vnet.name
   }
-  resource_group_name = azurerm_resource_group.apps_rg.name
+  resource_group_name = azurerm_resource_group.apps_rg.name #module.azure_core_infra.common_resource_group_name
 
   subnet_pep_id = module.azure_core_infra.common_pep_snet.id
-  subnet_cidr   = dx_available_subnet_cidr.app_frontend_service_subnet_cidr.cidr_block
+  subnet_cidr   = dx_available_subnet_cidr.app_service_subnet_cidr.cidr_block
 
-  environment = merge(local.environment, { app_name = "FSMCR", instance_number = local.instance_number })
-  # tier                = "l"
+  environment = merge(local.environment, { app_name = "FE-SMCR", instance_number = local.instance_number })
 
-
-  app_settings      = merge(local.common_app_settings, local.frontend_app_settings)
-  slot_app_settings = merge(local.common_app_settings, local.frontend_slot_app_settings)
+  app_settings      = merge(local.common_app_settings, local.fe_smcr_app_settings)
+  slot_app_settings = merge(local.common_app_settings, local.fe_smcr_slot_app_settings)
 
 
   health_check_path = "/api/health"
