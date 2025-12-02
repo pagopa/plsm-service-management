@@ -1,26 +1,25 @@
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  Input,
-  FormDescription,
-  FormMessage,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  SelectGroup,
-  SelectLabel,
-} from "@repo/ui";
 import { apiOriginValues } from "../../utils/constants";
 import { useFormContext } from "../../context/FormContext";
 import { useStepOneContext } from "../../context/StepOneContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 export const ProductData = () => {
   const { form } = useStepOneContext();
   const { isStepThree } = useFormContext();
