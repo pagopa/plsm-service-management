@@ -3,6 +3,26 @@ import messages from "../utils/messages";
 import { $api } from "../utils/fetch";
 import z from "zod";
 
+export const getUserEmailById = async (
+  userId: string,
+): Promise<{ data: string; error: null } | { data: null; error: string }> => {
+  const response = await fetch(
+    `${envData.SLACK_API_URL}/users.info?user=${userId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${envData.SLACK_BOT_TOKEN}`,
+      },
+    },
+  );
+  const body = await response.json();
+
+  if (!response.ok) {
+    return { data: null, error: messages.errors.generic };
+  }
+
+  return { data: body.user.profile.email, error: null };
+};
+
 export const getPermissions = async (
   userId: string,
 ): Promise<
