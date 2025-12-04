@@ -1,43 +1,42 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { AckFn, SayFn, SlashCommand } from '@slack/bolt'
-import { validateFiscalCode } from '../../../types/fiscal-code'
-import { getUser, UserResponse } from '../../../services/user.service'
-import { getLegalCommandMessage } from '../messages/legal.message'
-import { envData } from '../../../utils/validateEnv'
-import { getUserInfo } from '../../../services/slack.service'
-import messages from '../../../utils/messages'
+import { AckFn, SayFn, SlashCommand } from "@slack/bolt";
+import { validateFiscalCode } from "../../../types/fiscal-code";
+import { getUser, UserResponse } from "../../../services/user.service";
+import { getLegalCommandMessage } from "../messages/legal.message";
+import messages from "../../../utils/messages";
+import { hasLegalAccess } from "../../../services/auth.service";
 
 const legalCommand = async ({
   command,
   ack,
   say,
 }: {
-  command: SlashCommand
-  ack: AckFn<any>
-  say: SayFn
+  command: SlashCommand;
+  ack: AckFn<any>;
+  say: SayFn;
 }): Promise<void> => {
-  await ack()
+  await ack();
   try {
-    const email = await getUserInfo(command.user_id)
-
-    if (!envData.LEGAL_ENABLED_EMAILS_SECRET.find((item) => item === email)) {
-      throw new Error("Non hai l'autorizzazione per utilizzare questo comando.")
+    const isAuthorized = await hasLegalAccess(command.user_id);
+    if (isAuthorized.error) {
+      await say(isAuthorized.error);
+      return;
     }
 
-    const fiscalCode = validateFiscalCode(command.text)
-    const data = await getUser(fiscalCode)
+    const fiscalCode = validateFiscalCode(command.text);
+    const data = await getUser(fiscalCode);
 
-    say(getLegalCommandMessage(fiscalCode, data as UserResponse))
+    say(getLegalCommandMessage(fiscalCode, data as UserResponse));
   } catch (error) {
     if (error instanceof Error) {
-      say(error.message)
-      return
+      say(error.message);
+      return;
     }
 
-    say(messages.errors.generic)
-    return
+    say(messages.errors.generic);
+    return;
   }
-}
+};
 
-export default legalCommand
+export default legalCommand;
