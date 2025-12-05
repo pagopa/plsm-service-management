@@ -1348,7 +1348,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@better-fetch/fetch@npm:^1.1.17":
+"@better-fetch/fetch@npm:^1.1.17, @better-fetch/fetch@npm:^1.1.18":
   version: 1.1.18
   resolution: "@better-fetch/fetch@npm:1.1.18"
   checksum: 10c0/b8202e4d3dbcd52fd8b5b2f255817606c300f37c60b1d9876f560372b77f66cb6d730e72e2c9b35bca06a1e364ed9d08977c0e8c2ce0ee30fdb4c6f43aae9433
@@ -21651,6 +21651,7 @@ __metadata:
   resolution: "sm-ask-me-fn@workspace:apps/sm-ask-me-fn"
   dependencies:
     "@azure/functions": "npm:^4.0.0"
+    "@better-fetch/fetch": "npm:^1.1.18"
     "@slack/bolt": "npm:^3.22.0"
     "@types/jest": "npm:^29.5.13"
     "@types/node": "npm:^22.7.5"

@@ -17,6 +17,34 @@ export const askMeAnythingMemberSchema = z.object({
 
 export type AskMeAnythingMember = z.infer<typeof askMeAnythingMemberSchema>;
 
+export async function readAskMeAnythingMember(
+  email: string,
+): Promise<ServiceResult<AskMeAnythingMember>> {
+  const rawMember = await database
+    .from(tableName)
+    .select({
+      id: "id",
+      firstname: "firstname",
+      lastname: "lastname",
+      email: "email",
+      selfcareAccess: "selfcare_access",
+      legalAccess: "legal_access",
+      createdAt: "createdAt",
+      updatedAt: "updatedAt",
+    })
+    .where({ email })
+    .first();
+
+  const parsed = askMeAnythingMemberSchema.safeParse(rawMember);
+
+  if (!parsed.success) {
+    console.error("readAskMeAnythingMember - member not found", parsed.error);
+    return { data: null, error: "member not found" };
+  }
+
+  return { data: parsed.data, error: null };
+}
+
 export async function readAskMeAnythingMembers(): Promise<
   ServiceResult<AskMeAnythingMember[]>
 > {
