@@ -27,8 +27,11 @@ const selfcareEnteCommand = async ({
       return;
     }
 
+    console.log("checking user auth for id:", command.user_id);
+
     const isAuthorized = await hasSelfcareAccess(command.user_id);
     if (isAuthorized.error) {
+      console.error("auth check error:", isAuthorized.error);
       await say(isAuthorized.error);
       return;
     }

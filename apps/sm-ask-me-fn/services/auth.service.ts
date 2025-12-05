@@ -29,6 +29,8 @@ export const getPermissions = async (
   | { data: { selfcare: boolean; legal: boolean }; error: null }
   | { data: null; error: string }
 > => {
+  console.log("fetching user:", userId);
+
   const response = await fetch(
     `${envData.SLACK_API_URL}/users.info?user=${userId}`,
     {
@@ -38,8 +40,10 @@ export const getPermissions = async (
     },
   );
   const body = await response.json();
+  console.log("fetched user body:", userId, body);
 
   if (!response.ok) {
+    console.error("error fetching user:", userId, body, response.status);
     return { data: null, error: messages.errors.generic };
   }
 
@@ -58,10 +62,11 @@ export const getPermissions = async (
   });
 
   if (error) {
+    console.error("error fetching permissions:", userId, error, data);
     return { data: null, error: messages.auth.unauthorized };
   }
 
-  console.log(data);
+  console.log("fetched permissions:", data);
 
   return {
     data: { selfcare: data.selfcareAccess, legal: data.legalAccess },
@@ -71,6 +76,7 @@ export const getPermissions = async (
 
 export const hasSelfcareAccess = async (id: string) => {
   const { data, error } = await getPermissions(id);
+  console.log("getPermissions:", data, error);
 
   if (error || !data) {
     return { data: null, error: messages.auth.unauthorized };
