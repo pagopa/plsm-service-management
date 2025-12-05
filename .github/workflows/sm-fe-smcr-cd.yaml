@@ -3,52 +3,326 @@ name: Deploy - SM-FE-SMCR
 on:
   workflow_dispatch:
     inputs:
+      workspace_name:
+        description: "Workspace name"
+        type: string
+        required: true
+        default: "sm-fe-smcr"
+
+      next_app_path:
+        description: "NextJS App Path"
+        type: string
+        required: true
+        default: "./apps/sm-fe-smcr"
+
       environment:
-        description: Environment where the artifact will be deployed.
+        description: Environment where the artifact will be deployed
         type: string
         required: true
         default: "app-prod"
+
       resource_group_name:
-        description: "Web App resource group name"
+        description: "Web App Resource Group"
         type: string
         required: true
         default: "plsm-p-itn-apps-rg-01"
+
       web_app_name:
-        description: "Web App name"
+        description: "Web App Name"
         type: string
         required: true
-        default: "plsm-p-itn-fsmcr-app-01"
+        default: "plsm-p-itn-fe-smcr-app-01"
 
       use_private_agent:
         description: Use a private agent to deploy the built artifact.
         type: boolean
         required: false
         default: true
+
       use_labels:
-        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        description: Use labels to start the right environment's GitHub runner.
         type: boolean
         required: false
         default: false
+
       override_labels:
-        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        description: Custom runner label override
         type: string
         required: false
         default: ""
+
+      disable_auto_staging_deploy:
+        description: Disable automatic deployments to the staging slot
+        type: boolean
+        required: false
+        default: false
+
 permissions:
-  contents: read
   id-token: write
-  attestations: write
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  WORKSPACE_NAME: ${{ inputs.workspace_name }}
+  NEXT_APP_PATH: ${{ inputs.next_app_path }}
+  BUNDLE_NAME: "bundle"
+  RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+  WEB_APP_NAME: ${{ inputs.web_app_name }}
+  BUILD_DIR: bundle-root
+
 jobs:
+  # --------------------------------------------------------------------
+  # 🏗 BUILD & PACKAGE
+  # --------------------------------------------------------------------
+  build:
+    name: 🏗 Build & Package Artifact
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    environment: ${{ inputs.environment }}
+
+    env:
+      # NEXT PUBLIC ENV
+      NEXT_PUBLIC_MSAL_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_MSAL_CLIENT_ID }}
+      NEXT_PUBLIC_MSAL_TENANT_ID: ${{ secrets.NEXT_PUBLIC_MSAL_TENANT_ID }}
+      NEXT_PUBLIC_MSAL_REDIRECT_URI: ${{ secrets.NEXT_PUBLIC_MSAL_REDIRECT_URI }}
+      NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+
+      # SERVER ENV (opzionali in build, saranno in Azure App Settings)
+      MSAL_CLIENT_ID: ${{ secrets.MSAL_CLIENT_ID }}
+      MSAL_TENANT_ID: ${{ secrets.MSAL_TENANT_ID }}
+      MSAL_REDIRECT_URI: ${{ secrets.MSAL_REDIRECT_URI }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build (Turbo - monorepo)
+        run: yarn turbo build --filter=${{ env.WORKSPACE_NAME }}
+
+      # -----------------------------------------------------
+      # 🛠️ PACKAGING
+      # -----------------------------------------------------
+      - name: Create Standalone Bundle Directory
+        run: |
+          # Pulisce e crea la directory di staging
+          rm -rf $BUILD_DIR
+          mkdir -p $BUILD_DIR
+
+          # Copia il bundle standalone dalla sottodirectory interna
+          # Corrisponde a: cp -R apps/sm-fe-smcr/.next/standalone/apps/sm-fe-smcr/. bundle-root/
+          echo "1. Copia il contenuto Standalone da .next/standalone/$NEXT_APP_PATH/."
+          cp -R $NEXT_APP_PATH/.next/standalone/$NEXT_APP_PATH/. $BUILD_DIR/
+
+      - name: Copy Standalone Node Modules
+        run: |
+          # Il node_modules per lo standalone è spesso un livello più alto nel monorepo
+          NODE_MODULES_SRC="$NEXT_APP_PATH/.next/standalone/node_modules"
+
+          if [ -d "$NODE_MODULES_SRC" ]; then
+              echo "Copia node_modules standalone da $NODE_MODULES_SRC"
+              cp -R $NODE_MODULES_SRC $BUILD_DIR/
+          else
+              echo "AVVISO: Node_modules standalone non trovato in $NODE_MODULES_SRC. La build potrebbe fallire."
+          fi
+
+      - name: Copy Static Assets (.next/static)
+        run: |
+          STATIC_SRC="$NEXT_APP_PATH/.next/static"
+          STATIC_DEST="$BUILD_DIR/.next/static"
+          if [ -d "$STATIC_SRC" ]; then
+            echo "2. Copia gli asset statici da $STATIC_SRC"
+            mkdir -p $STATIC_DEST
+            cp -R $STATIC_SRC/* $STATIC_DEST/
+          else
+            echo "Nessuna cartella .next/static trovata, salto la copia."
+          fi
+
+      - name: Copy Public Directory
+        run: |
+          PUBLIC_SRC="$NEXT_APP_PATH/public"
+          if [ -d "$PUBLIC_SRC" ]; then
+            echo "3. Copia la cartella public da $PUBLIC_SRC"
+            cp -R $PUBLIC_SRC $BUILD_DIR/
+          else
+            echo "Nessuna cartella public trovata, salto la copia."
+          fi
+
+      - name: Create Deployment ZIP
+        run: |
+          cd $BUILD_DIR
+          zip -r ../${BUNDLE_NAME}.zip .
+          echo "ZIP artifact created: ${BUNDLE_NAME}.zip"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BUNDLE_NAME }}
+          path: ${{ env.BUNDLE_NAME }}.zip
+          retention-days: 7
+
+  # --------------------------------------------------------------------
+  # 🔍 VALIDATE WEB APP
+  # --------------------------------------------------------------------
+  validate:
+    name: 🔍 Validate Web App Configuration
+    needs: build
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    environment: ${{ inputs.environment }}-ci
+
+    permissions:
+      id-token: write
+
+    outputs:
+      use_staging_slot: ${{ steps.query-staging-slot.outputs.use_staging_slot }}
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Check for existing staging slot
+        id: query-staging-slot
+        run: |
+          echo "::debug::Checking for existing deployment slots..."
+          USE_STAGING_SLOT=$(az webapp deployment slot list \
+            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
+            --name "${{ env.WEB_APP_NAME }}" \
+            --query 'length([?name == `staging`]) > `0`')
+          echo "use_staging_slot=$USE_STAGING_SLOT" >> "$GITHUB_OUTPUT"
+
+          if [ "$USE_STAGING_SLOT" == "true" ]; then
+            echo "### ✅ Staging slot found" >> $GITHUB_STEP_SUMMARY
+            echo "Deployment will proceed to staging slot, then swap to production." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ⚠️ No staging slot found" >> $GITHUB_STEP_SUMMARY
+            echo "Deployment will proceed directly to production slot." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check custom warm-up configuration
+        if: ${{ steps.query-staging-slot.outputs.use_staging_slot == 'true' }}
+        run: |
+          IS_WARMUP_CONFIGURED=$(az webapp config appsettings list \
+            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
+            --name "${{ env.WEB_APP_NAME }}" \
+            --query 'length([?name==`WEBSITE_SWAP_WARMUP_PING_STATUSES`||name==`WEBSITE_SWAP_WARMUP_PING_PATH`]) == `2`')
+
+          if [ "$IS_WARMUP_CONFIGURED" == "false" ]; then
+            echo "::warning::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set."
+            echo "### ⚠️ Recommended: Configure custom warm-up" >> $GITHUB_STEP_SUMMARY
+            echo "For safer slot swapping, consider setting:" >> $GITHUB_STEP_SUMMARY
+            echo "- WEBSITE_SWAP_WARMUP_PING_PATH=/api/health" >> $GITHUB_STEP_SUMMARY
+            echo "- WEBSITE_SWAP_WARMUP_PING_STATUSES=200,302" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ✅ Custom warm-up configured" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # --------------------------------------------------------------------
+  # 🚀 DEPLOY TO STAGING SLOT (using Kudu API like PagoPA)
+  # --------------------------------------------------------------------
   deploy:
-    if: github.event_name == 'workflow_dispatch'
-    uses: pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml@main
-    with:
-      workspace_name: sm-fe-smcr
-      environment: ${{ inputs.environment }}
-      resource_group_name: ${{ inputs.resource_group_name }}
-      web_app_name: ${{ inputs.web_app_name }}
-      use_private_agent: ${{ inputs.use_private_agent }}
-      use_labels: ${{ inputs.use_labels }}
-      override_labels: ${{ inputs.override_labels }}
-      disable_auto_staging_deploy: true
-    secrets: inherit
+    name: ${{ fromJSON(needs.validate.outputs.use_staging_slot) && '🚀 Deploy to Staging' || '🚀 Deploy to Production' }}
+    needs: [validate]
+    environment: ${{ inputs.environment }}-cd
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ env.BUNDLE_NAME }}
+          path: .
+
+      - name: Azure Login
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Deploy to staging slot
+        if: fromJSON(needs.validate.outputs.use_staging_slot)
+        uses: azure/webapps-deploy@4bfb30bef2c330e36be280cb1e5726d0fac06233 #v2.2.13
+        with:
+          app-name: ${{ env.WEB_APP_NAME }}
+          slot-name: staging
+          package: ${{ env.BUNDLE_NAME }}.zip
+
+      - name: Deploy to production slot
+        if: ${{ !fromJSON(needs.validate.outputs.use_staging_slot) }}
+        uses: azure/webapps-deploy@4bfb30bef2c330e36be280cb1e5726d0fac06233 #v2.2.13
+        with:
+          app-name: ${{ env.WEB_APP_NAME }}
+          package: ${{ env.BUNDLE_NAME }}.zip
+
+  # --------------------------------------------------------------------
+  # ✨ SWAP → PRODUCTION
+  # --------------------------------------------------------------------
+  swap:
+    name: ✨ Swap Staging → Production
+    needs: [validate, deploy]
+    if: ${{ fromJSON(needs.validate.outputs.use_staging_slot) }}
+    environment: ${{ inputs.environment }}-cd
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      # swap staging to production
+      - name: Swap staging → production
+        run: |
+          echo "🔄 Starting slot swap: staging → production"
+
+          az webapp deployment slot swap \
+            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
+            --name "${{ env.WEB_APP_NAME }}" \
+            --slot staging \
+            --target-slot production \
+
+          echo "✅ Slot swap initiated (non-blocking)."
+
+      - name: Verify production deployment
+        run: |
+          echo "⏳ Waiting 30s for production slot to stabilize..."
+          sleep 30
+
+          PROD_URL="https://${{ env.WEB_APP_NAME }}.azurewebsites.net"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL" || echo "000")
+
+          echo "Production URL: $PROD_URL"
+          echo "HTTP Status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
+            echo "### ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
+            echo "Production is live at: $PROD_URL" >> $GITHUB_STEP_SUMMARY
+            echo "HTTP Status: $HTTP_STATUS" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ⚠️ Deployment needs verification" >> $GITHUB_STEP_SUMMARY
+            echo "Production URL: $PROD_URL" >> $GITHUB_STEP_SUMMARY
+            echo "HTTP Status: $HTTP_STATUS" >> $GITHUB_STEP_SUMMARY
+            echo "Please verify manually." >> $GITHUB_STEP_SUMMARY
+          fi
