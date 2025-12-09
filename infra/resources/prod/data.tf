@@ -45,6 +45,10 @@ data "azurerm_key_vault_secret" "db_password" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+data "azurerm_key_vault_secret" "db_password_b64" {
+  name         = "db-password-b64"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
 
 
 data "azurerm_user_assigned_identity" "github_cd_identity" {
@@ -122,6 +126,11 @@ data "azurerm_key_vault_secret" "fe_smcr_slack_call_management_hook_prod" {
 
 # Function Onboarding
 
+data "azurerm_key_vault_secret" "ocp_apim_subscription_key" {
+  name         = "fa-onboarding-ocp-apim-subscription-key"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
 data "azurerm_key_vault_secret" "sc_contracts_conn_string" {
   name         = "fa-onboarding-sc-contracts-conn-string"
   key_vault_id = module.azure_core_infra.common_key_vault.id
@@ -164,6 +173,11 @@ data "azurerm_key_vault_secret" "slack_webhook_onboarding_pagopa" {
 
 
 # Function Ask Me Bot
+
+data "azurerm_key_vault_secret" "askmebot_ocp_apim_subscription_key" {
+  name         = "fa-askmebot-ocp-apim-subscription-key"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
 
 data "azurerm_key_vault_secret" "askmebot_slack_bot_token" {
   name         = "fa-askmebot-slack-bot-token"
