@@ -165,10 +165,12 @@ locals {
     FE_SMCR_SLACK_REPORT_HOOK          = "${data.azurerm_key_vault_secret.fe_smcr_slack_report_hook.value}"
     FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook.value}"
 
-    DB_HOST         = "${data.azurerm_key_vault_secret.db_host.value}"
-    DB_USER         = "${data.azurerm_key_vault_secret.db_user.value}"
+    DB_HOST  = "${data.azurerm_key_vault_secret.db_host.value}"
+    DB_USER  = "${data.azurerm_key_vault_secret.db_user.value}"
+    DB_NAME  = "dbsmcr"
+    DB_TABLE = "dbsmcr"
     DB_PASSWORD_B64 = "${data.azurerm_key_vault_secret.db_password_b64.value}"
-    DB_NAME         = "dbsmcr"
+
 
     SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value}"
     SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value}"
@@ -181,8 +183,9 @@ locals {
     GET_STATUS                    = "external/support/v1/onboarding/institutionOnboardings"
     ONBOARDING_BASE_PATH          = "https://api.selfcare.pagopa.it/"
     UPLOAD                        = "external/internal/v1/onboarding/"
-    NEXT_PUBLIC_APP_URL           = "http://localhost:3000"
-    NEXT_PUBLIC_MSAL_REDIRECT_URI = "http://localhost:3000/api/auth/callback/microsoft"
+    NEXT_PUBLIC_APP_URL           = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
+    NEXT_PUBLIC_MSAL_REDIRECT_URI = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
+    NEXT_PUBLIC_POST_LOGIN_REDIRECT = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     NEXT_PUBLIC_MSAL_CLIENT_ID    = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_client_id.value}"
     NEXT_PUBLIC_MSAL_TENANT_ID    = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_tenant_id.value}"
 
@@ -201,10 +204,11 @@ locals {
     FE_SMCR_SLACK_REPORT_HOOK          = "${data.azurerm_key_vault_secret.fe_smcr_slack_report_hook.value}"
     FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook.value}"
 
-    DB_HOST         = "${data.azurerm_key_vault_secret.db_host.value}"
-    DB_USER         = "${data.azurerm_key_vault_secret.db_user.value}"
+    DB_HOST  = "${data.azurerm_key_vault_secret.db_host.value}"
+    DB_USER  = "${data.azurerm_key_vault_secret.db_user.value}"
+    DB_NAME  = "dbsmcr"
+    DB_TABLE = "dbsmcr"
     DB_PASSWORD_B64 = "${data.azurerm_key_vault_secret.db_password_b64.value}"
-    DB_NAME         = "dbsmcr"
 
     SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value}"
     SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value}"
@@ -217,8 +221,9 @@ locals {
     GET_STATUS                    = "external/support/v1/onboarding/institutionOnboardings"
     ONBOARDING_BASE_PATH          = "https://api.selfcare.pagopa.it/"
     UPLOAD                        = "external/internal/v1/onboarding/"
-    NEXT_PUBLIC_APP_URL           = "http://localhost:3000"
-    NEXT_PUBLIC_MSAL_REDIRECT_URI = "http://localhost:3000/api/auth/callback/microsoft"
+    NEXT_PUBLIC_APP_URL           = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
+    NEXT_PUBLIC_MSAL_REDIRECT_URI = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
+    NEXT_PUBLIC_POST_LOGIN_REDIRECT = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     NEXT_PUBLIC_MSAL_CLIENT_ID    = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_client_id.value}"
     NEXT_PUBLIC_MSAL_TENANT_ID    = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_tenant_id.value}"
 
