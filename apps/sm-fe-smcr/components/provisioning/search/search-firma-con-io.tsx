@@ -8,6 +8,7 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { SignatureFormSchema } from "@/lib/services/firma-con-io.service";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input } from "@repo/ui";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import { ArrowRightIcon, CornerDownLeft } from "lucide-react";
@@ -29,6 +30,7 @@ export default function SearchFirmaConIo() {
       signature_request: "",
       fiscal_code: "",
     },
+    resolver: zodResolver(SignatureFormSchema),
   });
 
   const handleSubmit = () => {
