@@ -165,10 +165,10 @@ locals {
     FE_SMCR_SLACK_REPORT_HOOK          = "${data.azurerm_key_vault_secret.fe_smcr_slack_report_hook.value}"
     FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook.value}"
 
-    DB_HOST  = "${data.azurerm_key_vault_secret.db_host.value}"
-    DB_USER  = "${data.azurerm_key_vault_secret.db_user.value}"
-    DB_NAME  = "dbsmcr"
-    DB_TABLE = "dbsmcr"
+    DB_HOST         = "${data.azurerm_key_vault_secret.db_host.value}"
+    DB_USER         = "${data.azurerm_key_vault_secret.db_user.value}"
+    DB_PASSWORD_B64 = "${data.azurerm_key_vault_secret.db_password_b64.value}"
+    DB_NAME         = "dbsmcr"
 
     SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value}"
     SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value}"
@@ -201,10 +201,10 @@ locals {
     FE_SMCR_SLACK_REPORT_HOOK          = "${data.azurerm_key_vault_secret.fe_smcr_slack_report_hook.value}"
     FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook.value}"
 
-    DB_HOST  = "${data.azurerm_key_vault_secret.db_host.value}"
-    DB_USER  = "${data.azurerm_key_vault_secret.db_user.value}"
-    DB_NAME  = "dbsmcr"
-    DB_TABLE = "dbsmcr"
+    DB_HOST         = "${data.azurerm_key_vault_secret.db_host.value}"
+    DB_USER         = "${data.azurerm_key_vault_secret.db_user.value}"
+    DB_PASSWORD_B64 = "${data.azurerm_key_vault_secret.db_password_b64.value}"
+    DB_NAME         = "dbsmcr"
 
     SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value}"
     SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value}"
