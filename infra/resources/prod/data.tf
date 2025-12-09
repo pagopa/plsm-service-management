@@ -2,11 +2,23 @@ data "azurerm_subscription" "current" {}
 
 data "azurerm_client_config" "current" {}
 
-
-
 data "azuread_group" "keyvault_admin_group" {
   # Usa il nome visualizzato per recuperare l'Object ID
   display_name = "plsm-p-adgroup-admin"
+}
+
+# Valori env per PF
+data "azurerm_key_vault_secret" "apikey_endpoint_pf" {
+  name         = "fa-pf-auth-apikey"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+data "azurerm_key_vault_secret" "storage_pf_name" {
+  name         = "fa-pf-storage-name"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+data "azurerm_key_vault_secret" "container_pf_name" {
+  name         = "fa-pf-container-name"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
 data "azurerm_key_vault_secret" "fe_smcr_plsm_p_platformsm_tenant_id" {
