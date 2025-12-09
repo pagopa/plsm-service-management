@@ -8,7 +8,7 @@ on:
         type: string
         required: true
         default: "sm-fe-smcr"
-      
+        
       next_app_path:
         description: "NextJS App Path"
         type: string
@@ -71,7 +71,6 @@ env:
   BUILD_DIR: bundle-root
 
 jobs:
-
   # --------------------------------------------------------------------
   # 🏗 BUILD & PACKAGE
   # --------------------------------------------------------------------
@@ -117,7 +116,6 @@ jobs:
           # Pulisce e crea la directory di staging
           rm -rf $BUILD_DIR
           mkdir -p $BUILD_DIR
-          
           # Copia il bundle standalone dalla sottodirectory interna
           # Corrisponde a: cp -R apps/sm-fe-smcr/.next/standalone/apps/sm-fe-smcr/. bundle-root/
           echo "1. Copia il contenuto Standalone da .next/standalone/$NEXT_APP_PATH/."
@@ -127,14 +125,13 @@ jobs:
         run: |
           # Il node_modules per lo standalone è spesso un livello più alto nel monorepo
           NODE_MODULES_SRC="$NEXT_APP_PATH/.next/standalone/node_modules"
-          
           if [ -d "$NODE_MODULES_SRC" ]; then
               echo "Copia node_modules standalone da $NODE_MODULES_SRC"
               cp -R $NODE_MODULES_SRC $BUILD_DIR/
           else
               echo "AVVISO: Node_modules standalone non trovato in $NODE_MODULES_SRC. La build potrebbe fallire."
           fi
-      
+          
       - name: Copy Static Assets (.next/static)
         run: |
           STATIC_SRC="$NEXT_APP_PATH/.next/static"
@@ -170,7 +167,6 @@ jobs:
           path: ${{ env.BUNDLE_NAME }}.zip
           retention-days: 7
 
-
   # --------------------------------------------------------------------
   # 🔍 VALIDATE WEB APP
   # --------------------------------------------------------------------
@@ -203,7 +199,6 @@ jobs:
             --name "${{ env.WEB_APP_NAME }}" \
             --query 'length([?name == `staging`]) > `0`')
           echo "use_staging_slot=$USE_STAGING_SLOT" >> "$GITHUB_OUTPUT"
-          
           if [ "$USE_STAGING_SLOT" == "true" ]; then
             echo "### ✅ Staging slot found" >> $GITHUB_STEP_SUMMARY
             echo "Deployment will proceed to staging slot, then swap to production." >> $GITHUB_STEP_SUMMARY
@@ -219,7 +214,7 @@ jobs:
             --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
             --name "${{ env.WEB_APP_NAME }}" \
             --query 'length([?name==`WEBSITE_SWAP_WARMUP_PING_STATUSES`||name==`WEBSITE_SWAP_WARMUP_PING_PATH`]) == `2`')
-          
+
           if [ "$IS_WARMUP_CONFIGURED" == "false" ]; then
             echo "::warning::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set."
             echo "### ⚠️ Recommended: Configure custom warm-up" >> $GITHUB_STEP_SUMMARY
@@ -294,31 +289,28 @@ jobs:
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-
       # swap staging to production
       - name: Swap staging → production
         run: |
           echo "🔄 Starting slot swap: staging → production"
-          
           az webapp deployment slot swap \
             --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
             --name "${{ env.WEB_APP_NAME }}" \
             --slot staging \
             --target-slot production \
-          
           echo "✅ Slot swap initiated (non-blocking)."
 
       - name: Verify production deployment
         run: |
           echo "⏳ Waiting 30s for production slot to stabilize..."
           sleep 30
-          
+
           PROD_URL="https://${{ env.WEB_APP_NAME }}.azurewebsites.net"
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL" || echo "000")
-          
+
           echo "Production URL: $PROD_URL"
           echo "HTTP Status: $HTTP_STATUS"
-          
+
           if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
             echo "### ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
             echo "Production is live at: $PROD_URL" >> $GITHUB_STEP_SUMMARY
