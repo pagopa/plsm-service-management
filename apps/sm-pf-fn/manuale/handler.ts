@@ -9,6 +9,7 @@ import { BlobServiceClient } from "@azure/storage-blob";
 // Recupero variabili d'ambiente
 const STORAGE_ACCOUNT_NAME = process.env.STORAGE_ACCOUNT_NAME;
 const CONTAINER_NAME = process.env.CONTAINER_NAME || "fatpublic";
+const API_KEY_SECRET = process.env.API_KEY_SECRET;
 
 export async function handler(
   request: HttpRequest,
@@ -17,6 +18,20 @@ export async function handler(
   context.log(`[START] Richiesta ricevuta: ${request.method} ${request.url}`);
 
   try {
+    const clientAuthHeader = request.headers.get("authorization");
+
+    if (!API_KEY_SECRET) {
+      context.error("[FATAL] API_KEY_SECRET non è configurata.");
+      return { status: 500, body: "Server configuration error." };
+    }
+
+    if (!clientAuthHeader || clientAuthHeader !== `Bearer ${API_KEY_SECRET}`) {
+      context.warn("[AUTH] Tentativo di accesso non autorizzato.");
+      return { status: 401, body: "Unauthorized: Invalid API Key or missing Authorization header." };
+    }
+
+    context.log("[AUTH] API Key verificata con successo.");
+    
     if (!STORAGE_ACCOUNT_NAME) {
       throw new Error("Manca la variabile d'ambiente STORAGE_ACCOUNT_NAME");
     }
