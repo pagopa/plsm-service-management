@@ -46,7 +46,7 @@ resource "dx_available_subnet_cidr" "onboarding_fa_subnet_cidr" {
   virtual_network_id = module.azure_core_infra.common_vnet.id
   prefix_length      = 24
   # depends_on         = [module.azure_app_service_smcr]
-  depends_on         = [module.certifica_function]
+  depends_on = [module.certifica_function]
 }
 
 # Calcola un CIDR per la Function App: Portale Fatturazione
@@ -479,4 +479,22 @@ module "postgres_apps" {
 
   depends_on = [module.azure_core_infra]
   app_name   = "apps"
+}
+
+
+resource "azurerm_resource_group" "ext_rg" {
+  name     = "plsm-p-itn-ext-rg-01"
+  location = "Italy North"
+}
+
+resource "azurerm_storage_account" "storage_marco_ext_001" {
+  name                     = "plsmpitmarcoext001"
+  resource_group_name      = azurerm_resource_group.ext_rg.name
+  location                 = azurerm_resource_group.ext_rg.location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+
+  tags = {
+    environment = "production"
+  }
 }
