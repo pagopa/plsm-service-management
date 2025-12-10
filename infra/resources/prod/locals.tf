@@ -34,9 +34,15 @@ locals {
 
   # Function Portale Fatturazione
   pf_app_settings = {
+    API_KEY_SECRET       = "${data.azurerm_key_vault_secret.apikey_endpoint_pf.value}"
+    STORAGE_ACCOUNT_NAME = "${data.azurerm_key_vault_secret.storage_pf_name.value}"
+    CONTAINER_NAME       = "${data.azurerm_key_vault_secret.container_pf_name.value}"
   }
 
   pf_slot_app_settings = {
+    API_KEY_SECRET       = "${data.azurerm_key_vault_secret.apikey_endpoint_pf.value}"
+    STORAGE_ACCOUNT_NAME = "${data.azurerm_key_vault_secret.storage_pf_name.value}"
+    CONTAINER_NAME       = "${data.azurerm_key_vault_secret.container_pf_name.value}"
   }
 
   # Function Certificates - Common
@@ -167,24 +173,27 @@ locals {
 
     DB_HOST         = "${data.azurerm_key_vault_secret.db_host.value}"
     DB_USER         = "${data.azurerm_key_vault_secret.db_user.value}"
-    DB_PASSWORD_B64 = "${data.azurerm_key_vault_secret.db_password_b64.value}"
     DB_NAME         = "dbsmcr"
+    DB_TABLE        = "dbsmcr"
+    DB_PASSWORD_B64 = "${data.azurerm_key_vault_secret.db_password_b64.value}"
+
 
     SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value}"
     SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value}"
 
-    GET_INFOCAMERE                = "external/internal/v1/infocamere-pdnd/institution/"
-    GET_INSTITUTION               = "external/support/v1/institutions"
-    GET_IPA                       = "external/internal/v1/institutions/"
-    GET_IPA_UO                    = "external/internal/v1/uo/"
-    GET_IPA_AOO                   = "external/internal/v1/aoo/"
-    GET_STATUS                    = "external/support/v1/onboarding/institutionOnboardings"
-    ONBOARDING_BASE_PATH          = "https://api.selfcare.pagopa.it/"
-    UPLOAD                        = "external/internal/v1/onboarding/"
-    NEXT_PUBLIC_APP_URL           = "http://localhost:3000"
-    NEXT_PUBLIC_MSAL_REDIRECT_URI = "http://localhost:3000/api/auth/callback/microsoft"
-    NEXT_PUBLIC_MSAL_CLIENT_ID    = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_client_id.value}"
-    NEXT_PUBLIC_MSAL_TENANT_ID    = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_tenant_id.value}"
+    GET_INFOCAMERE                  = "external/internal/v1/infocamere-pdnd/institution/"
+    GET_INSTITUTION                 = "external/support/v1/institutions"
+    GET_IPA                         = "external/internal/v1/institutions/"
+    GET_IPA_UO                      = "external/internal/v1/uo/"
+    GET_IPA_AOO                     = "external/internal/v1/aoo/"
+    GET_STATUS                      = "external/support/v1/onboarding/institutionOnboardings"
+    ONBOARDING_BASE_PATH            = "https://api.selfcare.pagopa.it/"
+    UPLOAD                          = "external/internal/v1/onboarding/"
+    NEXT_PUBLIC_APP_URL             = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
+    NEXT_PUBLIC_MSAL_REDIRECT_URI   = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
+    NEXT_PUBLIC_POST_LOGIN_REDIRECT = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
+    NEXT_PUBLIC_MSAL_CLIENT_ID      = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_client_id.value}"
+    NEXT_PUBLIC_MSAL_TENANT_ID      = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_tenant_id.value}"
 
     DB_PORT = 5432
     DB_SSL  = true
@@ -203,24 +212,26 @@ locals {
 
     DB_HOST         = "${data.azurerm_key_vault_secret.db_host.value}"
     DB_USER         = "${data.azurerm_key_vault_secret.db_user.value}"
-    DB_PASSWORD_B64 = "${data.azurerm_key_vault_secret.db_password_b64.value}"
     DB_NAME         = "dbsmcr"
+    DB_TABLE        = "dbsmcr"
+    DB_PASSWORD_B64 = "${data.azurerm_key_vault_secret.db_password_b64.value}"
 
     SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value}"
     SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value}"
 
-    GET_INFOCAMERE                = "external/internal/v1/infocamere-pdnd/institution/"
-    GET_INSTITUTION               = "external/support/v1/institutions"
-    GET_IPA                       = "external/internal/v1/institutions/"
-    GET_IPA_UO                    = "external/internal/v1/uo/"
-    GET_IPA_AOO                   = "external/internal/v1/aoo/"
-    GET_STATUS                    = "external/support/v1/onboarding/institutionOnboardings"
-    ONBOARDING_BASE_PATH          = "https://api.selfcare.pagopa.it/"
-    UPLOAD                        = "external/internal/v1/onboarding/"
-    NEXT_PUBLIC_APP_URL           = "http://localhost:3000"
-    NEXT_PUBLIC_MSAL_REDIRECT_URI = "http://localhost:3000/api/auth/callback/microsoft"
-    NEXT_PUBLIC_MSAL_CLIENT_ID    = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_client_id.value}"
-    NEXT_PUBLIC_MSAL_TENANT_ID    = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_tenant_id.value}"
+    GET_INFOCAMERE                  = "external/internal/v1/infocamere-pdnd/institution/"
+    GET_INSTITUTION                 = "external/support/v1/institutions"
+    GET_IPA                         = "external/internal/v1/institutions/"
+    GET_IPA_UO                      = "external/internal/v1/uo/"
+    GET_IPA_AOO                     = "external/internal/v1/aoo/"
+    GET_STATUS                      = "external/support/v1/onboarding/institutionOnboardings"
+    ONBOARDING_BASE_PATH            = "https://api.selfcare.pagopa.it/"
+    UPLOAD                          = "external/internal/v1/onboarding/"
+    NEXT_PUBLIC_APP_URL             = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
+    NEXT_PUBLIC_MSAL_REDIRECT_URI   = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
+    NEXT_PUBLIC_POST_LOGIN_REDIRECT = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
+    NEXT_PUBLIC_MSAL_CLIENT_ID      = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_client_id.value}"
+    NEXT_PUBLIC_MSAL_TENANT_ID      = "${data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_tenant_id.value}"
 
     DB_PORT = 5432
     DB_SSL  = true
