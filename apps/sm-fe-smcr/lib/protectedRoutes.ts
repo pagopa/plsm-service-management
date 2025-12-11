@@ -2,6 +2,7 @@
 
 import {
   BotIcon,
+  FolderIcon,
   LucideIcon,
   PhoneIcon,
   Search,
@@ -77,6 +78,14 @@ export const protectedRoutes: ProtectedRoute[] = [
     requiredTeams: ["service-management"],
     sidebar: true,
     icon: PhoneIcon,
+    teamId: "service-management",
+  },
+  {
+    label: "Portale Fatturazione",
+    path: "/dashboard/portale-fatturazione",
+    requiredTeams: ["service-management"],
+    sidebar: true,
+    icon: FolderIcon,
     teamId: "service-management",
   },
   {
