@@ -4,6 +4,7 @@ import { CloudUpload, FileIcon, UploadIcon, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
+import { UploadedFilesTable } from "./UploadedFilesTable";
 
 export function UploadFileSection() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -27,7 +28,20 @@ export function UploadFileSection() {
     const res = await uploadManualAction(formData);
     setUploading(false);
     if (res.error) toast.error(res.error);
-    else toast.success(res.data ?? "File caricato con successo");
+    else {
+      toast.success(res.data ?? "File caricato con successo");
+      const LOCAL_STORAGE_KEY = "uploaded-files";
+      const prev = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "[]");
+      const newFile = {
+        name: file.name,
+        size: file.size,
+        date: new Date().toLocaleString(),
+      };
+      localStorage.setItem(
+        LOCAL_STORAGE_KEY,
+        JSON.stringify([newFile, ...prev].slice(0, 10)),
+      );
+    }
   };
 
   return (
@@ -113,6 +127,7 @@ export function UploadFileSection() {
           }}
         />
       </form>
+      <UploadedFilesTable />
     </div>
   );
 }
