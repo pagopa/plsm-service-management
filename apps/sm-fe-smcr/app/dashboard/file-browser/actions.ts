@@ -7,7 +7,6 @@ export async function uploadManualAction(formData: FormData) {
   if (!(file instanceof File)) {
     return { error: "Nessun file selezionato." };
   }
-  console.log("fileName:", fileName);
 
   return await updateManual(file, fileName);
 }

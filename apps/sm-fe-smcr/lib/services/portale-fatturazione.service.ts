@@ -21,7 +21,6 @@ export async function updateManual(file: File, fileName: string) {
       },
     },
   );
-  console.log("Data:", data);
 
   if (error || !data) {
     console.error(error);
