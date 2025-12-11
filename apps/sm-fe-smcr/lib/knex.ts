@@ -3,7 +3,6 @@ import knex, { Knex } from "knex";
 
 // Per evitare di creare più istanze su ogni import (utile in dev/hot reload o serverless)
 declare global {
-  // eslint-disable-next-line no-var
   var knexInstance: Knex | undefined;
 }
 
@@ -21,12 +20,12 @@ const rawPassword = Buffer.from(
 const connectionString = `postgresql://${encodedUser}:${rawPassword}@${process.env.DB_HOST}:${port}/${process.env.DB_NAME}${sslEnabled ? "?sslmode=require" : ""}`;
 
 // Solo in sviluppo, stampa dettagli (evita in prod per sicurezza)
-if (process.env.NODE_ENV !== "production") {
-  console.log("[🔌 DB CONNECTION INFO]");
-  console.log(`→ Host: ${process.env.DB_HOST}`);
-  console.log(`→ SSL: ${sslEnabled ? "ENABLED" : "DISABLED"}`);
-  console.log("-------------------------------------------------");
-}
+// if (process.env.NODE_ENV !== "production") {
+//   console.log("[🔌 DB CONNECTION INFO]");
+//   console.log(`→ Host: ${process.env.DB_HOST}`);
+//   console.log(`→ SSL: ${sslEnabled ? "ENABLED" : "DISABLED"}`);
+//   console.log("-------------------------------------------------");
+// }
 
 // Singleton pattern per evitare troppi pool
 const knexConfig: Knex.Config = {

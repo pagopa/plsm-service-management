@@ -51,7 +51,6 @@ export async function readMemberByEmail(
     })
     .first();
 
-  console.log({ rawMember });
   const member = memberSchema.safeParse(rawMember);
   if (!member.success) {
     console.error("readMemberByEmail - validation error", member.error);

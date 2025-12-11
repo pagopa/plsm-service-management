@@ -3,13 +3,13 @@ import { LogLevel, PublicClientApplication } from "@azure/msal-browser";
 const CLIENT_ID = process.env.NEXT_PUBLIC_MSAL_CLIENT_ID || "";
 const TENANT_ID = process.env.NEXT_PUBLIC_MSAL_TENANT_ID;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_MSAL_REDIRECT_URI;
-const BASE_PATH = process.env.NEXT_PUBLIC_APP_URL ?? "/";
-console.log("🔍 MSAL Config Debug:");
-console.log("- CLIENT_ID:", CLIENT_ID ? "✅ Set" : "❌ Missing");
-console.log("- TENANT_ID:", TENANT_ID ? "✅ Set" : "❌ Missing");
-console.log("- REDIRECT_URI:", REDIRECT_URI ? "✅ Set" : "❌ Missing");
-console.log("- BASE_PATH:", BASE_PATH ? "✅ Set" : "❌ Missing");
-console.log("- Full REDIRECT_URI:", REDIRECT_URI);
+// const BASE_PATH = process.env.NEXT_PUBLIC_APP_URL ?? "/";
+// console.log("🔍 MSAL Config Debug:");
+// console.log("- CLIENT_ID:", CLIENT_ID ? "✅ Set" : "❌ Missing");
+// console.log("- TENANT_ID:", TENANT_ID ? "✅ Set" : "❌ Missing");
+// console.log("- REDIRECT_URI:", REDIRECT_URI ? "✅ Set" : "❌ Missing");
+// console.log("- BASE_PATH:", BASE_PATH ? "✅ Set" : "❌ Missing");
+// console.log("- Full REDIRECT_URI:", REDIRECT_URI);
 export const msalConfig = {
   auth: {
     clientId: CLIENT_ID,
