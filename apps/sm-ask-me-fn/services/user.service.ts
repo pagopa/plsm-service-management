@@ -31,7 +31,9 @@ const userResponseSchema = z.object({
 
 export type UserResponse = z.infer<typeof userResponseSchema>;
 
-type GetUserResponse = UserResponse | { message: string; error?: ZodError };
+type GetUserResponse =
+  | { data: UserResponse; error: null }
+  | { data: null; error: string };
 
 export const getUser = async (fiscalCode: string): Promise<GetUserResponse> => {
   const response = await fetch(
@@ -49,18 +51,20 @@ export const getUser = async (fiscalCode: string): Promise<GetUserResponse> => {
   );
 
   if (response.status === 404) {
-    throw new Error(messages.users.notFound);
+    console.warn("getUser - not found");
+    return { data: null, error: messages.users.notFound };
   }
 
   if (!response.ok) {
-    throw new Error(messages.errors.generic);
+    console.error("getUser - generic error");
+    return { data: null, error: messages.errors.generic };
   }
 
   const validationResult = userResponseSchema.safeParse(await response.json());
   if (!validationResult.success) {
     console.log({ message: "validation error", error: validationResult.error });
-    throw new Error(messages.errors.generic);
+    return { data: null, error: messages.errors.generic };
   }
 
-  return validationResult.data;
+  return { data: validationResult.data, error: null };
 };
