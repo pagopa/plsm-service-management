@@ -5,7 +5,12 @@ import { Institution, Product } from "@/lib/services/institution.service";
 import { useInstitutionStore } from "@/lib/store/institution.store";
 import { PRODUCT_MAP } from "@/lib/types/product";
 import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@repo/ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import {
   ClipboardList,

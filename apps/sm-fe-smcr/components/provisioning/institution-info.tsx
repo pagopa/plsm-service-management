@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui";
+} from "@/components/ui/select";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 

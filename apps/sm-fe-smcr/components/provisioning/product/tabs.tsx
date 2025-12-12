@@ -1,11 +1,5 @@
-import {
-  ScrollArea,
-  ScrollBar,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@repo/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   FileTextIcon,
   LayoutDashboardIcon,

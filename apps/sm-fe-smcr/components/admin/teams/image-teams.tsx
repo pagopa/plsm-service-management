@@ -1,5 +1,6 @@
 "use client";
-import { Button } from "@repo/ui";
+
+import { Button } from "@/components/ui/button";
 import { UploadIcon } from "lucide-react";
 import { useState, useRef } from "react";
 import Image from "next/image";

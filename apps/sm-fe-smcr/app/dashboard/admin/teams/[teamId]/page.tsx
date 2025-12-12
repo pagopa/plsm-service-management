@@ -12,7 +12,7 @@ import AddUserToTeamForm from "@/components/admin/teams/add-user-to-team-form";
 import TeamMemberList from "@/components/admin/teams/team-member-list";
 import { User } from "@/lib/types/user";
 import { Member } from "@/lib/types/member";
-import { Button } from "@repo/ui";
+import { Button } from "@/components/ui/button";
 import UpdateTeamImage from "@/components/admin/teams/update-team-image";
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"; // fallback in dev
 

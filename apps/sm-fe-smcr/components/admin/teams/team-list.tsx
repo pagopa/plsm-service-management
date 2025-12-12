@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { getTeams } from "@/lib/actions/team.action";
 import { Team } from "@/lib/types/team";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui";
-import { Button } from "@repo/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function TeamList() {
   const [teams, setTeams] = useState<Team[]>([]);

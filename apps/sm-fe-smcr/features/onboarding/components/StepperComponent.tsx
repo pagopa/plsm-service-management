@@ -4,7 +4,7 @@ import {
   StepperItem,
   StepperSeparator,
   StepperTrigger,
-} from "@repo/ui";
+} from "@/components/ui/stepper";
 import { useFormContext } from "../context/FormContext";
 
 export default function StepperComponent() {

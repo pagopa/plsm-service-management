@@ -4,7 +4,7 @@ import Link from "next/link";
 import ReportDialog from "../core/report-dialog";
 import { Card } from "../ui/card";
 import { CornerDownLeft, X } from "lucide-react";
-import { Button } from "@repo/ui";
+import { Button } from "@/components/ui/button";
 import { useEffect, useRef } from "react";
 
 export const ErrorBase = ({

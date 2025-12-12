@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addUserToTeam } from "@/lib/actions/team.action";
-import { Button } from "@repo/ui";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 

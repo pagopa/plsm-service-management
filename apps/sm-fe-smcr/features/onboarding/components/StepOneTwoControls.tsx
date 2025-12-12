@@ -1,4 +1,4 @@
-import { Button } from "@repo/ui";
+import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
 import { ProductStatus } from "../types/productStatus";
 import { StepOneSchema } from "../types/stepOneSchema";

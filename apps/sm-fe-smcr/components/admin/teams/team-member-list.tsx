@@ -8,7 +8,7 @@ import {
 } from "@/lib/actions/team.action";
 import { TEAM_ROLES } from "@/lib/costants";
 import Image from "next/image";
-import { Button } from "@repo/ui";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 type Member = {
@@ -100,7 +100,6 @@ export default function TeamMemberList({ teamId, members, onUpdate }: Props) {
   };
 
   return (
-    
     <div className="space-y-4">
       {members.map((member) => (
         <div
@@ -153,9 +152,7 @@ export default function TeamMemberList({ teamId, members, onUpdate }: Props) {
               onClick={() => handleRemove(member.id, member.name)}
               disabled={isPending && loading === member.id}
             >
-              {isPending && loading === member.id
-                ? "Rimuovendo..."
-                : "Rimuovi"}
+              {isPending && loading === member.id ? "Rimuovendo..." : "Rimuovi"}
             </Button>
           </div>
         </div>

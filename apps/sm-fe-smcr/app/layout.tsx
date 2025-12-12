@@ -1,6 +1,5 @@
 import { MSALProvider } from "@/context/MSALproviders";
 import { SessionProvider } from "@/context/sessionProvider";
-import "@repo/ui/dist/index.css";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import "./globals.css";

@@ -6,8 +6,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-  Separator,
-} from "@repo/ui";
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
 import { useState, useEffect } from "react";
 import { Team } from "@/lib/types/team";
 import { getTeams } from "@/lib/actions/team.action";

@@ -1,4 +1,4 @@
-import { Checkbox } from "@repo/ui";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useStepOneContext } from "../context/StepOneContext";
 
 export function EnableDeletion() {

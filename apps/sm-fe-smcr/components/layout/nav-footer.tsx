@@ -2,9 +2,6 @@
 
 // import authClient from "@/lib/auth-client";
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -12,11 +9,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@repo/ui";
+} from "@/components/ui/sidebar";
 import { ChevronsUpDown, LogOut, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { LogoutButton } from "../auth/logoutbutton";
@@ -87,16 +87,16 @@ export function NavUser({
             </DropdownMenuGroup>
 
             <DropdownMenuItem
-              //onClick={handleLogout}
-              //{async () =>
-                // await authClient.signOut({
-                //   fetchOptions: {
-                //     onSuccess: () => {
-                //       router.push("/"); // redirect to login page
-                //     },
-                //   },
-                // })
-              //}
+            //onClick={handleLogout}
+            //{async () =>
+            // await authClient.signOut({
+            //   fetchOptions: {
+            //     onSuccess: () => {
+            //       router.push("/"); // redirect to login page
+            //     },
+            //   },
+            // })
+            //}
             >
               <LogOut className="size-4" />
               <LogoutButton />

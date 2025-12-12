@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import Trie from "@/features/pda/lib/Trie";
-import { Card, CardContent } from "@repo/ui";
+import { Card, CardContent } from "@/components/ui/card";
 import { columns } from "./Columns";
 import {
   Command,

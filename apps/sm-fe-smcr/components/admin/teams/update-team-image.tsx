@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@repo/ui";
+import { Button } from "@/components/ui/button";
 import ImageTeam from "@/components/admin/teams/image-teams";
 import { useRouter } from "next/navigation";
 

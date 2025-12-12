@@ -1,4 +1,4 @@
-import { Badge } from "@repo/ui";
+import { Badge } from "@/components/ui/badge";
 
 type Status = "pending" | "blocked" | "completed";
 type Props = {

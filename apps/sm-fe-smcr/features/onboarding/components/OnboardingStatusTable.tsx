@@ -3,9 +3,8 @@ import {
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-  Card,
-  CardContent,
-} from "@repo/ui";
+} from "@/components/ui/accordion";
+import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "./DataTable";
 import { columns } from "./OnboardingColumns";
 import { ProductStatus } from "../types/productStatus";

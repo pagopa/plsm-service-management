@@ -1,15 +1,15 @@
 import { readUser, UserDetails } from "@/lib/services/users.service";
 import {
-  Badge,
-  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  Separator,
-} from "@repo/ui";
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { EyeIcon, EyeOffIcon, UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 

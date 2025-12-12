@@ -1,7 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Button,
   Dialog,
   DialogClose,
   DialogContent,
@@ -10,6 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Form,
   FormControl,
   FormDescription,
@@ -17,8 +18,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  Input,
-} from "@repo/ui";
+} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

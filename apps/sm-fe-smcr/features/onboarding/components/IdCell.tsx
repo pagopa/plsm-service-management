@@ -1,5 +1,9 @@
 "use client";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@repo/ui";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 import { Row } from "@tanstack/react-table";
 import { ProductStatus } from "../types/productStatus";

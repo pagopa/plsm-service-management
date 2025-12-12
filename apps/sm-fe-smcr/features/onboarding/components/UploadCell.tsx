@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@repo/ui";
+import { Button } from "@/components/ui/button";
 import { Row } from "@tanstack/react-table";
 import { ProductStatus } from "../types/productStatus";
 import { useFormContext } from "../context/FormContext";

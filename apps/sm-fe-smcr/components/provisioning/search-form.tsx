@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Input } from "@repo/ui";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { LoaderCircleIcon, SearchIcon } from "lucide-react";
 import Form from "next/form";
 import { useFormStatus } from "react-dom";

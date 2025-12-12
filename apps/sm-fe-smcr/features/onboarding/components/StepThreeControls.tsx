@@ -4,9 +4,9 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  Button,
   Select,
-} from "@repo/ui";
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { LoaderCircle } from "lucide-react";
 import { OutputOption } from "../utils/constants";
 import { useFormContext } from "../context/FormContext";
