@@ -8,6 +8,10 @@ data "azuread_group" "keyvault_admin_group" {
 }
 
 # Valori env per PF
+data "azurerm_private_dns_zone" "existing_storage_blob_dns_zone" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = module.azure_core_infra.network_resource_group_name 
+}
 data "azurerm_key_vault_secret" "apikey_endpoint_pf" {
   name         = "fa-pf-auth-apikey"
   key_vault_id = module.azure_core_infra.common_key_vault.id
