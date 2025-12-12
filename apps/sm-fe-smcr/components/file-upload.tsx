@@ -11,8 +11,7 @@ export function UploadFileSection() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-
-  console.log({ file });
+  const [tableKey, setTableKey] = useState(0);
 
   const handleUpload = () => {
     inputRef.current?.click();
@@ -41,6 +40,9 @@ export function UploadFileSection() {
         LOCAL_STORAGE_KEY,
         JSON.stringify([newFile, ...prev].slice(0, 10)),
       );
+      setTableKey((k) => k + 1); // force table re-render
+      setFile(null);
+      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
@@ -51,11 +53,11 @@ export function UploadFileSection() {
         onSubmit={handleSubmit}
       >
         <h2 className="font-semibold mb-2 text-2xl">
-          <CloudUpload className="inline-block size-5 mr-2" />
-          Caricamento Manuale
+          <CloudUpload className="inline-block size-7 mr-2" />
+          Caricamento Manuale su Portale Fatturazione
         </h2>
         <div
-          className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-md p-6 mb-4 transition-colors ${dragActive ? "border-pagopa-secondary bg-bg-dashboard" : "border-gray-300 bg-white"}`}
+          className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-md p-6 mb-4 transition-colors ${dragActive ? "border-pagopa-primary bg-bg-dashboard" : "border-gray-300 bg-white"}`}
           onClick={handleUpload}
           onDragOver={(e) => {
             e.preventDefault();
@@ -121,13 +123,11 @@ export function UploadFileSection() {
           type="file"
           className="hidden"
           onChange={(e) => {
-            console.log("here");
-
             setFile(e.target.files?.[0] ? e.target.files[0] : null);
           }}
         />
       </form>
-      <UploadedFilesTable />
+      <UploadedFilesTable key={tableKey} />
     </div>
   );
 }
