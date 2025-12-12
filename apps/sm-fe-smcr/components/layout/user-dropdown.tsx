@@ -1,7 +1,7 @@
 "use client";
 
 // import authClient from "@/lib/auth-client";
-import { TopBarUser, TopBarUserSignOut } from "@repo/ui";
+import { TopBarUser, TopBarUserSignOut } from "@/components/layout/top-bar";
 import { useRouter } from "next/navigation";
 
 type Props = {

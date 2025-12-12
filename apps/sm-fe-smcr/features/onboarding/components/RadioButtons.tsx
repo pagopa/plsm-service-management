@@ -3,7 +3,7 @@ import { CircleCheck } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { StepOneSchema } from "../types/stepOneSchema";
 import type { SubunitOption, SubunitValues } from "../types/subunitOptionsType";
-import { Card, CardContent } from "@repo/ui";
+import { Card, CardContent } from "@/components/ui/card";
 
 type Props = {
   form: UseFormReturn<StepOneSchema>;

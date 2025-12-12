@@ -3,7 +3,7 @@
 import { updateTeam } from "@/actions/admin";
 import { Team } from "@/lib/types/team";
 import { User } from "@/lib/types/user";
-import { getColumns, MembersTable } from "@repo/ui";
+import { getColumns, MembersTable } from "@/components/provisioning/members";
 import React from "react";
 
 type Props = {

@@ -6,10 +6,11 @@ import {
   InstitutionStoreValues,
   useInstitutionStore,
 } from "@/lib/store/institution.store";
-import { cn, Label } from "@repo/ui";
+import { Label } from "@/components/ui/label";
 import { CheckIcon, CopyIcon, PencilIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 type Props = {
   name: string;

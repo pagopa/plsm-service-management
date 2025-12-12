@@ -1,7 +1,7 @@
 import { getUserGroups } from "@/lib/services/institution.service";
 import { verifyContract } from "@/lib/services/product.service";
 import { PRODUCT_MAP } from "@/lib/types/product";
-import { Badge } from "@repo/ui";
+import { Badge } from "@/components/ui/badge";
 import { BadgeCheckIcon } from "lucide-react";
 import DownloadConctract from "./download-contract";
 import SendToQueue from "./send-to-queue";
