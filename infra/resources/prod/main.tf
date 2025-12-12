@@ -158,6 +158,44 @@ module "certifica_function" {
 
 # Azure Function per Portale Fatturazione
 
+## Private Endpoint per lo Storage Account 'fatppublic' (Cross-Subscription)
+resource "azurerm_private_endpoint" "fatppublic_storage_pep" {
+  name                = "plsm-p-itn-fatpublic-storage-pep"
+  location            = azurerm_resource_group.fn_rg.location
+  resource_group_name = azurerm_resource_group.fn_rg.name
+
+  # Subnet ID dalla CORE INFRA
+  subnet_id = module.azure_core_infra.common_pep_snet.id
+
+  tags = local.tags
+
+  private_service_connection {
+    name                           = "fatppublic-storage-psc"
+    private_connection_resource_id = var.storage_account_fatppublic_id
+    is_manual_connection           = true
+    subresource_names              = ["blob"]
+    request_message                = "Richiesta di Private Link per la Function App 'Funzione FAT Public'"
+  }
+
+  private_dns_zone_group {
+    name                 = "default"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.existing_storage_blob_dns_zone.id]
+  }
+
+  depends_on = [
+    module.azure_core_infra
+  ]
+}
+
+resource "azurerm_role_assignment" "pfatt_container_contributor" {
+  # Usa l'ID del container passato tramite var.container_pf
+  scope                = var.container_pf 
+  role_definition_name = "Storage Blob Data Contributor" 
+  principal_id         = module.portalefatturazione_function.function_app_principal_id
+
+  depends_on = [module.portalefatturazione_function]
+}
+
 resource "azurerm_role_assignment" "cd_identity_website_contrib_pf_fa" {
   scope                = module.portalefatturazione_function.function_app_id
   role_definition_name = "Website Contributor"
