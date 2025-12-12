@@ -2,6 +2,7 @@ import { z } from "zod";
 import "dotenv/config";
 
 const envSchema = z.object({
+  NODE_ENV: z.string(),
   APPINSIGHTS_CONNECTION_STRING: z.string(),
   APPINSIGHTS_SAMPLING_PERCENTAGE: z.preprocess(
     (a) => parseInt(z.string().parse(a), 10),
@@ -45,6 +46,7 @@ const envSchema = z.object({
 });
 
 const envParse = envSchema.safeParse({
+  NODE_ENV: process.env.NODE_ENV,
   APPINSIGHTS_CONNECTION_STRING: process.env.APPINSIGHTS_CONNECTION_STRING,
   APPINSIGHTS_SAMPLING_PERCENTAGE: process.env.APPINSIGHTS_SAMPLING_PERCENTAGE,
   SERVICENAME: process.env.SERVICENAME,

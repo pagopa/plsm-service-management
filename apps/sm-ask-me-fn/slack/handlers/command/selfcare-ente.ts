@@ -1,37 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { AckFn, SayFn, SlashCommand } from '@slack/bolt'
-import { getInstitutionByTaxCode } from '../../../services/institution.service'
-import hasAuthorization from '../../../utils/hasAuthorization'
-import messages from '../../../utils/messages'
-import { validateTaxCode } from '../../../utils/validateInput'
-import getSelfcareEnteMessage from '../messages/selfcare-ente.message'
+import { AckFn, SayFn, SlashCommand } from "@slack/bolt";
+import { getInstitutionByTaxCode } from "../../../services/institution.service";
+import messages from "../../../utils/messages";
+import { validateTaxCode } from "../../../utils/validateInput";
+import getSelfcareEnteMessage from "../messages/selfcare-ente.message";
+import { hasSelfcareAccess } from "../../../services/auth.service";
 
 const selfcareEnteCommand = async ({
   command,
   ack,
   say,
 }: {
-  command: SlashCommand
-  ack: AckFn<any>
-  say: SayFn
-}) => {
-  await ack()
+  command: SlashCommand;
+  ack: AckFn<any>;
+  say: SayFn;
+}): Promise<void> => {
+  await ack();
 
   try {
-    const [taxCodeInput, subunitCode] = command.text.split(' ')
-    const { data, error } = validateTaxCode(taxCodeInput)
+    const [taxCodeInput, subunitCode] = command.text.split(" ");
+    const { data, error } = validateTaxCode(taxCodeInput);
 
     if (error || data === null) {
-      await say(error)
-      return
+      await say(error);
+      return;
     }
 
-    if (!(await hasAuthorization(command.user_id, say))) {
-      return
+    const isAuthorized = await hasSelfcareAccess(command.user_id);
+    if (isAuthorized.error) {
+      console.error("auth check error:", isAuthorized.error);
+      await say(isAuthorized.error);
+      return;
     }
 
-    const { root, institutions } = await getInstitutionByTaxCode(data)
+    const { root, institutions } = await getInstitutionByTaxCode(data);
 
     say(
       getSelfcareEnteMessage({
@@ -40,14 +43,14 @@ const selfcareEnteCommand = async ({
         root,
         institutions,
       }),
-    )
+    );
   } catch (error) {
     if (error instanceof Error) {
-      say(error.message)
+      say(error.message);
     } else {
-      say(messages.errors.generic)
+      say(messages.errors.generic);
     }
   }
-}
+};
 
-export default selfcareEnteCommand
+export default selfcareEnteCommand;
