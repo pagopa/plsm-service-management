@@ -276,8 +276,6 @@ export async function updateInstitutionInfoPNPG(
   );
 
   if (error || !data) {
-    console.log("before error");
-
     console.error(error);
     return { error: "Si è verificato un errore, riprova più tardi." };
   }
