@@ -10,11 +10,7 @@ import {
 } from "react";
 import { useMsal } from "@azure/msal-react";
 import { UserProfile } from "@/lib/types/userProfile";
-import {
-  getUserMember,
-  getUserPreferences,
-  getUserTeams,
-} from "@/lib/actions/user.action";
+import { getUserMember, getUserPreferences } from "@/lib/actions/user.action";
 import {
   readMemberByEmail,
   createMember,
