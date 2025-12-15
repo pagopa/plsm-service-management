@@ -7,7 +7,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { FolderOpenIcon } from "lucide-react";
 
 export default function FileBrowserPage() {
   return (

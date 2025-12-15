@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { UploadedFilesTable } from "./UploadedFilesTable";
+import { slackMessageManual } from "@/lib/services/portale-fatturazione.service";
 
 export function UploadFileSection() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -43,6 +44,7 @@ export function UploadFileSection() {
       setTableKey((k) => k + 1); // force table re-render
       setFile(null);
       if (inputRef.current) inputRef.current.value = "";
+      await slackMessageManual();
     }
   };
 
