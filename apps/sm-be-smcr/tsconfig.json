@@ -12,7 +12,8 @@
       "@/*": ["src/*"]
     },
     "noEmit": false,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

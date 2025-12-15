@@ -1,5 +1,8 @@
+import dotenv from 'dotenv';
 import { serve } from '@hono/node-server';
 import { createApp } from './app.js';
+
+dotenv.config();
 
 const { app, config } = createApp();
 
