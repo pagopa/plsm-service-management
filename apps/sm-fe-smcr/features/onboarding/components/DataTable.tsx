@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui";
+} from "@/components/ui/table";
 import { useEffect, useState } from "react";
 
 import { isEmptyObj } from "../utils/isNotEmptyObj";

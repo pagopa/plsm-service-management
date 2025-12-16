@@ -2,8 +2,6 @@
 
 import { updateUserAction } from "@/lib/actions/users.actions";
 import {
-  Badge,
-  Button,
   Dialog,
   DialogClose,
   DialogContent,
@@ -12,13 +10,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-  Input,
-  Label,
-} from "@repo/ui";
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowUpDown,

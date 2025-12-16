@@ -8,7 +8,7 @@ on:
         type: string
         required: true
         default: "sm-fe-smcr"
-        
+
       next_app_path:
         description: "NextJS App Path"
         type: string
@@ -131,7 +131,7 @@ jobs:
           else
               echo "AVVISO: Node_modules standalone non trovato in $NODE_MODULES_SRC. La build potrebbe fallire."
           fi
-          
+
       - name: Copy Static Assets (.next/static)
         run: |
           STATIC_SRC="$NEXT_APP_PATH/.next/static"
@@ -297,7 +297,7 @@ jobs:
             --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
             --name "${{ env.WEB_APP_NAME }}" \
             --slot staging \
-            --target-slot production \
+            --target-slot production
           echo "✅ Slot swap initiated (non-blocking)."
 
       - name: Verify production deployment

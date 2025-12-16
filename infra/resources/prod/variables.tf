@@ -17,3 +17,8 @@ variable "bsmcr_principal_id" {
   description = "B-SMCR Principal ID"
   type        = string
 }
+
+variable "storage_account_fatppublic_id" {
+  description = "Storage Account ID of the target fatppublic Storage Account" #PROD-Fatturazione
+  type        = string
+}

@@ -70,7 +70,7 @@ export default async function Page({
           taxCode={taxCode}
           institution={institution}
           institutionDescription={
-            institutionsResponse.data?.find((item) => item.taxCode === taxCode)
+            institutionsResponse.data?.find((item) => item.id === institution)
               ?.description || "contratto"
           }
           product={product}

@@ -1,18 +1,17 @@
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  cn,
-  Input,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectGroup,
   SelectItem,
-  Label,
   Select,
-  Button,
   SelectLabel,
-} from "@repo/ui";
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { LoaderCircle } from "lucide-react";
 import { ApiOptionsApicale } from "../types/apiOptionsType";
 import { apiOptionsApicale } from "../utils/constants";

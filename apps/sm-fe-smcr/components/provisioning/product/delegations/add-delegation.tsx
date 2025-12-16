@@ -22,6 +22,13 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { addDelegationAction } from "@/lib/actions/delegation.action";
 import {
@@ -52,6 +59,9 @@ export default function AddDelegation({
   const [taxCodeTo, setTaxCodeTo] = useState("");
   const taxCodeToDebounced = useDebounce(taxCodeTo, 250);
   const [institutionTo, setInstitutionTo] = useState<Institution | null>(null);
+  const [institutionOptions, setInstitutionOptions] = useState<Institution[]>(
+    [],
+  );
   const [isFetchingInstitutionTo, setIsFetchingInstitutionTo] = useState(false);
   const [taxCodeToError, setTaxCodeToError] = useState<string | null>(null);
   const [state, action, isPending] = useActionState(addDelegationAction, {
@@ -83,6 +93,8 @@ export default function AddDelegation({
 
   useEffect(() => {
     setTaxCodeToError(null);
+    setInstitutionOptions([]);
+    setInstitutionTo(null);
     if (regex.test(taxCodeToDebounced)) {
       setIsFetchingInstitutionTo(true);
       getInstitutionWithSubunits(taxCodeToDebounced)
@@ -91,21 +103,22 @@ export default function AddDelegation({
             setTaxCodeToError(
               "Si è verificato un errore, controlla che il codice fiscale sia corretto.",
             );
+            setInstitutionOptions([]);
             return;
           }
 
+          setInstitutionOptions(data);
           setInstitutionTo(data.at(0) || null);
         })
         .catch((error) => {
           console.error(error);
           setTaxCodeToError("Si è verificato un errore, riprova più tardi.");
           setInstitutionTo(null);
+          setInstitutionOptions([]);
         })
         .finally(() => {
           setIsFetchingInstitutionTo(false);
         });
-    } else {
-      setInstitutionTo(null);
     }
   }, [taxCodeToDebounced]);
 
@@ -186,13 +199,42 @@ export default function AddDelegation({
                   )}
                 </InputGroup>
 
-                {taxCodeToError ||
-                  (state.errors?.taxCodeTo && (
-                    <FieldError>
-                      {taxCodeToError || state.errors.taxCodeTo}
-                    </FieldError>
-                  ))}
+                {(taxCodeToError || state.errors?.taxCodeTo) && (
+                  <FieldError>
+                    {taxCodeToError || state.errors?.taxCodeTo}
+                  </FieldError>
+                )}
               </Field>
+
+              {institutionOptions.length > 0 && (
+                <Field>
+                  <FieldLabel htmlFor="institutionToSelect">
+                    Seleziona Ente delegato
+                  </FieldLabel>
+                  <Select
+                    value={institutionTo?.id || undefined}
+                    onValueChange={(value) => {
+                      const selectedInstitution =
+                        institutionOptions.find(
+                          (institution) => institution.id === value,
+                        ) || null;
+
+                      setInstitutionTo(selectedInstitution);
+                    }}
+                  >
+                    <SelectTrigger id="institutionToSelect">
+                      <SelectValue placeholder="Seleziona ente delegato" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {institutionOptions.map((institution) => (
+                        <SelectItem key={institution.id} value={institution.id}>
+                          {institution.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
 
               {institutionTo?.id && institutionTo?.description && (
                 <>
@@ -202,7 +244,7 @@ export default function AddDelegation({
                       id="to"
                       name="to"
                       placeholder="ID delegato"
-                      defaultValue={institutionTo.id}
+                      value={institutionTo.id}
                       readOnly
                     />
                     {state.errors?.to && (
@@ -218,7 +260,7 @@ export default function AddDelegation({
                       id="institutionToName"
                       name="institutionToName"
                       placeholder="Nome delegato"
-                      defaultValue={institutionTo.description}
+                      value={institutionTo.description}
                       readOnly
                     />
                     {state.errors?.institutionToName && (
