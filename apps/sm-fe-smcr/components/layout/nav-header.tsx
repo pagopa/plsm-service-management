@@ -1,10 +1,9 @@
 "use client";
 
-import { ChevronsUpDown, Plus, UserIcon, UserRound } from "lucide-react";
+import { ChevronsUpDown, UserIcon } from "lucide-react";
 import * as React from "react";
 
 import {
-  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -12,25 +11,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-  Label,
+} from "@/components/ui/dropdown-menu";
+import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@repo/ui";
-import { Member, UserWithMembers } from "@/lib/types/member";
+} from "@/components/ui/sidebar";
+import { Member } from "@/lib/types/member";
 import { useEffect } from "react";
 import { Team } from "@/lib/types/team";
-import { UserProfile } from "@/lib/types/userProfile";
 import { useSession } from "@/context/sessionProvider";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export function NavHeader({ members }: { members: Array<Member> | undefined }) {
   const { isMobile } = useSidebar();
   const { user, setUser } = useSession();
   const [activeTeam, setActiveTeam] = React.useState({} as Team);
-  const router = useRouter();
 
   useEffect(() => {
     // Protezione: se non c'è nulla da fare, esci subito

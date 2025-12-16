@@ -21,9 +21,10 @@ const buttonVariants = cva(
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
         pagopaprimary:
-          "ui:bg-pagopa-primary ui:text-white ui:shadow-xs ui:hover:bg-pagopa-primary/90",
+          "bg-pagopa-primary text-white shadow-xs hover:bg-pagopa-primary/90",
         pagopasecondary:
-          "ui:bg-pagopa-secondary ui:text-pagopa-primary ui:shadow-xs ui:hover:bg-pagopa-secondary/90",
+          "bg-pagopa-secondary text-pagopa-primary shadow-xs hover:bg-pagopa-secondary/90",
+        copied: "bg-chart-5 text-white shadow-xs hover:bg-chart-5/90",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

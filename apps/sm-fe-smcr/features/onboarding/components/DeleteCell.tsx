@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Button,
   Dialog,
   DialogClose,
   DialogContent,
@@ -10,8 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  Input,
-} from "@repo/ui";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Row } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";

@@ -1,16 +1,13 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui";
+} from "@/components/ui/select";
 import { LoaderCircle } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
