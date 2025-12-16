@@ -11,29 +11,40 @@ export async function updateManual(file: File, fileName: string) {
     };
   }
 
-  const { data, error } = await betterFetch(
-    `https://plsm-p-itn-pfatt-func-01.azurewebsites.net/api/v1/manuali?filename=${fileName}`,
-    {
-      method: "POST",
-      body: file,
-      headers: {
-        Authorization: `Bearer ${STORAGE_TOKEN}`,
-        "Content-Type": "application/pdf",
+  try {
+    const { data, error } = await betterFetch(
+      `https://plsm-p-itn-pfatt-func-01.azurewebsites.net/api/v1/manuali?filename=${fileName}`,
+      {
+        method: "POST",
+        body: file,
+        headers: {
+          Authorization: `Bearer ${STORAGE_TOKEN}`,
+          "Content-Type": "application/pdf",
+        },
       },
-    },
-  );
+    );
 
-  if (error || !data) {
+    if (error || !data) {
+      console.error(error);
+      if (error?.status === 403)
+        return {
+          error: "Non autorizzato al caricamento del file, controllare la VPN",
+        };
+
+      if (error?.status === 413)
+        return {
+          error:
+            "Il file è troppo grande. La dimensione massima consentita è 1MB.",
+        };
+
+      return { error: "Si è verificato un errore, riprova più tardi." };
+    }
+
+    return { error: null, data: data as string };
+  } catch (error) {
     console.error(error);
-    if (error?.status === 403)
-      return {
-        error: "Non autorizzato al caricamento del file, controllare la VPN",
-      };
-
     return { error: "Si è verificato un errore, riprova più tardi." };
   }
-
-  return { error: null, data: data as string };
 }
 
 export async function slackMessageManual() {
