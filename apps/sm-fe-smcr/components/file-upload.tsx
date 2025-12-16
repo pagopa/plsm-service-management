@@ -25,6 +25,13 @@ export function UploadFileSection() {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("fileName", file.name);
+    if (file.size > 10 * 1024 * 1024) {
+      setUploading(false);
+      toast.error(
+        "Il file è troppo grande. La dimensione massima consentita è 10MB.",
+      );
+      return;
+    }
     const res = await uploadManualAction(formData);
     setUploading(false);
     if (res.error) toast.error(res.error);
