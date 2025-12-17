@@ -4,8 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - develop
-      - feature/**
+      # - develop
+      # - feature/**
+      - '**'
     paths:
       - "apps/sm-fe-smcr/**"
   pull_request:

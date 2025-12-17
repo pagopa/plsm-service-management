@@ -1,4 +1,4 @@
-name: Deploy Ask Me Bot Function
+name: CD - Ask Me Bot Function
 
 on:
   workflow_dispatch:

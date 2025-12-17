@@ -1,4 +1,4 @@
-name: Deploy Onboarding Function
+name: CD - Onboarding Function
 
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: Test Private Runner
+name: Test - Run Private Runner
 
 # Trigger per l'esecuzione:
 on:
