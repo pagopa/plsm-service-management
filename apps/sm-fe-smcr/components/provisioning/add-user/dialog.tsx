@@ -1,11 +1,11 @@
 import {
-  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@repo/ui";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import CreateUserForm from "./form";
 import { PlusIcon } from "lucide-react";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Checkbox } from "@repo/ui";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
 import { productsMap } from "../utils/constants";
 import { dateFormat } from "../utils/dateFormat";

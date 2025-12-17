@@ -6,8 +6,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-  Button,
-} from "@repo/ui";
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
 import { SearchIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SidebarTrigger } from "@/components//ui/sidebar";

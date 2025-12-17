@@ -3,7 +3,7 @@
 import { Command as CommandPrimitive } from "cmdk";
 import { SearchIcon } from "lucide-react";
 
-import { cn } from "@repo/ui";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,

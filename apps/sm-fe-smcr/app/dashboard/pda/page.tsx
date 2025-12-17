@@ -7,8 +7,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-  Separator,
-} from "@repo/ui";
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
 
 export default function Page() {
   return (
