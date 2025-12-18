@@ -1,3 +1,9 @@
+import VolumeChart from "@/components/logs/volume-chart";
+
 export default function Page() {
-  return <div>Page</div>;
+  return (
+    <div className="">
+      <VolumeChart />
+    </div>
+  );
 }
