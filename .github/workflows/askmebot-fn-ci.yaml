@@ -5,8 +5,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - develop
-      - feature/**
+      # - develop
+      # - feature/**
+      - '**'
     paths:
       - "apps/sm-ask-me-fn/**"
   pull_request:

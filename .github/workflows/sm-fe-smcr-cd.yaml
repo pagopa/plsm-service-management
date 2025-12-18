@@ -1,4 +1,4 @@
-name: Deploy - SM-FE-SMCR
+name: CD - SM-FE-SMCR
 
 on:
   workflow_dispatch:

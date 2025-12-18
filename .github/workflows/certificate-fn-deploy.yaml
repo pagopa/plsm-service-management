@@ -1,4 +1,4 @@
-name: Deploy Certificate Function
+name: CD - Certificate Function
 
 on:
   workflow_dispatch:
