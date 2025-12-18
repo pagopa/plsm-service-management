@@ -55,7 +55,8 @@ export async function readLogs(): Promise<
         "level",
         "service",
         "request as requestId",
-      ]);
+      ])
+      .orderBy("timestamp", "desc");
 
     return { data: logs, error: null };
   } catch (error) {

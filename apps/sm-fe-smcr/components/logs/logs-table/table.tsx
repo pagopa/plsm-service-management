@@ -32,7 +32,7 @@ export function LogsTable<TData, TValue>({
   });
 
   return (
-    <div className="overflow-hidden">
+    <div className="h-full min-h-0 overflow-auto">
       <Table className="table-fixed">
         <TableHeader className="bg-neutral-100">
           {table.getHeaderGroups().map((headerGroup) => (

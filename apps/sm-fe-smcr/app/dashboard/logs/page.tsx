@@ -19,10 +19,10 @@ export default async function Page() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 h-full min-h-0 flex-1">
       <VolumeChart />
 
-      <Card className="p-0 gap-0">
+      <Card className="p-0 gap-0 flex flex-col flex-1 min-h-0">
         <CardHeader className="px-3 py-3 border-b border-neutral-200 pb-3!">
           <CardTitle>Logs</CardTitle>
           <CardDescription>
@@ -30,7 +30,7 @@ export default async function Page() {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="p-0">
+        <CardContent className="p-0 flex-1 min-h-0">
           <LogsTable data={data} columns={columns} />
         </CardContent>
       </Card>
