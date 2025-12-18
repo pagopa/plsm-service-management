@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Pillow } from "@/components/ui/pillow";
 import { ColumnDef } from "@tanstack/react-table";
+import { BotMessageSquareIcon, LayoutDashboardIcon } from "lucide-react";
 
 export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
 
@@ -69,20 +70,16 @@ export const columns: ColumnDef<Log>[] = [
     },
   },
   {
-    accessorKey: "service",
-    header: "Service",
-    cell: ({ getValue }) => (
-      <span className="font-mono text-neutral-700">
-        {formatTimestamp(getValue())}
-      </span>
-    ),
-  },
-  {
     accessorKey: "message",
     header: "Messaggio",
     cell: ({ getValue }) => (
       <span className="text-neutral-700">{formatTimestamp(getValue())}</span>
     ),
+  },
+  {
+    accessorKey: "service",
+    header: "Service",
+    cell: ({ getValue }) => getServiceBadge(getValue() as string),
   },
   {
     accessorKey: "level",
@@ -120,3 +117,24 @@ export const columns: ColumnDef<Log>[] = [
     },
   },
 ];
+
+const getServiceBadge = (service: string) => {
+  switch (service) {
+    case "SMCR":
+      return (
+        <Badge variant="outline" className="bg-secondary font-normal">
+          <LayoutDashboardIcon className="opacity-60" />
+          SMCR
+        </Badge>
+      );
+    case "AMA":
+      return (
+        <Badge variant="outline" className="bg-secondary font-normal">
+          <BotMessageSquareIcon className="opacity-60" />
+          Ask Me Anything
+        </Badge>
+      );
+    default:
+      return <Badge>{service}</Badge>;
+  }
+};
