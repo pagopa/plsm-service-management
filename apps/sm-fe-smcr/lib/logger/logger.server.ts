@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import { randomUUID } from "crypto";
 import pino from "pino";
 import pinoPretty from "pino-pretty";
 
@@ -11,12 +11,7 @@ const remoteStream = {
       await fetch("http://localhost:3000/api/monitoring/logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          timestamp: dayjs(log.time).toISOString(),
-          level: "INFO",
-          service: log.service,
-          message: log.msg,
-        }),
+        body: JSON.stringify(log),
       });
     } catch (error) {
       console.error("error sending log:", error);
@@ -26,8 +21,22 @@ const remoteStream = {
 
 const logger = pino(
   {
+    messageKey: "message",
     base: {
       service: "SMCR",
+    },
+    timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
+    formatters: {
+      level(label) {
+        return { level: label.toUpperCase() };
+      },
+
+      log(object) {
+        return {
+          ...object,
+          requestId: object.requestId ?? randomUUID(),
+        };
+      },
     },
   },
   // Combina pretty print in console + invio remoto
