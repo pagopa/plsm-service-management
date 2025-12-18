@@ -8,7 +8,7 @@ const remoteStream = {
       const log = JSON.parse(input);
       console.log("LOG", log);
 
-      await fetch("http://localhost:3000/api/monitoring/logs", {
+      await fetch(process.env.FE_SMCR_LOGS_ENDPOINT as string, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(log),
@@ -21,6 +21,7 @@ const remoteStream = {
 
 const logger = pino(
   {
+    level: (process.env.FE_SMCR_LOG_LEVEL as string) || "info",
     messageKey: "message",
     base: {
       service: "SMCR",
