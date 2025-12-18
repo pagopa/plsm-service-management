@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { Pillow } from "@/components/ui/pillow";
 import { ColumnDef } from "@tanstack/react-table";
 
 export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
@@ -31,11 +32,56 @@ function formatTimestamp(value: unknown): string {
 export const columns: ColumnDef<Log>[] = [
   {
     accessorKey: "timestamp",
-    header: "Data ed ora",
+    header: () => (
+      <div className="h-full inline-flex items-center gap-3">
+        <Pillow className="opacity-0" />
+
+        <span>Data ed ora</span>
+      </div>
+    ),
+    cell: ({ row, getValue }) => {
+      const level = row.original.level as LogLevel;
+
+      const getLevelPillow = (level: LogLevel) => {
+        switch (level) {
+          case "DEBUG":
+            return <Pillow variant="debug" />;
+          case "INFO":
+            return <Pillow variant="info" />;
+          case "WARN":
+            return <Pillow variant="warn" />;
+          case "ERROR":
+            return <Pillow variant="error" />;
+          default:
+            return <Pillow />;
+        }
+      };
+
+      return (
+        <div className="h-full inline-flex items-center gap-3">
+          {getLevelPillow(level)}
+
+          <span className="font-mono text-neutral-700">
+            {formatTimestamp(getValue())}
+          </span>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "service",
+    header: "Service",
     cell: ({ getValue }) => (
       <span className="font-mono text-neutral-700">
         {formatTimestamp(getValue())}
       </span>
+    ),
+  },
+  {
+    accessorKey: "message",
+    header: "Messaggio",
+    cell: ({ getValue }) => (
+      <span className="text-neutral-700">{formatTimestamp(getValue())}</span>
     ),
   },
   {
@@ -57,22 +103,6 @@ export const columns: ColumnDef<Log>[] = [
           return value;
       }
     },
-  },
-  {
-    accessorKey: "service",
-    header: "Service",
-    cell: ({ getValue }) => (
-      <span className="font-mono text-neutral-700">
-        {formatTimestamp(getValue())}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "message",
-    header: "Messaggio",
-    cell: ({ getValue }) => (
-      <span className="text-neutral-700">{formatTimestamp(getValue())}</span>
-    ),
   },
   {
     accessorKey: "request",
