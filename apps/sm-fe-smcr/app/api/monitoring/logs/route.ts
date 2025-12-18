@@ -1,6 +1,16 @@
 import logger from "@/lib/logger/logger.server";
-import { logSchema, saveLog } from "@/lib/services/logs.service";
+import { logSchema, readLogs, saveLog } from "@/lib/services/logs.service";
 import { z } from "zod";
+
+export async function GET() {
+  const { data, error } = await readLogs();
+  if (error) {
+    logger.error({ data: data, error }, error);
+    return Response.json({ message: error }, { status: 500 });
+  }
+
+  return Response.json(data, { status: 200 });
+}
 
 export async function POST(request: Request) {
   const body = await request.json();

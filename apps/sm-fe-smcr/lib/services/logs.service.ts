@@ -37,7 +37,22 @@ export async function saveLog(
 
     return { data: log, error: null };
   } catch (error) {
-    logger.error({ service: "SMCR", error }, "saveLog - database error");
+    logger.error({ error }, "saveLog - database error");
     return { data: null, error: "Error saving log." };
+  }
+}
+
+export async function readLogs(): Promise<
+  { data: Array<Log>; error: null } | { data: null; error: string }
+> {
+  try {
+    const logs = await database
+      .from(LOGS_TABLE)
+      .select(["id", "timestamp", "message", "service", "request"]);
+
+    return { data: logs, error: null };
+  } catch (error) {
+    logger.error({ error }, "readLogs - database error");
+    return { data: null, error: "Error reading log." };
   }
 }
