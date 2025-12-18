@@ -230,3 +230,7 @@
     transform: scaleY(-1) rotate(-135deg);
   }
 }
+
+.border-pagopa-primary {
+  border-color: var(--pagopa-primary);
+}
