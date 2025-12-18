@@ -7,6 +7,10 @@ export async function POST(request: Request) {
   const result = logSchema.omit({ id: true }).safeParse(body);
 
   if (!result.success) {
+    console.warn(
+      "log validation error",
+      z.flattenError(result.error).fieldErrors,
+    );
     return Response.json(
       { message: z.flattenError(result.error).fieldErrors },
       { status: 422 },
