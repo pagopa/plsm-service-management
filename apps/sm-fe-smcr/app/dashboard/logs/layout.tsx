@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 
 type Props = {
   children: React.ReactNode;
@@ -27,56 +28,58 @@ export default function Layout({ children }: Props) {
         </div>
       </header>
 
-      <div className="w-full inline-flex items-center gap-3 p-3 bg-white rounded-lg border border-neutral-200">
-        <InputGroup className="h-8!">
-          <InputGroupInput placeholder="Search..." />
-          <InputGroupAddon>
-            <SearchIcon />
-          </InputGroupAddon>
-        </InputGroup>
+      <Card>
+        <CardContent className="inline-flex gap-3 items-center">
+          <InputGroup className="h-8!">
+            <InputGroupInput placeholder="Search..." />
+            <InputGroupAddon>
+              <SearchIcon />
+            </InputGroupAddon>
+          </InputGroup>
 
-        <div className="inline-flex items-center gap-3">
-          <Select>
-            <SelectTrigger className="w-[180px]" size="sm">
-              <SelectValue placeholder="Range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="5_min">Ultimi 5 minuti</SelectItem>
-                <SelectItem value="15_min">Ultimi 15 minuti</SelectItem>
-                <SelectItem value="30_min">Ultimi 30 minuti</SelectItem>
-                <SelectItem value="1_hour">Ultima ora</SelectItem>
-                <SelectItem value="4_hour">Ultime 4 ore</SelectItem>
-                <SelectItem value="24_hour">Ultime 24 ore</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <div className="inline-flex items-center gap-3">
+            <Select>
+              <SelectTrigger className="w-[180px]" size="sm">
+                <SelectValue placeholder="Range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="5_min">Ultimi 5 minuti</SelectItem>
+                  <SelectItem value="15_min">Ultimi 15 minuti</SelectItem>
+                  <SelectItem value="30_min">Ultimi 30 minuti</SelectItem>
+                  <SelectItem value="1_hour">Ultima ora</SelectItem>
+                  <SelectItem value="4_hour">Ultime 4 ore</SelectItem>
+                  <SelectItem value="24_hour">Ultime 24 ore</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
 
-          <Select>
-            <SelectTrigger className="w-[180px]" size="sm">
-              <SelectValue placeholder="Servizio" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="smcr">SMCR</SelectItem>
-                <SelectItem value="ama">AMA</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+            <Select>
+              <SelectTrigger className="w-[180px]" size="sm">
+                <SelectValue placeholder="Servizio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="smcr">SMCR</SelectItem>
+                  <SelectItem value="ama">AMA</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
 
-          <Select>
-            <SelectTrigger className="w-[180px]" size="sm">
-              <SelectValue placeholder="Livello" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="DEBUG">Debug</SelectItem>
-                <SelectItem value="INFO">Info</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+            <Select>
+              <SelectTrigger className="w-[180px]" size="sm">
+                <SelectValue placeholder="Livello" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="DEBUG">Debug</SelectItem>
+                  <SelectItem value="INFO">Info</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       {children}
     </div>
