@@ -5,15 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Pillow } from "@/components/ui/pillow";
 import { ColumnDef } from "@tanstack/react-table";
 import { BotMessageSquareIcon, LayoutDashboardIcon } from "lucide-react";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
 
 function formatTimestamp(value: unknown): string {
+  console.log(value, typeof value);
   if (typeof value === "string" || typeof value === "number") {
-    const date = new Date(value);
-    if (!Number.isNaN(date.getTime())) {
-      const pad2 = (n: number) => String(n).padStart(2, "0");
-      const time = `${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
-      const day = `${pad2(date.getDate())}-${pad2(date.getMonth() + 1)}-${date.getFullYear()}`;
-      return `${time} ${day}`;
+    const date = dayjs(value);
+    console.log({ value, date, isValid: date.isValid() });
+    if (date.isValid()) {
+      return date.format("HH:mm:ss DD-MM-YYYY");
     }
     return String(value);
   }
@@ -53,7 +56,7 @@ export const columns: ColumnDef<Log>[] = [
           {getLevelPillow(level)}
 
           <span className="font-mono text-neutral-700">
-            {formatTimestamp(getValue())}
+            {formatTimestamp(String(getValue()))}
           </span>
         </div>
       );
@@ -63,7 +66,7 @@ export const columns: ColumnDef<Log>[] = [
     accessorKey: "message",
     header: "Messaggio",
     cell: ({ getValue }) => (
-      <span className="text-neutral-700">{formatTimestamp(getValue())}</span>
+      <span className="text-neutral-700">{getValue() as string}</span>
     ),
   },
   {
@@ -92,15 +95,15 @@ export const columns: ColumnDef<Log>[] = [
     },
   },
   {
-    accessorKey: "request",
-    header: "Richiesta",
+    accessorKey: "requestId",
+    header: "ID Richiesta",
     cell: ({ getValue }) => {
       if (!getValue()) {
         return null;
       }
 
       return (
-        <Badge variant="outline" className="bg-muted">
+        <Badge variant="outline" className="font-normal bg-muted">
           {getValue() as string}
         </Badge>
       );

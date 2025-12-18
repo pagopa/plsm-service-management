@@ -48,7 +48,14 @@ export async function readLogs(): Promise<
   try {
     const logs = await database
       .from(LOGS_TABLE)
-      .select(["id", "timestamp", "message", "service", "request"]);
+      .select([
+        "id",
+        "timestamp",
+        "message",
+        "level",
+        "service",
+        "request as requestId",
+      ]);
 
     return { data: logs, error: null };
   } catch (error) {
