@@ -28,8 +28,8 @@ export default function Layout({ children }: Props) {
         </div>
       </header>
 
-      <Card>
-        <CardContent className="inline-flex gap-3 items-center">
+      <Card className="py-0">
+        <CardContent className="inline-flex gap-3 items-center p-3">
           <InputGroup className="h-8!">
             <InputGroupInput placeholder="Search..." />
             <InputGroupAddon>

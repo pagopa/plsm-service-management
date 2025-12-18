@@ -1,9 +1,11 @@
+@import url("https://fonts.googleapis.com/css2?family=Fragment+Mono&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-mono: "Fragment mono", mono;
   --color-pagopa-primary: var(--pagopa-primary);
   --color-pagopa-secondary: var(--pagopa-secondary);
   --color-bg-dashboard: var(--bg-dashboard);
