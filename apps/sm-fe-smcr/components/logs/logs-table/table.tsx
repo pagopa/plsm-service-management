@@ -41,7 +41,7 @@ export function LogsTable<TData, TValue>({
                 return (
                   <TableHead
                     key={header.id}
-                    className="font-normal text-muted-foreground text-sm px-3 h-9"
+                    className="font-normal text-muted-foreground text-sm px-3 h-9 border-b border-r border-neutral-200"
                   >
                     {header.isPlaceholder
                       ? null
@@ -64,7 +64,10 @@ export function LogsTable<TData, TValue>({
                 data-state={row.getIsSelected() && "selected"}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="px-3 h-9 py-0">
+                  <TableCell
+                    key={cell.id}
+                    className="px-3 h-9 py-0 border-r border-neutral-100"
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
