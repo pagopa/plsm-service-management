@@ -1,20 +1,10 @@
 "use client";
 
+import { Log, LogLevel } from "@/lib/services/logs.service";
 import { Badge } from "@/components/ui/badge";
 import { Pillow } from "@/components/ui/pillow";
 import { ColumnDef } from "@tanstack/react-table";
 import { BotMessageSquareIcon, LayoutDashboardIcon } from "lucide-react";
-
-export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
-
-export type Log = {
-  id: string;
-  timestamp: string;
-  level: LogLevel;
-  service: string;
-  message: string;
-  request?: string;
-};
 
 function formatTimestamp(value: unknown): string {
   if (typeof value === "string" || typeof value === "number") {
