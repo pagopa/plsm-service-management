@@ -33,7 +33,7 @@ export function LogsTable<TData, TValue>({
 
   return (
     <div className="overflow-hidden">
-      <Table>
+      <Table className="table-fixed">
         <TableHeader className="bg-neutral-100">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -41,7 +41,7 @@ export function LogsTable<TData, TValue>({
                 return (
                   <TableHead
                     key={header.id}
-                    className="font-mono uppercase font-normal text-muted-foreground text-xs"
+                    className="font-normal text-muted-foreground text-sm px-3 h-9"
                   >
                     {header.isPlaceholder
                       ? null
@@ -55,6 +55,7 @@ export function LogsTable<TData, TValue>({
             </TableRow>
           ))}
         </TableHeader>
+
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
@@ -63,7 +64,7 @@ export function LogsTable<TData, TValue>({
                 data-state={row.getIsSelected() && "selected"}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell key={cell.id} className="px-3 h-9 py-0">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
