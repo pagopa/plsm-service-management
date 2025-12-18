@@ -1,4 +1,5 @@
-import { logSchema } from "@/lib/services/logs.service";
+import logger from "@/lib/logger/logger.server";
+import { logSchema, saveLog } from "@/lib/services/logs.service";
 import { z } from "zod";
 
 export async function POST(request: Request) {
@@ -12,5 +13,11 @@ export async function POST(request: Request) {
     );
   }
 
-  return Response.json(result.data);
+  const { data, error } = await saveLog(result.data);
+  if (error) {
+    logger.error({ data: result.data, error }, error);
+    return Response.json({ message: error }, { status: 500 });
+  }
+
+  return Response.json(data, { status: 201 });
 }
