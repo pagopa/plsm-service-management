@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -9,10 +10,12 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { ActivityIcon, SearchIcon, XIcon } from "lucide-react";
+import { ActivityIcon, RefreshCcwIcon, SearchIcon, XIcon } from "lucide-react";
 import Filters from "./filters";
 
 export function LogsHeader() {
+  const router = useRouter();
+  const [isPending, startTransition] = React.useTransition();
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
 
@@ -23,6 +26,12 @@ export function LogsHeader() {
 
   function openSearch() {
     setIsSearchOpen(true);
+  }
+
+  function refresh() {
+    startTransition(() => {
+      router.refresh();
+    });
   }
 
   return (
@@ -69,6 +78,19 @@ export function LogsHeader() {
             <SearchIcon className="opacity-60" />
           </Button>
         ) : null}
+
+        <Button
+          variant="ghost"
+          size="icon"
+          type="button"
+          onClick={refresh}
+          disabled={isPending}
+          aria-label="Aggiorna"
+        >
+          <RefreshCcwIcon
+            className={isPending ? "opacity-60 animate-spin" : "opacity-60"}
+          />
+        </Button>
 
         <Filters />
       </div>
