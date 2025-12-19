@@ -103,7 +103,7 @@ export const columns: ColumnDef<Log>[] = [
       }
 
       return (
-        <Badge variant="outline" className="font-normal bg-muted">
+        <Badge variant="outline" className="font-mono font-normal bg-muted">
           {getValue() as string}
         </Badge>
       );
