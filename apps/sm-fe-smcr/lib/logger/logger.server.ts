@@ -6,7 +6,6 @@ const remoteStream = {
   write: async (input: string) => {
     try {
       const log = JSON.parse(input);
-      console.log("LOG", log);
 
       await fetch(process.env.FE_SMCR_LOGS_ENDPOINT as string, {
         method: "POST",

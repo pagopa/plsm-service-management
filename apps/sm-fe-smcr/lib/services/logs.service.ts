@@ -1,7 +1,10 @@
 import database from "@/lib/knex";
 import z from "zod";
 import logger from "@/lib/logger/logger.server";
+import EventEmitter from "events";
 
+const logsEventBus = new EventEmitter();
+const LOGS_EVENT_BUS = "logs" as const;
 const LOGS_TABLE = "logs" as const;
 
 export const logLevelSchema = z.enum(["DEBUG", "INFO", "WARN", "ERROR"]);
@@ -35,6 +38,8 @@ export async function saveLog(
       })
       .returning("*");
 
+    emitLogEvent(log);
+
     return { data: log, error: null };
   } catch (error) {
     logger.error({ error }, "saveLog - database error");
@@ -63,4 +68,17 @@ export async function readLogs(): Promise<
     logger.error({ error }, "readLogs - database error");
     return { data: null, error: "Error reading log." };
   }
+}
+
+export function emitLogEvent(log: Log) {
+  logsEventBus.emit(LOGS_EVENT_BUS, log);
+}
+
+export function subscribeLogEvets(onLog: (log: Log) => void) {
+  const handler = (log: Log) => onLog(log);
+  logsEventBus.on(LOGS_EVENT_BUS, handler);
+
+  return () => {
+    logsEventBus.off(LOGS_EVENT_BUS, handler);
+  };
 }
