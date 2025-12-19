@@ -64,8 +64,8 @@ const chartConfig = {
 
 export default function VolumeChart() {
   return (
-    <Card>
-      <CardHeader>
+    <Card className="p-3 gap-3 px-0">
+      <CardHeader className="px-3">
         <div className="inline-flex items-center justify-between">
           <CardTitle>Volume dei log</CardTitle>
           <div className="inline-flex items-center gap-3 text-sm">
@@ -77,19 +77,12 @@ export default function VolumeChart() {
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="px-3">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[128px] w-full"
+          className="aspect-auto h-[180px] w-full"
         >
-          <BarChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              left: 12,
-              right: 12,
-            }}
-          >
+          <BarChart accessibilityLayer data={chartData}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
