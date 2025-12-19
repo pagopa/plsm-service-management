@@ -5,8 +5,6 @@ import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -68,13 +66,21 @@ export default function VolumeChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Volume dei log</CardTitle>
+        <div className="inline-flex items-center justify-between">
+          <CardTitle>Volume dei log</CardTitle>
+          <div className="inline-flex items-center gap-3 text-sm">
+            <span className="font-mono text-neutral-500">[DEBUG]</span>
+            <span className="font-mono text-blue-500">[INFO]</span>
+            <span className="font-mono text-amber-500">[WARNING]</span>
+            <span className="font-mono text-red-500">[ERROR]</span>
+          </div>
+        </div>
       </CardHeader>
 
       <CardContent>
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
+          className="aspect-auto h-[128px] w-full"
         >
           <BarChart
             accessibilityLayer
@@ -100,7 +106,6 @@ export default function VolumeChart() {
               }}
             />
             <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-            <ChartLegend content={<ChartLegendContent />} />
             <Bar
               dataKey="logs"
               stackId="a"
