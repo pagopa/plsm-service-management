@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Rectangle, XAxis } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -111,6 +111,16 @@ export default function VolumeChart() {
               stackId="a"
               fill="var(--color-logs)"
               radius={[4, 4, 4, 4]}
+              activeBar={(props: any) => (
+                <Rectangle
+                  {...props}
+                  radius={[4, 4, 4, 4]}
+                  style={{
+                    ...props.style,
+                    fill: "var(--color-neutral-700, rgb(64 64 64))",
+                  }}
+                />
+              )}
             />
           </BarChart>
         </ChartContainer>
