@@ -57,25 +57,19 @@ resource "dx_available_subnet_cidr" "pf_fa_subnet_cidr" {
 }
 
 # Calcola un CIDR per la Function App: ASK ME Everything
-resource "dx_available_subnet_cidr" "askmebot_fa_subnet_cidr" {
-  virtual_network_id = module.azure_core_infra.common_vnet.id
-  prefix_length      = 24
-  depends_on         = [module.portalefatturazione_function]
-}
+#resource "dx_available_subnet_cidr" "askmebot_fa_subnet_cidr" {
+#  virtual_network_id = module.azure_core_infra.common_vnet.id
+#  prefix_length      = 24
+#  depends_on         = [module.portalefatturazione_function]
+#}
 
 # Calcola un CIDR per la WEB APP di Backend b-smcr
 resource "dx_available_subnet_cidr" "app_backend_service_subnet_cidr" {
   virtual_network_id = module.azure_core_infra.common_vnet.id
   prefix_length      = 24
-  depends_on         = [module.askmebot_function]
+  #depends_on         = [module.askmebot_function]
+  depends_on = [module.portalefatturazione_function]
 }
-
-# Calcola un CIDR per la WEB APP di Fronted f-smcr
-# resource "dx_available_subnet_cidr" "app_frontend_service_subnet_cidr" {
-#   virtual_network_id = module.azure_core_infra.common_vnet.id
-#   prefix_length      = 24
-#   depends_on         = [module.azure_app_service_backend_smcr]
-# }
 
 # Calcola un CIDR per l'App Service fe-smcr
 resource "dx_available_subnet_cidr" "app_service_subnet_cidr" {
@@ -136,7 +130,9 @@ module "certifica_function" {
     app_name        = "cert",
     instance_number = "01"
   })
-
+  
+  application_insights_instrumentation_key  = data.azurerm_key_vault_secret.appinsights_instrumentationkey.value
+  application_insights_connection_string  = data.azurerm_key_vault_secret.appinsights_connectionstring.value
 
   resource_group_name = azurerm_resource_group.fn_rg.name
   tags                = local.tags
@@ -211,6 +207,8 @@ module "portalefatturazione_function" {
     instance_number = "01"
   })
 
+  application_insights_instrumentation_key  = data.azurerm_key_vault_secret.appinsights_instrumentationkey.value
+  application_insights_connection_string  = data.azurerm_key_vault_secret.appinsights_connectionstring.value
 
   resource_group_name = azurerm_resource_group.fn_rg.name
   tags                = local.tags
@@ -247,6 +245,8 @@ module "onboarding_function" {
     instance_number = "01"
   })
 
+  application_insights_instrumentation_key  = data.azurerm_key_vault_secret.appinsights_instrumentationkey.value
+  application_insights_connection_string  = data.azurerm_key_vault_secret.appinsights_connectionstring.value
 
   resource_group_name = azurerm_resource_group.fn_rg.name
   tags                = local.tags
@@ -308,7 +308,6 @@ module "askmebot_function" {
     instance_number = "01"
   })
 
-
   resource_group_name = azurerm_resource_group.fn_rg.name
   tags                = local.tags
 
@@ -318,6 +317,28 @@ module "askmebot_function" {
   slot_app_settings = merge(local.common_app_settings, local.askmebot_func_slot_app_settings)
 
   depends_on = [module.azure_core_infra]
+}
+
+resource "azurerm_app_service_virtual_network_swift_connection" "askmebot_vnet_integration" {
+  app_service_id = module.askmebot_function.function_app_id
+  
+  # Uso la subnet esistente della web app FE-SMCR
+  subnet_id      = module.azure_fe_app_service_smcr.subnet_id
+
+  depends_on = [
+    module.askmebot_function,
+    module.azure_fe_app_service_smcr
+  ]
+}
+
+resource "azurerm_app_service_slot_virtual_network_swift_connection" "askmebot_slot_vnet_integration" {
+  slot_name      = "staging"
+  app_service_id = module.askmebot_function.function_app_id
+  subnet_id      = module.azure_fe_app_service_smcr.subnet_id
+  depends_on = [
+    module.askmebot_function,
+    module.azure_fe_app_service_smcr
+  ]
 }
 
 # App Service Backend
@@ -335,13 +356,6 @@ resource "azurerm_role_assignment" "ci_identity_website_contrib_backend_smcr" {
   principal_id         = data.azurerm_user_assigned_identity.github_ci_identity.principal_id
   depends_on           = [module.azure_app_service_backend_smcr]
 }
-# resource "azurerm_role_assignment" "ci_identity_website_contrib_backend_smcr" {
-#   scope = module.azure_app_service_backend_smcr.web_app_id
-#   # I ruoli in Azure sono sempre in inglese anche se ho l'interfaccia italiana!
-#   role_definition_name = "Website Contributor"
-#   principal_id         = data.azurerm_user_assigned_identity.github_ci_identity.principal_id
-#   depends_on           = [module.azure_app_service_backend_smcr]
-# }
 
 resource "azurerm_role_assignment" "smcr_portalefatturazione_storage_contributor" {
   # RISORSE SU CUI APPLICO LA MANAGED IDENTITY
@@ -386,50 +400,6 @@ module "azure_app_service_backend_smcr" {
   ]
 }
 
-# App Service Frontend F-SMCR
-
-# resource "azurerm_role_assignment" "cd_identity_website_contrib_frontend_smcr" {
-#   scope                = module.azure_app_service_frontend_smcr.web_app_id
-#   role_definition_name = "Website Contributor"
-#   principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
-#   depends_on           = [module.azure_app_service_frontend_smcr]
-# }
-
-# resource "azurerm_role_assignment" "ci_identity_website_contrib_frontend_smcr" {
-#   scope = module.azure_app_service_frontend_smcr.web_app_id
-#   # I ruoli in Azure sono sempre in inglese anche se ho l'interfaccia italiana!
-#   role_definition_name = "Website Contributor"
-#   principal_id         = data.azurerm_user_assigned_identity.github_ci_identity.principal_id
-#   depends_on           = [module.azure_app_service_frontend_smcr]
-# }
-
-# module "azure_app_service_frontend_smcr" {
-#   source       = "../_modules/app_service"
-#   node_version = 22
-
-#   virtual_network = {
-#     resource_group_name = module.azure_core_infra.network_resource_group_name
-#     name                = module.azure_core_infra.common_vnet.name
-#   }
-#   resource_group_name = azurerm_resource_group.apps_rg.name
-
-#   subnet_pep_id = module.azure_core_infra.common_pep_snet.id
-#   subnet_cidr   = dx_available_subnet_cidr.app_frontend_service_subnet_cidr.cidr_block
-
-#   environment = merge(local.environment, { app_name = "FSMCR", instance_number = local.instance_number })
-#   # tier                = "l"
-
-
-#   app_settings      = merge(local.common_app_settings, local.frontend_app_settings)
-#   slot_app_settings = merge(local.common_app_settings, local.frontend_slot_app_settings)
-
-
-#   health_check_path = "/api/health"
-#   tags              = local.tags
-#   depends_on = [
-#     module.azure_core_infra
-#   ]
-# }
 
 # App Service FE-SMCR
 

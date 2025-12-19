@@ -1,4 +1,4 @@
-name: Deploy Portale Fatturazione Function
+name: CD - Portale Fatturazione Function
 
 on:
   workflow_dispatch:
