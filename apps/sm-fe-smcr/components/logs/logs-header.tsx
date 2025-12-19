@@ -9,7 +9,8 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { ActivityIcon, FunnelIcon, SearchIcon, XIcon } from "lucide-react";
+import { ActivityIcon, SearchIcon, XIcon } from "lucide-react";
+import Filters from "./filters";
 
 export function LogsHeader() {
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
@@ -69,9 +70,7 @@ export function LogsHeader() {
           </Button>
         ) : null}
 
-        <Button variant="ghost" size="icon" type="button">
-          <FunnelIcon className="opacity-60" />
-        </Button>
+        <Filters />
       </div>
     </header>
   );
