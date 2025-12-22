@@ -1,4 +1,4 @@
-import { z, ZodError } from "zod";
+import { z } from "zod";
 import { envData } from "../utils/validateEnv";
 import messages from "../utils/messages";
 
