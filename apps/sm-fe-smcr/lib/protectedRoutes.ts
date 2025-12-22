@@ -89,14 +89,6 @@ export const protectedRoutes: ProtectedRoute[] = [
     teamId: "service-management",
   },
   {
-    label: "Admin",
-    path: "/dashboard/admin",
-    requiredTeams: ["admin"],
-    sidebar: true,
-    icon: Shield,
-    teamId: "admin",
-  },
-  {
     label: "Teams",
     path: "/dashboard/teams",
     requiredTeams: ["admin"],
@@ -118,14 +110,6 @@ export const protectedRoutes: ProtectedRoute[] = [
     requiredTeams: ["admin"],
     sidebar: true,
     icon: BotIcon,
-    teamId: "admin",
-  },
-  {
-    label: "Testing",
-    path: "/dashboard/testing",
-    icon: TestTube2,
-    sidebar: true,
-    requiredTeams: ["admin"],
     teamId: "admin",
   },
 ];
