@@ -40,6 +40,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="h-full w-full p-4 flex flex-col gap-4">
+      <h1 className="text-2xl font-bold">Dashboard Onboarding</h1>
       <section className="grid grid-cols-5 gap-4">
         {analytics.map((card) => (
           <TextAnalytics

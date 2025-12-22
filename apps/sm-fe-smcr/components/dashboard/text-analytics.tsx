@@ -55,5 +55,5 @@ function getVariation(prev: number, current: number) {
     if (current === 0) return 0;
     return 100;
   }
-  return ((prev - current) / prev) * 100;
+  return ((current - prev) / prev) * 100;
 }
