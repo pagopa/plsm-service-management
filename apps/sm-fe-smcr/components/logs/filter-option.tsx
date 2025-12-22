@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as LabelPrimitive from "@radix-ui/react-label";
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 
 import { cn } from "@/lib/utils";
 
@@ -27,7 +28,7 @@ const filterOptionVariants = cva(
   },
 );
 
-const checkboxVariants = cva("transition-colors", {
+const filterOptionCheckboxVariants = cva("transition-colors", {
   variants: {
     variant: {
       default:
@@ -45,22 +46,41 @@ const checkboxVariants = cva("transition-colors", {
   },
 });
 
-export default function FilterOption({
+export function FilterOption({
   className,
   variant,
-  label,
+  children,
   ...props
 }: React.ComponentProps<typeof LabelPrimitive.Root> &
-  VariantProps<typeof filterOptionVariants> & { label: string }) {
+  VariantProps<typeof filterOptionVariants>) {
   return (
     <Label
       className={cn(filterOptionVariants({ variant }), className)}
       {...props}
     >
-      <Checkbox className={checkboxVariants({ variant })} />
-      <p className="text-sm">{label}</p>
+      {children}
     </Label>
   );
 }
 
-export { FilterOption, filterOptionVariants };
+export function FilterOptionCheckbox({
+  className,
+  variant,
+  label,
+  onChange,
+  ...props
+}: React.ComponentProps<typeof CheckboxPrimitive.Root> &
+  VariantProps<typeof filterOptionCheckboxVariants> & { label: string }) {
+  return (
+    <div className="inline-flex items-center gap-2">
+      <Checkbox
+        className={cn(filterOptionCheckboxVariants({ variant }), className)}
+        onChange={onChange}
+        {...props}
+      />
+      <p className="text-sm">{label}</p>
+    </div>
+  );
+}
+
+export { filterOptionVariants, filterOptionCheckboxVariants };
