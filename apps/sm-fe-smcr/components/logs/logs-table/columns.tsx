@@ -21,6 +21,20 @@ function formatTimestamp(value: unknown): string {
   return "";
 }
 
+import type { FilterFn } from "@tanstack/react-table";
+
+export const levelsFilterFn: FilterFn<any> = (row, columnId, filterValue) => {
+  const selected = (filterValue ?? []) as string[];
+  if (selected.length === 0) return true; // nessun filtro => tutto visibile
+
+  const rowValue = row.getValue(columnId);
+  if (rowValue == null) return false;
+
+  if (typeof rowValue === "string") return selected.includes(rowValue);
+
+  return selected.includes(String(rowValue));
+};
+
 export const columns: ColumnDef<Log>[] = [
   {
     accessorKey: "timestamp",
@@ -91,6 +105,7 @@ export const columns: ColumnDef<Log>[] = [
           return value;
       }
     },
+    filterFn: levelsFilterFn,
   },
   {
     accessorKey: "requestId",
