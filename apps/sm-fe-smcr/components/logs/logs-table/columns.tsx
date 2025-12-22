@@ -25,7 +25,19 @@ import type { FilterFn } from "@tanstack/react-table";
 
 export const levelsFilterFn: FilterFn<any> = (row, columnId, filterValue) => {
   const selected = (filterValue ?? []) as string[];
-  if (selected.length === 0) return true; // nessun filtro => tutto visibile
+  if (selected.length === 0) return true;
+
+  const rowValue = row.getValue(columnId);
+  if (rowValue == null) return false;
+
+  if (typeof rowValue === "string") return selected.includes(rowValue);
+
+  return selected.includes(String(rowValue));
+};
+
+export const servicesFilterFn: FilterFn<any> = (row, columnId, filterValue) => {
+  const selected = (filterValue ?? []) as string[];
+  if (selected.length === 0) return true;
 
   const rowValue = row.getValue(columnId);
   if (rowValue == null) return false;
@@ -85,6 +97,7 @@ export const columns: ColumnDef<Log>[] = [
     accessorKey: "service",
     header: "Service",
     cell: ({ getValue }) => getServiceBadge(getValue() as string),
+    filterFn: servicesFilterFn,
   },
   {
     accessorKey: "level",

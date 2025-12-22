@@ -17,12 +17,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useQueryState, parseAsArrayOf, parseAsString } from "nuqs";
-import { LogLevel } from "@/lib/services/logs.service";
+import { LogLevel, LogService } from "@/lib/services/logs.service";
 import { CheckedState } from "@radix-ui/react-checkbox";
 
 export default function Filters() {
   const [levels, setLevels] = useQueryState(
     "level",
+    parseAsArrayOf(parseAsString),
+  );
+
+  const [services, setServices] = useQueryState(
+    "service",
     parseAsArrayOf(parseAsString),
   );
 
@@ -37,6 +42,22 @@ export default function Filters() {
 
     if (levels) {
       return setLevels(levels.filter((current) => current !== level));
+    }
+  };
+
+  const handleServiceChange = (value: CheckedState, service: LogService) => {
+    if (value) {
+      return setServices((current) =>
+        current ? [...current, service] : [service],
+      );
+    }
+
+    if (services?.length === 1) {
+      return setServices(null);
+    }
+
+    if (services) {
+      return setServices(services.filter((current) => current !== service));
     }
   };
 
@@ -95,8 +116,21 @@ export default function Filters() {
           <Label>Servizi</Label>
 
           <div className="w-full grid grid-cols-2 gap-2.5">
-            {/* <FilterOption label="SMCR" defaultChecked /> */}
-            {/* <FilterOption label="AMA" defaultChecked /> */}
+            <FilterOption>
+              <FilterOptionCheckbox
+                label="SMCR"
+                checked={services?.includes("SMCR") || false}
+                onCheckedChange={(value) => handleServiceChange(value, "SMCR")}
+              />
+            </FilterOption>
+
+            <FilterOption>
+              <FilterOptionCheckbox
+                label="AMA"
+                checked={services?.includes("AMA") || false}
+                onCheckedChange={(value) => handleServiceChange(value, "AMA")}
+              />
+            </FilterOption>
           </div>
         </div>
 

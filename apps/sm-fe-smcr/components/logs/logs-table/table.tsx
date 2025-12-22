@@ -30,6 +30,7 @@ export function LogsTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [levels] = useQueryState("level", parseAsArrayOf(parseAsString));
+  const [services] = useQueryState("service", parseAsArrayOf(parseAsString));
 
   const table = useReactTable({
     data,
@@ -45,6 +46,10 @@ export function LogsTable<TData, TValue>({
   useEffect(() => {
     table.getColumn("level")?.setFilterValue(levels);
   }, [levels, table]);
+
+  useEffect(() => {
+    table.getColumn("service")?.setFilterValue(services);
+  }, [services, table]);
 
   return (
     <div className="h-full min-h-0 overflow-auto">
