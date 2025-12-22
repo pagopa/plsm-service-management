@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { columns, LogsTable } from "@/components/logs/logs-table";
+import { RealTimeLogsTable } from "@/components/logs/logs-table";
 import VolumeChart from "@/components/logs/volume-chart";
 import {
   Card,
@@ -31,7 +31,7 @@ export default async function Page() {
         </CardHeader>
 
         <CardContent className="p-0 flex-1 min-h-0">
-          <LogsTable data={data} columns={columns} />
+          <RealTimeLogsTable initialData={data} />
         </CardContent>
       </Card>
     </div>

@@ -20,7 +20,6 @@ export async function GET(request: Request) {
       );
 
       request.signal.addEventListener("abort", () => {
-        console.log({ message: "ABORT" });
         if (intervalId) clearInterval(intervalId);
         if (unsubscribe) unsubscribe();
         controller.close();
