@@ -56,13 +56,20 @@ export default async function DashboardPage() {
       <section className="w-full">
         <ChartPie
           period={`${format(dateRanges.current.from, "MMMM")} - ${format(dateRanges.current.to, "MMMM")}`}
-          chartData={analytics.map((analytic) => ({
-            product: analytic.label,
-            count: analytic.currentCount,
-            fill:
-              PRODUCT_CARDS.find((c) => c.label === analytic.label)?.color ||
-              "gray",
-          }))}
+          chartData={(() => {
+            const total =
+              analytics.reduce(
+                (sum, analytic) => sum + analytic.currentCount,
+                0,
+              ) || 1;
+            return analytics.map((analytic) => ({
+              product: analytic.label,
+              count: Number(((analytic.currentCount / total) * 100).toFixed(2)), // percentage
+              fill:
+                PRODUCT_CARDS.find((c) => c.label === analytic.label)?.color ||
+                "gray",
+            }));
+          })()}
           chartConfig={analytics.reduce(
             (acc, analytic) => {
               acc[analytic.label as string] = {
