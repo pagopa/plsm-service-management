@@ -5,7 +5,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { FunnelIcon } from "lucide-react";
-import { FilterOption } from "./filter-option";
+import { FilterOption, FilterOptionCheckbox } from "./filter-option";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -16,8 +16,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useQueryState, parseAsArrayOf, parseAsString } from "nuqs";
+import { LogLevel } from "@/lib/services/logs.service";
+import { CheckedState } from "@radix-ui/react-checkbox";
 
 export default function Filters() {
+  const [levels, setLevels] = useQueryState(
+    "level",
+    parseAsArrayOf(parseAsString),
+  );
+
+  const handleLevelChange = (value: CheckedState, level: LogLevel) => {
+    if (value) {
+      return setLevels((current) => (current ? [...current, level] : [level]));
+    }
+
+    if (levels?.length === 1) {
+      return setLevels(null);
+    }
+
+    if (levels) {
+      return setLevels(levels.filter((current) => current !== level));
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -31,10 +53,41 @@ export default function Filters() {
           <Label>Livelli</Label>
 
           <div className="w-full grid grid-cols-2 gap-2.5">
-            <FilterOption label="Debug" variant="debug" />
-            <FilterOption label="Info" variant="info" defaultChecked />
-            <FilterOption label="Warning" variant="warn" />
-            <FilterOption label="Error" variant="error" defaultChecked />
+            <FilterOption variant="debug">
+              <FilterOptionCheckbox
+                variant="debug"
+                label="Debug"
+                checked={levels?.includes("DEBUG") || false}
+                onCheckedChange={(value) => handleLevelChange(value, "DEBUG")}
+              />
+            </FilterOption>
+
+            <FilterOption variant="info">
+              <FilterOptionCheckbox
+                variant="info"
+                label="Info"
+                checked={levels?.includes("INFO") || false}
+                onCheckedChange={(value) => handleLevelChange(value, "INFO")}
+              />
+            </FilterOption>
+
+            <FilterOption variant="warn">
+              <FilterOptionCheckbox
+                variant="warn"
+                label="Warning"
+                checked={levels?.includes("WARN") || false}
+                onCheckedChange={(value) => handleLevelChange(value, "WARN")}
+              />
+            </FilterOption>
+
+            <FilterOption variant="error">
+              <FilterOptionCheckbox
+                variant="error"
+                label="Error"
+                checked={levels?.includes("ERROR") || false}
+                onCheckedChange={(value) => handleLevelChange(value, "ERROR")}
+              />
+            </FilterOption>
           </div>
         </div>
 
@@ -42,13 +95,13 @@ export default function Filters() {
           <Label>Servizi</Label>
 
           <div className="w-full grid grid-cols-2 gap-2.5">
-            <FilterOption label="SMCR" defaultChecked />
-            <FilterOption label="AMA" defaultChecked />
+            {/* <FilterOption label="SMCR" defaultChecked /> */}
+            {/* <FilterOption label="AMA" defaultChecked /> */}
           </div>
         </div>
 
         <div className="flex flex-col gap-2.5">
-          <Label>Servizi</Label>
+          <Label>Range</Label>
 
           <Select defaultValue="1_hour">
             <SelectTrigger className="w-full">

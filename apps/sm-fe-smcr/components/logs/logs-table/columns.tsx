@@ -11,10 +11,8 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
 
 function formatTimestamp(value: unknown): string {
-  console.log(value, typeof value);
   if (typeof value === "string" || typeof value === "number") {
     const date = dayjs(value);
-    console.log({ value, date, isValid: date.isValid() });
     if (date.isValid()) {
       return date.format("HH:mm:ss DD-MM-YYYY");
     }
