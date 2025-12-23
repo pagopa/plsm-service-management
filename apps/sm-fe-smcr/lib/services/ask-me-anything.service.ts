@@ -96,6 +96,22 @@ export async function createAskMeAnythingMember(input: {
   | { data: null; error: MutationError }
 > {
   try {
+    const alreadyExists = await database
+      .from(tableName)
+      .select("*")
+      .where({ email: input.email })
+      .first();
+
+    if (alreadyExists) {
+      console.error(alreadyExists);
+      return {
+        data: null,
+        error: {
+          message: "Un utente con questo indirizzo email già esiste.",
+        },
+      };
+    }
+
     const [rawMember] = await database
       .from(tableName)
       .insert({
@@ -113,13 +129,14 @@ export async function createAskMeAnythingMember(input: {
         "createAskMeAnythingMember - validation error",
         parsed.error,
       );
+
       return {
         data: null,
         error: {
           message: "validation error",
-          //     fields:
-          //       (parsed.error.formErrors.fieldErrors as Record<string, string>) ??
-          //       undefined,
+          // fields:
+          // (parsed.error.formErrors.fieldErrors as Record<string, string>) ??
+          // undefined,
         },
       };
     }
