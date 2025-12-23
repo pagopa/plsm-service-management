@@ -19,7 +19,7 @@ import { getOnboardingStatusSchema } from "../types/getOnboardingStatusSchema";
 import { SubunitOption } from "../types/subunitOptionsType";
 import { isIpaAOOData, isIpaUOData } from "../utils/helpers";
 import { isEmptyObj } from "../utils/isNotEmptyObj";
-const API_KEY_PROD_GET_INSTITUTION = process.env.API_KEY_PROD_GET_INSTITUTION;
+const FE_SMCR_API_KEY_INSTITUTION = process.env.FE_SMCR_API_KEY_INSTITUTION;
 const FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY =
   process.env.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY;
 
@@ -27,7 +27,6 @@ const GET_INSTITUTION = process.env.GET_INSTITUTION;
 const GET_IPA = process.env.GET_IPA;
 const GET_IPA_AOO = process.env.GET_IPA_AOO;
 const GET_IPA_UO = process.env.GET_IPA_UO;
-const API_KEY_PROD_GET_IPA = process.env.API_KEY_PROD_GET_IPA;
 const GET_INFOCAMERE = process.env.GET_INFOCAMERE;
 const ONBOARDING_BASE_PATH = process.env.ONBOARDING_BASE_PATH;
 const GET_STATUS = process.env.GET_STATUS;
@@ -90,7 +89,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
   function fetchConfig(code: string, subunit: SubunitOption) {
     if (subunit === "AOO" || subunit === "UO") {
       return {
-        apikey: `${API_KEY_PROD_GET_IPA}`,
+        apikey: `${FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY}`,
         schema: subunit === "AOO" ? getIpaSchemaAOO : getIpaSchemaUO,
         url: `${subunit === "AOO" ? GET_IPA_AOO : GET_IPA_UO}${code}`,
       };
@@ -99,14 +98,14 @@ export async function verifyTaxCode(state: any, formData: FormData) {
     switch (endpoint) {
       case "selfcare":
         return {
-          apikey: `${API_KEY_PROD_GET_INSTITUTION}`,
+          apikey: `${FE_SMCR_API_KEY_INSTITUTION}`,
           schema: getSelfCareSchema,
           url: `${GET_INSTITUTION}?taxCode=${code}`,
           endpoint,
         };
       case "ipa":
         return {
-          apikey: `${API_KEY_PROD_GET_IPA}`,
+          apikey: `${FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY}`,
           schema: getIpaSchema,
           url: `${GET_IPA}${code}`,
           endpoint,
@@ -169,7 +168,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
             method: "GET",
             baseURL: ONBOARDING_BASE_PATH,
             headers: {
-              "Ocp-Apim-Subscription-Key": `${API_KEY_PROD_GET_INSTITUTION}`,
+              "Ocp-Apim-Subscription-Key": `${FE_SMCR_API_KEY_INSTITUTION}`,
             },
             output: getOnboardingStatusSchema,
           },
@@ -240,7 +239,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
             method: "GET",
             baseURL: ONBOARDING_BASE_PATH,
             headers: {
-              "Ocp-Apim-Subscription-Key": `${API_KEY_PROD_GET_INSTITUTION}`,
+              "Ocp-Apim-Subscription-Key": `${FE_SMCR_API_KEY_INSTITUTION}`,
             },
             output: getOnboardingStatusSchema,
           },
