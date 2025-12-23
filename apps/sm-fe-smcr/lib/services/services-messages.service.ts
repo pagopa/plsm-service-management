@@ -145,7 +145,7 @@ export async function getMessagesCount(
     {
       method: "GET",
       headers: {
-        "x-api-key": "mQVQ7lBOmi8QB2yG3X0bP8Mc9ymyBWON7mphEmfH",
+        "x-api-key": process.env.FE_SMCR_API_KEY_SERVICES as string,
       },
       output: z.any(),
     },
