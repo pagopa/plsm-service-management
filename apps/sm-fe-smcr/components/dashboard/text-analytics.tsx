@@ -6,18 +6,27 @@ type Props = {
   label: string;
   currentCount: number;
   previousCount: number;
+  bgColor?: string;
 };
 
 export default function TextAnalytics({
   label,
   currentCount,
   previousCount,
+  bgColor,
 }: Props) {
   return (
-    <AnalyticsCard label={label}>
-      <div className="inline-flex w-full items-center justify-between">
-        <p className="font-medium text-3xl">{currentCount}</p>
-        <VariationBadge variation={getVariation(previousCount, currentCount)} />
+    <AnalyticsCard label={label} bgColor={bgColor}>
+      <div className="flex flex-col gap-4">
+        <div className="inline-flex w-full items-center justify-between">
+          <p className="font-medium text-3xl">{currentCount}</p>
+          <VariationBadge
+            variation={getVariation(previousCount, currentCount)}
+          />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Last month: {previousCount}
+        </p>
       </div>
     </AnalyticsCard>
   );
@@ -46,5 +55,5 @@ function getVariation(prev: number, current: number) {
     if (current === 0) return 0;
     return 100;
   }
-  return ((prev - current) / prev) * 100;
+  return ((current - prev) / prev) * 100;
 }
