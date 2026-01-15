@@ -16,11 +16,9 @@ locals {
     Owner          = "PLSM"
     ManagementTeam = "Service Management"
     Source         = "https://github.com/pagopa/plsm-service-management/tree/main"
-  }    
+  }
 
-  common_app_settings = {
-
-    # APPINSIGHTS_INSTRUMENTATIONKEY                  = "${data.azurerm_key_vault_secret.appinsights_instrumentationkey.value}"
+common_app_settings = {
     DiagnosticServices_EXTENSION_VERSION            = "~3"
     InstrumentationEngine_EXTENSION_VERSION         = "disabled"
     SnapshotDebugger_EXTENSION_VERSION              = "disabled"
@@ -28,9 +26,8 @@ locals {
     XDT_MicrosoftApplicationInsights_Mode           = "recommended"
     XDT_MicrosoftApplicationInsights_PreemptSdk     = "disabled"
     TIMEOUT_DELAY                                   = 300
+}
 
-
-  }
 
   # Function Portale Fatturazione
   pf_app_settings = {
@@ -84,7 +81,7 @@ locals {
   }
 
   onboarding_slot_func_app_settings = {
-    # APPINSIGHTS_INSTRUMENTATIONKEY        = "${data.azurerm_key_vault_secret.appinsights_instrumentationkey.value}"
+    APPINSIGHTS_INSTRUMENTATIONKEY        = "${data.azurerm_key_vault_secret.appinsights_instrumentationkey.value}"
     CONTRACTS_TOPIC_CONSUMER_GROUP        = "$Default"
     CONTRACTS_CONSUMER_CONNECTION_STRING  = "${data.azurerm_key_vault_secret.sc_contracts_conn_string.value}"
     CONTRACTS_TOPIC_NAME                  = "sc-contracts"
@@ -103,7 +100,6 @@ locals {
 
   askmebot_func_app_settings = {
     SERVICENAME                       = "Ask Me Bot"
-    NODE_ENV                          = "production"
     SLACK_BOT_TOKEN                   = "${data.azurerm_key_vault_secret.askmebot_slack_bot_token.value}"
     SLACK_SIGNING_SECRET              = "${data.azurerm_key_vault_secret.askmebot_slack_signing_secret.value}"
     ENABLED_EMAILS_SECRET             = "${data.azurerm_key_vault_secret.askmebot_enabled_emails_secret.value}"
@@ -123,16 +119,13 @@ locals {
     FROM_EMAIL                        = "noreply@pagopa.it"
     CCN_EMAIL                         = "Bot_Selfcare@pagopa.it"
     MAX_DATA_LENGTH                   = "10"
-    # APPINSIGHTS_CONNECTION_STRING     = "${data.azurerm_key_vault_secret.appinsights_connection_string.value}"
-    # APPINSIGHTS_INSTRUMENTATIONKEY    = "${data.azurerm_key_vault_secret.appinsights_instrumentationkey.value}"
+    APPINSIGHTS_CONNECTION_STRING     = "${data.azurerm_key_vault_secret.appinsights_connection_string.value}"
+    APPINSIGHTS_INSTRUMENTATIONKEY    = "${data.azurerm_key_vault_secret.appinsights_instrumentationkey.value}"
     APPINSIGHTS_SAMPLING_PERCENTAGE   = 5
-    APPINSIGHTS_CONNECTION_STRING   = data.azurerm_key_vault_secret.appinsights_connectionstring.value
-    APPINSIGHTS_INSTRUMENTATIONKEY  = data.azurerm_key_vault_secret.appinsights_instrumentationkey.value
   }
 
   askmebot_func_slot_app_settings = {
     SERVICENAME                       = "Ask Me Bot"
-    NODE_ENV                          = "development"
     SLACK_BOT_TOKEN                   = "${data.azurerm_key_vault_secret.askmebot_slack_bot_token.value}"
     SLACK_SIGNING_SECRET              = "${data.azurerm_key_vault_secret.askmebot_slack_signing_secret.value}"
     ENABLED_EMAILS_SECRET             = "${data.azurerm_key_vault_secret.askmebot_enabled_emails_secret.value}"
@@ -152,11 +145,9 @@ locals {
     FROM_EMAIL                        = "noreply@pagopa.it"
     CCN_EMAIL                         = "Bot_Selfcare@pagopa.it"
     MAX_DATA_LENGTH                   = "10"
-    # APPINSIGHTS_CONNECTION_STRING     = "${data.azurerm_key_vault_secret.appinsights_connection_string.value}"
-    # APPINSIGHTS_INSTRUMENTATIONKEY    = "${data.azurerm_key_vault_secret.appinsights_instrumentationkey.value}"
+    APPINSIGHTS_CONNECTION_STRING     = "${data.azurerm_key_vault_secret.appinsights_connection_string.value}"
+    APPINSIGHTS_INSTRUMENTATIONKEY    = "${data.azurerm_key_vault_secret.appinsights_instrumentationkey.value}"
     APPINSIGHTS_SAMPLING_PERCENTAGE   = 5
-    APPINSIGHTS_CONNECTION_STRING   = data.azurerm_key_vault_secret.appinsights_connectionstring.value
-    APPINSIGHTS_INSTRUMENTATIONKEY  = data.azurerm_key_vault_secret.appinsights_instrumentationkey.value
   }
 
   # BACKEND App Service

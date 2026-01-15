@@ -7,11 +7,6 @@ data "azuread_group" "keyvault_admin_group" {
   display_name = "plsm-p-adgroup-admin"
 }
 
-data "azurerm_key_vault_secret" "appinsights_connectionstring" {
-  name         = "APPINSIGHTS-CONNECTION-STRING"
-  key_vault_id = module.azure_core_infra.common_key_vault.id
-}
-
 # Valori env per PF
 data "azurerm_private_dns_zone" "existing_storage_blob_dns_zone" {
   name                = "privatelink.blob.core.windows.net"
