@@ -66,13 +66,23 @@ export default function OnBoardingForm() {
   function renderStep() {
     switch (currentStep) {
       case 1:
-        return <StepOne style={{ viewTransitionName: "stepOne" }} />;
+        return (
+          <StepOne style={{ viewTransitionName: "stepOne" }}>
+            <StepperComponent />
+          </StepOne>
+        );
       case 2:
-        return <StepTwo style={{ viewTransitionName: "stepTwo" }} />;
+        return (
+          <StepTwo style={{ viewTransitionName: "stepTwo" }}>
+            <StepperComponent />
+          </StepTwo>
+        );
       case 3:
         return (
           <>
-            <StepOne />
+            <StepOne>
+              <StepperComponent />
+            </StepOne>
             <StepTwo />
             <form action={handleSubmit}>
               <StepThreeControls
@@ -84,7 +94,11 @@ export default function OnBoardingForm() {
           </>
         );
       case 4:
-        return <StepFour />;
+        return (
+          <StepFour>
+            <StepperComponent />
+          </StepFour>
+        );
       default:
         throw Error(`Invalid currentStep: ${currentStep satisfies never}`);
     }

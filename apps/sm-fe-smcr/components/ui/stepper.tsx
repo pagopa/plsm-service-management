@@ -87,7 +87,7 @@ function Stepper({
       <div
         data-slot="stepper"
         className={cn(
-          "ui:group/stepper ui:inline-flex data-[orientation=horizontal]:ui:w-full data-[orientation=horizontal]:ui:flex-row data-[orientation=vertical]:ui:flex-col",
+          "group/stepper inline-flex data-[orientation=horizontal]:w-full data-[orientation=horizontal]:flex-row data-[orientation=vertical]:flex-col",
           className,
         )}
         data-orientation={orientation}
@@ -132,7 +132,7 @@ function StepperItem({
       <div
         data-slot="stepper-item"
         className={cn(
-          "ui:group/step ui:flex ui:items-center ui:group-data-[orientation=horizontal]/stepper:flex-row ui:group-data-[orientation=vertical]/stepper:flex-col",
+          "group/step flex items-center group-data-[orientation=horizontal]/stepper:flex-row group-data-[orientation=vertical]/stepper:flex-col",
           className,
         )}
         data-state={state}
@@ -173,7 +173,7 @@ function StepperTrigger({
     <button
       data-slot="stepper-trigger"
       className={cn(
-        "ui:focus-visible:border-ring ui:focus-visible:ring-ring/50 ui:inline-flex ui:items-center ui:gap-3 ui:rounded-full ui:outline-none ui:focus-visible:z-10 ui:focus-visible:ring-[3px] ui:disabled:pointer-events-none ui:disabled:opacity-50",
+        "focus-visible:border-ring focus-visible:ring-ring/50 inline-flex items-center gap-3 rounded-full outline-none focus-visible:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50",
         className,
       )}
       onClick={() => setActiveStep(step)}
@@ -202,7 +202,7 @@ function StepperIndicator({
     <span
       data-slot="stepper-indicator"
       className={cn(
-        "ui:bg-muted ui:text-muted-foreground data-[state=active]:ui:bg-primary data-[state=completed]:ui:bg-primary data-[state=active]:ui:text-primary-foreground data-[state=completed]:ui:text-primary-foreground ui:relative ui:flex ui:size-6 ui:shrink-0 ui:items-center ui:justify-center ui:rounded-full ui:text-xs ui:font-medium",
+        "bg-muted text-muted-foreground data-[state=active]:bg-primary data-[state=completed]:bg-primary data-[state=active]:text-primary-foreground data-[state=completed]:text-primary-foreground relative flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium",
         className,
       )}
       data-state={state}
@@ -212,18 +212,18 @@ function StepperIndicator({
         children
       ) : (
         <>
-          <span className="ui:transition-all ui:group-data-loading/step:scale-0 ui:group-data-loading/step:opacity-0 ui:group-data-loading/step:transition-none ui:group-data-[state=completed]/step:scale-0 ui:group-data-[state=completed]/step:opacity-0">
+          <span className="transition-all group-data-loading/step:scale-0 group-data-loading/step:opacity-0 group-data-loading/step:transition-none group-data-[state=completed]/step:scale-0 group-data-[state=completed]/step:opacity-0">
             {step}
           </span>
           <CheckIcon
-            className="ui:absolute ui:scale-0 ui:opacity-0 ui:transition-all ui:group-data-[state=completed]/step:scale-100 ui:group-data-[state=completed]/step:opacity-100"
+            className="absolute scale-0 opacity-0 transition-all group-data-[state=completed]/step:scale-100 group-data-[state=completed]/step:opacity-100"
             size={16}
             aria-hidden="true"
           />
           {isLoading && (
-            <span className="ui:absolute ui:transition-all">
+            <span className="absolute transition-all">
               <LoaderCircleIcon
-                className="ui:animate-spin"
+                className="animate-spin"
                 size={14}
                 aria-hidden="true"
               />
@@ -243,7 +243,7 @@ function StepperTitle({
   return (
     <h3
       data-slot="stepper-title"
-      className={cn("ui:text-sm ui:font-medium", className)}
+      className={cn("text-sm font-medium", className)}
       {...props}
     />
   );
@@ -257,7 +257,7 @@ function StepperDescription({
   return (
     <p
       data-slot="stepper-description"
-      className={cn("ui:text-muted-foreground ui:text-sm", className)}
+      className={cn("text-muted-foreground text-sm", className)}
       {...props}
     />
   );
@@ -272,7 +272,7 @@ function StepperSeparator({
     <div
       data-slot="stepper-separator"
       className={cn(
-        "ui:bg-muted ui:group-data-[state=completed]/step:bg-primary ui:m-0.5 ui:group-data-[orientation=horizontal]/stepper:h-0.5 ui:group-data-[orientation=horizontal]/stepper:w-full ui:group-data-[orientation=horizontal]/stepper:flex-1 ui:group-data-[orientation=vertical]/stepper:h-12 ui:group-data-[orientation=vertical]/stepper:w-0.5",
+        "bg-muted group-data-[state=completed]/step:bg-primary m-0.5 group-data-[orientation=horizontal]/stepper:h-0.5 group-data-[orientation=horizontal]/stepper:w-full group-data-[orientation=horizontal]/stepper:flex-1 group-data-[orientation=vertical]/stepper:h-12 group-data-[orientation=vertical]/stepper:w-0.5",
         className,
       )}
       {...props}

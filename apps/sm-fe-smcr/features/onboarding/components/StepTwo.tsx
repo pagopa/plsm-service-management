@@ -143,6 +143,7 @@ export default function StepTwo({ children, ...props }: Props) {
 
   return (
     <div {...props}>
+      {children}
       {!isStepThree && (
         <Header
           taxcode={formData.taxcode}
@@ -152,7 +153,6 @@ export default function StepTwo({ children, ...props }: Props) {
           subunit={formData.subunit}
         />
       )}
-      {children}
       <h2 className="text-2xl font-semibold">Utenti</h2>
       {!isStepThree && (
         <Card className="shadow-xl mt-8 rounded-none">
