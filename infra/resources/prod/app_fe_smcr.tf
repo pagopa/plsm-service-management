@@ -31,7 +31,55 @@ module "azure_fe_app_service_smcr" {
 # Il modulo DX non supporta app_command_line, quindi usiamo azapi
 # -----------------------------------------------------------------------------
 
-# TODO
+# -----------------------------------------------------------------------------
+# Startup Command (il modulo DX non supporta app_command_line)
+# -----------------------------------------------------------------------------
+
+resource "terraform_data" "fe_smcr_startup_trigger" {
+  input = module.azure_fe_app_service_smcr.web_app_id
+}
+
+resource "azapi_update_resource" "fe_smcr_startup_command" {
+  type        = "Microsoft.Web/sites@2023-12-01"
+  resource_id = module.azure_fe_app_service_smcr.web_app_id
+
+  body = {
+    properties = {
+      siteConfig = {
+        appCommandLine = "node server.js"
+      }
+    }
+  }
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.fe_smcr_startup_trigger
+    ]
+  }
+
+  depends_on = [module.azure_fe_app_service_smcr]
+}
+
+resource "azapi_update_resource" "fe_smcr_slot_startup_command" {
+  type        = "Microsoft.Web/sites/slots@2023-12-01"
+  resource_id = "${module.azure_fe_app_service_smcr.web_app_id}/slots/staging"
+
+  body = {
+    properties = {
+      siteConfig = {
+        appCommandLine = "node server.js"
+      }
+    }
+  }
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.fe_smcr_startup_trigger
+    ]
+  }
+
+  depends_on = [module.azure_fe_app_service_smcr]
+}
 
 # -----------------------------------------------------------------------------
 # Role Assignments
