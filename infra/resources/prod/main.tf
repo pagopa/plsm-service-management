@@ -9,6 +9,12 @@ terraform {
       version = "~>4"
     }
 
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.0"
+    }
+
+
     dx = {
       source  = "pagopa-dx/azure"
       version = ">= 0.0.6, < 1.0.0"
@@ -32,3 +38,5 @@ provider "azurerm" {
   storage_use_azuread = true
   features {}
 }
+
+provider "azapi" {}

@@ -122,6 +122,7 @@ common_app_settings = {
     APPINSIGHTS_CONNECTION_STRING     = "${data.azurerm_key_vault_secret.appinsights_connection_string.value}"
     APPINSIGHTS_INSTRUMENTATIONKEY    = "${data.azurerm_key_vault_secret.appinsights_instrumentationkey.value}"
     APPINSIGHTS_SAMPLING_PERCENTAGE   = 5
+    NODE_ENV                          = "production"
   }
 
   askmebot_func_slot_app_settings = {
@@ -148,6 +149,7 @@ common_app_settings = {
     APPINSIGHTS_CONNECTION_STRING     = "${data.azurerm_key_vault_secret.appinsights_connection_string.value}"
     APPINSIGHTS_INSTRUMENTATIONKEY    = "${data.azurerm_key_vault_secret.appinsights_instrumentationkey.value}"
     APPINSIGHTS_SAMPLING_PERCENTAGE   = 5
+    NODE_ENV                          = "production"
   }
 
   # BACKEND App Service
