@@ -34,36 +34,19 @@ export default function TabsSection({
   institution,
   institutionDescription,
   product,
-  onboarding,
   isPNPG = false,
 }: Props) {
   return (
     <section className="flex h-[calc(100vh-64px)] flex-col min-h-0">
-      <Tabs defaultValue={TABS.GROUPS} className="flex flex-1 min-h-0 flex-col">
+      <Tabs defaultValue={TABS.USERS} className="flex flex-1 min-h-0 flex-col">
         <ScrollArea>
           <TabsList className="mb-3">
-            <TabsTrigger value={TABS.GROUPS}>
-              <LayoutDashboardIcon
-                className="size-3.5 -ms-0.5 me-1.5 opacity-60"
-                aria-hidden="true"
-              />
-              Gruppi
-            </TabsTrigger>
-
             <TabsTrigger value={TABS.USERS} className="group">
               <UsersIcon
                 className="size-3.5 -ms-0.5 me-1.5 opacity-60"
                 aria-hidden="true"
               />
               Utenti
-            </TabsTrigger>
-
-            <TabsTrigger value={TABS.CONTRACT} className="group">
-              <FileTextIcon
-                className="size-3.5 -ms-0.5 me-1.5 opacity-60"
-                aria-hidden="true"
-              />
-              Contratto
             </TabsTrigger>
 
             {product === "prod-io" && (
@@ -95,10 +78,6 @@ export default function TabsSection({
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
 
-        <TabsContent value={TABS.GROUPS} className="h-full">
-          <GroupsTab institution={institution} product={product} />
-        </TabsContent>
-
         <TabsContent
           value={TABS.USERS}
           className="flex flex-1 min-h-0 flex-col"
@@ -108,18 +87,6 @@ export default function TabsSection({
             institution={institution}
             product={product}
             isPNPG={isPNPG}
-          />
-        </TabsContent>
-
-        <TabsContent
-          value={TABS.CONTRACT}
-          className="flex flex-1 min-h-0 flex-col"
-        >
-          <ContractTab
-            institution={institution}
-            product={product}
-            onboarding={onboarding}
-            institutionDescription={institutionDescription}
           />
         </TabsContent>
 
