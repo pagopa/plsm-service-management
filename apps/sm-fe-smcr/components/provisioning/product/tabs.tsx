@@ -11,7 +11,6 @@ import GroupsTab from "./groups/groups-tab";
 import ServicesTab from "./services/services-tab";
 import UsersTab from "./users/users-tab";
 import DelegationsTab from "./delegations/delegations-tab";
-
 enum TABS {
   GROUPS = "groups",
   USERS = "users",
@@ -19,7 +18,6 @@ enum TABS {
   SERVICES = "services",
   DELEGATIONS = "delegactions",
 }
-
 type Props = {
   taxCode: string;
   institution: string;
@@ -28,19 +26,32 @@ type Props = {
   onboarding: string;
   isPNPG?: boolean;
 };
-
 export default function TabsSection({
   taxCode,
   institution,
   institutionDescription,
   product,
+  onboarding,
   isPNPG = false,
 }: Props) {
   return (
     <section className="flex h-[calc(100vh-64px)] flex-col min-h-0">
-      <Tabs defaultValue={TABS.USERS} className="flex flex-1 min-h-0 flex-col">
+      <Tabs
+        defaultValue={isPNPG ? TABS.USERS : TABS.GROUPS}
+        className="flex flex-1 min-h-0 flex-col"
+      >
         <ScrollArea>
           <TabsList className="mb-3">
+            {!isPNPG && (
+              <TabsTrigger value={TABS.GROUPS}>
+                <LayoutDashboardIcon
+                  className="size-3.5 -ms-0.5 me-1.5 opacity-60"
+                  aria-hidden="true"
+                />
+                Gruppi
+              </TabsTrigger>
+            )}
+
             <TabsTrigger value={TABS.USERS} className="group">
               <UsersIcon
                 className="size-3.5 -ms-0.5 me-1.5 opacity-60"
@@ -48,6 +59,16 @@ export default function TabsSection({
               />
               Utenti
             </TabsTrigger>
+
+            {!isPNPG && (
+              <TabsTrigger value={TABS.CONTRACT} className="group">
+                <FileTextIcon
+                  className="size-3.5 -ms-0.5 me-1.5 opacity-60"
+                  aria-hidden="true"
+                />
+                Contratto
+              </TabsTrigger>
+            )}
 
             {product === "prod-io" && (
               <TabsTrigger
@@ -61,7 +82,6 @@ export default function TabsSection({
                 Servizi
               </TabsTrigger>
             )}
-
             {product === "prod-pagopa" && (
               <TabsTrigger
                 value={TABS.DELEGATIONS}
@@ -78,6 +98,12 @@ export default function TabsSection({
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
 
+        {!isPNPG && (
+          <TabsContent value={TABS.GROUPS} className="h-full">
+            <GroupsTab institution={institution} product={product} />
+          </TabsContent>
+        )}
+
         <TabsContent
           value={TABS.USERS}
           className="flex flex-1 min-h-0 flex-col"
@@ -90,13 +116,26 @@ export default function TabsSection({
           />
         </TabsContent>
 
+        {!isPNPG && (
+          <TabsContent
+            value={TABS.CONTRACT}
+            className="flex flex-1 min-h-0 flex-col"
+          >
+            <ContractTab
+              institution={institution}
+              product={product}
+              onboarding={onboarding}
+              institutionDescription={institutionDescription}
+            />
+          </TabsContent>
+        )}
+
         <TabsContent
           value={TABS.SERVICES}
           className="flex flex-1 min-h-0 flex-col"
         >
           <ServicesTab institution={institutionDescription} taxCode={taxCode} />
         </TabsContent>
-
         <TabsContent
           value={TABS.DELEGATIONS}
           className="flex flex-1 min-h-0 flex-col"
