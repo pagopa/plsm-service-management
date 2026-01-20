@@ -44,3 +44,15 @@ variable "node_version" {
   default = 20
   description = "Versione di Node.js da utilizzare per la Function App."
 }
+
+variable "application_insights_connection_string" {
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "application_insights_instrumentation_key" {
+  type        = string
+  default     = null
+  sensitive   = true
+}
