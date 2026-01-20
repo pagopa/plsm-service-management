@@ -56,8 +56,8 @@ function StepFour({ children }: Props) {
 
   return (
     <div className="container flex flex-col  gap-8  max-w-3xl mx-auto ">
-      <Header {...stepFourData} />
       {children}
+      <Header {...stepFourData} />
       {stepFourData.dataTable && stepFourData.dataTable.length > 1 && (
         <Card className="rounded-none">
           <CardContent>

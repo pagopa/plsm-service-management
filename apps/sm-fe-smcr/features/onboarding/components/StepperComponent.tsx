@@ -10,10 +10,10 @@ import { useFormContext } from "../context/FormContext";
 export default function StepperComponent() {
   const { currentStep, handleStepChange, steps } = useFormContext();
   return (
-    <div className="ui:mx-auto ui:max-w-xl my-8  ui:text-center">
+    <div className="mx-auto max-w-xl my-8 text-center">
       <Stepper value={currentStep} onValueChange={handleStepChange}>
         {steps.map((step) => (
-          <StepperItem key={step} step={step} className="not-last:ui:flex-1">
+          <StepperItem key={step} step={step} className="not-last:flex-1">
             <StepperTrigger asChild>
               <StepperIndicator />
             </StepperTrigger>
@@ -22,7 +22,7 @@ export default function StepperComponent() {
         ))}
       </Stepper>
 
-      <div className="ui:flex ui:justify-center ui:space-x-4"></div>
+      <div className="flex justify-center space-x-4"></div>
     </div>
   );
 }
