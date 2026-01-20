@@ -1,3 +1,7 @@
+# -----------------------------------------------------------------------------
+# Interesse Generale
+# -----------------------------------------------------------------------------
+
 data "azurerm_subscription" "current" {}
 
 data "azurerm_client_config" "current" {}
@@ -7,12 +11,10 @@ data "azuread_group" "keyvault_admin_group" {
   display_name = "plsm-p-adgroup-admin"
 }
 
-data "azurerm_key_vault_secret" "appinsights_connectionstring" {
-  name         = "APPINSIGHTS-CONNECTION-STRING"
-  key_vault_id = module.azure_core_infra.common_key_vault.id
-}
+# -----------------------------------------------------------------------------
+# Valori env per PF - Portale Fatturazione
+# -----------------------------------------------------------------------------
 
-# Valori env per PF
 data "azurerm_private_dns_zone" "existing_storage_blob_dns_zone" {
   name                = "privatelink.blob.core.windows.net"
   resource_group_name = module.azure_core_infra.network_resource_group_name 
@@ -49,8 +51,10 @@ data "azurerm_key_vault_secret" "appinsights_instrumentationkey" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
-
+# -----------------------------------------------------------------------------
 # Database PostgreSQL
+# -----------------------------------------------------------------------------
+
 data "azurerm_key_vault_secret" "db_host" {
   name         = "db-host"
   key_vault_id = module.azure_core_infra.common_key_vault.id
@@ -87,7 +91,10 @@ data "azurerm_linux_function_app" "plsm_cert_func" {
   resource_group_name = "plsm-p-itn-fn-rg-01"
 }
 
-// Variabili FE_SMCR
+# -----------------------------------------------------------------------------
+# Variabili FE_SMCR
+# -----------------------------------------------------------------------------
+
 data "azurerm_key_vault_secret" "fe_smcr_users_api_key" {
   name         = "fe-smcr-users-api-key"
   key_vault_id = module.azure_core_infra.common_key_vault.id
@@ -143,8 +150,19 @@ data "azurerm_key_vault_secret" "fe_smcr_slack_call_management_hook_prod" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+data "azurerm_key_vault_secret" "fe_smcr_webhook_manual_storage" {
+  name         = "fe-smcr-webhook-manual-storage"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
 
+data "azurerm_key_vault_secret" "fe_smcr_storage_token" {
+  name         = "fe-smcr-storage-token"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+# -----------------------------------------------------------------------------
 # Function Onboarding
+# -----------------------------------------------------------------------------
 
 data "azurerm_key_vault_secret" "ocp_apim_subscription_key" {
   name         = "fa-onboarding-ocp-apim-subscription-key"
@@ -191,8 +209,9 @@ data "azurerm_key_vault_secret" "slack_webhook_onboarding_pagopa" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
-
+# -----------------------------------------------------------------------------
 # Function Ask Me Bot
+# -----------------------------------------------------------------------------
 
 data "azurerm_key_vault_secret" "askmebot_ocp_apim_subscription_key" {
   name         = "fa-askmebot-ocp-apim-subscription-key"
