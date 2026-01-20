@@ -381,6 +381,7 @@ function StepOne({ children, ...props }: Props) {
         dataTable,
       }}
     >
+      {children}
       <div {...props}>
         {!isStepThree && (
           <SearchForm
@@ -420,7 +421,6 @@ function StepOne({ children, ...props }: Props) {
             {!isStepThree && (
               <Product productOptionsToDisplay={productOptionsToDisplay} />
             )}
-            {children}
             <PersonalData
               isPIVANull={isPIVANull}
               isPIVAequalToTaxcode={isPIVAequalToTaxcode}
