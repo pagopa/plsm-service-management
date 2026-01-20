@@ -1,5 +1,5 @@
 import logger from "@/lib/logger/logger.server";
-import { logSchema, readLogs, saveLog } from "@/lib/services/logs.service";
+import { logInputSchema, readLogs, saveLog } from "@/lib/services/logs.service";
 import { z } from "zod";
 
 export async function GET() {
@@ -14,7 +14,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const result = logSchema.omit({ id: true }).safeParse(body);
+  const result = logInputSchema.safeParse(body);
 
   if (!result.success) {
     console.warn(
