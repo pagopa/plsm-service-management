@@ -57,6 +57,26 @@ variable "health_check_path" {
 
 variable "node_version" {
   type        = number
-  default = 20
+  default     = 20
   description = "Versione di Node.js da utilizzare per la Function App."
+}
+
+# Application Insights
+variable "application_insights_connection_string" {
+  type        = string
+  description = "Connection string di Application Insights."
+  default     = null
+}
+
+variable "application_insights_key" {
+  type        = string
+  description = "Instrumentation key di Application Insights."
+  default     = null
+  sensitive   = true
+}
+
+variable "application_insights_sampling_percentage" {
+  type        = number
+  description = "Percentuale di sampling per Application Insights. Default: 5"
+  default     = 5
 }
