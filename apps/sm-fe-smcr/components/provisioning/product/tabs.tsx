@@ -129,13 +129,17 @@ export default function TabsSection({
             />
           </TabsContent>
         )}
-
-        <TabsContent
-          value={TABS.SERVICES}
-          className="flex flex-1 min-h-0 flex-col"
-        >
-          <ServicesTab institution={institutionDescription} taxCode={taxCode} />
-        </TabsContent>
+        {product === "prod-io" && (
+          <TabsContent
+            value={TABS.SERVICES}
+            className="flex flex-1 min-h-0 flex-col"
+          >
+            <ServicesTab
+              institution={institutionDescription}
+              taxCode={taxCode}
+            />
+          </TabsContent>
+        )}
         <TabsContent
           value={TABS.DELEGATIONS}
           className="flex flex-1 min-h-0 flex-col"
