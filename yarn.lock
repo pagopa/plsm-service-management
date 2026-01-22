@@ -19799,6 +19799,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"sm-crm-fn@workspace:apps/sm-crm-fn":
+  version: 0.0.0-use.local
+  resolution: "sm-crm-fn@workspace:apps/sm-crm-fn"
+  dependencies:
+    "@azure/functions": "npm:^4.10.0"
+    "@azure/identity": "npm:^4.13.0"
+    "@azure/storage-blob": "npm:^12.29.1"
+    "@types/node": "npm:^24.1.2"
+    typescript: "npm:^5.9.3"
+    zod: "npm:^4.1.13"
+  languageName: unknown
+  linkType: soft
+
 "sm-fe-smcr@workspace:apps/sm-fe-smcr":
   version: 0.0.0-use.local
   resolution: "sm-fe-smcr@workspace:apps/sm-fe-smcr"
