@@ -2,6 +2,7 @@
 
 import { betterFetch } from "@better-fetch/fetch";
 import { z } from "zod";
+import logger from "@/lib/logger/logger.server";
 
 const OnboardingSchema = z.object({
   productId: z.string(),
@@ -100,9 +101,9 @@ export async function getInstitution(taxCode: string) {
 
 type GetInstitutionWithSubunitsResponse =
   | {
-      data: Array<Institution>;
-      error: null;
-    }
+    data: Array<Institution>;
+    error: null;
+  }
   | { data: []; error: "Errore nel recupero dati" | "Nessun ente trovato" };
 
 export async function getInstitutionWithSubunits(
@@ -120,13 +121,45 @@ export async function getInstitutionWithSubunits(
   );
 
   if (error || !data) {
+    logger.error({
+      request: {
+        "method": "GET",
+        "path": `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${taxCode}&enableSubunits=true`
+      },
+      error: {
+        name: error.status,
+        message: error.message,
+        stack: error.statusText,
+      },
+    }, `getInstitution ${taxCode} - empty`)
     console.error(error);
     return { data: [], error: "Errore nel recupero dati" };
   }
 
   if (data.institutions.length < 1) {
+    logger.warn({
+      request: {
+        "method": "GET",
+        "path": `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${taxCode}&enableSubunits=true`
+      },
+      info: {
+        event: "getInstitution",
+        metadata: data,
+      },
+    }, `getInstitution ${taxCode} - empty`)
     return { data: [], error: "Nessun ente trovato" };
   }
+
+  logger.info({
+    request: {
+      "method": "GET",
+      "path": `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${taxCode}&enableSubunits=true`
+    },
+    info: {
+      event: "getInstitution",
+      metadata: data,
+    },
+  }, `getInstitution called with ${taxCode}`)
 
   return { data: data.institutions, error: null };
 }
