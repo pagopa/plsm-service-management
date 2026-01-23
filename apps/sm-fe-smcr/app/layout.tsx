@@ -2,6 +2,7 @@ import { MSALProvider } from "@/context/MSALproviders";
 import { SessionProvider } from "@/context/sessionProvider";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 
 import { Space_Grotesk } from "next/font/google";
@@ -25,7 +26,9 @@ export default function RootLayout({
     <html lang="it" className={font.className}>
       <body className="h-screen">
         <MSALProvider>
-          <SessionProvider>{children}</SessionProvider>
+          <SessionProvider>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </SessionProvider>
         </MSALProvider>
 
         <Toaster />
