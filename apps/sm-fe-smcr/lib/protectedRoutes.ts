@@ -1,12 +1,12 @@
 // Spostiamo in app/config?
 
 import {
+  ActivityIcon,
   BotIcon,
   FolderIcon,
   LucideIcon,
   PhoneIcon,
   Search,
-  Shield,
   SquareTerminal,
   TestTube2,
   TextCursorInput,
@@ -110,6 +110,14 @@ export const protectedRoutes: ProtectedRoute[] = [
     requiredTeams: ["admin"],
     sidebar: true,
     icon: BotIcon,
+    teamId: "admin",
+  },
+  {
+    label: "Logs",
+    path: "/dashboard/logs",
+    icon: ActivityIcon,
+    sidebar: true,
+    requiredTeams: ["admin"],
     teamId: "admin",
   },
 ];
