@@ -49,7 +49,6 @@ export default function StepTwo({ children, ...props }: Props) {
     formData,
     updateFormData,
     nextStep,
-    prevStep,
     isStepTwoSubmitted,
     handleStepTwoSubmit,
   } = useFormContext();
@@ -87,9 +86,6 @@ export default function StepTwo({ children, ...props }: Props) {
       handleStepTwoSubmit();
       if (event.nativeEvent.submitter.name === "next") {
         nextStep();
-      }
-      if (event.nativeEvent.submitter.name === "prev") {
-        prevStep();
       }
     }
   }
