@@ -1,4 +1,4 @@
-variable "subscription_id" { # Controllare
+variable "subscription_id" {              # Controllare
   description = "Subscription ID of PLSM" #PROD-PLSM-Platform
   type        = string
 }
