@@ -1,0 +1,23 @@
+{
+  "name": "sm-crm-fn",
+  "version": "1.0.0",
+  "main": "dist/**/*/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "func start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@azure/functions": "^4.10.0",
+    "@azure/identity": "^4.13.0",
+    "@azure/storage-blob": "^12.29.1",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.2",
+    "typescript": "^5.9.3"
+  }
+}
