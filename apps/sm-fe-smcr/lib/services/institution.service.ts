@@ -157,7 +157,7 @@ export async function getInstitutionPNPG(
 }
 
 const zipCodeRegex = /^[0-9]{5}$/;
-const pecRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+// const pecRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 const UpdateInsitutionInfoSchema = z.object({
   institutionId: z
@@ -175,12 +175,7 @@ const UpdateInsitutionInfoSchema = z.object({
     .string()
     .nonempty({ message: "La descrizione è obbligatoria." }),
 
-  digitalAddress: z
-    .string()
-    .nonempty({ message: "L'indirizzo PEC è obbligatorio." })
-    .regex(pecRegex, {
-      message: "L'indirizzo PEC non è valido.",
-    }),
+  digitalAddress: z.string().optional(),
 
   zipCode: z
     .string()
