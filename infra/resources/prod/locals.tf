@@ -245,12 +245,14 @@ locals {
     DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
     DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
     NODE_ENV              = "production"
+    WEBSITE_RUN_FROM_PACKAGE = 1
   }
 
   crm_func_slot_app_settings = {
     DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
     DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
     NODE_ENV              = "production"
+    WEBSITE_RUN_FROM_PACKAGE = 1
   }
 
 
