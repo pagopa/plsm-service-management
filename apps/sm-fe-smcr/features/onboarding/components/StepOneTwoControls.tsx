@@ -18,7 +18,7 @@ export default function StepOneTwoControls({
   handleDeleteOn,
   resetProductOptions,
 }: Props) {
-  const { isFirstStep, isStepThree } = useFormContext();
+  const { isFirstStep, isStepThree, prevStep } = useFormContext();
   return (
     <div className="flex justify-between pt-8">
       <div className="flex gap-4">
@@ -47,11 +47,12 @@ export default function StepOneTwoControls({
 
       <div className="flex gap-4">
         <Button
-          type="submit"
+          type="button"
           name="prev"
           variant="outline"
           className="w-fit sm:w-32 hover: cursor-pointer disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500 disabled:shadow-none"
           disabled={isFirstStep}
+          onClick={() => prevStep()}
         >
           Indietro
         </Button>
