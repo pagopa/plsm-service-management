@@ -18,7 +18,7 @@ locals {
     Source         = "https://github.com/pagopa/plsm-service-management/tree/main"
   }
 
-common_app_settings = {
+  common_app_settings = {
     DiagnosticServices_EXTENSION_VERSION            = "~3"
     InstrumentationEngine_EXTENSION_VERSION         = "disabled"
     SnapshotDebugger_EXTENSION_VERSION              = "disabled"
@@ -26,7 +26,7 @@ common_app_settings = {
     XDT_MicrosoftApplicationInsights_Mode           = "recommended"
     XDT_MicrosoftApplicationInsights_PreemptSdk     = "disabled"
     TIMEOUT_DELAY                                   = 300
-}
+  }
 
 
   # Function Portale Fatturazione
@@ -239,5 +239,19 @@ common_app_settings = {
     DB_PORT = 5432
     DB_SSL  = true
   }
+
+  # Function CRM (Dynamics)
+  crm_func_app_settings = {
+    DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
+    DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
+    NODE_ENV              = "production"
+  }
+
+  crm_func_slot_app_settings = {
+    DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
+    DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
+    NODE_ENV              = "production"
+  }
+
 
 }
