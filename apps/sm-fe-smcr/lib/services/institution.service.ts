@@ -132,7 +132,6 @@ export async function getInstitutionWithSubunits(
         stack: error.statusText,
       },
     }, `getInstitution ${taxCode} - empty`)
-    console.error(error);
     return { data: [], error: "Errore nel recupero dati" };
   }
 
