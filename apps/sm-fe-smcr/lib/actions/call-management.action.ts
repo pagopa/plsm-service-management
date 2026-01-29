@@ -2,6 +2,7 @@
 
 import z from "zod";
 import { PRODUCT_MAP } from "../types/product";
+import logger from "@/lib/logger/logger.server";
 
 const sendToSlackSchema = z.object({
   name: z.string(),
@@ -47,6 +48,19 @@ export async function sendToSlackAction(
       target: (inputEntries.target as "test" | "prod") ?? "test",
     };
 
+    logger.warn(
+      {
+        info: {
+          event: "call-management.send-to-slack.validation-failed",
+          metadata: {
+            target: sanitizedFields.target ?? prevState.target ?? "test",
+            invalidFields: Object.keys(errors),
+          },
+        },
+      },
+      "sendToSlackAction validation failed",
+    );
+
     return {
       fields: sanitizedFields,
       errors,
@@ -62,8 +76,14 @@ export async function sendToSlackAction(
   const webhook = webhooks[validation.data.target];
 
   if (!webhook) {
-    console.error(
-      "Errore durante l'invio del messaggio, env FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK mancante.",
+    logger.error(
+      {
+        info: {
+          event: "call-management.send-to-slack.missing-webhook",
+          metadata: { target: validation.data.target },
+        },
+      },
+      "sendToSlackAction missing webhook env",
     );
     return {
       fields: validation.data,
@@ -155,10 +175,24 @@ export async function sendToSlackAction(
 
   if (!response.ok) {
     const body = await response.json();
-    console.error(
-      "Errore durante l'invio del messaggio, status:",
-      response.status,
-      body,
+    logger.error(
+      {
+        request: {
+          method: "POST",
+          path: "slack-webhook",
+          statusCode: response.status,
+        },
+        error: {
+          name: "SlackWebhookError",
+          message:
+            typeof body === "string" ? body : JSON.stringify(body ?? {}),
+        },
+        info: {
+          event: "call-management.send-to-slack.failed",
+          metadata: { target: validation.data.target },
+        },
+      },
+      "sendToSlackAction failed to send Slack message",
     );
 
     return {
@@ -168,6 +202,20 @@ export async function sendToSlackAction(
       submittedAt: Date.now(),
     };
   }
+
+  logger.info(
+    {
+      info: {
+        event: "call-management.send-to-slack.success",
+        metadata: {
+          target: validation.data.target,
+          product: validation.data.product,
+          membersCount: membersArray.length,
+        },
+      },
+    },
+    "sendToSlackAction sent Slack message",
+  );
 
   return {
     fields: {
