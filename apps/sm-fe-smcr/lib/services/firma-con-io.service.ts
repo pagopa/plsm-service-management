@@ -71,7 +71,7 @@ export async function getFirmaConIoSignerID(
 
   if (error || !data) {
     console.error(error);
-    return null;
+    throw new Error("Errore nel recupero del Signer ID");
   }
 
   return data.id;
