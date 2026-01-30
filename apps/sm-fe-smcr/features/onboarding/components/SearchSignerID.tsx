@@ -46,9 +46,14 @@ export function SearchSignerID() {
         <form
           className="flex flex-col gap-6 w-full"
           action={async (formData) => {
-            const result = await getFirmaConIoSignerID(formData);
-            setSignerID(result);
-            form.reset();
+            try {
+              const result = await getFirmaConIoSignerID(formData);
+              setSignerID(result);
+              form.reset();
+            } catch (error) {
+              console.error("Error fetching Signer ID:", error);
+              toast.error("Errore nel recupero del Signer ID");
+            }
           }}
         >
           <p className="font-semibold">Inserisci il codice fiscale</p>
