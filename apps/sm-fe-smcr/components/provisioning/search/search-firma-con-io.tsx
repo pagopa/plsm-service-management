@@ -7,7 +7,7 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { SignatureFormSchema } from "@/lib/services/firma-con-io.service";
+import { SignatureFormSchema } from "@/lib/services/firma-con-io.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,7 +91,7 @@ export default function SearchFirmaConIo() {
             Ricerche recenti
           </p>
 
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 max-h-52 overflow-auto">
             {history.items.map((item) => (
               <HistoryItem key={item.signature_request} {...item} />
             ))}

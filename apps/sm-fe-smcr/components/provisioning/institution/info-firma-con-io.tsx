@@ -6,7 +6,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { FirmaConIO } from "@/lib/services/firma-con-io.service";
+import { FirmaConIO } from "@/lib/services/firma-con-io.schema";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import { format, parseISO } from "date-fns";
 import { AlertTriangle, Files, FileText } from "lucide-react";
