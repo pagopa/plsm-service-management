@@ -160,6 +160,8 @@ locals {
 
   # FRONTEND FE-SMCR
   fe_smcr_app_settings = {
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value}"
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value}"
     FE_SMCR_USERS_API_KEY              = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY  = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value}"
     FE_SMCR_API_KEY_INSTITUTION        = "${data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value}"
@@ -201,6 +203,8 @@ locals {
   }
 
   fe_smcr_slot_app_settings = {
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value}"
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value}"
     FE_SMCR_USERS_API_KEY              = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY  = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value}"
     FE_SMCR_API_KEY_INSTITUTION        = "${data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value}"
