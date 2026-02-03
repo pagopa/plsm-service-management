@@ -160,6 +160,16 @@ data "azurerm_key_vault_secret" "fe_smcr_storage_token" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+data "azurerm_key_vault_secret" "fe_smcr_api_slack_call_management_hook_test" {
+  name         = "fe-smcr-api-slack-call-management-hook-test"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_api_slack_call_management_hook_prod" {
+  name         = "fe-smcr-api-slack-call-management-hook-prod"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
 # -----------------------------------------------------------------------------
 # Function Onboarding
 # -----------------------------------------------------------------------------
