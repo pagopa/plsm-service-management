@@ -1,0 +1,583 @@
+openapi: 3.0.3
+info:
+  title: SM-CRM-FN - Integrazione Dynamics 365 CRM
+  description: |
+    Azure Functions per l'integrazione con Microsoft Dynamics 365 CRM di PagoPA.
+
+    ## Funzionalità principali
+    - Verifica esistenza Enti (Accounts) e Contatti
+    - Creazione Contatti se mancanti
+    - Creazione Appuntamenti CRM con partecipanti
+    - GrantAccess per visibilità team Sales
+
+    ## Flusso di creazione appuntamento
+    1. **Verifica Ente** - Ricerca per Selfcare ID o nome
+    2. **Verifica/Crea Contatti** - Per ogni partecipante
+    3. **Crea Appuntamento** - Con activity_parties
+    4. **GrantAccess** - Condivisione con team Sales
+
+    ## Dry-Run Mode
+    Tutti gli endpoint di creazione supportano la modalità `dryRun` per testare 
+    il flusso senza effettuare modifiche su Dynamics CRM.
+  version: 1.0.0
+  contact:
+    name: PagoPA S.p.A.
+    url: https://www.pagopa.it
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: http://localhost:7071/api/v1
+    description: Sviluppo locale
+  - url: https://sm-d-itn-pg-smcr-fn.azurewebsites.net/api/v1
+    description: Ambiente DEV
+  - url: https://sm-u-itn-pg-smcr-fn.azurewebsites.net/api/v1
+    description: Ambiente UAT
+  - url: https://sm-p-itn-pg-smcr-fn.azurewebsites.net/api/v1
+    description: Ambiente PROD
+
+tags:
+  - name: Health
+    description: Endpoint di monitoraggio
+  - name: Meetings
+    description: Gestione appuntamenti CRM
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Verifica che il servizio sia attivo e funzionante.
+      operationId: getHealth
+      responses:
+        "200":
+          description: Servizio attivo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /dynamics/ping:
+    get:
+      tags:
+        - Health
+      summary: Test connettività Dynamics
+      description: |
+        Verifica la connettività con Microsoft Dynamics 365 CRM 
+        effettuando una query di test sui contatti.
+      operationId: pingDynamics
+      responses:
+        "200":
+          description: Connessione riuscita
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PingResponse"
+        "503":
+          description: Connessione fallita
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PingErrorResponse"
+
+  /meetings:
+    get:
+      tags:
+        - Meetings
+      summary: Lista appuntamenti
+      description: Recupera la lista degli appuntamenti da Dynamics CRM.
+      operationId: listMeetings
+      parameters:
+        - name: top
+          in: query
+          description: Numero massimo di risultati da restituire
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 500
+        - name: filter
+          in: query
+          description: Filtro OData (es. `statecode eq 0`)
+          schema:
+            type: string
+            example: "statecode eq 0"
+      responses:
+        "200":
+          description: Lista appuntamenti
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListMeetingsResponse"
+        "500":
+          description: Errore interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      tags:
+        - Meetings
+      summary: Crea appuntamento
+      description: |
+        Crea un nuovo appuntamento in Dynamics CRM seguendo il flusso completo:
+
+        1. **Verifica Ente** - Cerca l'ente per `institutionIdSelfcare` o `nomeEnte`
+        2. **Verifica/Crea Contatti** - Per ogni partecipante, verifica esistenza o crea
+        3. **Crea Appuntamento** - Con tutti i partecipanti come activity_parties
+        4. **GrantAccess** - Condivide l'appuntamento con il team Sales
+
+        ### Dry-Run Mode
+        Impostare `dryRun: true` per testare il flusso senza modifiche a Dynamics.
+      operationId: createMeeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMeetingRequest"
+            examples:
+              minimal:
+                summary: Richiesta minima
+                value:
+                  institutionIdSelfcare: "fce7a03b-94fe-4fa6-8dc3-10c1b4f45a76"
+                  productIdSelfcare: "prod-pagopa"
+                  partecipanti:
+                    - email: "mario.rossi@ente.it"
+                      nome: "Mario"
+                      cognome: "Rossi"
+                  subject: "Riunione di allineamento"
+                  scheduledstart: "2025-02-15T10:00:00Z"
+                  scheduledend: "2025-02-15T11:00:00Z"
+              complete:
+                summary: Richiesta completa
+                value:
+                  institutionIdSelfcare: "fce7a03b-94fe-4fa6-8dc3-10c1b4f45a76"
+                  productIdSelfcare: "prod-pagopa"
+                  partecipanti:
+                    - email: "mario.rossi@ente.it"
+                      nome: "Mario"
+                      cognome: "Rossi"
+                      tipologiaReferente: "TECNICO"
+                    - email: "luigi.verdi@ente.it"
+                      nome: "Luigi"
+                      cognome: "Verdi"
+                      tipologiaReferente: "BUSINESS"
+                  subject: "Riunione di allineamento tecnico"
+                  scheduledstart: "2025-02-15T10:00:00Z"
+                  scheduledend: "2025-02-15T11:00:00Z"
+                  location: "Google Meet"
+                  description: "Discussione requisiti integrazione"
+                  nextstep: "Preparare documentazione tecnica"
+                  dataProssimoContatto: "2025-02-20"
+                  dryRun: false
+              dryRun:
+                summary: Test dry-run
+                value:
+                  institutionIdSelfcare: "fce7a03b-94fe-4fa6-8dc3-10c1b4f45a76"
+                  productIdSelfcare: "prod-pagopa"
+                  partecipanti:
+                    - email: "test@example.com"
+                      nome: "Test"
+                      cognome: "User"
+                  subject: "Test meeting"
+                  scheduledstart: "2025-02-15T10:00:00Z"
+                  scheduledend: "2025-02-15T11:00:00Z"
+                  dryRun: true
+      responses:
+        "201":
+          description: Appuntamento creato con successo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateMeetingResponse"
+        "207":
+          description: Appuntamento creato con warning (es. GrantAccess fallito)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateMeetingResponse"
+        "400":
+          description: Errore di validazione
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+        "404":
+          description: Ente non trovato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateMeetingResponse"
+        "409":
+          description: Ambiguità (più enti trovati)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateMeetingResponse"
+        "500":
+          description: Errore interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /meetings/dry-run:
+    post:
+      tags:
+        - Meetings
+      summary: Test creazione appuntamento (dry-run)
+      description: |
+        Esegue il flusso completo di creazione appuntamento **senza effettuare modifiche** 
+        su Dynamics CRM. Utile per validare i dati e testare l'integrazione.
+
+        Equivalente a `POST /meetings` con `dryRun: true`.
+      operationId: dryRunMeeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMeetingRequest"
+      responses:
+        "200":
+          description: Dry-run completato con successo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateMeetingResponse"
+        "400":
+          description: Dry-run fallito (errori di validazione o logica)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateMeetingResponse"
+
+components:
+  schemas:
+    # ==========================================================================
+    # Request Schemas
+    # ==========================================================================
+
+    CreateMeetingRequest:
+      type: object
+      required:
+        - productIdSelfcare
+        - partecipanti
+        - subject
+        - scheduledstart
+        - scheduledend
+      properties:
+        institutionIdSelfcare:
+          type: string
+          format: uuid
+          description: |
+            ID Selfcare dell'ente. Almeno uno tra `institutionIdSelfcare` e `nomeEnte` 
+            deve essere specificato.
+          example: "fce7a03b-94fe-4fa6-8dc3-10c1b4f45a76"
+        nomeEnte:
+          type: string
+          description: |
+            Nome dell'ente (fallback se `institutionIdSelfcare` non è specificato).
+          example: "Comune di Roma"
+        productIdSelfcare:
+          $ref: "#/components/schemas/ProductIdSelfcare"
+        partecipanti:
+          type: array
+          minItems: 1
+          description: Lista dei partecipanti all'appuntamento
+          items:
+            $ref: "#/components/schemas/Partecipante"
+        subject:
+          type: string
+          minLength: 1
+          description: Oggetto dell'appuntamento
+          example: "Riunione di allineamento tecnico"
+        scheduledstart:
+          type: string
+          format: date-time
+          description: Data e ora di inizio (ISO 8601)
+          example: "2025-02-15T10:00:00Z"
+        scheduledend:
+          type: string
+          format: date-time
+          description: Data e ora di fine (ISO 8601)
+          example: "2025-02-15T11:00:00Z"
+        location:
+          type: string
+          description: Luogo dell'appuntamento
+          default: "Meet"
+          example: "Google Meet"
+        description:
+          type: string
+          description: Descrizione dettagliata
+          example: "Discussione requisiti integrazione pagoPA"
+        nextstep:
+          type: string
+          description: Prossimi passi da intraprendere
+          example: "Preparare documentazione tecnica"
+        dataProssimoContatto:
+          type: string
+          format: date
+          description: Data del prossimo contatto previsto
+          example: "2025-02-20"
+        dryRun:
+          type: boolean
+          default: false
+          description: |
+            Se `true`, esegue il flusso senza modificare Dynamics CRM.
+            Utile per test e validazione.
+
+    Partecipante:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email del partecipante
+          example: "mario.rossi@ente.it"
+        nome:
+          type: string
+          description: Nome (obbligatorio se il contatto non esiste in CRM)
+          example: "Mario"
+        cognome:
+          type: string
+          description: Cognome (obbligatorio se il contatto non esiste in CRM)
+          example: "Rossi"
+        tipologiaReferente:
+          $ref: "#/components/schemas/TipologiaReferente"
+
+    # ==========================================================================
+    # Response Schemas
+    # ==========================================================================
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy]
+        timestamp:
+          type: string
+          format: date-time
+
+    PingResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [connected]
+        message:
+          type: string
+          example: "Successfully connected to Dynamics CRM"
+        timestamp:
+          type: string
+          format: date-time
+        contactsFound:
+          type: integer
+          description: Numero di contatti trovati nella query di test
+
+    PingErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+        message:
+          type: string
+          example: "Failed to connect to Dynamics CRM"
+        error:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ListMeetingsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Appointment"
+        count:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    CreateMeetingResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Esito complessivo dell'operazione
+        dryRun:
+          type: boolean
+          description: Indica se l'operazione è stata eseguita in dry-run mode
+        message:
+          type: string
+          description: Messaggio descrittivo
+          example: "Appuntamento creato con successo"
+        activityId:
+          type: string
+          format: uuid
+          description: GUID dell'appuntamento creato in Dynamics
+        accountId:
+          type: string
+          format: uuid
+          description: GUID dell'ente associato
+        contactIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Lista dei GUID dei contatti partecipanti
+        steps:
+          type: array
+          description: Dettaglio di ogni step eseguito
+          items:
+            $ref: "#/components/schemas/OrchestratorStep"
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Lista di warning non bloccanti
+        timestamp:
+          type: string
+          format: date-time
+
+    OrchestratorStep:
+      type: object
+      properties:
+        step:
+          type: string
+          enum:
+            - verifyAccount
+            - verifyOrCreateContacts
+            - createAppointment
+            - grantAccess
+          description: Nome dello step
+        success:
+          type: boolean
+          description: Esito dello step
+        data:
+          type: object
+          description: Dati specifici dello step
+        error:
+          type: string
+          description: Messaggio di errore (se fallito)
+        skipped:
+          type: boolean
+          description: Indica se lo step è stato saltato
+        dryRun:
+          type: boolean
+          description: Indica se lo step è stato eseguito in dry-run
+
+    Appointment:
+      type: object
+      properties:
+        activityid:
+          type: string
+          format: uuid
+        subject:
+          type: string
+        scheduledstart:
+          type: string
+          format: date-time
+        scheduledend:
+          type: string
+          format: date-time
+        location:
+          type: string
+        description:
+          type: string
+        statecode:
+          type: integer
+        statuscode:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+        error:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Errore di validazione"
+        errors:
+          type: array
+          items:
+            type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    # ==========================================================================
+    # Enums
+    # ==========================================================================
+
+    ProductIdSelfcare:
+      type: string
+      description: |
+        Identificativo del prodotto Selfcare. Viene mappato al GUID CRM corrispondente.
+      enum:
+        - prod-pn
+        - prod-io
+        - prod-pagopa
+        - prod-idpay
+        - prod-idpay-merchant
+        - prod-checkiban
+        - prod-interop
+        - prod-io-premium
+        - prod-io-sign
+        - prod-rtp
+      example: "prod-pagopa"
+
+    TipologiaReferente:
+      type: string
+      description: |
+        Tipologia del referente. Viene mappata all'ID numerico CRM corrispondente.
+      enum:
+        - APICALE
+        - DIRETTO
+        - TECNICO
+        - BUSINESS
+        - ACCOUNT
+        - RESPONSABILE_DI_TRASFORMAZIONE_DIGITALE
+        - REFERENTE_CONTRATTUALE
+        - RESPONSABILE_PROTEZIONE_DATI
+        - REFERENTE_BUSINESS_APICALE_ACCOUNT
+      default: TECNICO
+      example: "TECNICO"
+
+  securitySchemes:
+    functionKey:
+      type: apiKey
+      in: header
+      name: x-functions-key
+      description: Azure Functions API Key
+
+security:
+  - functionKey: []
