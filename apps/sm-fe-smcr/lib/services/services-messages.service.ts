@@ -89,7 +89,7 @@ export async function getServices(query: string) {
 
   if (error) {
     console.error(error);
-    return { data: null, error: "Error" };
+    return { data: null, error };
   }
 
   return {

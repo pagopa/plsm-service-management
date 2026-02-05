@@ -18,7 +18,7 @@ locals {
     Source         = "https://github.com/pagopa/plsm-service-management/tree/main"
   }
 
-common_app_settings = {
+  common_app_settings = {
     DiagnosticServices_EXTENSION_VERSION            = "~3"
     InstrumentationEngine_EXTENSION_VERSION         = "disabled"
     SnapshotDebugger_EXTENSION_VERSION              = "disabled"
@@ -26,7 +26,7 @@ common_app_settings = {
     XDT_MicrosoftApplicationInsights_Mode           = "recommended"
     XDT_MicrosoftApplicationInsights_PreemptSdk     = "disabled"
     TIMEOUT_DELAY                                   = 300
-}
+  }
 
 
   # Function Portale Fatturazione
@@ -160,6 +160,8 @@ common_app_settings = {
 
   # FRONTEND FE-SMCR
   fe_smcr_app_settings = {
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value}"
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value}"
     FE_SMCR_USERS_API_KEY              = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY  = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value}"
     FE_SMCR_API_KEY_INSTITUTION        = "${data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value}"
@@ -201,6 +203,8 @@ common_app_settings = {
   }
 
   fe_smcr_slot_app_settings = {
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value}"
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value}"
     FE_SMCR_USERS_API_KEY              = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY  = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value}"
     FE_SMCR_API_KEY_INSTITUTION        = "${data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value}"
@@ -239,5 +243,21 @@ common_app_settings = {
     DB_PORT = 5432
     DB_SSL  = true
   }
+
+  # Function CRM (Dynamics)
+  crm_func_app_settings = {
+    DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
+    DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
+    NODE_ENV              = "production"
+    WEBSITE_RUN_FROM_PACKAGE = 1
+  }
+
+  crm_func_slot_app_settings = {
+    DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
+    DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
+    NODE_ENV              = "production"
+    WEBSITE_RUN_FROM_PACKAGE = 1
+  }
+
 
 }

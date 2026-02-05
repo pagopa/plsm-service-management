@@ -13,7 +13,11 @@ export default async function ServicesTab({ institution, taxCode }: Props) {
   );
 
   if (error) {
-    throw new Error(error);
+    return (
+      <div className="w-full flex items-center justify-center">
+        <p className="text-sm text-gray-500">Errore nel recupero dei servizi</p>
+      </div>
+    );
   }
 
   return (

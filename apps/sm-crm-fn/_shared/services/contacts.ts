@@ -82,14 +82,6 @@ export async function searchContactsByEmail(
 
 /**
  * Cerca un Contatto in Dynamics per email, ente e prodotto.
- *
- * Endpoint 3: GET /api/data/v9.2/contacts?$filter=pgp_identificativoselfcarecliente eq '{ente}'
- *             and emailaddress1 eq '{email}' and contains(pgp_identificativoidpagopa, '{prodotto}')
- *
- * @param email - Email del contatto
- * @param institutionIdSelfcare - ID Selfcare dell'ente di appartenenza
- * @param productIdSelfcare - ID prodotto Selfcare (es: "prod-pagopa")
- * @returns Contatto trovato o null
  */
 export async function getContactByEmailAndInstitution(
   email: string,
@@ -124,13 +116,6 @@ export async function getContactByEmailAndInstitution(
 
 /**
  * Cerca un Contatto in Dynamics per email e GUID prodotto (fallback).
- *
- * Endpoint 4: GET /api/data/v9.2/contacts?$filter=emailaddress1 eq '{email}'
- *             and _pgp_prodottoid_value eq '{guid}'
- *
- * @param email - Email del contatto
- * @param productGuidCRM - GUID del prodotto in Dynamics
- * @returns Contatto trovato o null
  */
 export async function getContactByEmailAndProduct(
   email: string,
@@ -177,20 +162,6 @@ export interface CreateContactParams {
   accountId: string;
 }
 
-/**
- * Crea un nuovo Contatto in Dynamics.
- *
- * Endpoint 5: POST /api/data/v9.2/contacts
- *
- * @param params - Dati del contatto da creare
- * @param params.firstname - Nome
- * @param params.lastname - Cognome
- * @param params.email - Email
- * @param params.productIdSelfcare - ID prodotto Selfcare
- * @param params.tipologiaReferente - Tipologia (TECNICO, BUSINESS, etc.)
- * @param params.accountId - GUID dell'ente di appartenenza
- * @returns Contatto creato con contactid
- */
 export async function createContact(
   params: CreateContactParams,
 ): Promise<Contact> {
@@ -205,7 +176,6 @@ export async function createContact(
   }
 
   const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente);
-
   const url = `${cfg.DYNAMICS_BASE_URL}/api/data/v9.2/contacts`;
 
   const body: CreateContactRequest = {
@@ -256,7 +226,6 @@ export async function verifyOrCreateContact(
   const environment = resolveEnvironment(cfg.DYNAMICS_BASE_URL);
   const productGuid = getProductGuid(params.productIdSelfcare, environment);
 
-  // Step 1: Cerca per email + ente + prodotto
   if (params.institutionIdSelfcare) {
     const contact = await getContactByEmailAndInstitution(
       params.email,
@@ -268,7 +237,6 @@ export async function verifyOrCreateContact(
     }
   }
 
-  // Step 2: Fallback - cerca per email + productGUID
   if (productGuid) {
     const contact = await getContactByEmailAndProduct(
       params.email,
@@ -279,7 +247,6 @@ export async function verifyOrCreateContact(
     }
   }
 
-  // Step 3: Crea contatto se non trovato
   if (params.enableCreateContact) {
     if (!params.nome || !params.cognome) {
       return {

@@ -17,7 +17,7 @@ data "azuread_group" "keyvault_admin_group" {
 
 data "azurerm_private_dns_zone" "existing_storage_blob_dns_zone" {
   name                = "privatelink.blob.core.windows.net"
-  resource_group_name = module.azure_core_infra.network_resource_group_name 
+  resource_group_name = module.azure_core_infra.network_resource_group_name
 }
 data "azurerm_key_vault_secret" "apikey_endpoint_pf" {
   name         = "fa-pf-auth-apikey"
@@ -160,6 +160,16 @@ data "azurerm_key_vault_secret" "fe_smcr_storage_token" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+data "azurerm_key_vault_secret" "fe_smcr_api_slack_call_management_hook_test" {
+  name         = "fe-smcr-api-slack-call-management-hook-test"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_api_slack_call_management_hook_prod" {
+  name         = "fe-smcr-api-slack-call-management-hook-prod"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
 # -----------------------------------------------------------------------------
 # Function Onboarding
 # -----------------------------------------------------------------------------
@@ -255,5 +265,19 @@ data "azurerm_key_vault_secret" "askmebot_contract_apim_subscription_key" {
 
 data "azurerm_key_vault_secret" "askmebot_smtp_password" {
   name         = "fa-askmebot-smtp-password"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+# -----------------------------------------------------------------------------
+# Function CRM
+# -----------------------------------------------------------------------------
+
+data "azurerm_key_vault_secret" "dynamics_base_url" {
+  name         = "fa-crm-dynamics-base-url"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "dynamics_url_contacts" {
+  name         = "fa-crm-dynamics-url-contacts"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
