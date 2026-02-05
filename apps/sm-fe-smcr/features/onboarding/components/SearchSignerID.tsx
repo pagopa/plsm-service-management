@@ -25,7 +25,6 @@ export function SearchSignerID() {
     defaultValues: {
       fiscal_code: "",
     },
-    resolver: zodResolver(SignIDFormSchema),
   });
 
   const handleCopy = async () => {
@@ -46,14 +45,18 @@ export function SearchSignerID() {
         <form
           className="flex flex-col gap-6 w-full"
           action={async (formData) => {
-            try {
-              const result = await getFirmaConIoSignerID(formData);
-              setSignerID(result);
-              form.reset();
-            } catch (error) {
-              console.error("Error fetching Signer ID:", error);
-              toast.error("Errore nel recupero del Signer ID");
+            if (form.getValues("fiscal_code").length !== 16) {
+              toast.error("Il codice fiscale deve essere lungo 16 caratteri");
+              return;
             }
+            const result = await getFirmaConIoSignerID(formData);
+            if (result?.error) {
+              console.error(result?.error);
+              toast.error(result?.error);
+              return;
+            }
+            setSignerID(result.data);
+            form.reset();
           }}
         >
           <p className="font-semibold">Inserisci il codice fiscale</p>

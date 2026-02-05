@@ -46,9 +46,7 @@ export async function getFirmaConIoInstitution(
   return { data, error: null };
 }
 
-export async function getFirmaConIoSignerID(
-  formData: FormData,
-): Promise<string | null> {
+export async function getFirmaConIoSignerID(formData: FormData) {
   const fiscal_code = formData.get("fiscal_code") as string;
 
   const { data, error } = await betterFetch(
@@ -71,8 +69,8 @@ export async function getFirmaConIoSignerID(
 
   if (error || !data) {
     console.error(error);
-    throw new Error("Errore nel recupero del Signer ID");
+    return { error: error.statusText, data: null };
   }
 
-  return data.id;
+  return { error: null, data: data.id };
 }
