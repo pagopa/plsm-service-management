@@ -1,8 +1,27 @@
 "use server";
 
+import { format as formatDate } from "date-fns";
+import { it } from "date-fns/locale";
 import z from "zod";
 import { PRODUCT_MAP } from "../types/product";
 import logger from "@/lib/logger/logger.server";
+
+const formatItalianDateTime = (value: string) => {
+  const isoMatch =
+    /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/.exec(value);
+
+  if (isoMatch) {
+    const [, year, month, day, hours, minutes] = isoMatch;
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  }
+
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    return formatDate(parsed, "dd/MM/yyyy HH:mm", { locale: it });
+  }
+
+  return value;
+};
 
 const sendToSlackSchema = z.object({
   name: z.string(),
@@ -95,6 +114,7 @@ export async function sendToSlackAction(
 
   const membersArray = validation.data.members.split(",").map((m) => m.trim());
   const membersText = membersArray.map((m) => `• ${m}`).join("\n");
+  const dateTimeText = formatItalianDateTime(validation.data.date);
 
   const payload = {
     blocks: [
@@ -114,7 +134,7 @@ export async function sendToSlackAction(
           },
           {
             type: "mrkdwn",
-            text: `*Data e Ora 📅:*\n${validation.data.date}`,
+            text: `*Data e Ora 📅:*\n${dateTimeText}`,
           },
           {
             type: "mrkdwn",
@@ -184,8 +204,7 @@ export async function sendToSlackAction(
         },
         error: {
           name: "SlackWebhookError",
-          message:
-            typeof body === "string" ? body : JSON.stringify(body ?? {}),
+          message: typeof body === "string" ? body : JSON.stringify(body ?? {}),
         },
         info: {
           event: "call-management.send-to-slack.failed",
