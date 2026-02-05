@@ -8,14 +8,20 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { getFirmaConIoSignerID } from "@/lib/services/firma-con-io.service";
 import { SignIDFormSchema } from "@/lib/services/firma-con-io.schema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import z from "zod";
+import { getFirmaConIoSignerID } from "@/lib/services/firma-con-io.service";
 import { CheckIcon, ClipboardIcon, CornerDownLeft } from "lucide-react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import z from "zod";
+
+const errorMessages = {
+  401: "Credenziali non valide",
+  422: "Codice fiscale non valido",
+  403: "Indirizzo IP non autorizzato",
+  default: "Errore nel recupero del signer ID",
+};
 
 export function SearchSignerID() {
   const [signerID, setSignerID] = useState<string | null>(null);
@@ -52,7 +58,10 @@ export function SearchSignerID() {
             const result = await getFirmaConIoSignerID(formData);
             if (result?.error) {
               console.error(result?.error);
-              toast.error(result?.error);
+              toast.error(
+                errorMessages[result?.error as keyof typeof errorMessages] ||
+                  errorMessages.default,
+              );
               return;
             }
             setSignerID(result.data);

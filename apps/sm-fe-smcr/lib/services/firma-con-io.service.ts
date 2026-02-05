@@ -69,7 +69,7 @@ export async function getFirmaConIoSignerID(formData: FormData) {
 
   if (error || !data) {
     console.error(error);
-    return { error: error.statusText, data: null };
+    return { error: error.status, data: null };
   }
 
   return { error: null, data: data.id };
