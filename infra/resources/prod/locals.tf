@@ -160,6 +160,8 @@ locals {
 
   # FRONTEND FE-SMCR
   fe_smcr_app_settings = {
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value}"
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value}"
     FE_SMCR_USERS_API_KEY              = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY  = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value}"
     FE_SMCR_API_KEY_INSTITUTION        = "${data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value}"
@@ -201,6 +203,8 @@ locals {
   }
 
   fe_smcr_slot_app_settings = {
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value}"
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value}"
     FE_SMCR_USERS_API_KEY              = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY  = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value}"
     FE_SMCR_API_KEY_INSTITUTION        = "${data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value}"
@@ -245,12 +249,14 @@ locals {
     DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
     DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
     NODE_ENV              = "production"
+    WEBSITE_RUN_FROM_PACKAGE = 1
   }
 
   crm_func_slot_app_settings = {
     DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
     DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
     NODE_ENV              = "production"
+    WEBSITE_RUN_FROM_PACKAGE = 1
   }
 
 
