@@ -1,5 +1,6 @@
 import SearchFirmaConIo from "@/components/provisioning/search/search-firma-con-io";
 import { Card } from "@/components/ui/card";
+import { SearchSignerID } from "@/features/onboarding/components/SearchSignerID";
 
 export default async function Page() {
   return (
@@ -16,6 +17,9 @@ export default async function Page() {
           </div>
 
           <SearchFirmaConIo />
+        </Card>
+        <Card className="p-4">
+          <SearchSignerID />
         </Card>
       </div>
     </div>

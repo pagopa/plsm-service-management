@@ -1,10 +1,8 @@
 import { ErrorBase } from "@/components/error/error-overview";
 import Header from "@/components/provisioning/header";
 import { InstitutionInfoFirmaConIo } from "@/components/provisioning/institution/info-firma-con-io";
-import {
-  FirmaConIO,
-  getFirmaConIoInstitution,
-} from "@/lib/services/firma-con-io.service";
+import { FirmaConIO } from "@/lib/services/firma-con-io.schema";
+import { getFirmaConIoInstitution } from "@/lib/services/firma-con-io.service";
 
 export default async function Page({
   searchParams,
