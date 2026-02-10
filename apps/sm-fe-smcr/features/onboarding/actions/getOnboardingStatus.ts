@@ -9,7 +9,7 @@ import { StatusActionState } from "./actionsTypes";
 
 const GET_STATUS = process.env.GET_STATUS;
 const ONBOARDING_BASE_PATH = process.env.ONBOARDING_BASE_PATH;
-const API_KEY_PROD_GET_INSTITUTION = process.env.API_KEY_PROD_GET_INSTITUTION;
+const FE_SMCR_API_KEY_INSTITUTION = process.env.FE_SMCR_API_KEY_INSTITUTION;
 
 export async function onboardingStatus(
   state: StatusActionState,
@@ -68,7 +68,7 @@ export async function onboardingStatus(
         method: "GET",
         baseURL: ONBOARDING_BASE_PATH,
         headers: {
-          "Ocp-Apim-Subscription-Key": `${API_KEY_PROD_GET_INSTITUTION}`,
+          "Ocp-Apim-Subscription-Key": `${FE_SMCR_API_KEY_INSTITUTION}`,
         },
         output: getOnboardingStatusSchema,
       },
