@@ -2,11 +2,12 @@
 
 import { $fetch } from "@/lib/fetch";
 import { OutputOptionsStepFour } from "../components/StepFour";
-const UPLOAD = process.env.UPLOAD ?? "";
-const ONBOARDING_BASE_PATH = process.env.ONBOARDING_BASE_PATH;
-const ONBOARDING_BASE_PATH_UAT = process.env.ONBOARDING_BASE_PATH_UAT;
-const FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY =
-  process.env.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY;
+import {
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY,
+  ONBOARDING_BASE_PATH,
+  ONBOARDING_BASE_PATH_UAT,
+  UPLOAD,
+} from "./config/env";
 
 export async function uploadContract(state: any, formData: FormData) {
   const contract = formData.get("contract") as File;

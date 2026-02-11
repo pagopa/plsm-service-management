@@ -1,10 +1,7 @@
 "use server";
 
 import { $fetch } from "@/lib/fetch";
-
-const FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY =
-  process.env.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY;
-const UPLOAD = process.env.UPLOAD;
+import { FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY, UPLOAD } from "./config/env";
 
 export async function setDeleteStatus(state: any, formData: FormData) {
   const id = formData.get("id") as string;

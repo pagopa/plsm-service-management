@@ -6,10 +6,11 @@ import { StatusSchema, statusSchema } from "../types/getFormStatusSchema";
 import { getOnboardingStatusSchema } from "../types/getOnboardingStatusSchema";
 import { SubunitOption } from "../types/subunitOptionsType";
 import { StatusActionState } from "./actionsTypes";
-
-const GET_STATUS = process.env.GET_STATUS;
-const ONBOARDING_BASE_PATH = process.env.ONBOARDING_BASE_PATH;
-const FE_SMCR_API_KEY_INSTITUTION = process.env.FE_SMCR_API_KEY_INSTITUTION;
+import {
+  FE_SMCR_API_KEY_INSTITUTION,
+  GET_STATUS,
+  ONBOARDING_BASE_PATH,
+} from "./config/env";
 
 export async function onboardingStatus(
   state: StatusActionState,

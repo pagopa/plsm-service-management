@@ -5,16 +5,15 @@ import { getOnboardingStatusSchema } from "../types/getOnboardingStatusSchema";
 import { onboardingSchema } from "../types/onboardingSchema";
 import { productKeys, productsMap, OutputOption } from "../utils/constants";
 import { generatePayload } from "../utils/generatePayload";
-
-const FE_SMCR_API_KEY_INSTITUTION = process.env.FE_SMCR_API_KEY_INSTITUTION;
-const FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY =
-  process.env.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY;
-const FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT =
-  process.env.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT;
-const GET_STATUS = process.env.GET_STATUS;
-const UPLOAD = process.env.UPLOAD ?? "";
-const ONBOARDING_BASE_PATH = process.env.ONBOARDING_BASE_PATH;
-const ONBOARDING_BASE_PATH_UAT = process.env.ONBOARDING_BASE_PATH_UAT;
+import {
+  FE_SMCR_API_KEY_INSTITUTION,
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY,
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT,
+  GET_STATUS,
+  ONBOARDING_BASE_PATH,
+  ONBOARDING_BASE_PATH_UAT,
+  UPLOAD,
+} from "./config/env";
 
 export async function onSubmitFormData(state: any, formData: FormData) {
   const output = formData.get("output") as OutputOption;
