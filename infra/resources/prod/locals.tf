@@ -18,6 +18,9 @@ locals {
     Source         = "https://github.com/pagopa/plsm-service-management/tree/main"
   }
 
+  dns_default_ttl_sec       = 3600
+  enable_smcr_custom_domain = false
+
   common_app_settings = {
     DiagnosticServices_EXTENSION_VERSION            = "~3"
     InstrumentationEngine_EXTENSION_VERSION         = "disabled"
