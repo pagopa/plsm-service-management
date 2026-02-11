@@ -30,16 +30,20 @@ info:
 servers:
   - url: http://localhost:7071/api/v1
     description: Sviluppo locale
-  - url: https://sm-d-itn-pg-smcr-fn.azurewebsites.net/api/v1
+  - url: https://sm-d-itn-pg-<service>-fn.azurewebsites.net/api/v1
     description: Ambiente DEV
-  - url: https://sm-u-itn-pg-smcr-fn.azurewebsites.net/api/v1
+  - url: https://sm-u-itn-pg-<service>-fn.azurewebsites.net/api/v1
     description: Ambiente UAT
-  - url: https://sm-p-itn-pg-smcr-fn.azurewebsites.net/api/v1
+  - url: https://sm-p-itn-pg-<service>-fn.azurewebsites.net/api/v1
     description: Ambiente PROD
 
 tags:
   - name: Health
     description: Endpoint di monitoraggio
+  - name: Accounts
+    description: Gestione Enti (Account) CRM
+  - name: Contacts
+    description: Gestione Contatti CRM
   - name: Meetings
     description: Gestione appuntamenti CRM
 
@@ -81,6 +85,121 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PingErrorResponse"
+
+  /accounts:
+    get:
+      tags:
+        - Accounts
+      summary: Ottieni dati Ente
+      description: |
+        Recupera i dati di un Ente (Account) da Dynamics CRM.
+
+        È possibile cercare per:
+        - **selfcareId**: ID Selfcare dell'ente (consigliato)
+        - **name**: Nome dell'ente (fallback)
+      operationId: getAccount
+      parameters:
+        - name: selfcareId
+          in: query
+          description: ID Selfcare dell'ente
+          schema:
+            type: string
+            format: uuid
+            example: "fce7a03b-94fe-4fa6-8dc3-10c1b4f45a76"
+        - name: name
+          in: query
+          description: Nome dell'ente (fallback se selfcareId non specificato)
+          schema:
+            type: string
+            example: "Comune di Roma"
+      responses:
+        "200":
+          description: Ente trovato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAccountResponse"
+        "400":
+          description: Parametri mancanti o invalidi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Ente non trovato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Ambiguità - trovati più enti con gli stessi criteri
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Errore interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /contacts:
+    get:
+      tags:
+        - Contacts
+      summary: Ottieni contatti
+      description: |
+        Recupera i contatti da Dynamics CRM.
+
+        È possibile cercare per:
+        - **accountId**: GUID dell'account per ottenere tutti i contatti associati
+        - **contactId**: GUID del contatto per ottenere un singolo contatto
+
+        **Nota**: Specificare solo uno dei due parametri.
+      operationId: getContacts
+      parameters:
+        - name: accountId
+          in: query
+          description: GUID dell'account (ente) per ottenere tutti i suoi contatti
+          schema:
+            type: string
+            format: uuid
+            example: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        - name: contactId
+          in: query
+          description: GUID del contatto per ottenere un singolo contatto
+          schema:
+            type: string
+            format: uuid
+            example: "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
+      responses:
+        "200":
+          description: Contatti trovati
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/GetContactsListResponse"
+                  - $ref: "#/components/schemas/GetContactResponse"
+        "400":
+          description: Parametri mancanti o invalidi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Contatto non trovato (solo per contactId)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Errore interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /meetings:
     get:
@@ -356,6 +475,47 @@ components:
     # Response Schemas
     # ==========================================================================
 
+    GetAccountResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: "#/components/schemas/Account"
+        timestamp:
+          type: string
+          format: date-time
+
+    GetContactResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: "#/components/schemas/Contact"
+        timestamp:
+          type: string
+          format: date-time
+
+    GetContactsListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contact"
+        count:
+          type: integer
+          description: Numero di contatti trovati
+        timestamp:
+          type: string
+          format: date-time
+
     HealthResponse:
       type: object
       properties:
@@ -479,6 +639,85 @@ components:
         dryRun:
           type: boolean
           description: Indica se lo step è stato eseguito in dry-run
+
+    Account:
+      type: object
+      properties:
+        accountid:
+          type: string
+          format: uuid
+          description: GUID dell'account in Dynamics
+        name:
+          type: string
+          description: Nome dell'ente
+        pgp_identificativoselfcare:
+          type: string
+          format: uuid
+          description: ID Selfcare dell'ente
+        pgp_denominazioneselfcare:
+          type: string
+          description: Denominazione Selfcare
+        pgp_codicefiscaleselfcare:
+          type: string
+          description: Codice Fiscale dell'ente
+        emailaddress1:
+          type: string
+          format: email
+          description: Email principale
+        telephone1:
+          type: string
+          description: Telefono principale
+        address1_composite:
+          type: string
+          description: Indirizzo completo
+        statecode:
+          type: integer
+          description: Stato record (0=Attivo, 1=Inattivo)
+        statuscode:
+          type: integer
+          description: Stato dettagliato
+
+    Contact:
+      type: object
+      properties:
+        contactid:
+          type: string
+          format: uuid
+          description: GUID del contatto in Dynamics
+        fullname:
+          type: string
+          description: Nome completo
+        firstname:
+          type: string
+          description: Nome
+        lastname:
+          type: string
+          description: Cognome
+        emailaddress1:
+          type: string
+          format: email
+          description: Email principale
+        telephone1:
+          type: string
+          description: Telefono
+        pgp_identificativoselfcarecliente:
+          type: string
+          format: uuid
+          description: ID Selfcare del cliente associato
+        pgp_identificativoidpagopa:
+          type: string
+          description: Identificativo ID pagoPA
+        _pgp_prodottoid_value:
+          type: string
+          format: uuid
+          description: GUID del prodotto associato
+        _parentcustomerid_value:
+          type: string
+          format: uuid
+          description: GUID dell'account (ente) di appartenenza
+        pgp_tipologiareferente:
+          type: integer
+          description: ID tipologia referente
 
     Appointment:
       type: object

@@ -44,11 +44,11 @@ sm-crm-fn/
 
 ## URL Ambienti
 
-| Ambiente | URL                                    |
-| -------- | -------------------------------------- |
-| DEV      | `https://********.***.****.com` |
-| UAT      | `https://********.***.****.com` |
-| PROD     | `https://*********.****.****.com`     |
+| Ambiente | URL                               |
+| -------- | --------------------------------- |
+| DEV      | `https://********.***.****.com`   |
+| UAT      | `https://********.***.****.com`   |
+| PROD     | `https://*********.****.****.com` |
 
 ## Autenticazione
 
@@ -72,13 +72,21 @@ Per lo sviluppo locale, configurare le variabili in `local.settings.json`:
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "node",
-    "DYNAMICS_BASE_URL": "https://********.***.****.com",
+    "DYNAMICS_BASE_URL": "https://<your-org>.crm4.dynamics.com",
     "AZURE_TENANT_ID": "<tenant-id>",
     "AZURE_CLIENT_ID": "<client-id>",
     "NODE_ENV": "development"
   }
 }
 ```
+
+**⚠️ IMPORTANTE - Sicurezza:**
+
+- **NON committare mai `local.settings.json` con valori reali**
+- Usa `.env.example` come template per la configurazione
+- I GUID dei prodotti e team CRM sono configurati nel codice (`_shared/utils/mappings.ts`)
+- Per informazioni sugli ambienti, consulta la documentazione interna PagoPA
+- In produzione, configura tutte le variabili sensibili nelle **Application Settings** di Azure
 
 ## API Documentation
 
@@ -104,6 +112,117 @@ Verifica la connettività con Dynamics CRM.
 ```http
 GET /api/v1/dynamics/ping
 ```
+
+---
+
+### Ottieni Dati Ente (Account)
+
+Recupera i dati di un Ente da Dynamics CRM.
+
+**Per Selfcare ID (consigliato):**
+
+```http
+GET /api/v1/accounts?selfcareId=fce7a03b-94fe-4fa6-8dc3-10c1b4f45a76
+```
+
+**Per Nome (fallback):**
+
+```http
+GET /api/v1/accounts?name=Comune%20di%20Roma
+```
+
+**Risposta di successo (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "accountid": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "name": "Comune di Roma",
+    "pgp_identificativoselfcare": "fce7a03b-94fe-4fa6-8dc3-10c1b4f45a76",
+    "emailaddress1": "info@comune.roma.it",
+    "telephone1": "+39 06 67101",
+    "statecode": 0
+  },
+  "timestamp": "2025-02-11T10:30:00Z"
+}
+```
+
+**Possibili errori:**
+
+- `400` - Parametro mancante
+- `404` - Ente non trovato
+- `409` - Ambiguità (più enti trovati)
+- `500` - Errore interno
+
+---
+
+### Ottieni Contatti di un Ente
+
+Recupera tutti i contatti associati a un Ente.
+
+```http
+GET /api/v1/contacts?accountId=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+**Risposta di successo (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "contactid": "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy",
+      "fullname": "Mario Rossi",
+      "firstname": "Mario",
+      "lastname": "Rossi",
+      "emailaddress1": "mario.rossi@ente.it",
+      "telephone1": "+39 06 1234567",
+      "_parentcustomerid_value": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "pgp_tipologiareferente": 100000002
+    }
+  ],
+  "count": 1,
+  "timestamp": "2025-02-11T10:30:00Z"
+}
+```
+
+---
+
+### Ottieni Dati di un Contatto
+
+Recupera i dati di un singolo contatto.
+
+```http
+GET /api/v1/contacts?contactId=yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+```
+
+**Risposta di successo (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "contactid": "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy",
+    "fullname": "Mario Rossi",
+    "firstname": "Mario",
+    "lastname": "Rossi",
+    "emailaddress1": "mario.rossi@ente.it",
+    "telephone1": "+39 06 1234567",
+    "_parentcustomerid_value": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "pgp_tipologiareferente": 100000002
+  },
+  "timestamp": "2025-02-11T10:30:00Z"
+}
+```
+
+**Possibili errori:**
+
+- `400` - Parametro mancante o entrambi specificati
+- `404` - Contatto non trovato (solo per contactId)
+- `500` - Errore interno
+
+---
 
 ### Lista Appuntamenti
 
@@ -211,7 +330,7 @@ Content-Type: application/json
 | `prod-pagopa`         | pagoPA           | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` |
 | `prod-idpay`          | IDPAY            | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` |
 | `prod-idpay-merchant` | IDPAY Esercenti  | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` |
-| `prod-checkiban`      | CheckIBAN        | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx |
+| `prod-checkiban`      | CheckIBAN        | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx  |
 | `prod-interop`        | Interoperabilità | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` |
 | `prod-io-premium`     | IO Premium       | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` |
 | `prod-io-sign`        | Firma con IO     | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` |
@@ -286,6 +405,117 @@ In dry-run mode:
 - Le chiamate POST loggano il body e ritornano UUID generati
 - Nessuna modifica viene effettuata su Dynamics
 
+## Testing con Postman
+
+### Configurazione Postman
+
+1. **Importa OpenAPI spec**: Importa il file `openapi.yaml` in Postman per generare automaticamente tutte le richieste
+2. **Configura variabili d'ambiente**:
+
+```json
+{
+  "BASE_URL": "http://localhost:7071/api/v1",
+  "FUNCTION_KEY": "your-function-key-here"
+}
+```
+
+Per ambiente di produzione:
+
+```json
+{
+  "BASE_URL": "https://sm-p-itn-pg-smcr-fn.azurewebsites.net/api/v1",
+  "FUNCTION_KEY": "your-production-function-key"
+}
+```
+
+### Esempi di chiamate Postman
+
+#### 1. Ottieni Ente per Selfcare ID
+
+```
+GET {{BASE_URL}}/accounts?selfcareId=fce7a03b-94fe-4fa6-8dc3-10c1b4f45a76
+Headers:
+  x-functions-key: {{FUNCTION_KEY}}
+```
+
+#### 2. Ottieni Ente per Nome
+
+```
+GET {{BASE_URL}}/accounts?name=Comune di Roma
+Headers:
+  x-functions-key: {{FUNCTION_KEY}}
+```
+
+#### 3. Ottieni tutti i Contatti di un Ente
+
+```
+GET {{BASE_URL}}/contacts?accountId=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+Headers:
+  x-functions-key: {{FUNCTION_KEY}}
+```
+
+#### 4. Ottieni un Contatto specifico
+
+```
+GET {{BASE_URL}}/contacts?contactId=yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+Headers:
+  x-functions-key: {{FUNCTION_KEY}}
+```
+
+#### 5. Crea Appuntamento
+
+```
+POST {{BASE_URL}}/meetings
+Headers:
+  x-functions-key: {{FUNCTION_KEY}}
+  Content-Type: application/json
+
+Body:
+{
+  "institutionIdSelfcare": "fce7a03b-94fe-4fa6-8dc3-10c1b4f45a76",
+  "productIdSelfcare": "prod-pagopa",
+  "partecipanti": [
+    {
+      "email": "mario.rossi@ente.it",
+      "nome": "Mario",
+      "cognome": "Rossi",
+      "tipologiaReferente": "TECNICO"
+    }
+  ],
+  "subject": "Riunione di allineamento",
+  "scheduledstart": "2025-02-15T10:00:00Z",
+  "scheduledend": "2025-02-15T11:00:00Z",
+  "location": "Google Meet",
+  "description": "Discussione requisiti",
+  "dryRun": false
+}
+```
+
+### Workflow completo in Postman
+
+Per testare un flusso completo:
+
+1. **Verifica connettività**: `GET /dynamics/ping`
+2. **Cerca l'Ente**: `GET /accounts?selfcareId=...` - Salva l'`accountId` dalla risposta
+3. **Ottieni contatti dell'Ente**: `GET /contacts?accountId={accountId}`
+4. **Crea appuntamento**: `POST /meetings` con i dati dell'ente e contatti
+
+### Tips per Postman
+
+- Usa **variabili** per salvare `accountId` e `contactId` dalle risposte
+- Crea **test script** per estrarre automaticamente gli ID:
+
+```javascript
+// Estrai accountId dalla risposta
+if (pm.response.code === 200) {
+  const response = pm.response.json();
+  pm.environment.set("accountId", response.data.accountid);
+}
+```
+
+- Usa **Collection Runner** per eseguire test sequenziali
+- Configura **Pre-request Scripts** per generare timestamp dinamici
+
 ## Sviluppo
 
 ### Prerequisiti
@@ -307,7 +537,7 @@ yarn build
 func start
 ```
 
-Attenzione in locale dovresti avere una utenza abilitata al CRM altrimenti l'auth restituisce un bel *403*
+Attenzione in locale dovresti avere una utenza abilitata al CRM altrimenti l'auth restituisce un bel _403_
 
 ## Headers HTTP Richiesti
 
@@ -328,5 +558,5 @@ Tutte le chiamate a Dynamics utilizzano i seguenti headers (gestiti automaticame
 
 - [Dynamics 365 Web API](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview)
 - [Azure Managed Identity](https://eugenevanstaden.com/blog/d365-managed-identity/)
-- [Documentazione interna PagoPA - Interfaccia Appuntamenti SM v1](https://docs.google.com/document/d/1DCyWqbKl166xKQUvmtgpOx8NPJk_QGf3/edit#heading=h.k7snzpo6plas)
-- [Documentazione interna PagoPA - Integrazione]https://docs.google.com/document/d/1Ey3Voyj6Wi1Tl8t41QUuZMEkOgc7zK6EP7HFe7K9-sM/edit?tab=t.0)
+- Documentazione interna PagoPA - Interfaccia Appuntamenti SM v1 (link disponibile internamente)
+- Documentazione interna PagoPA - Integrazione (link disponibile internamente)

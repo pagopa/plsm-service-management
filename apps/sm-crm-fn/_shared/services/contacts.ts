@@ -76,6 +76,37 @@ export async function searchContactsByEmail(
   });
 }
 
+// -----------------------------------------------------------------------------
+// Cerca Contatti per Account ID (Ente)
+// -----------------------------------------------------------------------------
+
+/**
+ * Recupera tutti i contatti associati a un Ente (Account).
+ *
+ * @param accountId - GUID dell'account in Dynamics
+ * @returns Lista di contatti associati all'ente
+ */
+export async function getContactsByAccountId(
+  accountId: string,
+): Promise<DynamicsList<Contact>> {
+  const url = buildUrl({
+    endpoint: "/api/data/v9.2/contacts",
+    filter: `_parentcustomerid_value eq ${accountId}`,
+    select:
+      "contactid,fullname,emailaddress1,firstname,lastname,telephone1,pgp_identificativoselfcarecliente,_pgp_prodottoid_value,_parentcustomerid_value,pgp_tipologiareferente",
+  });
+
+  console.log(`[Contacts] Ricerca contatti per Account ID: ${accountId}`);
+
+  const result = await get<Contact>(url);
+
+  console.log(
+    `[Contacts] Trovati ${result.value?.length ?? 0} contatti per Account ID: ${accountId}`,
+  );
+
+  return result;
+}
+
 // =============================================================================
 // CONTACTS
 // =============================================================================

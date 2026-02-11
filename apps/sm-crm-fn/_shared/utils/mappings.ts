@@ -1,14 +1,32 @@
 // =============================================================================
 // CRM MAPPINGS - Mapping hardcoded per l'integrazione con Dynamics 365
 // =============================================================================
+//
+// ⚠️ ATTENZIONE - DATI SENSIBILI:
+// Questo file contiene GUID reali di prodotti e team CRM per tutti gli ambienti.
+//
+// SICUREZZA:
+// - NON esporre questi dati pubblicamente
+// - Considerare lo spostamento in Azure Key Vault per produzione
+// - I GUID sono specifici per ogni ambiente Dynamics (DEV/UAT/PROD)
+// - Accesso limitato solo a personale autorizzato
+//
+// =============================================================================
 
-import type { TipologiaReferente, ProductIdSelfcare, Environment } from "../types/dynamics";
+import type {
+  TipologiaReferente,
+  ProductIdSelfcare,
+  Environment,
+} from "../types/dynamics";
 
 // -----------------------------------------------------------------------------
 // Mapping Prodotti Selfcare → GUID CRM
 // -----------------------------------------------------------------------------
 
-export const PRODUCTS_MAP: Record<Environment, Record<ProductIdSelfcare, string>> = {
+export const PRODUCTS_MAP: Record<
+  Environment,
+  Record<ProductIdSelfcare, string>
+> = {
   DEV: {
     "prod-pn": "617cbe1b-bb58-f011-877b-000d3a662132",
     "prod-io": "26a975ef-a205-f011-bae4-000d3ab7023d",
@@ -90,11 +108,13 @@ export const BASE_URLS: Record<Environment, string> = {
 
 export function getProductGuid(
   productId: ProductIdSelfcare,
-  environment: Environment
+  environment: Environment,
 ): string | null {
   const guid = PRODUCTS_MAP[environment]?.[productId];
   if (!guid) {
-    console.warn(`Prodotto ${productId} non trovato per ambiente ${environment}`);
+    console.warn(
+      `Prodotto ${productId} non trovato per ambiente ${environment}`,
+    );
     return null;
   }
   return guid;

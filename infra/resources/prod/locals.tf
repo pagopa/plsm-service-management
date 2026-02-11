@@ -162,17 +162,17 @@ locals {
   fe_smcr_app_settings = {
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value}"
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value}"
-    FE_SMCR_USERS_API_KEY              = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
-    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY  = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value}"
-    FE_SMCR_API_KEY_INSTITUTION        = "${data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value}"
-    FE_SMCR_API_KEY_PROD_GET_USERS     = "${data.azurerm_key_vault_secret.fe_smcr_api_key_prod_get_users.value}"
-    FE_SMCR_API_KEY_SERVICES           = "${data.azurerm_key_vault_secret.fe_smcr_api_key_services.value}"
-    FE_SMCR_API_KEY_PNPG               = "${data.azurerm_key_vault_secret.fe_smcr_api_key_pnpg.value}"
-    FE_SMCR_API_KEY_FIRMA_CON_IO       = "${data.azurerm_key_vault_secret.fe_smcr_api_key_firma_con_io.value}"
-    FE_SMCR_SLACK_REPORT_HOOK          = "${data.azurerm_key_vault_secret.fe_smcr_slack_report_hook.value}"
-    FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook.value}"
-    WEBHOOK_MANUAL_STORAGE             = "${data.azurerm_key_vault_secret.fe_smcr_webhook_manual_storage.value}"
-    STORAGE_TOKEN                      = "${data.azurerm_key_vault_secret.fe_smcr_storage_token.value}"
+    FE_SMCR_USERS_API_KEY                       = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
+    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY           = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value}"
+    FE_SMCR_API_KEY_INSTITUTION                 = "${data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value}"
+    FE_SMCR_API_KEY_PROD_GET_USERS              = "${data.azurerm_key_vault_secret.fe_smcr_api_key_prod_get_users.value}"
+    FE_SMCR_API_KEY_SERVICES                    = "${data.azurerm_key_vault_secret.fe_smcr_api_key_services.value}"
+    FE_SMCR_API_KEY_PNPG                        = "${data.azurerm_key_vault_secret.fe_smcr_api_key_pnpg.value}"
+    FE_SMCR_API_KEY_FIRMA_CON_IO                = "${data.azurerm_key_vault_secret.fe_smcr_api_key_firma_con_io.value}"
+    FE_SMCR_SLACK_REPORT_HOOK                   = "${data.azurerm_key_vault_secret.fe_smcr_slack_report_hook.value}"
+    FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK          = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook.value}"
+    WEBHOOK_MANUAL_STORAGE                      = "${data.azurerm_key_vault_secret.fe_smcr_webhook_manual_storage.value}"
+    STORAGE_TOKEN                               = "${data.azurerm_key_vault_secret.fe_smcr_storage_token.value}"
 
     DB_HOST         = "${data.azurerm_key_vault_secret.db_host.value}"
     DB_USER         = "${data.azurerm_key_vault_secret.db_user.value}"
@@ -205,17 +205,17 @@ locals {
   fe_smcr_slot_app_settings = {
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value}"
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value}"
-    FE_SMCR_USERS_API_KEY              = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
-    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY  = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value}"
-    FE_SMCR_API_KEY_INSTITUTION        = "${data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value}"
-    FE_SMCR_API_KEY_PROD_GET_USERS     = "${data.azurerm_key_vault_secret.fe_smcr_api_key_prod_get_users.value}"
-    FE_SMCR_API_KEY_SERVICES           = "${data.azurerm_key_vault_secret.fe_smcr_api_key_services.value}"
-    FE_SMCR_API_KEY_PNPG               = "${data.azurerm_key_vault_secret.fe_smcr_api_key_pnpg.value}"
-    FE_SMCR_API_KEY_FIRMA_CON_IO       = "${data.azurerm_key_vault_secret.fe_smcr_api_key_firma_con_io.value}"
-    FE_SMCR_SLACK_REPORT_HOOK          = "${data.azurerm_key_vault_secret.fe_smcr_slack_report_hook.value}"
-    FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook.value}"
-    WEBHOOK_MANUAL_STORAGE             = "${data.azurerm_key_vault_secret.fe_smcr_webhook_manual_storage.value}"
-    STORAGE_TOKEN                      = "${data.azurerm_key_vault_secret.fe_smcr_storage_token.value}"
+    FE_SMCR_USERS_API_KEY                       = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
+    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY           = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value}"
+    FE_SMCR_API_KEY_INSTITUTION                 = "${data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value}"
+    FE_SMCR_API_KEY_PROD_GET_USERS              = "${data.azurerm_key_vault_secret.fe_smcr_api_key_prod_get_users.value}"
+    FE_SMCR_API_KEY_SERVICES                    = "${data.azurerm_key_vault_secret.fe_smcr_api_key_services.value}"
+    FE_SMCR_API_KEY_PNPG                        = "${data.azurerm_key_vault_secret.fe_smcr_api_key_pnpg.value}"
+    FE_SMCR_API_KEY_FIRMA_CON_IO                = "${data.azurerm_key_vault_secret.fe_smcr_api_key_firma_con_io.value}"
+    FE_SMCR_SLACK_REPORT_HOOK                   = "${data.azurerm_key_vault_secret.fe_smcr_slack_report_hook.value}"
+    FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK          = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook.value}"
+    WEBHOOK_MANUAL_STORAGE                      = "${data.azurerm_key_vault_secret.fe_smcr_webhook_manual_storage.value}"
+    STORAGE_TOKEN                               = "${data.azurerm_key_vault_secret.fe_smcr_storage_token.value}"
 
     DB_HOST         = "${data.azurerm_key_vault_secret.db_host.value}"
     DB_USER         = "${data.azurerm_key_vault_secret.db_user.value}"
@@ -244,20 +244,35 @@ locals {
     DB_SSL  = true
   }
 
-  # Function CRM (Dynamics)
-  crm_func_app_settings = {
-    DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
-    DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
-    NODE_ENV              = "production"
-    WEBSITE_RUN_FROM_PACKAGE = 1
-  }
+  # =============================================================================
+  # Function CRM (Dynamics) - YAML-BASED CONFIGURATION
+  # =============================================================================
+  # CRM Function configuration has been migrated to YAML-based approach.
+  # See: infra/resources/environments/prod.yaml
+  # Implementation: infra/resources/prod/locals_yaml.tf
+  #
+  # This is a POC to test YAML-based configuration management.
+  # If successful, other functions will be migrated to the same approach.
+  # =============================================================================
 
-  crm_func_slot_app_settings = {
-    DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
-    DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
-    NODE_ENV              = "production"
-    WEBSITE_RUN_FROM_PACKAGE = 1
-  }
+  # Reference YAML-based configuration from locals_yaml.tf
+  crm_func_app_settings      = local.yaml_crm_func_app_settings
+  crm_func_slot_app_settings = local.yaml_crm_func_slot_app_settings
+
+  # OLD HARDCODED CONFIGURATION (COMMENTED OUT FOR REFERENCE)
+  # crm_func_app_settings = {
+  #   DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
+  #   DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
+  #   NODE_ENV              = "production"
+  #   WEBSITE_RUN_FROM_PACKAGE = 1
+  # }
+  #
+  # crm_func_slot_app_settings = {
+  #   DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
+  #   DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
+  #   NODE_ENV              = "production"
+  #   WEBSITE_RUN_FROM_PACKAGE = 1
+  # }
 
 
 }
