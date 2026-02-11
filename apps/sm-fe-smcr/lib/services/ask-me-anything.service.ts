@@ -202,3 +202,28 @@ export async function updateAskMeAnythingMember(input: {
     return { data: null, error: { message: "database error" } };
   }
 }
+
+export async function deleteAskMeAnythingMember(input: {
+  id: number;
+}): Promise<
+  { data: { id: number }; error: null } | { data: null; error: MutationError }
+> {
+  try {
+    const deletedCount = await database
+      .from(tableName)
+      .where({ id: input.id })
+      .del();
+
+    if (!deletedCount) {
+      return {
+        data: null,
+        error: { message: "record not found" },
+      };
+    }
+
+    return { data: { id: input.id }, error: null };
+  } catch (error) {
+    console.error("deleteAskMeAnythingMember - database error", error);
+    return { data: null, error: { message: "database error" } };
+  }
+}
