@@ -2,6 +2,7 @@
 // HTTP CLIENT - Client HTTP per Dynamics 365 con supporto dry-run
 // =============================================================================
 
+import { randomUUID } from "node:crypto";
 import { getAccessToken, buildScope } from "./auth";
 import { getConfigOrThrow } from "../utils/config";
 import type { DynamicsList } from "../types/dynamics";
@@ -62,14 +63,14 @@ let dryRunContext: DryRunContext = { enabled: false };
 
 /**
  * Abilita la modalità dry-run per test senza modifiche a Dynamics.
- * 
+ *
  * In dry-run mode:
  * - GET: ritorna mock realistici (account, contact, appointment)
  * - POST: logga il body e ritorna UUID generati
  * - Nessuna chiamata HTTP viene effettuata
- * 
+ *
  * @param simulatedResponses - Map opzionale di risposte personalizzate per URL
- * 
+ *
  * @example
  * enableDryRun();
  * const result = await createMeetingOrchestrator({ ... });
@@ -102,11 +103,7 @@ export function isDryRunEnabled(): boolean {
 // -----------------------------------------------------------------------------
 
 function generateMockUuid(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  return randomUUID();
 }
 
 // -----------------------------------------------------------------------------
