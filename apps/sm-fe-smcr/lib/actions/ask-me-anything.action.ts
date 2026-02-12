@@ -2,6 +2,7 @@
 
 import {
   createAskMeAnythingMember,
+  deleteAskMeAnythingMember,
   updateAskMeAnythingMember,
 } from "@/lib/services/ask-me-anything.service";
 import { validateFormData } from "@/lib/utils";
@@ -23,6 +24,9 @@ const memberBaseSchema = z.object({
 
 const createAskMeAnythingMemberSchema = memberBaseSchema;
 const updateAskMeAnythingMemberSchema = memberBaseSchema.extend({
+  id: z.coerce.number().int(),
+});
+const deleteAskMeAnythingMemberSchema = z.object({
   id: z.coerce.number().int(),
 });
 
@@ -86,6 +90,36 @@ export async function updateAskMeAnythingMemberAction(
   const result = await updateAskMeAnythingMember(input);
   if (result.error) {
     console.error("updateAskMeAnythingMemberAction - error", result.error);
+    return {
+      data: input,
+      error: {
+        ...result.error.fields,
+        root: result.error.message ?? "Si è verificato un errore.",
+      },
+    };
+  }
+
+  revalidatePath("/dashboard/ask-me-anything");
+
+  return { data: input, error: null };
+}
+
+export async function deleteAskMeAnythingMemberAction(
+  _prevState: AskMeAnythingMemberFormState = initialActionState,
+  formData: FormData,
+): Promise<AskMeAnythingMemberFormState> {
+  const { input, errors } = validateFormData(
+    deleteAskMeAnythingMemberSchema,
+    formData,
+  );
+
+  if (errors) {
+    return { data: input, error: errors };
+  }
+
+  const result = await deleteAskMeAnythingMember(input);
+  if (result.error) {
+    console.error("deleteAskMeAnythingMemberAction - error", result.error);
     return {
       data: input,
       error: {

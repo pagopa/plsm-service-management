@@ -34,21 +34,23 @@ export function AskMeAnythingTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
   });
   const allColumns = table.getAllLeafColumns();
-  const selectColumnId = "select";
-  const hasSelectColumn = allColumns.some(
-    (column) => column.id === selectColumnId,
+  const fixedColumnWidths: Partial<Record<string, number>> = {
+    select: 48,
+    actions: 56,
+  };
+  const fixedWidthTotal = allColumns.reduce(
+    (total, column) => total + (fixedColumnWidths[column.id] ?? 0),
+    0,
   );
-  const selectColumnWidth = 48;
-  const nonSelectColumnCount =
-    allColumns.filter((column) => column.id !== selectColumnId).length || 1;
-  const columnWidth = hasSelectColumn
-    ? `calc((100% - ${selectColumnWidth}px) / ${nonSelectColumnCount})`
-    : `${100 / (allColumns.length || 1)}%`;
+  const flexibleColumnCount =
+    allColumns.filter((column) => fixedColumnWidths[column.id] === undefined)
+      .length || 1;
+  const columnWidth = `calc((100% - ${fixedWidthTotal}px) / ${flexibleColumnCount})`;
 
-  const getColumnWidth = (columnId: string) =>
-    hasSelectColumn && columnId === selectColumnId
-      ? `${selectColumnWidth}px`
-      : columnWidth;
+  const getColumnWidth = (columnId: string) => {
+    const fixedWidth = fixedColumnWidths[columnId];
+    return fixedWidth ? `${fixedWidth}px` : columnWidth;
+  };
 
   const handleRowClick =
     (row: Row<TData>) => (event: MouseEvent<HTMLTableRowElement>) => {
