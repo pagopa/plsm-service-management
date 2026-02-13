@@ -3,6 +3,7 @@
 import {
   createTeam,
   createTeamPermission,
+  removeTeam,
   removeTeamPermission,
   teamSchema,
 } from "@/lib/services/teams.service";
@@ -94,4 +95,59 @@ export async function updateTeamPermissionAction(
   revalidatePath("/dashboard/teams");
 
   return { data: { ...input, active: !input.active }, error: null };
+}
+
+const deleteTeamSchema = z.object({
+  teamId: z.coerce.number().int().positive(),
+});
+type DeleteTeamInput = z.infer<typeof deleteTeamSchema>;
+
+export type DeleteTeamFormState = {
+  data: Partial<DeleteTeamInput>;
+  error?: { root?: string } | null;
+};
+
+export async function deleteTeamAction(
+  prevState: DeleteTeamFormState,
+  formData: FormData,
+): Promise<DeleteTeamFormState> {
+  const { input, errors } = validateFormData(deleteTeamSchema, formData);
+  if (errors) {
+    return { data: input, error: errors };
+  }
+
+  const result = await removeTeam({ ...input });
+  if (result.error) {
+    if (result.error === "admin-team") {
+      return {
+        data: input,
+        error: {
+          root: "Non e possibile eliminare il team Admin.",
+        },
+      };
+    }
+
+    if (result.error === "team-not-found") {
+      return {
+        data: input,
+        error: {
+          root: "Team non trovato.",
+        },
+      };
+    }
+
+    console.error(result.error);
+
+    return {
+      data: input,
+      error: {
+        root: "Si e verificato un errore, riprova piu tardi.",
+      },
+    };
+  }
+
+  revalidatePath("/dashboard/teams");
+  revalidatePath("/dashboard/members");
+
+  return { data: input, error: null };
 }
