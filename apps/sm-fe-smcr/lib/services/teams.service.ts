@@ -95,6 +95,37 @@ export async function createTeam(input: {
   return { data: validation.data, error: null };
 }
 
+export async function removeTeam(input: { teamId: number }) {
+  try {
+    const result = await database.transaction(async (trx) => {
+      const team = await trx
+        .table("teams")
+        .select("id", "name")
+        .where({ id: input.teamId })
+        .first<{ id: number; name: string }>();
+
+      if (!team) {
+        return { error: "team-not-found" as const };
+      }
+
+      if (team.name === "Admin") {
+        return { error: "admin-team" as const };
+      }
+
+      await trx.table("team_permissions").where({ teamId: input.teamId }).del();
+      await trx.table("member_teams").where({ teamId: input.teamId }).del();
+      await trx.table("teams").where({ id: input.teamId }).del();
+
+      return { error: null };
+    });
+
+    return result;
+  } catch (error) {
+    console.error(error);
+    return { error };
+  }
+}
+
 export async function readPermissions() {
   const rawFeatures = await database.from("features").select("*");
   const features = z.array(featureSchema).safeParse(rawFeatures);

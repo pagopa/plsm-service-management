@@ -1,10 +1,19 @@
+"use client";
+
 import { CardRow } from "@/components/core/card-row";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -12,6 +21,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { deleteTeamAction } from "@/lib/actions/teams.action";
 import { TeamWithPermissions } from "@/lib/services/teams.service";
 import useTeamsStore from "@/lib/store/teams.store";
 import {
@@ -20,8 +30,12 @@ import {
   HashIcon,
   ImageIcon,
   Link2Icon,
+  Trash2Icon,
   TypeIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
 import Permission from "./permission";
 
 type Props = {
@@ -30,10 +44,42 @@ type Props = {
 };
 
 export function TeamSheet({ children, team }: Props) {
+  const router = useRouter();
   const features = useTeamsStore((state) => state.features);
+  const [open, setOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleteSubmitted, setIsDeleteSubmitted] = useState(false);
+  const [deleteState, deleteAction, isDeletePending] = useActionState(
+    deleteTeamAction,
+    {
+      data: {
+        teamId: team.id,
+      },
+      error: null,
+    },
+  );
+
+  useEffect(() => {
+    if (!isDeleteSubmitted) {
+      return;
+    }
+
+    if (deleteState.error) {
+      toast.error(
+        deleteState.error.root ||
+          "Si e verificato un errore, riprova piu tardi.",
+      );
+      return;
+    }
+
+    toast.success(`Il team ${team.name} e stato eliminato correttamente.`);
+    setIsDeleteDialogOpen(false);
+    setOpen(false);
+    router.refresh();
+  }, [deleteState, isDeleteSubmitted, router, team.name]);
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className="sm:max-w-xl">
         <SheetHeader>
@@ -109,12 +155,63 @@ export function TeamSheet({ children, team }: Props) {
         </div>
 
         <SheetFooter className="flex flex-row w-full items-center justify-end">
-          <SheetClose asChild>
-            <Button variant="outline">Annulla</Button>
-          </SheetClose>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => setIsDeleteDialogOpen(true)}
+          >
+            <Trash2Icon className="size-3.5" />
+            Elimina team
+          </Button>
 
           <Button type="submit">Salva</Button>
         </SheetFooter>
+
+        <AlertDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={(nextOpen) => {
+            if (isDeletePending) {
+              return;
+            }
+
+            setIsDeleteDialogOpen(nextOpen);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Elimina team</AlertDialogTitle>
+              <AlertDialogDescription>
+                Stai per eliminare definitivamente il team {team.name}. Questa
+                operazione non puo essere annullata.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isDeletePending}
+                >
+                  Annulla
+                </Button>
+              </AlertDialogCancel>
+
+              <form action={deleteAction}>
+                <input type="hidden" name="teamId" value={team.id} />
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  disabled={isDeletePending}
+                  onClick={() => setIsDeleteSubmitted(true)}
+                >
+                  {isDeletePending ? <Spinner className="size-3.5" /> : null}
+                  Elimina team
+                </Button>
+              </form>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SheetContent>
     </Sheet>
   );
