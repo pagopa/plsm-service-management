@@ -121,7 +121,7 @@ export default function SlackForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="date">Data</Label>
+        <Label htmlFor="date">Data e Ora</Label>
         <DatePicker
           name="date"
           defaultValue={
