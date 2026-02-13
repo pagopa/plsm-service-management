@@ -5,13 +5,15 @@ import { getOnboardingStatusSchema } from "../types/getOnboardingStatusSchema";
 import { onboardingSchema } from "../types/onboardingSchema";
 import { productKeys, productsMap, OutputOption } from "../utils/constants";
 import { generatePayload } from "../utils/generatePayload";
-
-const API_KEY_PROD_GET_INSTITUTION = process.env.API_KEY_PROD_GET_INSTITUTION;
-const API_KEY_PROD_GET_IPA = process.env.API_KEY_PROD_GET_IPA;
-const GET_STATUS = process.env.GET_STATUS;
-const UPLOAD = process.env.UPLOAD;
-const UPLOAD_UAT = process.env.UPLOAD_UAT;
-const ONBOARDING_BASE_PATH = process.env.ONBOARDING_BASE_PATH;
+import {
+  FE_SMCR_API_KEY_INSTITUTION,
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY,
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT,
+  GET_STATUS,
+  ONBOARDING_BASE_PATH,
+  ONBOARDING_BASE_PATH_UAT,
+  UPLOAD,
+} from "./config/env";
 
 export async function onSubmitFormData(state: any, formData: FormData) {
   const output = formData.get("output") as OutputOption;
@@ -45,14 +47,13 @@ export async function onSubmitFormData(state: any, formData: FormData) {
       };
     }
 
-    const endpoint = output === "prod" ? `${UPLOAD}` : `${UPLOAD_UAT}`;
-
-    const { data, error } = await $fetch(endpoint, {
+    const { data, error } = await $fetch(UPLOAD, {
       method: "POST",
-      baseURL: ONBOARDING_BASE_PATH,
+      baseURL:
+        output === "prod" ? ONBOARDING_BASE_PATH : ONBOARDING_BASE_PATH_UAT,
       headers: {
         "Content-Type": "application/json",
-        "Ocp-Apim-Subscription-Key": `${API_KEY_PROD_GET_IPA}`,
+        "Ocp-Apim-Subscription-Key": `${output === "prod" ? FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY : FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT}`,
       },
       body: JSON.stringify(generatePayload(dataFromUIParsed)),
     });
@@ -75,7 +76,7 @@ export async function onSubmitFormData(state: any, formData: FormData) {
           method: "GET",
           baseURL: ONBOARDING_BASE_PATH,
           headers: {
-            "Ocp-Apim-Subscription-Key": `${API_KEY_PROD_GET_INSTITUTION}`,
+            "Ocp-Apim-Subscription-Key": `${FE_SMCR_API_KEY_INSTITUTION}`,
           },
           output: getOnboardingStatusSchema,
         },
