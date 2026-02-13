@@ -1,0 +1,28 @@
+# =============================================================================
+# Common Configuration for All Environments
+# =============================================================================
+# This file contains configuration shared across all environments (prod, staging, uat, etc.)
+# Environment-specific values should be defined in their respective files (prod.yaml, uat.yaml, etc.)
+
+# Common Application Insights settings (used by all functions)
+app_insights:
+  diagnostic_services_extension_version: "~3"
+  instrumentation_engine_extension_version: "disabled"
+  snapshot_debugger_extension_version: "disabled"
+  xdt_microsoft_application_insights_base_extensions: "disabled"
+  xdt_microsoft_application_insights_mode: "recommended"
+  xdt_microsoft_application_insights_preempt_sdk: "disabled"
+
+# Common timeout settings
+common:
+  timeout_delay: 300
+  website_run_from_package: 1
+
+# Node.js runtime configuration
+runtime:
+  node_version: 22
+  node_env: "production"
+
+# Health check configuration
+health_check:
+  path: "/api/v1/health"
