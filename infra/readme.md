@@ -6,6 +6,7 @@ Questa cartella contiene la configurazione dell'infrastruttura per il progetto P
 
 - `repository/`: Contiene le configurazioni Terraform per la gestione delle impostazioni e delle policy dei repository GitHub utilizzati dal progetto.
 - `resources/`: Include i moduli Terraform per la creazione e gestione delle risorse cloud principali (es. storage, database, networking) necessarie al funzionamento del servizio.
+- `docs/`: Documentazione infrastrutturale (architetture, scelte, note operative).
 - `bootstrap/`: Fornisce script e configurazioni per l'inizializzazione dell'ambiente, come la creazione di utenti, ruoli, e la configurazione preliminare delle risorse cloud.
 
 ## Come usare
