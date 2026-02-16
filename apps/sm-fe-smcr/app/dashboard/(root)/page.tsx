@@ -3,7 +3,10 @@ export const dynamic = "force-dynamic";
 import dayjs from "dayjs";
 
 import TextAnalytics from "@/components/dashboard/text-analytics";
-import { getOnboardingByProduct } from "@/lib/services/product.service";
+import {
+  getOnboardingByProduct,
+  getOnboardingProducts,
+} from "@/lib/services/product.service";
 import { ChartPie } from "@/components/dashboard/chart";
 import { format } from "date-fns";
 
@@ -18,23 +21,15 @@ const PRODUCT_CARDS = [
 export default async function DashboardPage() {
   const dateRanges = buildDateRanges();
   const analytics = [];
+  const products = await getOnboardingProducts();
 
   for (const card of PRODUCT_CARDS) {
-    const current = await getOnboardingByProduct(
-      card.productId,
-      dateRanges.current.from,
-      dateRanges.current.to,
-    );
-    const previous = await getOnboardingByProduct(
-      card.productId,
-      dateRanges.previous.from,
-      dateRanges.previous.to,
-    );
-
+    const product = products.data?.find((p) => p.product === card.productId);
     analytics.push({
       ...card,
-      currentCount: extractCount(current),
-      previousCount: extractCount(previous),
+      currentCount: product?.count_current_month ?? 0,
+      previousCount: product?.count_previous_month ?? 0,
+      variationPercentage: product?.variazione_percentuale ?? 0,
     });
   }
 
@@ -49,6 +44,7 @@ export default async function DashboardPage() {
             currentCount={card.currentCount}
             previousCount={card.previousCount}
             bgColor={card.color}
+            variation={card.variationPercentage}
           />
         ))}
       </section>
