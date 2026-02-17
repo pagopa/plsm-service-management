@@ -3,6 +3,7 @@
 import {
   createTeam,
   createTeamPermission,
+  submitTeamAccessRequest,
   removeTeamPermission,
   teamSchema,
 } from "@/lib/services/teams.service";
@@ -94,4 +95,11 @@ export async function updateTeamPermissionAction(
   revalidatePath("/dashboard/teams");
 
   return { data: { ...input, active: !input.active }, error: null };
+}
+
+export async function submitTeamAccessRequestAction(input: {
+  team: string;
+  reason: string;
+}) {
+  return submitTeamAccessRequest(input);
 }

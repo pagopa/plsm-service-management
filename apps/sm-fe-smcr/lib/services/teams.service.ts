@@ -45,6 +45,78 @@ export type FeatureWithPermissions = Feature & {
   permissions: Array<Permission>;
 };
 
+const submitTeamAccessRequestSchema = z.object({
+  team: z
+    .string()
+    .min(1, "Seleziona un team")
+    .refine((value) => value === "other" || /^\d+$/.test(value), {
+      message: "Team non valido",
+    }),
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Inserisci almeno 3 caratteri")
+    .max(256, "Inserisci massimo 256 caratteri"),
+});
+
+type SubmitTeamAccessRequestInput = z.infer<
+  typeof submitTeamAccessRequestSchema
+>;
+
+type SubmitTeamAccessRequestError = {
+  team?: string;
+  reason?: string;
+};
+
+type SubmitTeamAccessRequestResponse =
+  | {
+      data: SubmitTeamAccessRequestInput;
+      error: null;
+      fields: null;
+    }
+  | {
+      data: null;
+      error: "validation error" | "internal error";
+      fields: SubmitTeamAccessRequestError | null;
+    };
+
+export async function submitTeamAccessRequest(
+  input: SubmitTeamAccessRequestInput,
+): Promise<SubmitTeamAccessRequestResponse> {
+  const validation = submitTeamAccessRequestSchema.safeParse(input);
+  if (!validation.success) {
+    const flatErrors = validation.error.flatten().fieldErrors;
+    const fields: SubmitTeamAccessRequestError = {};
+
+    if (flatErrors.team?.[0]) {
+      fields.team = flatErrors.team[0];
+    }
+
+    if (flatErrors.reason?.[0]) {
+      fields.reason = flatErrors.reason[0];
+    }
+
+    console.error(
+      "submitTeamAccessRequest - validation error",
+      validation.error,
+    );
+
+    return { data: null, error: "validation error", fields };
+  }
+
+  try {
+    console.info("submitTeamAccessRequest - payload", {
+      team: validation.data.team,
+      reason: validation.data.reason,
+    });
+
+    return { data: validation.data, error: null, fields: null };
+  } catch (error) {
+    console.error("submitTeamAccessRequest - internal error", error);
+    return { data: null, error: "internal error", fields: null };
+  }
+}
+
 export async function readTeams() {
   const rawTeams = await database.from("teams").select("*");
   const teams = z.array(teamSchema).safeParse(rawTeams);

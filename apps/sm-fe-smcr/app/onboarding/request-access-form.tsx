@@ -32,9 +32,10 @@ import {
   MailCheckIcon,
   ShieldCheckIcon,
 } from "lucide-react";
+import { submitTeamAccessRequestAction } from "@/lib/actions/teams.action";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import logoPagoPa from "public/logo_4.svg";
 import { z } from "zod";
@@ -88,6 +89,8 @@ export default function RequestAccessForm({
   teamOptions,
 }: RequestAccessFormProps) {
   const [ticketId, setTicketId] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm<RequestAccessFormValues>({
     resolver: zodResolver(requestAccessFormSchema),
@@ -109,13 +112,35 @@ export default function RequestAccessForm({
     return teamOptions.find((team) => team.value === selectedTeam)?.label ?? "";
   }, [selectedTeam, teamOptions]);
 
-  async function onSubmit() {
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    setTicketId(createTicketId());
+  function onSubmit(values: RequestAccessFormValues) {
+    setSubmitError(null);
+
+    startTransition(async () => {
+      const result = await submitTeamAccessRequestAction(values);
+
+      if (result.error || result.data === null) {
+        if (result.fields?.team) {
+          form.setError("team", { message: result.fields.team });
+        }
+
+        if (result.fields?.reason) {
+          form.setError("reason", { message: result.fields.reason });
+        }
+
+        if (!result.fields?.team && !result.fields?.reason) {
+          setSubmitError("Si è verificato un errore, riprova tra poco.");
+        }
+
+        return;
+      }
+
+      setTicketId(createTicketId());
+    });
   }
 
   function handleReset() {
     setTicketId(null);
+    setSubmitError(null);
     form.reset();
   }
 
@@ -241,6 +266,7 @@ export default function RequestAccessForm({
                           name={field.name}
                           value={field.value}
                           onValueChange={field.onChange}
+                          disabled={isPending}
                         >
                           <SelectTrigger
                             id="team-select"
@@ -284,6 +310,7 @@ export default function RequestAccessForm({
                           id="reason"
                           rows={4}
                           maxLength={256}
+                          disabled={isPending}
                           aria-invalid={fieldState.invalid}
                           placeholder="Descrivi brevemente perché ti serve l'accesso a questo team"
                         />
@@ -303,15 +330,17 @@ export default function RequestAccessForm({
                     giusto.
                   </div>
 
+                  {submitError ? (
+                    <p className="text-sm text-destructive">{submitError}</p>
+                  ) : null}
+
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Button
                       type="submit"
                       variant="pagopaprimary"
-                      disabled={
-                        !form.formState.isValid || form.formState.isSubmitting
-                      }
+                      disabled={!form.formState.isValid || isPending}
                     >
-                      {form.formState.isSubmitting ? (
+                      {isPending ? (
                         <>
                           <Spinner />
                           <span>Invio richiesta...</span>
