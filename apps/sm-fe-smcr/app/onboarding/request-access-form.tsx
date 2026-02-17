@@ -106,8 +106,8 @@ export default function RequestAccessForm({
       <div className="pointer-events-none absolute -top-32 left-0 h-72 w-72 rounded-full bg-[#00a1b0]/20 blur-3xl" />
       <div className="pointer-events-none absolute right-0 top-1/3 h-64 w-64 rounded-full bg-[#97d1d8]/35 blur-3xl" />
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center gap-6 px-4 py-10 md:px-8 md:py-14 lg:grid lg:grid-cols-[1.08fr_1fr] lg:items-start lg:gap-10">
-        <section className="h-fit rounded-2xl border border-white/60 bg-white/55 p-6 shadow-sm backdrop-blur md:p-8 lg:self-start">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center gap-6 px-4 py-10 md:px-8 md:py-14 lg:grid lg:grid-cols-[1.08fr_1fr] lg:content-center lg:items-stretch lg:gap-10">
+        <section className="rounded-2xl border border-white/60 bg-white/55 p-6 shadow-sm backdrop-blur md:p-8">
           <div className="mb-8 flex items-center gap-3">
             <Image
               src={logoPagoPa.src}
@@ -149,8 +149,8 @@ export default function RequestAccessForm({
           </div>
         </section>
 
-        <section>
-          <Card className="gap-0 border-[#cfe4e1] bg-white/95 py-0 shadow-xl shadow-[#0b6e7910]">
+        <section className="h-full">
+          <Card className="h-full gap-0 border-[#cfe4e1] bg-white/95 py-0 shadow-xl shadow-[#0b6e7910]">
             <CardHeader className="border-b border-[#e1efec] px-6 py-6">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <Badge
