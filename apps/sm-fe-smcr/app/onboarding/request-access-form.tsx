@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -28,8 +34,10 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import logoPagoPa from "public/logo_4.svg";
+import { z } from "zod";
 
 const OTHER_TEAM_VALUE = "other";
 
@@ -60,6 +68,17 @@ type RequestAccessFormProps = {
   teamOptions: TeamSelectOption[];
 };
 
+const requestAccessFormSchema = z.object({
+  team: z.string().min(1, "Seleziona un team"),
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Inserisci almeno 3 caratteri")
+    .max(256, "Inserisci massimo 256 caratteri"),
+});
+
+type RequestAccessFormValues = z.infer<typeof requestAccessFormSchema>;
+
 function createTicketId() {
   const timestamp = Date.now().toString().slice(-6);
   return `REQ-${new Date().getFullYear()}-${timestamp}`;
@@ -68,12 +87,19 @@ function createTicketId() {
 export default function RequestAccessForm({
   teamOptions,
 }: RequestAccessFormProps) {
-  const [selectedTeam, setSelectedTeam] = useState("");
-  const [reason, setReason] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [ticketId, setTicketId] = useState<string | null>(null);
 
-  const canSubmit = selectedTeam.length > 0 && reason.trim().length >= 20;
+  const form = useForm<RequestAccessFormValues>({
+    resolver: zodResolver(requestAccessFormSchema),
+    mode: "onChange",
+    defaultValues: {
+      team: "",
+      reason: "",
+    },
+  });
+
+  const selectedTeam = form.watch("team");
+  const reason = form.watch("reason");
 
   const selectedTeamLabel = useMemo(() => {
     if (selectedTeam === OTHER_TEAM_VALUE) {
@@ -83,22 +109,14 @@ export default function RequestAccessForm({
     return teamOptions.find((team) => team.value === selectedTeam)?.label ?? "";
   }, [selectedTeam, teamOptions]);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!canSubmit) {
-      return;
-    }
-
-    setIsSubmitting(true);
+  async function onSubmit() {
     await new Promise((resolve) => setTimeout(resolve, 900));
     setTicketId(createTicketId());
-    setIsSubmitting(false);
   }
 
   function handleReset() {
     setTicketId(null);
-    setSelectedTeam("");
-    setReason("");
+    form.reset();
   }
 
   return (
@@ -206,46 +224,78 @@ export default function RequestAccessForm({
                   </div>
                 </div>
               ) : (
-                <form className="space-y-5" onSubmit={handleSubmit}>
-                  <div className="space-y-2">
-                    <Label htmlFor="team-select">Team richiesto *</Label>
-                    <Select
-                      value={selectedTeam}
-                      onValueChange={setSelectedTeam}
-                    >
-                      <SelectTrigger id="team-select" className="w-full">
-                        <SelectValue placeholder="Seleziona team" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {teamOptions.map((team) => (
-                          <SelectItem key={team.value} value={team.value}>
-                            {team.label}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value={OTHER_TEAM_VALUE}>Altro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {selectedTeam === OTHER_TEAM_VALUE && (
-                      <p className="text-xs text-muted-foreground">
-                        Hai selezionato Altro: aggiungi i dettagli nella
-                        motivazione.
-                      </p>
+                <form
+                  className="space-y-5"
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  noValidate
+                >
+                  <Controller
+                    name="team"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="team-select">
+                          Team richiesto *
+                        </FieldLabel>
+                        <Select
+                          name={field.name}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger
+                            id="team-select"
+                            className="w-full"
+                            aria-invalid={fieldState.invalid}
+                          >
+                            <SelectValue placeholder="Seleziona team" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {teamOptions.map((team) => (
+                              <SelectItem key={team.value} value={team.value}>
+                                {team.label}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value={OTHER_TEAM_VALUE}>
+                              Altro
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {field.value === OTHER_TEAM_VALUE && (
+                          <FieldDescription>
+                            Hai selezionato Altro: aggiungi i dettagli nella
+                            motivazione.
+                          </FieldDescription>
+                        )}
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
                     )}
-                  </div>
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="reason">Motivazione *</Label>
-                    <Textarea
-                      id="reason"
-                      rows={4}
-                      placeholder="Descrivi brevemente perché ti serve l'accesso a questo team"
-                      value={reason}
-                      onChange={(event) => setReason(event.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Inserisci almeno 20 caratteri ({reason.trim().length}/20)
-                    </p>
-                  </div>
+                  <Controller
+                    name="reason"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="reason">Motivazione *</FieldLabel>
+                        <Textarea
+                          {...field}
+                          id="reason"
+                          rows={4}
+                          maxLength={256}
+                          aria-invalid={fieldState.invalid}
+                          placeholder="Descrivi brevemente perché ti serve l'accesso a questo team"
+                        />
+                        <FieldDescription>
+                          Inserisci da 3 a 256 caratteri ({reason.length}/256)
+                        </FieldDescription>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
 
                   <div className="rounded-lg border border-[#d7e9e6] bg-[#f4fbf9] px-4 py-3 text-sm text-[#32525a]">
                     Se non conosci il team corretto, indica il contesto nella
@@ -257,9 +307,11 @@ export default function RequestAccessForm({
                     <Button
                       type="submit"
                       variant="pagopaprimary"
-                      disabled={!canSubmit || isSubmitting}
+                      disabled={
+                        !form.formState.isValid || form.formState.isSubmitting
+                      }
                     >
-                      {isSubmitting ? (
+                      {form.formState.isSubmitting ? (
                         <>
                           <Spinner />
                           <span>Invio richiesta...</span>
