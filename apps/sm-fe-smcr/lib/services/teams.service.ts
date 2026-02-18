@@ -45,6 +45,11 @@ export type FeatureWithPermissions = Feature & {
   permissions: Array<Permission>;
 };
 
+type TeamDeleteError = {
+  code: "not_found" | "protected" | "validation_error" | "database_error";
+  message: string;
+};
+
 const teamMembersCountSchema = z.object({
   teamId: z.number().int().positive(),
   membersCount: z.coerce.number().int().nonnegative(),
@@ -112,6 +117,94 @@ export async function readTeamMemberCounts() {
   } catch (error) {
     console.error("readTeamMemberCounts - database error", error);
     return { data: null, error: "database error" };
+  }
+}
+
+export async function readTeamById(teamId: number) {
+  try {
+    const rawTeam = await database
+      .from("teams")
+      .select("*")
+      .where({ id: teamId })
+      .first();
+
+    if (!rawTeam) {
+      return { data: null, error: "not found" };
+    }
+
+    const team = teamSchema.safeParse(rawTeam);
+    if (!team.success) {
+      console.error("readTeamById - validation error", team.error);
+      return { data: null, error: "validation error" };
+    }
+
+    return { data: team.data, error: null };
+  } catch (error) {
+    console.error("readTeamById - database error", error);
+    return { data: null, error: "database error" };
+  }
+}
+
+export async function deleteTeamById(input: {
+  teamId: number;
+}): Promise<
+  { data: { id: number }; error: null } | { data: null; error: TeamDeleteError }
+> {
+  try {
+    const rawTeam = await database
+      .from("teams")
+      .select({ id: "id", slug: "slug" })
+      .where({ id: input.teamId })
+      .first();
+
+    if (!rawTeam) {
+      return {
+        data: null,
+        error: { code: "not_found", message: "Team non trovato." },
+      };
+    }
+
+    const parsedTeam = z
+      .object({ id: z.number().int().positive(), slug: z.string().nonempty() })
+      .safeParse(rawTeam);
+
+    if (!parsedTeam.success) {
+      console.error("deleteTeamById - validation error", parsedTeam.error);
+      return {
+        data: null,
+        error: { code: "validation_error", message: "validation error" },
+      };
+    }
+
+    if (parsedTeam.data.slug === "admin") {
+      return {
+        data: null,
+        error: {
+          code: "protected",
+          message: "Il team admin non può essere eliminato.",
+        },
+      };
+    }
+
+    const deletedCount = await database
+      .from("teams")
+      .where({ id: input.teamId })
+      .del();
+
+    if (!deletedCount) {
+      return {
+        data: null,
+        error: { code: "not_found", message: "Team non trovato." },
+      };
+    }
+
+    return { data: { id: input.teamId }, error: null };
+  } catch (error) {
+    console.error("deleteTeamById - database error", error);
+    return {
+      data: null,
+      error: { code: "database_error", message: "database error" },
+    };
   }
 }
 

@@ -39,7 +39,11 @@ export function TeamCard({ team, description = fallbackDescription }: Props) {
     <div className="w-full rounded-xl border border-neutral-100 bg-neutral-50 p-2">
       <div className="flex items-center justify-between rounded-xl p-1">
         <p className="text-xs text-neutral-500">{team.slug}</p>
-        <TeamCardActionsDropdown teamName={team.name} />
+        <TeamCardActionsDropdown
+          teamId={team.id}
+          teamName={team.name}
+          teamSlug={team.slug}
+        />
       </div>
 
       <div className="w-full rounded-xl border border-neutral-100 bg-white p-3">
