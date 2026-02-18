@@ -359,43 +359,6 @@ export async function readPermissions() {
   return { data: featuresWithPermissions, error: null };
 }
 
-export async function createTeamPermission(input: {
-  teamId: number;
-  permissionId: number;
-}) {
-  try {
-    await database
-      .table("team_permissions")
-      .insert({
-        teamId: input.teamId,
-        permissionId: input.permissionId,
-      })
-      .returning("*");
-
-    return { error: null };
-  } catch (error) {
-    console.error(error);
-    return { error };
-  }
-}
-
-export async function removeTeamPermission(input: {
-  teamId: number;
-  permissionId: number;
-}) {
-  try {
-    await database
-      .table("team_permissions")
-      .delete("*")
-      .where({ teamId: input.teamId, permissionId: input.permissionId });
-
-    return { error: null };
-  } catch (error) {
-    console.error(error);
-    return { error };
-  }
-}
-
 export async function syncTeamPermissions(input: {
   teamId: number;
   permissionIds: Array<number>;

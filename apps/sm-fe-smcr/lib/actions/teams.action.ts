@@ -2,10 +2,8 @@
 
 import {
   createTeam,
-  createTeamPermission,
   deleteTeamById,
   readTeamById,
-  removeTeamPermission,
   syncTeamPermissions,
   teamSchema,
   updateTeamById,
@@ -131,55 +129,6 @@ export async function updateTeamAction(
     },
     error: null,
   };
-}
-
-const updateTeamPermissionSchema = z.object({
-  teamId: z.coerce.number().int(),
-  permissionId: z.coerce.number().int(),
-  active: z.preprocess(
-    (v) => v === "on" || v === "true" || v === true,
-    z.boolean(),
-  ),
-});
-type UpdateTeamPermissionInput = z.infer<typeof updateTeamPermissionSchema>;
-
-export type UpdateTeamPermissionFormState = {
-  data: Partial<UpdateTeamPermissionInput>;
-  error?: { root?: string } | null;
-};
-
-export async function updateTeamPermissionAction(
-  prevState: UpdateTeamPermissionFormState,
-  formData: FormData,
-): Promise<UpdateTeamPermissionFormState> {
-  const { input, errors } = validateFormData(
-    updateTeamPermissionSchema,
-    formData,
-  );
-  if (errors) {
-    return { data: input, error: errors };
-  }
-
-  let result: { error: unknown };
-
-  if (input.active) {
-    // handle permission delete
-    result = await removeTeamPermission({ ...input });
-  } else {
-    // handle permission create
-    result = await createTeamPermission({ ...input });
-  }
-
-  if (result.error) {
-    return {
-      data: input,
-      error: { root: "Si è verificato un errore, riprova più tardi." },
-    };
-  }
-
-  revalidatePath("/dashboard/teams");
-
-  return { data: { ...input, active: !input.active }, error: null };
 }
 
 const syncTeamPermissionsSchema = z.object({
