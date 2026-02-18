@@ -45,6 +45,11 @@ export type FeatureWithPermissions = Feature & {
   permissions: Array<Permission>;
 };
 
+const teamMembersCountSchema = z.object({
+  teamId: z.number().int().positive(),
+  membersCount: z.coerce.number().int().nonnegative(),
+});
+
 export async function readTeams() {
   const rawTeams = await database.from("teams").select("*");
   const teams = z.array(teamSchema).safeParse(rawTeams);
@@ -77,6 +82,37 @@ export async function readTeams() {
   );
 
   return { data: teamsWithPermissions, error: null };
+}
+
+export async function readTeamMemberCounts() {
+  try {
+    const rawCounts = await database
+      .from("member_teams")
+      .select("teamId")
+      .count("id as membersCount")
+      .groupBy("teamId");
+
+    const parsedCounts = z.array(teamMembersCountSchema).safeParse(rawCounts);
+    if (!parsedCounts.success) {
+      console.error(
+        "readTeamMemberCounts - validation error",
+        parsedCounts.error,
+      );
+      return { data: null, error: "validation error" };
+    }
+
+    const memberCountsByTeamId = parsedCounts.data.reduce<
+      Record<number, number>
+    >((acc, row) => {
+      acc[row.teamId] = row.membersCount;
+      return acc;
+    }, {});
+
+    return { data: memberCountsByTeamId, error: null };
+  } catch (error) {
+    console.error("readTeamMemberCounts - database error", error);
+    return { data: null, error: "database error" };
+  }
 }
 
 export async function createTeam(input: {
