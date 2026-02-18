@@ -1,6 +1,3 @@
-"use client";
-
-import { TeamSheet } from "@/components/teams/sheet";
 import { TeamCard, TeamCardData } from "./team-card";
 
 type Props = {
@@ -25,15 +22,7 @@ export function TeamsGrid({
   return (
     <div className="grid grid-cols-1 gap-3 p-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {teams.map((team) => (
-        <TeamSheet key={team.id} team={team}>
-          <button
-            type="button"
-            className="w-full rounded-xl text-left outline-none transition-shadow hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={`Apri dettagli team ${team.name}`}
-          >
-            <TeamCard team={team} description={descriptionFallback} />
-          </button>
-        </TeamSheet>
+        <TeamCard key={team.id} team={team} description={descriptionFallback} />
       ))}
     </div>
   );
