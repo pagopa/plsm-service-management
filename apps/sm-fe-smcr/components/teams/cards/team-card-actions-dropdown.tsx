@@ -13,12 +13,14 @@ import { EllipsisVertical } from "lucide-react";
 import { useState } from "react";
 import { TeamDeleteDialog } from "./team-delete-dialog";
 import { TeamEditDialog } from "./team-edit-dialog";
+import { TeamPermissionsDialog } from "./team-permissions-dialog";
 
 type Props = {
   teamId: number;
   teamName: string;
   teamSlug: string;
   teamIcon: string | null;
+  teamPermissionIds: Array<number>;
 };
 
 export function TeamCardActionsDropdown({
@@ -26,8 +28,10 @@ export function TeamCardActionsDropdown({
   teamName,
   teamSlug,
   teamIcon,
+  teamPermissionIds,
 }: Props) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const isAdminTeam = teamSlug === "admin";
 
@@ -55,7 +59,14 @@ export function TeamCardActionsDropdown({
           >
             Modifica team
           </DropdownMenuItem>
-          <DropdownMenuItem>Gestisci permessi</DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              setIsPermissionsDialogOpen(true);
+            }}
+          >
+            Gestisci permessi
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
@@ -81,6 +92,16 @@ export function TeamCardActionsDropdown({
           teamIcon={teamIcon}
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
+        />
+      ) : null}
+
+      {isPermissionsDialogOpen ? (
+        <TeamPermissionsDialog
+          teamId={teamId}
+          teamName={teamName}
+          teamPermissionIds={teamPermissionIds}
+          open={isPermissionsDialogOpen}
+          onOpenChange={setIsPermissionsDialogOpen}
         />
       ) : null}
 

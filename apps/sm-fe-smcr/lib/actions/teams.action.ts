@@ -6,6 +6,7 @@ import {
   deleteTeamById,
   readTeamById,
   removeTeamPermission,
+  syncTeamPermissions,
   teamSchema,
   updateTeamById,
 } from "@/lib/services/teams.service";
@@ -159,7 +160,6 @@ export async function updateTeamPermissionAction(
     return { data: input, error: errors };
   }
 
-  console.log(input);
   let result: { error: unknown };
 
   if (input.active) {
@@ -180,6 +180,81 @@ export async function updateTeamPermissionAction(
   revalidatePath("/dashboard/teams");
 
   return { data: { ...input, active: !input.active }, error: null };
+}
+
+const syncTeamPermissionsSchema = z.object({
+  teamId: z.coerce.number().int().positive(),
+  permissionIds: z.string().transform((value, ctx) => {
+    try {
+      const parsed = JSON.parse(value);
+      const parsedPermissionIds = z
+        .array(z.coerce.number().int().positive())
+        .safeParse(parsed);
+
+      if (!parsedPermissionIds.success) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Formato permessi non valido.",
+        });
+        return [];
+      }
+
+      return Array.from(new Set(parsedPermissionIds.data));
+    } catch {
+      ctx.addIssue({
+        code: "custom",
+        message: "Formato permessi non valido.",
+      });
+      return [];
+    }
+  }),
+});
+
+type SyncTeamPermissionsInput = z.infer<typeof syncTeamPermissionsSchema>;
+
+export type SyncTeamPermissionsFormState = {
+  data: Partial<SyncTeamPermissionsInput>;
+  error: (Partial<SyncTeamPermissionsInput> & { root?: string }) | null;
+};
+
+export async function syncTeamPermissionsAction(
+  prevState: SyncTeamPermissionsFormState,
+  formData: FormData,
+): Promise<SyncTeamPermissionsFormState> {
+  const { input, errors } = validateFormData(
+    syncTeamPermissionsSchema,
+    formData,
+  );
+  if (errors) {
+    return { data: input, error: errors };
+  }
+
+  const syncResult = await syncTeamPermissions({
+    teamId: input.teamId,
+    permissionIds: input.permissionIds,
+  });
+
+  if (syncResult.error) {
+    return {
+      data: input,
+      error: {
+        root:
+          syncResult.error.message === "database error"
+            ? "Si è verificato un errore, riprova più tardi."
+            : syncResult.error.message,
+      },
+    };
+  }
+
+  revalidatePath("/dashboard/teams");
+
+  return {
+    data: {
+      teamId: syncResult.data.teamId,
+      permissionIds: syncResult.data.permissionIds,
+    },
+    error: null,
+  };
 }
 
 const deleteTeamSchema = z.object({

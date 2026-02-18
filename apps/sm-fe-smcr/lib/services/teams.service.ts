@@ -56,6 +56,11 @@ type TeamUpdateError = {
   field?: "name" | "slug" | "icon";
 };
 
+type TeamPermissionsSyncError = {
+  code: "not_found" | "validation_error" | "database_error";
+  message: string;
+};
+
 const teamMembersCountSchema = z.object({
   teamId: z.number().int().positive(),
   membersCount: z.coerce.number().int().nonnegative(),
@@ -388,6 +393,111 @@ export async function removeTeamPermission(input: {
   } catch (error) {
     console.error(error);
     return { error };
+  }
+}
+
+export async function syncTeamPermissions(input: {
+  teamId: number;
+  permissionIds: Array<number>;
+}): Promise<
+  | { data: { teamId: number; permissionIds: Array<number> }; error: null }
+  | { data: null; error: TeamPermissionsSyncError }
+> {
+  try {
+    const normalizedPermissionIds = Array.from(new Set(input.permissionIds));
+
+    const team = await database
+      .from("teams")
+      .select({ id: "id" })
+      .where({ id: input.teamId })
+      .first();
+
+    if (!team) {
+      return {
+        data: null,
+        error: {
+          code: "not_found",
+          message: "Team non trovato.",
+        },
+      };
+    }
+
+    if (normalizedPermissionIds.length > 0) {
+      const existingPermissions = await database
+        .from("permissions")
+        .select("id")
+        .whereIn("id", normalizedPermissionIds);
+
+      if (existingPermissions.length !== normalizedPermissionIds.length) {
+        return {
+          data: null,
+          error: {
+            code: "validation_error",
+            message: "Alcuni permessi selezionati non sono validi.",
+          },
+        };
+      }
+    }
+
+    await database.transaction(async (trx) => {
+      const rawCurrentPermissions = await trx
+        .from("team_permissions")
+        .select("permissionId")
+        .where({ teamId: input.teamId });
+
+      const currentPermissionIds = rawCurrentPermissions.map(
+        (permission) => permission.permissionId as number,
+      );
+
+      const currentPermissionSet = new Set(currentPermissionIds);
+      const targetPermissionSet = new Set(normalizedPermissionIds);
+
+      const permissionIdsToCreate = normalizedPermissionIds.filter(
+        (permissionId) => !currentPermissionSet.has(permissionId),
+      );
+
+      const permissionIdsToDelete = currentPermissionIds.filter(
+        (permissionId) => !targetPermissionSet.has(permissionId),
+      );
+
+      if (permissionIdsToDelete.length > 0) {
+        await trx
+          .from("team_permissions")
+          .where({ teamId: input.teamId })
+          .whereIn("permissionId", permissionIdsToDelete)
+          .del();
+      }
+
+      if (permissionIdsToCreate.length > 0) {
+        const rowsToCreate = permissionIdsToCreate.map((permissionId) => ({
+          teamId: input.teamId,
+          permissionId,
+        }));
+
+        await trx
+          .from("team_permissions")
+          .insert(rowsToCreate)
+          .onConflict(["teamId", "permissionId"])
+          .ignore();
+      }
+    });
+
+    return {
+      data: {
+        teamId: input.teamId,
+        permissionIds: normalizedPermissionIds,
+      },
+      error: null,
+    };
+  } catch (error) {
+    console.error("syncTeamPermissions - database error", error);
+    return {
+      data: null,
+      error: {
+        code: "database_error",
+        message: "database error",
+      },
+    };
   }
 }
 
