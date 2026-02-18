@@ -43,6 +43,7 @@ export function TeamCard({ team, description = fallbackDescription }: Props) {
           teamId={team.id}
           teamName={team.name}
           teamSlug={team.slug}
+          teamIcon={team.icon}
         />
       </div>
 

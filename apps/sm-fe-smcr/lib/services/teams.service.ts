@@ -50,6 +50,12 @@ type TeamDeleteError = {
   message: string;
 };
 
+type TeamUpdateError = {
+  code: "not_found" | "validation_error" | "database_error" | "conflict";
+  message: string;
+  field?: "name" | "slug" | "icon";
+};
+
 const teamMembersCountSchema = z.object({
   teamId: z.number().int().positive(),
   membersCount: z.coerce.number().int().nonnegative(),
@@ -201,6 +207,99 @@ export async function deleteTeamById(input: {
     return { data: { id: input.teamId }, error: null };
   } catch (error) {
     console.error("deleteTeamById - database error", error);
+    return {
+      data: null,
+      error: { code: "database_error", message: "database error" },
+    };
+  }
+}
+
+export async function updateTeamById(input: {
+  teamId: number;
+  name: string;
+  icon: string;
+}): Promise<
+  { data: Team; error: null } | { data: null; error: TeamUpdateError }
+> {
+  try {
+    const [rawTeam] = await database
+      .from("teams")
+      .update({
+        name: input.name,
+        icon: input.icon,
+        updatedAt: new Date(),
+      })
+      .where({ id: input.teamId })
+      .returning("*");
+
+    if (!rawTeam) {
+      return {
+        data: null,
+        error: {
+          code: "not_found",
+          message: "Team non trovato.",
+        },
+      };
+    }
+
+    const team = teamSchema.safeParse(rawTeam);
+    if (!team.success) {
+      console.error("updateTeamById - validation error", team.error);
+      return {
+        data: null,
+        error: {
+          code: "validation_error",
+          message: "validation error",
+        },
+      };
+    }
+
+    return { data: team.data, error: null };
+  } catch (error: unknown) {
+    console.error("updateTeamById - database error", error);
+
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "23505"
+    ) {
+      const constraint =
+        "constraint" in error && typeof error.constraint === "string"
+          ? error.constraint
+          : "";
+
+      if (constraint.toLowerCase().includes("name")) {
+        return {
+          data: null,
+          error: {
+            code: "conflict",
+            field: "name",
+            message: "Esiste già un team con questo nome.",
+          },
+        };
+      }
+
+      if (constraint.toLowerCase().includes("slug")) {
+        return {
+          data: null,
+          error: {
+            code: "conflict",
+            field: "slug",
+            message: "Esiste già un team con questo slug.",
+          },
+        };
+      }
+
+      return {
+        data: null,
+        error: {
+          code: "conflict",
+          message: "Esiste già un team con questi dati.",
+        },
+      };
+    }
+
     return {
       data: null,
       error: { code: "database_error", message: "database error" },
