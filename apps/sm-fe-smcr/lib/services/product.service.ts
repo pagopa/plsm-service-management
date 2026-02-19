@@ -101,15 +101,23 @@ function normalizeConnectionString(connectionString: string): string {
 }
 
 function getContainerName(containerEnv: string): string {
-  if (
-    containerEnv.startsWith("https://") &&
-    containerEnv.includes(".blob.core.windows.net/")
-  ) {
-    const path =
-      containerEnv.split(".blob.core.windows.net/")[1]?.split("?")[0] ?? "";
-    return path.replace(/\/$/, "").split("/")[0] ?? containerEnv;
+  if (!containerEnv.startsWith("https://") && !containerEnv.startsWith("http://")) {
+    return containerEnv;
   }
-  return containerEnv;
+  try {
+    const parsed = new URL(containerEnv);
+    const hostname = parsed.hostname.toLowerCase();
+    const allowedHost =
+      hostname === "blob.core.windows.net" ||
+      hostname.endsWith(".blob.core.windows.net");
+    if (!allowedHost) {
+      return containerEnv;
+    }
+    const pathname = parsed.pathname.replace(/^\/+|\/+$/g, "").split("/")[0];
+    return pathname || containerEnv;
+  } catch {
+    return containerEnv;
+  }
 }
 
 async function getLatestBlobNameByPrefix(
