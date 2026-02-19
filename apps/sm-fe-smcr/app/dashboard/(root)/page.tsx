@@ -23,6 +23,14 @@ export default async function DashboardPage() {
   const analytics = [];
   const products = await getOnboardingProducts();
 
+  if (products.error) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        Errore: {products.error}
+      </div>
+    );
+  }
+
   for (const card of PRODUCT_CARDS) {
     const product = products.data?.find((p) => p.product === card.productId);
     analytics.push({
