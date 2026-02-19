@@ -45,6 +45,27 @@ export type FeatureWithPermissions = Feature & {
   permissions: Array<Permission>;
 };
 
+type TeamDeleteError = {
+  code: "not_found" | "protected" | "validation_error" | "database_error";
+  message: string;
+};
+
+type TeamUpdateError = {
+  code: "not_found" | "validation_error" | "database_error" | "conflict";
+  message: string;
+  field?: "name" | "slug" | "icon";
+};
+
+type TeamPermissionsSyncError = {
+  code: "not_found" | "validation_error" | "database_error";
+  message: string;
+};
+
+const teamMembersCountSchema = z.object({
+  teamId: z.number().int().positive(),
+  membersCount: z.coerce.number().int().nonnegative(),
+});
+
 export async function readTeams() {
   const rawTeams = await database.from("teams").select("*");
   const teams = z.array(teamSchema).safeParse(rawTeams);
@@ -77,6 +98,218 @@ export async function readTeams() {
   );
 
   return { data: teamsWithPermissions, error: null };
+}
+
+export async function readTeamMemberCounts() {
+  try {
+    const rawCounts = await database
+      .from("member_teams")
+      .select("teamId")
+      .count("id as membersCount")
+      .groupBy("teamId");
+
+    const parsedCounts = z.array(teamMembersCountSchema).safeParse(rawCounts);
+    if (!parsedCounts.success) {
+      console.error(
+        "readTeamMemberCounts - validation error",
+        parsedCounts.error,
+      );
+      return { data: null, error: "validation error" };
+    }
+
+    const memberCountsByTeamId = parsedCounts.data.reduce<
+      Record<number, number>
+    >((acc, row) => {
+      acc[row.teamId] = row.membersCount;
+      return acc;
+    }, {});
+
+    return { data: memberCountsByTeamId, error: null };
+  } catch (error) {
+    console.error("readTeamMemberCounts - database error", error);
+    return { data: null, error: "database error" };
+  }
+}
+
+export async function readTeamById(teamId: number) {
+  try {
+    const rawTeam = await database
+      .from("teams")
+      .select("*")
+      .where({ id: teamId })
+      .first();
+
+    if (!rawTeam) {
+      return { data: null, error: "not found" };
+    }
+
+    const team = teamSchema.safeParse(rawTeam);
+    if (!team.success) {
+      console.error("readTeamById - validation error", team.error);
+      return { data: null, error: "validation error" };
+    }
+
+    return { data: team.data, error: null };
+  } catch (error) {
+    console.error("readTeamById - database error", error);
+    return { data: null, error: "database error" };
+  }
+}
+
+export async function deleteTeamById(input: {
+  teamId: number;
+}): Promise<
+  { data: { id: number }; error: null } | { data: null; error: TeamDeleteError }
+> {
+  try {
+    const rawTeam = await database
+      .from("teams")
+      .select({ id: "id", slug: "slug" })
+      .where({ id: input.teamId })
+      .first();
+
+    if (!rawTeam) {
+      return {
+        data: null,
+        error: { code: "not_found", message: "Team non trovato." },
+      };
+    }
+
+    const parsedTeam = z
+      .object({ id: z.number().int().positive(), slug: z.string().nonempty() })
+      .safeParse(rawTeam);
+
+    if (!parsedTeam.success) {
+      console.error("deleteTeamById - validation error", parsedTeam.error);
+      return {
+        data: null,
+        error: { code: "validation_error", message: "validation error" },
+      };
+    }
+
+    if (parsedTeam.data.slug === "admin") {
+      return {
+        data: null,
+        error: {
+          code: "protected",
+          message: "Il team admin non può essere eliminato.",
+        },
+      };
+    }
+
+    const deletedCount = await database
+      .from("teams")
+      .where({ id: input.teamId })
+      .del();
+
+    if (!deletedCount) {
+      return {
+        data: null,
+        error: { code: "not_found", message: "Team non trovato." },
+      };
+    }
+
+    return { data: { id: input.teamId }, error: null };
+  } catch (error) {
+    console.error("deleteTeamById - database error", error);
+    return {
+      data: null,
+      error: { code: "database_error", message: "database error" },
+    };
+  }
+}
+
+export async function updateTeamById(input: {
+  teamId: number;
+  name: string;
+  icon: string;
+}): Promise<
+  { data: Team; error: null } | { data: null; error: TeamUpdateError }
+> {
+  try {
+    const [rawTeam] = await database
+      .from("teams")
+      .update({
+        name: input.name,
+        icon: input.icon,
+        updatedAt: new Date(),
+      })
+      .where({ id: input.teamId })
+      .returning("*");
+
+    if (!rawTeam) {
+      return {
+        data: null,
+        error: {
+          code: "not_found",
+          message: "Team non trovato.",
+        },
+      };
+    }
+
+    const team = teamSchema.safeParse(rawTeam);
+    if (!team.success) {
+      console.error("updateTeamById - validation error", team.error);
+      return {
+        data: null,
+        error: {
+          code: "validation_error",
+          message: "validation error",
+        },
+      };
+    }
+
+    return { data: team.data, error: null };
+  } catch (error: unknown) {
+    console.error("updateTeamById - database error", error);
+
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "23505"
+    ) {
+      const constraint =
+        "constraint" in error && typeof error.constraint === "string"
+          ? error.constraint
+          : "";
+
+      if (constraint.toLowerCase().includes("name")) {
+        return {
+          data: null,
+          error: {
+            code: "conflict",
+            field: "name",
+            message: "Esiste già un team con questo nome.",
+          },
+        };
+      }
+
+      if (constraint.toLowerCase().includes("slug")) {
+        return {
+          data: null,
+          error: {
+            code: "conflict",
+            field: "slug",
+            message: "Esiste già un team con questo slug.",
+          },
+        };
+      }
+
+      return {
+        data: null,
+        error: {
+          code: "conflict",
+          message: "Esiste già un team con questi dati.",
+        },
+      };
+    }
+
+    return {
+      data: null,
+      error: { code: "database_error", message: "database error" },
+    };
+  }
 }
 
 export async function createTeam(input: {
@@ -126,40 +359,108 @@ export async function readPermissions() {
   return { data: featuresWithPermissions, error: null };
 }
 
-export async function createTeamPermission(input: {
+export async function syncTeamPermissions(input: {
   teamId: number;
-  permissionId: number;
-}) {
+  permissionIds: Array<number>;
+}): Promise<
+  | { data: { teamId: number; permissionIds: Array<number> }; error: null }
+  | { data: null; error: TeamPermissionsSyncError }
+> {
   try {
-    await database
-      .table("team_permissions")
-      .insert({
+    const normalizedPermissionIds = Array.from(new Set(input.permissionIds));
+
+    const team = await database
+      .from("teams")
+      .select({ id: "id" })
+      .where({ id: input.teamId })
+      .first();
+
+    if (!team) {
+      return {
+        data: null,
+        error: {
+          code: "not_found",
+          message: "Team non trovato.",
+        },
+      };
+    }
+
+    if (normalizedPermissionIds.length > 0) {
+      const existingPermissions = await database
+        .from("permissions")
+        .select("id")
+        .whereIn("id", normalizedPermissionIds);
+
+      if (existingPermissions.length !== normalizedPermissionIds.length) {
+        return {
+          data: null,
+          error: {
+            code: "validation_error",
+            message: "Alcuni permessi selezionati non sono validi.",
+          },
+        };
+      }
+    }
+
+    await database.transaction(async (trx) => {
+      const rawCurrentPermissions = await trx
+        .from("team_permissions")
+        .select("permissionId")
+        .where({ teamId: input.teamId });
+
+      const currentPermissionIds = rawCurrentPermissions.map(
+        (permission) => permission.permissionId as number,
+      );
+
+      const currentPermissionSet = new Set(currentPermissionIds);
+      const targetPermissionSet = new Set(normalizedPermissionIds);
+
+      const permissionIdsToCreate = normalizedPermissionIds.filter(
+        (permissionId) => !currentPermissionSet.has(permissionId),
+      );
+
+      const permissionIdsToDelete = currentPermissionIds.filter(
+        (permissionId) => !targetPermissionSet.has(permissionId),
+      );
+
+      if (permissionIdsToDelete.length > 0) {
+        await trx
+          .from("team_permissions")
+          .where({ teamId: input.teamId })
+          .whereIn("permissionId", permissionIdsToDelete)
+          .del();
+      }
+
+      if (permissionIdsToCreate.length > 0) {
+        const rowsToCreate = permissionIdsToCreate.map((permissionId) => ({
+          teamId: input.teamId,
+          permissionId,
+        }));
+
+        await trx
+          .from("team_permissions")
+          .insert(rowsToCreate)
+          .onConflict(["teamId", "permissionId"])
+          .ignore();
+      }
+    });
+
+    return {
+      data: {
         teamId: input.teamId,
-        permissionId: input.permissionId,
-      })
-      .returning("*");
-
-    return { error: null };
+        permissionIds: normalizedPermissionIds,
+      },
+      error: null,
+    };
   } catch (error) {
-    console.error(error);
-    return { error };
-  }
-}
-
-export async function removeTeamPermission(input: {
-  teamId: number;
-  permissionId: number;
-}) {
-  try {
-    await database
-      .table("team_permissions")
-      .delete("*")
-      .where({ teamId: input.teamId, permissionId: input.permissionId });
-
-    return { error: null };
-  } catch (error) {
-    console.error(error);
-    return { error };
+    console.error("syncTeamPermissions - database error", error);
+    return {
+      data: null,
+      error: {
+        code: "database_error",
+        message: "database error",
+      },
+    };
   }
 }
 
