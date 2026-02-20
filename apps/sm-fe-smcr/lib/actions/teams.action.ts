@@ -2,6 +2,7 @@
 
 import {
   createTeam,
+  submitTeamAccessRequest,
   deleteTeamById,
   readTeamById,
   syncTeamPermissions,
@@ -277,4 +278,11 @@ export async function deleteTeamAction(
     data: { teamId: input.teamId },
     error: null,
   };
+}
+
+export async function submitTeamAccessRequestAction(input: {
+  team: string;
+  reason: string;
+}) {
+  return submitTeamAccessRequest(input);
 }
