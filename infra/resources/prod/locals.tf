@@ -18,6 +18,9 @@ locals {
     Source         = "https://github.com/pagopa/plsm-service-management/tree/main"
   }
 
+  dns_default_ttl_sec       = 3600
+  enable_smcr_custom_domain = true
+
   common_app_settings = {
     DiagnosticServices_EXTENSION_VERSION            = "~3"
     InstrumentationEngine_EXTENSION_VERSION         = "disabled"
@@ -160,7 +163,7 @@ locals {
 
   # FRONTEND FE-SMCR
   fe_smcr_app_settings = {
-    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT="${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value}"
+    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT       = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value}"
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value}"
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value}"
     FE_SMCR_USERS_API_KEY              = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
@@ -196,7 +199,7 @@ locals {
     GET_IPA_AOO                     = "external/internal/v1/aoo/"
     GET_STATUS                      = "external/support/v1/onboarding/institutionOnboardings"
     ONBOARDING_BASE_PATH            = "https://api.selfcare.pagopa.it/"
-    ONBOARDING_BASE_PATH_UAT="${data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value}"
+    ONBOARDING_BASE_PATH_UAT        = "${data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value}"
     UPLOAD                          = "external/internal/v1/onboarding/"
     NEXT_PUBLIC_APP_URL             = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     NEXT_PUBLIC_MSAL_REDIRECT_URI   = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
@@ -209,7 +212,7 @@ locals {
   }
 
   fe_smcr_slot_app_settings = {
-    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT="${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value}"
+    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT       = "${data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value}"
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value}"
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD = "${data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value}"
     FE_SMCR_USERS_API_KEY              = "${data.azurerm_key_vault_secret.fe_smcr_users_api_key.value}"
@@ -243,7 +246,7 @@ locals {
     GET_IPA_AOO                     = "external/internal/v1/aoo/"
     GET_STATUS                      = "external/support/v1/onboarding/institutionOnboardings"
     ONBOARDING_BASE_PATH            = "https://api.selfcare.pagopa.it/"
-    ONBOARDING_BASE_PATH_UAT="${data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value}"
+    ONBOARDING_BASE_PATH_UAT        = "${data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value}"
     UPLOAD                          = "external/internal/v1/onboarding/"
     NEXT_PUBLIC_APP_URL             = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     NEXT_PUBLIC_MSAL_REDIRECT_URI   = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
@@ -257,16 +260,16 @@ locals {
 
   # Function CRM (Dynamics)
   crm_func_app_settings = {
-    DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
-    DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
-    NODE_ENV              = "production"
+    DYNAMICS_BASE_URL        = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
+    DYNAMICS_URL_CONTACTS    = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
+    NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = 1
   }
 
   crm_func_slot_app_settings = {
-    DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
-    DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
-    NODE_ENV              = "production"
+    DYNAMICS_BASE_URL        = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
+    DYNAMICS_URL_CONTACTS    = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
+    NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = 1
   }
 
