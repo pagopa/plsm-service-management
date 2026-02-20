@@ -3,11 +3,11 @@
 import { z } from "zod";
 import { $fetch } from "@/lib/fetch";
 import { TAXCODE_PRIVATE_LENGTH } from "../utils/constants";
-const GET_USERS_PATH = process.env.GET_USERS_PATH;
-
-const ONBOARDING_BASE_PATH = process.env.ONBOARDING_BASE_PATH;
-const FE_SMCR_API_KEY_PROD_GET_USERS =
-  process.env.FE_SMCR_API_KEY_PROD_GET_USERS;
+import {
+  FE_SMCR_API_KEY_PROD_GET_USERS,
+  GET_USERS_PATH,
+  ONBOARDING_BASE_PATH,
+} from "./config/env";
 
 export async function getUserTaxCode(state: any, formData: FormData) {
   const taxCodeFormData = formData.get("taxCode") as string;

@@ -1,9 +1,7 @@
 "use server";
 
 import { $fetch } from "@/lib/fetch";
-
-const API_KEY_PROD_GET_IPA = process.env.API_KEY_PROD_GET_IPA;
-const UPLOAD = process.env.UPLOAD;
+import { FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY, UPLOAD } from "./config/env";
 
 export async function setDeleteStatus(state: any, formData: FormData) {
   const id = formData.get("id") as string;
@@ -29,7 +27,7 @@ export async function setDeleteStatus(state: any, formData: FormData) {
     const { data, error } = await $fetch(`${UPLOAD}:${id}`, {
       method: "DELETE",
       headers: {
-        "Ocp-Apim-Subscription-Key": `${API_KEY_PROD_GET_IPA}`,
+        "Ocp-Apim-Subscription-Key": `${FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY}`,
       },
     });
     if (error) {
