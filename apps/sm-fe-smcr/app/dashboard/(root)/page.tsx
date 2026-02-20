@@ -2,13 +2,9 @@ export const dynamic = "force-dynamic";
 
 import dayjs from "dayjs";
 
-import TextAnalytics from "@/components/dashboard/text-analytics";
-import {
-  getOnboardingByProduct,
-  getOnboardingProducts,
-} from "@/lib/services/product.service";
 import { ChartPie } from "@/components/dashboard/chart";
-import { format } from "date-fns";
+import TextAnalytics from "@/components/dashboard/text-analytics";
+import { getOnboardingProducts } from "@/lib/services/product.service";
 
 const PRODUCT_CARDS = [
   { label: "IO", productId: "prod-io", color: "#3b82f6" },
@@ -52,14 +48,14 @@ export default async function DashboardPage() {
             currentCount={card.currentCount}
             previousCount={card.previousCount}
             bgColor={card.color}
-            variation={card.variationPercentage}
+            variationPercentage={card.variationPercentage}
           />
         ))}
       </section>
 
       <section className="w-full">
         <ChartPie
-          period={`${format(dateRanges.current.from, "MMMM")} - ${format(dateRanges.current.to, "MMMM")}`}
+          period={`${dayjs(dateRanges.current.from).format("MMMM")} - ${dayjs(dateRanges.current.to).format("MMMM")}`}
           chartData={(() => {
             const total =
               analytics.reduce(
@@ -102,10 +98,4 @@ function buildDateRanges() {
       to: now.subtract(30, "days").format("YYYY-MM-DD"),
     },
   };
-}
-
-function extractCount(
-  result: Awaited<ReturnType<typeof getOnboardingByProduct>>,
-) {
-  return result.data?.notificationCount ?? 0;
 }
