@@ -2,9 +2,7 @@
 
 import {
   createTeam,
-  createTeamPermission,
   submitTeamAccessRequest,
-  removeTeamPermission,
   deleteTeamById,
   readTeamById,
   syncTeamPermissions,

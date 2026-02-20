@@ -117,6 +117,27 @@ export async function submitTeamAccessRequest(
   }
 }
 
+type TeamDeleteError = {
+  code: "not_found" | "protected" | "validation_error" | "database_error";
+  message: string;
+};
+
+type TeamUpdateError = {
+  code: "not_found" | "validation_error" | "database_error" | "conflict";
+  message: string;
+  field?: "name" | "slug" | "icon";
+};
+
+type TeamPermissionsSyncError = {
+  code: "not_found" | "validation_error" | "database_error";
+  message: string;
+};
+
+const teamMembersCountSchema = z.object({
+  teamId: z.number().int().positive(),
+  membersCount: z.coerce.number().int().nonnegative(),
+});
+
 export async function readTeams() {
   const rawTeams = await database.from("teams").select("*");
   const teams = z.array(teamSchema).safeParse(rawTeams);
