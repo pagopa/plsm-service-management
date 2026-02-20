@@ -172,8 +172,12 @@ locals {
     FE_SMCR_API_KEY_FIRMA_CON_IO       = "${data.azurerm_key_vault_secret.fe_smcr_api_key_firma_con_io.value}"
     FE_SMCR_SLACK_REPORT_HOOK          = "${data.azurerm_key_vault_secret.fe_smcr_slack_report_hook.value}"
     FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook.value}"
+    FE_SMCR_AZURE_STORAGE_CONNECTION_STRING="${data.azurerm_key_vault_secret.fe_smcr_azure_storage_connection_string.value}"
+    FE_SMCR_AZURE_STORAGE_CONTAINER="selfcare"
+    FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX="Selfcare_onboarding_mensili_"
     WEBHOOK_MANUAL_STORAGE             = "${data.azurerm_key_vault_secret.fe_smcr_webhook_manual_storage.value}"
     STORAGE_TOKEN                      = "${data.azurerm_key_vault_secret.fe_smcr_storage_token.value}"
+    
 
     DB_HOST         = "${data.azurerm_key_vault_secret.db_host.value}"
     DB_USER         = "${data.azurerm_key_vault_secret.db_user.value}"
@@ -217,6 +221,9 @@ locals {
     FE_SMCR_API_KEY_FIRMA_CON_IO       = "${data.azurerm_key_vault_secret.fe_smcr_api_key_firma_con_io.value}"
     FE_SMCR_SLACK_REPORT_HOOK          = "${data.azurerm_key_vault_secret.fe_smcr_slack_report_hook.value}"
     FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK = "${data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook.value}"
+    FE_SMCR_AZURE_STORAGE_CONNECTION_STRING="${data.azurerm_key_vault_secret.fe_smcr_azure_storage_connection_string.value}"
+    FE_SMCR_AZURE_STORAGE_CONTAINER="selfcare"
+    FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX="Selfcare_onboarding_mensili_"
     WEBHOOK_MANUAL_STORAGE             = "${data.azurerm_key_vault_secret.fe_smcr_webhook_manual_storage.value}"
     STORAGE_TOKEN                      = "${data.azurerm_key_vault_secret.fe_smcr_storage_token.value}"
 
