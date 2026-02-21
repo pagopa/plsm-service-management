@@ -44,6 +44,7 @@ locals {
     DYNAMICS_URL_CONTACTS    = data.azurerm_key_vault_secret.dynamics_url_contacts.value
     NODE_ENV                 = local.env_config.crm_function.production.node_env
     WEBSITE_RUN_FROM_PACKAGE = local.env_config.crm_function.production.website_run_from_package
+    DEBUG                    = local.env_config.crm_function.production.debug
   }
 
   # Build CRM Function staging slot app settings from YAML
@@ -52,6 +53,7 @@ locals {
     DYNAMICS_URL_CONTACTS    = data.azurerm_key_vault_secret.dynamics_url_contacts.value
     NODE_ENV                 = local.env_config.crm_function.staging.node_env
     WEBSITE_RUN_FROM_PACKAGE = local.env_config.crm_function.staging.website_run_from_package
+    DEBUG                    = local.env_config.crm_function.staging.debug
   }
 
   # Extract environment metadata from YAML

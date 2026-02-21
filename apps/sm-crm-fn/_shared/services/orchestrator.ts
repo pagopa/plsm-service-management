@@ -15,6 +15,7 @@ import { verifyOrCreateContact } from "./contacts";
 import { createAppointment } from "./appointments";
 import { grantAccessToAppointment } from "./grantAccess";
 import { enableDryRun, disableDryRun, isDryRunEnabled } from "./httpClient";
+import { createLogger, Timer } from "../utils/logger";
 
 // =============================================================================
 // ORCHESTRATOR
@@ -50,33 +51,60 @@ export async function createMeetingOrchestrator(
   const warnings: string[] = [];
   const dryRun = request.dryRun ?? false;
 
+  // Crea logger con metadata del meeting
+  const logger = createLogger(undefined, {
+    institutionId: request.institutionIdSelfcare,
+    productId: request.productIdSelfcare,
+    dryRun,
+    subject: request.subject,
+  });
+
+  const overallTimer = new Timer();
+
+  logger.info("🚀 Starting meeting orchestrator", {
+    institutionId: request.institutionIdSelfcare,
+    productId: request.productIdSelfcare,
+    partecipantiCount: request.partecipanti.length,
+    enableCreateContact: request.enableCreateContact,
+    enableFallback: request.enableFallback,
+    dryRun,
+  });
+
   // Abilita dry-run se richiesto
   if (dryRun) {
     enableDryRun();
-    console.log("\n" + "=".repeat(60));
-    console.log("🧪 ESECUZIONE IN MODALITÀ DRY-RUN");
-    console.log(
-      `Enable Create Contact:${request.enableCreateContact} - Enable Fallback Ente:${request.enableFallback}`,
+    logger.info(
+      "🧪 DRY-RUN MODE ENABLED - No changes will be made to Dynamics",
+      {
+        enableCreateContact: request.enableCreateContact,
+        enableFallback: request.enableFallback,
+      },
     );
-
-    console.log("   Nessuna modifica verrà effettuata su Dynamics CRM");
-    console.log("=".repeat(60) + "\n");
   }
 
   try {
     // =========================================================================
     // STEP 1: Verifica Ente
     // =========================================================================
-    console.log("\n📋 STEP 1: Verifica Ente");
-    console.log("-".repeat(40));
+    logger.info("📋 STEP 1/4: Account verification", {
+      institutionId: request.institutionIdSelfcare,
+      nomeEnte: request.nomeEnte,
+    });
+
+    const stepTimer = new Timer();
 
     const accountResult = await verifyAccount({
       institutionIdSelfcare: request.institutionIdSelfcare,
       nomeEnte: request.nomeEnte,
-      enableFallback: (request.enableFallback = false),
+      enableFallback: request.enableFallback ?? false,
     });
 
     if (!accountResult.found || !accountResult.account) {
+      logger.error("❌ STEP 1 FAILED: Account not found", undefined, {
+        duration: stepTimer.elapsed(),
+        error: accountResult.error,
+      });
+
       steps.push({
         step: "verifyAccount",
         success: false,
@@ -84,7 +112,6 @@ export async function createMeetingOrchestrator(
         dryRun,
       });
 
-      // L'ente non è stato trovato
       return buildErrorResponse(
         steps,
         warnings,
@@ -96,7 +123,6 @@ export async function createMeetingOrchestrator(
     const accountId = accountResult.account.accountid;
     const accountName = accountResult.account.name ?? "N/A";
 
-    // L'ente è stato trovato
     steps.push({
       step: "verifyAccount",
       success: true,
@@ -108,14 +134,22 @@ export async function createMeetingOrchestrator(
       dryRun,
     });
 
-    console.log(`✅ Ente trovato: ${accountName} (${accountId})`);
+    logger.info("✅ STEP 1 COMPLETED: Account found", {
+      accountId,
+      accountName,
+      method: accountResult.method,
+      duration: stepTimer.elapsed(),
+    });
 
     // =========================================================================
     // STEP 2: Verifica/Crea Contatti
     // =========================================================================
-    console.log("\n📋 STEP 2: Verifica/Crea Contatti");
-    console.log("-".repeat(40));
+    logger.info("📋 STEP 2/4: Contact verification/creation", {
+      partecipantiCount: request.partecipanti.length,
+      enableCreateContact: request.enableCreateContact ?? false,
+    });
 
+    const contactStepTimer = new Timer();
     const contactIds: string[] = [];
     const contactResults: Array<{
       email: string;
@@ -124,8 +158,15 @@ export async function createMeetingOrchestrator(
       error?: string;
     }> = [];
 
-    for (const partecipante of request.partecipanti) {
-      console.log(`\n  → Elaborazione: ${partecipante.email}`);
+    for (const [index, partecipante] of request.partecipanti.entries()) {
+      logger.info(
+        `Processing contact ${index + 1}/${request.partecipanti.length}`,
+        {
+          email: partecipante.email,
+          hasNome: !!partecipante.nome,
+          hasCognome: !!partecipante.cognome,
+        },
+      );
 
       const contactResult = await verifyOrCreateContact({
         email: partecipante.email,
@@ -136,7 +177,7 @@ export async function createMeetingOrchestrator(
         tipologiaReferente: (partecipante.tipologiaReferente ??
           "TECNICO") as TipologiaReferente,
         accountId,
-        enableCreateContact: (request.enableCreateContact = false),
+        enableCreateContact: request.enableCreateContact ?? false,
       });
 
       if (contactResult.contact) {
@@ -146,8 +187,13 @@ export async function createMeetingOrchestrator(
           contactId: contactResult.contact.contactid,
           created: contactResult.created,
         });
-        console.log(
-          `    ✅ ${contactResult.created ? "Creato" : "Trovato"}: ${contactResult.contact.contactid}`,
+        logger.info(
+          `✅ Contact ${contactResult.created ? "created" : "found"}`,
+          {
+            email: partecipante.email,
+            contactId: contactResult.contact.contactid,
+            created: contactResult.created,
+          },
         );
       } else {
         contactResults.push({
@@ -156,7 +202,10 @@ export async function createMeetingOrchestrator(
           error: contactResult.error,
         });
         warnings.push(`Contatto ${partecipante.email}: ${contactResult.error}`);
-        console.log(`    ⚠️ ${contactResult.error}`);
+        logger.warn(`⚠️ Contact processing failed`, {
+          email: partecipante.email,
+          error: contactResult.error,
+        });
       }
     }
 
@@ -172,6 +221,15 @@ export async function createMeetingOrchestrator(
     });
 
     if (contactIds.length === 0) {
+      logger.error(
+        "❌ STEP 2 FAILED: No valid contacts found or created",
+        undefined,
+        {
+          duration: contactStepTimer.elapsed(),
+          partecipantiCount: request.partecipanti.length,
+        },
+      );
+
       return buildErrorResponse(
         steps,
         warnings,
@@ -180,13 +238,25 @@ export async function createMeetingOrchestrator(
       );
     }
 
+    logger.info("✅ STEP 2 COMPLETED: Contacts processed", {
+      contactsProcessed: contactIds.length,
+      totalPartecipanti: request.partecipanti.length,
+      duration: contactStepTimer.elapsed(),
+    });
+
     // =========================================================================
     // STEP 3: Crea Appuntamento
     // =========================================================================
-    console.log("\n📋 STEP 3: Crea Appuntamento");
-    console.log("-".repeat(40));
+    logger.info("📋 STEP 3/4: Appointment creation", {
+      subject: request.subject,
+      scheduledstart: request.scheduledstart,
+      scheduledend: request.scheduledend,
+      contactsCount: contactIds.length,
+    });
 
+    const appointmentTimer = new Timer();
     let appointment;
+
     try {
       appointment = await createAppointment({
         subject: request.subject,
@@ -213,9 +283,16 @@ export async function createMeetingOrchestrator(
         dryRun,
       });
 
-      console.log(`✅ Appuntamento creato: ${appointment.activityid}`);
+      logger.info("✅ STEP 3 COMPLETED: Appointment created", {
+        activityId: appointment.activityid,
+        duration: appointmentTimer.elapsed(),
+      });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
+      logger.error("❌ STEP 3 FAILED: Appointment creation failed", error, {
+        duration: appointmentTimer.elapsed(),
+      });
+
       steps.push({
         step: "createAppointment",
         success: false,
@@ -234,9 +311,11 @@ export async function createMeetingOrchestrator(
     // =========================================================================
     // STEP 4: GrantAccess
     // =========================================================================
-    console.log("\n📋 STEP 4: GrantAccess (visibilità team Sales)");
-    console.log("-".repeat(40));
+    logger.info("📋 STEP 4/4: Grant access to Sales team", {
+      activityId: appointment.activityid,
+    });
 
+    const grantTimer = new Timer();
     const grantResult = await grantAccessToAppointment({
       activityId: appointment.activityid,
     });
@@ -256,19 +335,33 @@ export async function createMeetingOrchestrator(
       warnings.push(
         `GrantAccess fallito: ${grantResult.error}. L'appuntamento è stato creato ma potrebbe non essere visibile al team Sales.`,
       );
-      console.log(`⚠️ GrantAccess fallito: ${grantResult.error}`);
+      logger.warn(`⚠️ STEP 4 WARNING: GrantAccess failed`, {
+        error: grantResult.error,
+        duration: grantTimer.elapsed(),
+      });
     } else {
-      console.log(`✅ GrantAccess completato: team ${grantResult.teamId}`);
+      logger.info("✅ STEP 4 COMPLETED: Access granted to Sales team", {
+        teamId: grantResult.teamId,
+        duration: grantTimer.elapsed(),
+      });
     }
 
     // =========================================================================
     // COMPLETATO
     // =========================================================================
-    console.log("\n" + "=".repeat(60));
-    console.log(
-      dryRun ? "🧪 DRY-RUN COMPLETATO" : "✅ FLUSSO COMPLETATO CON SUCCESSO",
+    const totalDuration = overallTimer.elapsed();
+    logger.info(
+      dryRun
+        ? "🧪 DRY-RUN COMPLETED SUCCESSFULLY"
+        : "✅ ORCHESTRATOR COMPLETED SUCCESSFULLY",
+      {
+        totalDuration,
+        activityId: appointment.activityid,
+        accountId,
+        contactsProcessed: contactIds.length,
+        warningsCount: warnings.length,
+      },
     );
-    console.log("=".repeat(60) + "\n");
 
     return {
       success: true,
@@ -298,9 +391,11 @@ function buildErrorResponse(
   dryRun: boolean,
   errorMessage: string,
 ): CreateMeetingOrchestratorResponse {
-  console.log("\n" + "=".repeat(60));
-  console.log(`❌ FLUSSO INTERROTTO: ${errorMessage}`);
-  console.log("=".repeat(60) + "\n");
+  const logger = createLogger(undefined, { dryRun });
+  logger.error(`❌ ORCHESTRATOR FAILED: ${errorMessage}`, undefined, {
+    stepsCompleted: steps.length,
+    warningsCount: warnings.length,
+  });
 
   return {
     success: false,

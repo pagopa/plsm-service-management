@@ -16,6 +16,7 @@ import {
   resolveEnvironment,
 } from "../utils/mappings";
 import { getConfigOrThrow } from "../utils/config";
+import { createLogger, logODataQuery, Timer } from "../utils/logger";
 
 // -----------------------------------------------------------------------------
 // Lista Contatti (usato da ping e altre utility)
@@ -89,22 +90,55 @@ export async function searchContactsByEmail(
 export async function getContactsByAccountId(
   accountId: string,
 ): Promise<DynamicsList<Contact>> {
+  const logger = createLogger(undefined, { accountId });
+  const timer = new Timer();
+
+  logger.info("🔍 Searching contacts by Account ID", { accountId });
+
+  const filter = `_parentcustomerid_value eq '${accountId}'`;
+  const select =
+    "contactid,fullname,emailaddress1,firstname,lastname,telephone1,pgp_identificativoselfcarecliente,_pgp_prodottoid_value,_parentcustomerid_value,pgp_tipologiareferente";
+
   const url = buildUrl({
     endpoint: "/api/data/v9.2/contacts",
-    filter: `_parentcustomerid_value eq ${accountId}`,
-    select:
-      "contactid,fullname,emailaddress1,firstname,lastname,telephone1,pgp_identificativoselfcarecliente,_pgp_prodottoid_value,_parentcustomerid_value,pgp_tipologiareferente",
+    filter,
+    select,
   });
 
-  console.log(`[Contacts] Ricerca contatti per Account ID: ${accountId}`);
+  logODataQuery(logger, "/api/data/v9.2/contacts", filter, select);
 
-  const result = await get<Contact>(url);
+  try {
+    const result = await get<Contact>(url);
+    const count = result.value?.length ?? 0;
+    const duration = timer.elapsed();
 
-  console.log(
-    `[Contacts] Trovati ${result.value?.length ?? 0} contatti per Account ID: ${accountId}`,
-  );
+    if (count === 0) {
+      logger.warn("⚠️ No contacts found for Account ID", {
+        accountId,
+        duration,
+        resultCount: 0,
+      });
+    } else {
+      logger.info(`✅ Found ${count} contact(s) for Account ID`, {
+        accountId,
+        duration,
+        resultCount: count,
+        contacts: result.value?.map((c) => ({
+          id: c.contactid,
+          email: c.emailaddress1,
+          name: c.fullname,
+        })),
+      });
+    }
 
-  return result;
+    return result;
+  } catch (error) {
+    logger.error("❌ Failed to fetch contacts by Account ID", error, {
+      accountId,
+      duration: timer.elapsed(),
+    });
+    throw error;
+  }
 }
 
 // =============================================================================
@@ -119,30 +153,67 @@ export async function getContactByEmailAndInstitution(
   institutionIdSelfcare: string,
   productIdSelfcare: string,
 ): Promise<Contact | null> {
+  const logger = createLogger(undefined, {
+    email,
+    institutionId: institutionIdSelfcare,
+    productId: productIdSelfcare,
+  });
+  const timer = new Timer();
+
+  logger.info("🔍 Searching contact by email, institution and product", {
+    email,
+    institutionId: institutionIdSelfcare,
+    productId: productIdSelfcare,
+  });
+
   const escapedEmail = email.replace(/'/g, "''");
+  const filter = `pgp_identificativoselfcarecliente eq '${institutionIdSelfcare}' and emailaddress1 eq '${escapedEmail}' and contains(pgp_identificativoidpagopa, '${productIdSelfcare}')`;
+  const select =
+    "contactid,fullname,emailaddress1,firstname,lastname,telephone1,pgp_identificativoselfcarecliente,_pgp_prodottoid_value,_parentcustomerid_value,pgp_tipologiareferente";
 
   const url = buildUrl({
     endpoint: "/api/data/v9.2/contacts",
-    filter: `pgp_identificativoselfcarecliente eq '${institutionIdSelfcare}' and emailaddress1 eq '${escapedEmail}' and contains(pgp_identificativoidpagopa, '${productIdSelfcare}')`,
-    select:
-      "contactid,fullname,emailaddress1,firstname,lastname,telephone1,pgp_identificativoselfcarecliente,_pgp_prodottoid_value,_parentcustomerid_value,pgp_tipologiareferente",
+    filter,
+    select,
   });
 
-  console.log(
-    `[Contacts] Ricerca contatto: ${email} per ente ${institutionIdSelfcare}`,
-  );
+  logODataQuery(logger, "/api/data/v9.2/contacts", filter, select);
 
-  const result = await get<Contact>(url);
+  try {
+    const result = await get<Contact>(url);
+    const duration = timer.elapsed();
 
-  if (!result.value || result.value.length === 0) {
-    console.log(`[Contacts] Nessun contatto trovato per email: ${email}`);
-    return null;
+    if (!result.value || result.value.length === 0) {
+      logger.warn("⚠️ Contact not found by email and institution", {
+        email,
+        institutionId: institutionIdSelfcare,
+        productId: productIdSelfcare,
+        duration,
+      });
+      return null;
+    }
+
+    const contact = result.value[0];
+    logger.info("✅ Contact found by email and institution", {
+      contactId: contact.contactid,
+      fullName: contact.fullname,
+      email: contact.emailaddress1,
+      duration,
+    });
+
+    return contact;
+  } catch (error) {
+    logger.error(
+      "❌ Failed to search contact by email and institution",
+      error,
+      {
+        email,
+        institutionId: institutionIdSelfcare,
+        duration: timer.elapsed(),
+      },
+    );
+    throw error;
   }
-
-  console.log(
-    `[Contacts] Contatto trovato: ${result.value[0].fullname} (${result.value[0].contactid})`,
-  );
-  return result.value[0];
 }
 
 /**
@@ -152,32 +223,60 @@ export async function getContactByEmailAndProduct(
   email: string,
   productGuidCRM: string,
 ): Promise<Contact | null> {
+  const logger = createLogger(undefined, {
+    email,
+    productGuid: productGuidCRM,
+  });
+  const timer = new Timer();
+
+  logger.info("🔍 Searching contact by email and product GUID (fallback)", {
+    email,
+    productGuid: productGuidCRM,
+  });
+
   const escapedEmail = email.replace(/'/g, "''");
+  const filter = `emailaddress1 eq '${escapedEmail}' and _pgp_prodottoid_value eq '${productGuidCRM}'`;
+  const select =
+    "contactid,fullname,emailaddress1,firstname,lastname,telephone1,_pgp_prodottoid_value,_parentcustomerid_value,pgp_tipologiareferente";
 
   const url = buildUrl({
     endpoint: "/api/data/v9.2/contacts",
-    filter: `emailaddress1 eq '${escapedEmail}' and _pgp_prodottoid_value eq '${productGuidCRM}'`,
-    select:
-      "contactid,fullname,emailaddress1,firstname,lastname,telephone1,_pgp_prodottoid_value,_parentcustomerid_value,pgp_tipologiareferente",
+    filter,
+    select,
   });
 
-  console.log(
-    `[Contacts] Ricerca contatto (fallback): ${email} per prodotto ${productGuidCRM}`,
-  );
+  logODataQuery(logger, "/api/data/v9.2/contacts", filter, select);
 
-  const result = await get<Contact>(url);
+  try {
+    const result = await get<Contact>(url);
+    const duration = timer.elapsed();
 
-  if (!result.value || result.value.length === 0) {
-    console.log(
-      `[Contacts] Nessun contatto trovato (fallback) per email: ${email}`,
-    );
-    return null;
+    if (!result.value || result.value.length === 0) {
+      logger.warn("⚠️ Contact not found by email and product (fallback)", {
+        email,
+        productGuid: productGuidCRM,
+        duration,
+      });
+      return null;
+    }
+
+    const contact = result.value[0];
+    logger.info("✅ Contact found by email and product (fallback)", {
+      contactId: contact.contactid,
+      fullName: contact.fullname,
+      email: contact.emailaddress1,
+      duration,
+    });
+
+    return contact;
+  } catch (error) {
+    logger.error("❌ Failed to search contact by email and product", error, {
+      email,
+      productGuid: productGuidCRM,
+      duration: timer.elapsed(),
+    });
+    throw error;
   }
-
-  console.log(
-    `[Contacts] Contatto trovato (fallback): ${result.value[0].fullname} (${result.value[0].contactid})`,
-  );
-  return result.value[0];
 }
 
 // -----------------------------------------------------------------------------
@@ -253,42 +352,92 @@ export interface VerifyOrCreateContactResult {
 export async function verifyOrCreateContact(
   params: VerifyOrCreateContactParams,
 ): Promise<VerifyOrCreateContactResult> {
+  const logger = createLogger(undefined, {
+    email: params.email,
+    accountId: params.accountId,
+    productId: params.productIdSelfcare,
+    institutionId: params.institutionIdSelfcare,
+  });
+  const overallTimer = new Timer();
+
+  logger.info("🔄 Starting contact verification/creation flow", {
+    email: params.email,
+    enableCreateContact: params.enableCreateContact,
+  });
+
   const cfg = getConfigOrThrow();
   const environment = resolveEnvironment(cfg.DYNAMICS_BASE_URL);
   const productGuid = getProductGuid(params.productIdSelfcare, environment);
 
+  // Step 1: Search by institution
   if (params.institutionIdSelfcare) {
+    logger.debug("Step 1: Searching by institution ID and product", {
+      institutionId: params.institutionIdSelfcare,
+    });
+
     const contact = await getContactByEmailAndInstitution(
       params.email,
       params.institutionIdSelfcare,
       params.productIdSelfcare,
     );
+
     if (contact) {
+      logger.info("✅ Contact found by institution ID", {
+        contactId: contact.contactid,
+        duration: overallTimer.elapsed(),
+      });
       return { found: true, created: false, contact };
     }
+
+    logger.debug("Step 1 complete: Contact not found by institution");
   }
 
+  // Step 2: Fallback search by product GUID
   if (productGuid) {
+    logger.debug("Step 2: Fallback search by product GUID", { productGuid });
+
     const contact = await getContactByEmailAndProduct(
       params.email,
       productGuid,
     );
+
     if (contact) {
+      logger.info("✅ Contact found by product GUID (fallback)", {
+        contactId: contact.contactid,
+        duration: overallTimer.elapsed(),
+      });
       return { found: true, created: false, contact };
     }
+
+    logger.debug("Step 2 complete: Contact not found by product GUID");
   }
 
+  // Step 3: Create contact if enabled
   if (params.enableCreateContact) {
+    logger.info("Step 3: Contact creation enabled, attempting to create", {
+      hasNome: !!params.nome,
+      hasCognome: !!params.cognome,
+    });
+
     if (!params.nome || !params.cognome) {
+      const error = `Contatto ${params.email} non trovato e dati insufficienti per la creazione (nome/cognome mancanti)`;
+      logger.warn("⚠️ Cannot create contact: missing name/surname", {
+        duration: overallTimer.elapsed(),
+      });
       return {
         found: false,
         created: false,
         contact: null,
-        error: `Contatto ${params.email} non trovato e dati insufficienti per la creazione (nome/cognome mancanti)`,
+        error,
       };
     }
 
     try {
+      logger.info("Creating new contact in Dynamics", {
+        nome: params.nome,
+        cognome: params.cognome,
+      });
+
       const newContact = await createContact({
         firstname: params.nome,
         lastname: params.cognome,
@@ -298,9 +447,17 @@ export async function verifyOrCreateContact(
         accountId: params.accountId,
       });
 
+      logger.info("✅ Contact created successfully", {
+        contactId: newContact.contactid,
+        duration: overallTimer.elapsed(),
+      });
+
       return { found: false, created: true, contact: newContact };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
+      logger.error("❌ Failed to create contact", error, {
+        duration: overallTimer.elapsed(),
+      });
       return {
         found: false,
         created: false,
@@ -310,10 +467,16 @@ export async function verifyOrCreateContact(
     }
   }
 
+  // Contact not found and creation disabled
+  const error = `Contatto ${params.email} non trovato e abilitazione alla creazione disattivata`;
+  logger.warn("⚠️ Contact not found and creation is disabled", {
+    duration: overallTimer.elapsed(),
+  });
+
   return {
     found: false,
     created: false,
     contact: null,
-    error: `Contatto ${params.email} non trovato e abilitazione alla creazione disattivata`,
+    error,
   };
 }

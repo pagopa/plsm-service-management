@@ -6,6 +6,12 @@ import { randomUUID } from "node:crypto";
 import { getAccessToken, buildScope } from "./auth";
 import { getConfigOrThrow } from "../utils/config";
 import type { DynamicsList } from "../types/dynamics";
+import {
+  createLogger,
+  logHttpRequest,
+  logHttpResponse,
+  Timer,
+} from "../utils/logger";
 
 // -----------------------------------------------------------------------------
 // Headers standard per Dynamics OData API
@@ -111,43 +117,71 @@ function generateMockUuid(): string {
 // -----------------------------------------------------------------------------
 
 export async function get<T>(url: string): Promise<DynamicsList<T>> {
+  const logger = createLogger();
+  const timer = new Timer();
+
   if (dryRunContext.enabled) {
-    console.log(`🧪 [DRY-RUN] GET ${url}`);
+    logger.info(`🧪 [DRY-RUN] GET`, { url, dryRun: true });
 
     // Simula risposta vuota o usa risposta configurata
     const simulatedResponse = dryRunContext.simulatedResponses?.get(url);
     if (simulatedResponse) {
-      console.log(`🧪 [DRY-RUN] Usando risposta simulata`);
+      logger.info(`🧪 [DRY-RUN] Using simulated response`, { dryRun: true });
       return simulatedResponse as DynamicsList<T>;
     }
 
     // Genera mock realistici basati sull'endpoint
     const mockData = generateMockForEndpoint<T>(url);
     if (mockData) {
-      console.log(`🧪 [DRY-RUN] Generato mock per endpoint`);
+      logger.info(`🧪 [DRY-RUN] Generated mock for endpoint`, { dryRun: true });
       return { value: [mockData] };
     }
 
     // Default: lista vuota
+    logger.warn(`🧪 [DRY-RUN] No mock available, returning empty list`, {
+      dryRun: true,
+    });
     return { value: [] };
   }
 
-  const headers = await getHeaders();
-  const response = await fetch(url, { method: "GET", headers });
+  logHttpRequest(logger, "GET", url);
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`GET ${url} failed: ${response.status} - ${errorBody}`);
+  try {
+    const headers = await getHeaders();
+    const response = await fetch(url, { method: "GET", headers });
+    const duration = timer.elapsed();
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      logger.error(`GET request failed`, new Error(errorBody), {
+        url,
+        statusCode: response.status,
+        duration,
+        method: "GET",
+      });
+      throw new Error(`GET ${url} failed: ${response.status} - ${errorBody}`);
+    }
+
+    const data = await response.json();
+
+    // Se è una singola entità (non una lista), wrappala
+    const result: DynamicsList<T> =
+      "value" in data ? (data as DynamicsList<T>) : { value: [data as T] };
+
+    const resultCount = result.value?.length ?? 0;
+
+    logHttpResponse(logger, "GET", url, response.status, duration, resultCount);
+
+    return result;
+  } catch (error) {
+    const duration = timer.elapsed();
+    logger.error(`GET request exception`, error, {
+      url,
+      duration,
+      method: "GET",
+    });
+    throw error;
   }
-
-  const data = await response.json();
-
-  // Se è una singola entità (non una lista), wrappala
-  if (!("value" in data)) {
-    return { value: [data as T] };
-  }
-
-  return data as DynamicsList<T>;
 }
 
 // -----------------------------------------------------------------------------
@@ -199,9 +233,16 @@ export async function post<TRequest, TResponse>(
   url: string,
   body: TRequest,
 ): Promise<TResponse> {
+  const logger = createLogger();
+  const timer = new Timer();
+
   if (dryRunContext.enabled) {
-    console.log(`🧪 [DRY-RUN] POST ${url}`);
-    console.log(`🧪 [DRY-RUN] Body:`, JSON.stringify(body, null, 2));
+    logger.info(`🧪 [DRY-RUN] POST`, {
+      url,
+      dryRun: true,
+      bodySize: JSON.stringify(body).length,
+    });
+    logger.debug(`🧪 [DRY-RUN] Body`, { body, dryRun: true });
 
     // Simula risposta con ID generato
     const mockId = generateMockUuid();
@@ -212,40 +253,69 @@ export async function post<TRequest, TResponse>(
       accountid: mockId,
     } as TResponse;
 
-    console.log(`🧪 [DRY-RUN] Mock response ID: ${mockId}`);
+    logger.info(`🧪 [DRY-RUN] Mock response generated`, {
+      mockId,
+      dryRun: true,
+    });
     return mockResponse;
   }
 
-  const headers = await getHeaders();
-  const response = await fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-  });
+  logHttpRequest(logger, "POST", url);
+  logger.debug("POST body", { body });
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`POST ${url} failed: ${response.status} - ${errorBody}`);
-  }
+  try {
+    const headers = await getHeaders();
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+    const duration = timer.elapsed();
 
-  // Per GrantAccess la response è 204 No Content
-  if (response.status === 204) {
-    return {} as TResponse;
-  }
-
-  // Estrai ID dall'header OData-EntityId se presente
-  const entityId = response.headers.get("OData-EntityId");
-  const data = await response.json().catch(() => ({}));
-
-  if (entityId && !data.activityid && !data.contactid) {
-    // Estrai GUID dall'header
-    const match = entityId.match(/\(([a-f0-9-]+)\)/i);
-    if (match) {
-      (data as Record<string, unknown>).extractedId = match[1];
+    if (!response.ok) {
+      const errorBody = await response.text();
+      logger.error(`POST request failed`, new Error(errorBody), {
+        url,
+        statusCode: response.status,
+        duration,
+        method: "POST",
+      });
+      throw new Error(`POST ${url} failed: ${response.status} - ${errorBody}`);
     }
-  }
 
-  return data as TResponse;
+    // Per GrantAccess la response è 204 No Content
+    if (response.status === 204) {
+      logHttpResponse(logger, "POST", url, response.status, duration);
+      return {} as TResponse;
+    }
+
+    // Estrai ID dall'header OData-EntityId se presente
+    const entityId = response.headers.get("OData-EntityId");
+    const data = await response.json().catch(() => ({}));
+
+    if (entityId && !data.activityid && !data.contactid) {
+      // Estrai GUID dall'header
+      const match = entityId.match(/\(([a-f0-9-]+)\)/i);
+      if (match) {
+        (data as Record<string, unknown>).extractedId = match[1];
+        logger.debug("Extracted entity ID from OData-EntityId header", {
+          entityId: match[1],
+        });
+      }
+    }
+
+    logHttpResponse(logger, "POST", url, response.status, duration);
+
+    return data as TResponse;
+  } catch (error) {
+    const duration = timer.elapsed();
+    logger.error(`POST request exception`, error, {
+      url,
+      duration,
+      method: "POST",
+    });
+    throw error;
+  }
 }
 
 export async function postAction<TRequest>(

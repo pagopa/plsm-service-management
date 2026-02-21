@@ -40,6 +40,9 @@ crm_function:
     node_env: "production"
     website_run_from_package: 1
 
+    # Logging configuration
+    debug: "true" # Enable detailed logging for debugging CRM integration
+
   # Staging slot app settings
   staging:
     # Dynamics CRM connection (from Key Vault - same as production for now)
@@ -49,6 +52,9 @@ crm_function:
     # Runtime configuration
     node_env: "production"
     website_run_from_package: 1
+
+    # Logging configuration
+    debug: "true" # Enable detailed logging for debugging CRM integration
 
 # =============================================================================
 # Network Configuration
