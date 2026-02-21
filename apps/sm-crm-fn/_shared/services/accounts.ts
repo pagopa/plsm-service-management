@@ -4,6 +4,7 @@
 
 import type { Account, DynamicsList } from "../types/dynamics";
 import { get, buildUrl } from "./httpClient";
+import { createLogger, logODataQuery, Timer } from "../utils/logger";
 
 // =============================================================================
 // ACCOUNTS
@@ -11,9 +12,9 @@ import { get, buildUrl } from "./httpClient";
 
 /**
  * Cerca un Ente (Account) in Dynamics tramite Selfcare ID.
- * 
+ *
  * Endpoint 1: GET /api/data/v9.2/accounts?$filter=pgp_identificativoselfcare eq '{id}'
- * 
+ *
  * @param institutionIdSelfcare - ID Selfcare dell'ente
  * @returns Account trovato o null se non esiste
  * @throws Error se trovati più enti (ambiguità)
@@ -21,46 +22,68 @@ import { get, buildUrl } from "./httpClient";
 export async function getAccountBySelfcareId(
   institutionIdSelfcare: string,
 ): Promise<Account | null> {
+  const logger = createLogger(undefined, { institutionIdSelfcare });
+  const timer = new Timer();
+
+  logger.info("🔍 Searching account by Selfcare ID", { institutionIdSelfcare });
+
+  const filter = `pgp_identificativoselfcare eq '${institutionIdSelfcare}'`;
+  const select =
+    "accountid,name,pgp_identificativoselfcare,pgp_denominazioneselfcare,emailaddress1,telephone1,address1_composite,statecode";
+
   const url = buildUrl({
     endpoint: "/api/data/v9.2/accounts",
-    filter: `pgp_identificativoselfcare eq '${institutionIdSelfcare}'`,
-    select:
-      "accountid,name,pgp_identificativoselfcare,pgp_denominazioneselfcare,emailaddress1,telephone1,address1_composite,statecode",
+    filter,
+    select,
   });
 
-  console.log(
-    `[Accounts] Ricerca ente per Selfcare ID: ${institutionIdSelfcare}`,
-  );
+  logODataQuery(logger, "/api/data/v9.2/accounts", filter, select);
 
-  const result = await get<Account>(url);
+  try {
+    const result = await get<Account>(url);
+    const duration = timer.elapsed();
 
-  if (!result.value || result.value.length === 0) {
-    console.log(
-      `[Accounts] Nessun ente trovato per Selfcare ID: ${institutionIdSelfcare}`,
-    );
-    return null;
+    if (!result.value || result.value.length === 0) {
+      logger.warn("⚠️ No account found for Selfcare ID", {
+        institutionIdSelfcare,
+        duration,
+      });
+      return null;
+    }
+
+    if (result.value.length > 1) {
+      logger.error("❌ Multiple accounts found for Selfcare ID", undefined, {
+        institutionIdSelfcare,
+        count: result.value.length,
+        duration,
+      });
+      throw new Error(
+        `Ambiguità: trovati ${result.value.length} enti per Selfcare ID ${institutionIdSelfcare}`,
+      );
+    }
+
+    logger.info("✅ Account found", {
+      institutionIdSelfcare,
+      accountId: result.value[0].accountid,
+      accountName: result.value[0].name,
+      duration,
+    });
+
+    return result.value[0];
+  } catch (error) {
+    logger.error("❌ Failed to fetch account by Selfcare ID", error, {
+      institutionIdSelfcare,
+      duration: timer.elapsed(),
+    });
+    throw error;
   }
-
-  if (result.value.length > 1) {
-    console.warn(
-      `[Accounts] Trovati ${result.value.length} enti per Selfcare ID: ${institutionIdSelfcare}`,
-    );
-    throw new Error(
-      `Ambiguità: trovati ${result.value.length} enti per Selfcare ID ${institutionIdSelfcare}`,
-    );
-  }
-
-  console.log(
-    `[Accounts] Ente trovato: ${result.value[0].name} (${result.value[0].accountid})`,
-  );
-  return result.value[0];
 }
 
 /**
  * Cerca un Ente (Account) in Dynamics tramite nome (fallback).
- * 
+ *
  * Endpoint 2: GET /api/data/v9.2/accounts?$filter=contains(tolower(name), '{nome}')
- * 
+ *
  * @param nomeEnte - Nome dell'ente da cercare
  * @returns Account trovato o null se non esiste
  * @throws Error se trovati più enti (ambiguità)
@@ -68,38 +91,64 @@ export async function getAccountBySelfcareId(
 export async function getAccountByName(
   nomeEnte: string,
 ): Promise<Account | null> {
+  const logger = createLogger(undefined, { nomeEnte });
+  const timer = new Timer();
+
+  logger.info("🔍 Searching account by name (fallback)", { nomeEnte });
+
   // Escape single quotes nel nome
   const escapedName = nomeEnte.toLowerCase().replace(/'/g, "''");
 
+  const filter = `contains(tolower(name), '${escapedName}') and pgp_identificativoselfcare eq null`;
+  const select =
+    "accountid,name,pgp_identificativoselfcare,pgp_denominazioneselfcare,emailaddress1,telephone1,address1_composite,statecode";
+
   const url = buildUrl({
     endpoint: "/api/data/v9.2/accounts",
-    filter: `contains(tolower(name), '${escapedName}') and pgp_identificativoselfcare eq null`,
-    select:
-      "accountid,name,pgp_identificativoselfcare,pgp_denominazioneselfcare,emailaddress1,telephone1,address1_composite,statecode",
+    filter,
+    select,
   });
 
-  console.log(`[Accounts] Ricerca ente per nome: ${nomeEnte}`);
+  logODataQuery(logger, "/api/data/v9.2/accounts", filter, select);
 
-  const result = await get<Account>(url);
+  try {
+    const result = await get<Account>(url);
+    const duration = timer.elapsed();
 
-  if (!result.value || result.value.length === 0) {
-    console.log(`[Accounts] Nessun ente trovato per nome: ${nomeEnte}`);
-    return null;
+    if (!result.value || result.value.length === 0) {
+      logger.warn("⚠️ No account found by name", {
+        nomeEnte,
+        duration,
+      });
+      return null;
+    }
+
+    if (result.value.length > 1) {
+      logger.error("❌ Multiple accounts found by name", undefined, {
+        nomeEnte,
+        count: result.value.length,
+        duration,
+      });
+      throw new Error(
+        `Ambiguità: trovati ${result.value.length} enti per nome "${nomeEnte}". Specificare institutionIdSelfcare.`,
+      );
+    }
+
+    logger.info("✅ Account found by name", {
+      nomeEnte,
+      accountId: result.value[0].accountid,
+      accountName: result.value[0].name,
+      duration,
+    });
+
+    return result.value[0];
+  } catch (error) {
+    logger.error("❌ Failed to fetch account by name", error, {
+      nomeEnte,
+      duration: timer.elapsed(),
+    });
+    throw error;
   }
-
-  if (result.value.length > 1) {
-    console.warn(
-      `[Accounts] Trovati ${result.value.length} enti per nome: ${nomeEnte}`,
-    );
-    throw new Error(
-      `Ambiguità: trovati ${result.value.length} enti per nome "${nomeEnte}". Specificare institutionIdSelfcare.`,
-    );
-  }
-
-  console.log(
-    `[Accounts] Ente trovato: ${result.value[0].name} (${result.value[0].accountid})`,
-  );
-  return result.value[0];
 }
 
 // -----------------------------------------------------------------------------
