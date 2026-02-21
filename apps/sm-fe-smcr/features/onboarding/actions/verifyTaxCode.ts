@@ -19,17 +19,17 @@ import { getOnboardingStatusSchema } from "../types/getOnboardingStatusSchema";
 import { SubunitOption } from "../types/subunitOptionsType";
 import { isIpaAOOData, isIpaUOData } from "../utils/helpers";
 import { isEmptyObj } from "../utils/isNotEmptyObj";
-const FE_SMCR_API_KEY_INSTITUTION = process.env.FE_SMCR_API_KEY_INSTITUTION;
-const FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY =
-  process.env.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY;
-
-const GET_INSTITUTION = process.env.GET_INSTITUTION;
-const GET_IPA = process.env.GET_IPA;
-const GET_IPA_AOO = process.env.GET_IPA_AOO;
-const GET_IPA_UO = process.env.GET_IPA_UO;
-const GET_INFOCAMERE = process.env.GET_INFOCAMERE;
-const ONBOARDING_BASE_PATH = process.env.ONBOARDING_BASE_PATH;
-const GET_STATUS = process.env.GET_STATUS;
+import {
+  FE_SMCR_API_KEY_INSTITUTION,
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY,
+  GET_INFOCAMERE,
+  GET_INSTITUTION,
+  GET_IPA,
+  GET_IPA_AOO,
+  GET_IPA_UO,
+  GET_STATUS,
+  ONBOARDING_BASE_PATH,
+} from "./config/env";
 
 export async function verifyTaxCode(state: any, formData: FormData) {
   const subunit = formData.get("subunitOption") as SubunitOption;
