@@ -318,13 +318,16 @@ export async function createContact(
   const url = `${cfg.DYNAMICS_BASE_URL}/api/data/v9.2/contacts`;
 
   // Use Navigation Properties with @odata.bind instead of direct Entity Reference fields
+  // TODO: Find correct Navigation Property name for product lookup
+  // Existing contacts have _pgp_prodottoid_value: null, suggesting this field might not be required
+  // Temporarily removed to test if contact creation works without product ID
   const body: CreateContactRequest = {
     firstname: params.firstname,
     lastname: params.lastname,
     emailaddress1: params.email,
     pgp_tipologiareferente: tipologiaId,
     "parentcustomerid_account@odata.bind": `/accounts(${params.accountId})`,
-    "pgp_ProdottoId@odata.bind": `/pgp_prodottos(${productGuid})`,
+    // "pgp_ProdottoId@odata.bind": `/pgp_prodottos(${productGuid})`,  // ❌ TEMPORARILY DISABLED - Navigation Property name incorrect
   };
 
   console.log(
