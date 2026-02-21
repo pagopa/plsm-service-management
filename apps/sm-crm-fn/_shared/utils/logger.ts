@@ -302,8 +302,31 @@ export function logODataQuery(
 function sanitizeUrl(url: string): string {
   try {
     const urlObj = new URL(url);
-    // Mantieni solo hostname e pathname, rimuovi query params con dati sensibili
-    return `${urlObj.hostname}${urlObj.pathname}`;
+
+    // Lista di parametri sensibili da rimuovere
+    const sensitiveParams = [
+      "access_token",
+      "token",
+      "api-key",
+      "apikey",
+      "api_key",
+      "authorization",
+      "auth",
+      "password",
+      "secret",
+      "client_secret",
+    ];
+
+    // Rimuovi solo parametri sensibili, mantieni OData params ($filter, $select, etc.)
+    const searchParams = new URLSearchParams(urlObj.search);
+    for (const param of sensitiveParams) {
+      searchParams.delete(param);
+    }
+
+    const queryString = searchParams.toString();
+    const path = `${urlObj.hostname}${urlObj.pathname}`;
+
+    return queryString ? `${path}?${queryString}` : path;
   } catch {
     // Se non è un URL valido, ritorna così com'è
     return url;
