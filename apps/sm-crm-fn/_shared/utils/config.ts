@@ -3,12 +3,13 @@ import { z, ZodError } from "zod";
 const configSchema = z.object({
   DYNAMICS_BASE_URL: z
     .string()
-    .min(1, "Il base URL non puo essere una stringa vuota")
-    .default("https://uat-pagopa.crm4.dynamics.com"),
+    .url("DYNAMICS_BASE_URL deve essere un URL valido")
+    .min(1, "Il base URL non puo essere una stringa vuota"),
   DYNAMICS_URL_CONTACTS: z
     .string()
+    .url("DYNAMICS_URL_CONTACTS deve essere un URL valido")
     .min(1, "L'URL Dynamics non puo essere una stringa vuota")
-    .default("https://uat-pagopa.crm4.dynamics.com/api/data/v9.2/contacts"),
+    .optional(),
   DYNAMICS_SCOPE: z.string().min(1).optional(),
   NODE_ENV: z
     .string()

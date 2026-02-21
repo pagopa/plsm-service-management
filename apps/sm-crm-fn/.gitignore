@@ -1,9 +1,29 @@
+# Environment variables (may contain secrets)
 .env
+local.settings.json
+
+# Dependencies
 node_modules
+
+# Build output
 dist
 build
+
+# OS files
 .DS_Store
+
+# IDE
 .vscode
 .idea
+
+# Logs
 *.log
+
+# Testing
 coverage
+
+# Azure Functions
+*.zip
+__blobstorage__
+__queuestorage__
+__azurite_db*__.json

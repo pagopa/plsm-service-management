@@ -258,20 +258,35 @@ locals {
     DB_SSL  = true
   }
 
-  # Function CRM (Dynamics)
-  crm_func_app_settings = {
-    DYNAMICS_BASE_URL        = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
-    DYNAMICS_URL_CONTACTS    = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
-    NODE_ENV                 = "production"
-    WEBSITE_RUN_FROM_PACKAGE = 1
-  }
+  # =============================================================================
+  # Function CRM (Dynamics) - YAML-BASED CONFIGURATION
+  # =============================================================================
+  # CRM Function configuration has been migrated to YAML-based approach.
+  # See: infra/resources/environments/prod.yaml
+  # Implementation: infra/resources/prod/locals_yaml.tf
+  #
+  # This is a POC to test YAML-based configuration management.
+  # If successful, other functions will be migrated to the same approach.
+  # =============================================================================
 
-  crm_func_slot_app_settings = {
-    DYNAMICS_BASE_URL        = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
-    DYNAMICS_URL_CONTACTS    = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
-    NODE_ENV                 = "production"
-    WEBSITE_RUN_FROM_PACKAGE = 1
-  }
+  # Reference YAML-based configuration from locals_yaml.tf
+  crm_func_app_settings      = local.yaml_crm_func_app_settings
+  crm_func_slot_app_settings = local.yaml_crm_func_slot_app_settings
+
+  # OLD HARDCODED CONFIGURATION (COMMENTED OUT FOR REFERENCE)
+  # crm_func_app_settings = {
+  #   DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
+  #   DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
+  #   NODE_ENV              = "production"
+  #   WEBSITE_RUN_FROM_PACKAGE = 1
+  # }
+  #
+  # crm_func_slot_app_settings = {
+  #   DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"
+  #   DYNAMICS_URL_CONTACTS = "${data.azurerm_key_vault_secret.dynamics_url_contacts.value}"
+  #   NODE_ENV              = "production"
+  #   WEBSITE_RUN_FROM_PACKAGE = 1
+  # }
 
 
 }

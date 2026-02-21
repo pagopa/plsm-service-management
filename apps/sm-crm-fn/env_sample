@@ -1,0 +1,29 @@
+# =============================================================================
+# CONFIGURAZIONE AZURE FUNCTION - SM-CRM-FN
+# =============================================================================
+# 
+# IMPORTANTE: Questo è un file di esempio. NON committare il file .env reale!
+# Copia questo file e rinominalo secondo il tuo setup locale.
+#
+# =============================================================================
+
+# Azure Functions Runtime
+AzureWebJobsStorage=UseDevelopmentStorage=true
+FUNCTIONS_WORKER_RUNTIME=node
+
+# Dynamics 365 CRM Configuration
+# Formato: https://<org-name>.crm<region>.dynamics.com
+DYNAMICS_BASE_URL=https://<your-org>.crm4.dynamics.com
+
+# Azure AD Authentication (per sviluppo locale)
+AZURE_TENANT_ID=00000000-0000-0000-0000-000000000000
+AZURE_CLIENT_ID=00000000-0000-0000-0000-000000000000
+
+# Environment
+NODE_ENV=development
+
+# =============================================================================
+# NOTES:
+# - In PRODUZIONE usa Azure Managed Identity invece di Client Secret
+# - I GUID dei prodotti/team sono in _shared/utils/mappings.ts
+# =============================================================================

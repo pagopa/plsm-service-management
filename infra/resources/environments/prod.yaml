@@ -1,0 +1,65 @@
+# =============================================================================
+# Production Environment Configuration
+# =============================================================================
+# This file contains production-specific configuration for SM-CRM-FN (Dynamics CRM Function)
+
+environment:
+  name: "prod"
+  prefix: "plsm"
+  env_short: "p"
+  location: "italynorth"
+  instance_number: "01"
+
+# Tags for resource management
+tags:
+  CostCenter: "TS310 - PAGAMENTI & SERVIZI"
+  CreatedBy: "Terraform"
+  Environment: "Prod"
+  Owner: "PLSM"
+  ManagementTeam: "Service Management"
+  Source: "https://github.com/pagopa/plsm-service-management/tree/main"
+
+# =============================================================================
+# CRM Function App Settings
+# =============================================================================
+
+crm_function:
+  # Resource configuration
+  app_name: "crm"
+  instance_number: "01"
+  node_version: 22
+  health_check_path: "/api/v1/health"
+
+  # Production slot app settings
+  production:
+    # Dynamics CRM connection (from Key Vault)
+    dynamics_base_url_secret: "fa-crm-dynamics-base-url"
+    dynamics_url_contacts_secret: "fa-crm-dynamics-url-contacts"
+
+    # Runtime configuration
+    node_env: "production"
+    website_run_from_package: 1
+
+    # Logging configuration
+    debug: "true" # Enable detailed logging for debugging CRM integration
+
+  # Staging slot app settings
+  staging:
+    # Dynamics CRM connection (from Key Vault - same as production for now)
+    dynamics_base_url_secret: "fa-crm-dynamics-base-url"
+    dynamics_url_contacts_secret: "fa-crm-dynamics-url-contacts"
+
+    # Runtime configuration
+    node_env: "production"
+    website_run_from_package: 1
+
+    # Logging configuration
+    debug: "true" # Enable detailed logging for debugging CRM integration
+
+# =============================================================================
+# Network Configuration
+# =============================================================================
+
+network:
+  subnet_cidr_block: "10.0.0.0/24" # Will be dynamically calculated by Terraform
+  use_private_endpoint: true
