@@ -60,9 +60,10 @@ export interface CreateContactRequest {
   firstname: string;
   lastname: string;
   emailaddress1: string;
-  _pgp_prodottoid_value: string;
   pgp_tipologiareferente: number;
-  _parentcustomerid_value: string;
+  // Navigation Properties for lookups (use @odata.bind)
+  "parentcustomerid_account@odata.bind": string;
+  "pgp_ProdottoId@odata.bind": string;
 }
 
 export interface CreateAppointmentRequest {

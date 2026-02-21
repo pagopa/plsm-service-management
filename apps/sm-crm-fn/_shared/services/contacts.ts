@@ -317,13 +317,14 @@ export async function createContact(
   const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente);
   const url = `${cfg.DYNAMICS_BASE_URL}/api/data/v9.2/contacts`;
 
+  // Use Navigation Properties with @odata.bind instead of direct Entity Reference fields
   const body: CreateContactRequest = {
     firstname: params.firstname,
     lastname: params.lastname,
     emailaddress1: params.email,
-    _pgp_prodottoid_value: productGuid,
     pgp_tipologiareferente: tipologiaId,
-    _parentcustomerid_value: params.accountId,
+    "parentcustomerid_account@odata.bind": `/accounts(${params.accountId})`,
+    "pgp_ProdottoId@odata.bind": `/pgp_prodottos(${productGuid})`,
   };
 
   console.log(

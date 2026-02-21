@@ -6,6 +6,32 @@
 
 ---
 
+## [2026-02-21] - STEP 2 Error Handling Enhancement
+
+### Changed
+
+- Added comprehensive try-catch wrapper to STEP 2 (contact verification/creation loop) in `orchestrator.ts`
+- Added console.log markers for Azure Log Stream visibility:
+  - `[STEP 2 START]` - Before contact processing loop begins
+  - `[CONTACT VERIFY START]` - For each contact being processed
+  - `[CONTACT VERIFY RESULT]` - After each verifyOrCreateContact call (shows CREATED/FOUND/FAILED)
+  - `[STEP 2 CONTACTS PROCESSED]` - After loop completes with summary
+  - `[STEP 2 EXCEPTION]` - In catch block for unhandled exceptions
+
+### Fixed
+
+- STEP 2 exceptions are now properly caught and logged with full error details
+- Contact processing failures now include timer duration and context in error logs
+- Follows same error handling pattern as STEP 1 for consistency
+
+### Why
+
+- Production logs showed STEP 1 completing successfully but STEP 2 failing silently
+- Missing try-catch in STEP 2 meant exceptions from verifyOrCreateContact were not being logged
+- Console.log markers provide visibility in Azure Log Stream when structured logs are truncated
+
+---
+
 ## 🐛 **Bug Fixes**
 
 ### Bug #1: GET `/api/v1/contacts?accountId=XXX` ritornava array vuoto
