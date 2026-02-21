@@ -92,12 +92,39 @@ export async function createMeetingOrchestrator(
     });
 
     const stepTimer = new Timer();
+    let accountResult;
 
-    const accountResult = await verifyAccount({
-      institutionIdSelfcare: request.institutionIdSelfcare,
-      nomeEnte: request.nomeEnte,
-      enableFallback: request.enableFallback ?? false,
-    });
+    try {
+      accountResult = await verifyAccount({
+        institutionIdSelfcare: request.institutionIdSelfcare,
+        nomeEnte: request.nomeEnte,
+        enableFallback: request.enableFallback ?? false,
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      logger.error(
+        "❌ STEP 1 EXCEPTION: Account verification threw error",
+        error,
+        {
+          duration: stepTimer.elapsed(),
+          institutionId: request.institutionIdSelfcare,
+        },
+      );
+
+      steps.push({
+        step: "verifyAccount",
+        success: false,
+        error: `Exception during account verification: ${msg}`,
+        dryRun,
+      });
+
+      return buildErrorResponse(
+        steps,
+        warnings,
+        dryRun,
+        `Errore durante verifica ente: ${msg}`,
+      );
+    }
 
     if (!accountResult.found || !accountResult.account) {
       logger.error("❌ STEP 1 FAILED: Account not found", undefined, {
@@ -371,6 +398,34 @@ export async function createMeetingOrchestrator(
       contactIds,
       steps,
       warnings,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    // Catch globale per errori non gestiti
+    const msg = error instanceof Error ? error.message : String(error);
+    const totalDuration = overallTimer.elapsed();
+
+    logger.error("❌ ORCHESTRATOR UNHANDLED EXCEPTION", error, {
+      totalDuration,
+      stepsCompleted: steps.length,
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+    });
+
+    // Aggiungi step di errore se non ce ne sono già
+    if (steps.length === 0 || steps[steps.length - 1].success) {
+      steps.push({
+        step: "unhandledException",
+        success: false,
+        error: msg,
+        dryRun,
+      });
+    }
+
+    return {
+      success: false,
+      dryRun,
+      steps,
+      warnings: [...warnings, `Errore non gestito: ${msg}`],
       timestamp: new Date().toISOString(),
     };
   } finally {
