@@ -152,6 +152,12 @@ export interface CreateMeetingOrchestratorRequest {
 
   // Opzioni
   dryRun?: boolean;
+  /**
+   * Abilita lo step di GrantAccess per garantire la visibilità dell'appuntamento al team Sales.
+   * Se impostato a `false` o omesso, lo step 4 (GrantAccess) verrà saltato completamente.
+   * @default false
+   */
+  enableGrantAccess?: boolean;
 }
 
 export interface OrchestratorStepResult {

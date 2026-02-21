@@ -67,6 +67,7 @@ export async function createMeetingOrchestrator(
     partecipantiCount: request.partecipanti.length,
     enableCreateContact: request.enableCreateContact,
     enableFallback: request.enableFallback,
+    enableGrantAccess: request.enableGrantAccess,
     dryRun,
   });
 
@@ -78,6 +79,7 @@ export async function createMeetingOrchestrator(
       {
         enableCreateContact: request.enableCreateContact,
         enableFallback: request.enableFallback,
+        enableGrantAccess: request.enableGrantAccess,
       },
     );
   }
@@ -403,38 +405,50 @@ export async function createMeetingOrchestrator(
     // =========================================================================
     // STEP 4: GrantAccess
     // =========================================================================
-    logger.info("📋 STEP 4/4: Grant access to Sales team", {
-      activityId: appointment.activityid,
-    });
-
-    const grantTimer = new Timer();
-    const grantResult = await grantAccessToAppointment({
-      activityId: appointment.activityid,
-    });
-
-    steps.push({
-      step: "grantAccess",
-      success: grantResult.success,
-      data: {
-        activityId: grantResult.activityId,
-        teamId: grantResult.teamId,
-      },
-      error: grantResult.error,
-      dryRun,
-    });
-
-    if (!grantResult.success) {
-      warnings.push(
-        `GrantAccess fallito: ${grantResult.error}. L'appuntamento è stato creato ma potrebbe non essere visibile al team Sales.`,
-      );
-      logger.warn(`⚠️ STEP 4 WARNING: GrantAccess failed`, {
-        error: grantResult.error,
-        duration: grantTimer.elapsed(),
+    if (request.enableGrantAccess ?? false) {
+      logger.info("📋 STEP 4/4: Grant access to Sales team", {
+        activityId: appointment.activityid,
       });
+
+      const grantTimer = new Timer();
+      const grantResult = await grantAccessToAppointment({
+        activityId: appointment.activityid,
+      });
+
+      steps.push({
+        step: "grantAccess",
+        success: grantResult.success,
+        data: {
+          activityId: grantResult.activityId,
+          teamId: grantResult.teamId,
+        },
+        error: grantResult.error,
+        dryRun,
+      });
+
+      if (!grantResult.success) {
+        warnings.push(
+          `GrantAccess fallito: ${grantResult.error}. L'appuntamento è stato creato ma potrebbe non essere visibile al team Sales.`,
+        );
+        logger.warn(`⚠️ STEP 4 WARNING: GrantAccess failed`, {
+          error: grantResult.error,
+          duration: grantTimer.elapsed(),
+        });
+      } else {
+        logger.info("✅ STEP 4 COMPLETED: Access granted to Sales team", {
+          teamId: grantResult.teamId,
+          duration: grantTimer.elapsed(),
+        });
+      }
     } else {
-      logger.info("✅ STEP 4 COMPLETED: Access granted to Sales team", {
-        teamId: grantResult.teamId,
-        duration: grantTimer.elapsed(),
+      logger.info(
+        "ℹ️ STEP 4 SKIPPED: GrantAccess disabled via request parameter",
+      );
+      steps.push({
+        step: "grantAccess",
+        success: true,
+        skipped: true,
+        dryRun,
       });
     }
 
