@@ -14,7 +14,7 @@ info:
     1. **Verifica Ente** - Ricerca per Selfcare ID o nome
     2. **Verifica/Crea Contatti** - Per ogni partecipante
     3. **Crea Appuntamento** - Con activity_parties
-    4. **GrantAccess** - Condivisione con team Sales
+    4. **GrantAccess** - Condivisione con team Sales (opzionale)
 
     ## Dry-Run Mode
     Tutti gli endpoint di creazione supportano la modalità `dryRun` per testare 
@@ -245,9 +245,9 @@ paths:
         Crea un nuovo appuntamento in Dynamics CRM seguendo il flusso completo:
 
         1. **Verifica Ente** - Cerca l'ente per `institutionIdSelfcare` o `nomeEnte`
-        2. **Verifica/Crea Contatti** - Per ogni partecipante, verifica esistenza o crea
+        2. **Verifica/Crea Contatti** - Per ogni partecipante, verifica esistenza o crea (opzionale con `enableCreateContact`)
         3. **Crea Appuntamento** - Con tutti i partecipanti come activity_parties
-        4. **GrantAccess** - Condivide l'appuntamento con il team Sales
+        4. **GrantAccess** - Condivide l'appuntamento con il team Sales (opzionale con `enableGrantAccess`)
 
         ### Dry-Run Mode
         Impostare `dryRun: true` per testare il flusso senza modifiche a Dynamics.
@@ -292,6 +292,8 @@ paths:
                   description: "Discussione requisiti integrazione"
                   nextstep: "Preparare documentazione tecnica"
                   dataProssimoContatto: "2025-02-20"
+                  enableCreateContact: true
+                  enableGrantAccess: true
                   dryRun: false
               dryRun:
                 summary: Test dry-run
@@ -443,6 +445,33 @@ components:
           format: date
           description: Data del prossimo contatto previsto
           example: "2025-02-20"
+        enableCreateContact:
+          type: boolean
+          default: false
+          description: |
+            **Create Missing Contacts**: Se `true`, crea automaticamente i contatti 
+            che non esistono in Dynamics CRM. Se `false`, i contatti mancanti 
+            generano un warning e vengono saltati.
+
+            **Utilizzo consigliato**:
+            - `false` (default): Per appuntamenti con contatti esistenti
+            - `true`: Per nuovi enti o nuovi referenti non ancora in CRM
+          example: false
+        enableGrantAccess:
+          type: boolean
+          default: false
+          description: |
+            **Grant Access to Sales Team**: Se `true`, esegue lo step 4 (GrantAccess) 
+            per rendere l'appuntamento visibile al team Sales in Dynamics CRM.
+            Se `false` o omesso, lo step viene saltato completamente.
+
+            **Nota**: GrantAccess richiede che l'API Custom Action sia disponibile 
+            nell'ambiente Dynamics. Potrebbe non essere disponibile in DEV/UAT.
+
+            **Utilizzo consigliato**:
+            - `false` (default): Per la maggior parte degli appuntamenti
+            - `true`: Per appuntamenti critici che richiedono visibilità del team Sales
+          example: false
         dryRun:
           type: boolean
           default: false
