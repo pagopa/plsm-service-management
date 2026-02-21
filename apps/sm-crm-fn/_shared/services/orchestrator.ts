@@ -185,91 +185,156 @@ export async function createMeetingOrchestrator(
       error?: string;
     }> = [];
 
-    for (const [index, partecipante] of request.partecipanti.entries()) {
-      logger.info(
-        `Processing contact ${index + 1}/${request.partecipanti.length}`,
-        {
-          email: partecipante.email,
-          hasNome: !!partecipante.nome,
-          hasCognome: !!partecipante.cognome,
-        },
+    try {
+      console.log(
+        "[STEP 2 START] Processing",
+        request.partecipanti.length,
+        "contacts",
       );
 
-      const contactResult = await verifyOrCreateContact({
-        email: partecipante.email,
-        nome: partecipante.nome,
-        cognome: partecipante.cognome,
-        institutionIdSelfcare: request.institutionIdSelfcare,
-        productIdSelfcare: request.productIdSelfcare as ProductIdSelfcare,
-        tipologiaReferente: (partecipante.tipologiaReferente ??
-          "TECNICO") as TipologiaReferente,
-        accountId,
-        enableCreateContact: request.enableCreateContact ?? false,
-      });
-
-      if (contactResult.contact) {
-        contactIds.push(contactResult.contact.contactid);
-        contactResults.push({
-          email: partecipante.email,
-          contactId: contactResult.contact.contactid,
-          created: contactResult.created,
-        });
+      for (const [index, partecipante] of request.partecipanti.entries()) {
         logger.info(
-          `✅ Contact ${contactResult.created ? "created" : "found"}`,
+          `Processing contact ${index + 1}/${request.partecipanti.length}`,
           {
+            email: partecipante.email,
+            hasNome: !!partecipante.nome,
+            hasCognome: !!partecipante.cognome,
+          },
+        );
+
+        console.log(
+          "[CONTACT VERIFY START]",
+          index + 1,
+          "of",
+          request.partecipanti.length,
+          "email:",
+          partecipante.email,
+        );
+
+        const contactResult = await verifyOrCreateContact({
+          email: partecipante.email,
+          nome: partecipante.nome,
+          cognome: partecipante.cognome,
+          institutionIdSelfcare: request.institutionIdSelfcare,
+          productIdSelfcare: request.productIdSelfcare as ProductIdSelfcare,
+          tipologiaReferente: (partecipante.tipologiaReferente ??
+            "TECNICO") as TipologiaReferente,
+          accountId,
+          enableCreateContact: request.enableCreateContact ?? false,
+        });
+
+        console.log(
+          "[CONTACT VERIFY RESULT]",
+          contactResult.created
+            ? "CREATED"
+            : contactResult.contact
+              ? "FOUND"
+              : "FAILED",
+          "email:",
+          partecipante.email,
+        );
+
+        if (contactResult.contact) {
+          contactIds.push(contactResult.contact.contactid);
+          contactResults.push({
             email: partecipante.email,
             contactId: contactResult.contact.contactid,
             created: contactResult.created,
+          });
+          logger.info(
+            `✅ Contact ${contactResult.created ? "created" : "found"}`,
+            {
+              email: partecipante.email,
+              contactId: contactResult.contact.contactid,
+              created: contactResult.created,
+            },
+          );
+        } else {
+          contactResults.push({
+            email: partecipante.email,
+            created: false,
+            error: contactResult.error,
+          });
+          warnings.push(
+            `Contatto ${partecipante.email}: ${contactResult.error}`,
+          );
+          logger.warn(`⚠️ Contact processing failed`, {
+            email: partecipante.email,
+            error: contactResult.error,
+          });
+        }
+      }
+
+      console.log(
+        "[STEP 2 CONTACTS PROCESSED]",
+        contactIds.length,
+        "of",
+        request.partecipanti.length,
+      );
+
+      steps.push({
+        step: "verifyOrCreateContacts",
+        success: contactIds.length > 0,
+        data: {
+          totalPartecipanti: request.partecipanti.length,
+          contactsProcessed: contactIds.length,
+          contactResults,
+        },
+        dryRun,
+      });
+
+      if (contactIds.length === 0) {
+        logger.error(
+          "❌ STEP 2 FAILED: No valid contacts found or created",
+          undefined,
+          {
+            duration: contactStepTimer.elapsed(),
+            partecipantiCount: request.partecipanti.length,
           },
         );
-      } else {
-        contactResults.push({
-          email: partecipante.email,
-          created: false,
-          error: contactResult.error,
-        });
-        warnings.push(`Contatto ${partecipante.email}: ${contactResult.error}`);
-        logger.warn(`⚠️ Contact processing failed`, {
-          email: partecipante.email,
-          error: contactResult.error,
-        });
+
+        return buildErrorResponse(
+          steps,
+          warnings,
+          dryRun,
+          "Nessun contatto valido trovato o creato",
+        );
       }
-    }
 
-    steps.push({
-      step: "verifyOrCreateContacts",
-      success: contactIds.length > 0,
-      data: {
-        totalPartecipanti: request.partecipanti.length,
+      logger.info("✅ STEP 2 COMPLETED: Contacts processed", {
         contactsProcessed: contactIds.length,
-        contactResults,
-      },
-      dryRun,
-    });
-
-    if (contactIds.length === 0) {
+        totalPartecipanti: request.partecipanti.length,
+        duration: contactStepTimer.elapsed(),
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
       logger.error(
-        "❌ STEP 2 FAILED: No valid contacts found or created",
-        undefined,
+        "❌ STEP 2 EXCEPTION: Contact verification/creation threw error",
+        error,
         {
           duration: contactStepTimer.elapsed(),
           partecipantiCount: request.partecipanti.length,
+          contactsProcessedBeforeError: contactIds.length,
         },
       );
+
+      console.log("[STEP 2 EXCEPTION]", msg, stack);
+
+      steps.push({
+        step: "verifyOrCreateContacts",
+        success: false,
+        error: `Exception during contact processing: ${msg}`,
+        dryRun,
+      });
 
       return buildErrorResponse(
         steps,
         warnings,
         dryRun,
-        "Nessun contatto valido trovato o creato",
+        `Errore durante verifica/creazione contatti: ${msg}`,
       );
     }
-
-    logger.info("✅ STEP 2 COMPLETED: Contacts processed", {
-      contactsProcessed: contactIds.length,
-      totalPartecipanti: request.partecipanti.length,
-      duration: contactStepTimer.elapsed(),
-    });
 
     // =========================================================================
     // STEP 3: Crea Appuntamento
