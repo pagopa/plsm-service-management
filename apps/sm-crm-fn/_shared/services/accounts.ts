@@ -43,6 +43,11 @@ export async function getAccountBySelfcareId(
     const result = await get<Account>(url);
     const duration = timer.elapsed();
 
+    // Simple console log for Azure Log Stream visibility
+    console.log(
+      `[ACCOUNT SEARCH RESULT] Found: ${result.value?.length ?? 0} accounts`,
+    );
+
     if (!result.value || result.value.length === 0) {
       logger.warn("⚠️ No account found for Selfcare ID", {
         institutionIdSelfcare,
@@ -61,6 +66,10 @@ export async function getAccountBySelfcareId(
         `Ambiguità: trovati ${result.value.length} enti per Selfcare ID ${institutionIdSelfcare}`,
       );
     }
+
+    console.log(
+      `[ACCOUNT FOUND] ID: ${result.value[0].accountid}, Name: ${result.value[0].name}`,
+    );
 
     logger.info("✅ Account found", {
       institutionIdSelfcare,

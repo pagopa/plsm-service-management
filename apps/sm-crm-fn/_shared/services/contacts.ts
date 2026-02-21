@@ -112,6 +112,11 @@ export async function getContactsByAccountId(
     const count = result.value?.length ?? 0;
     const duration = timer.elapsed();
 
+    // Simple console log for Azure Log Stream visibility
+    console.log(
+      `[CONTACTS SEARCH RESULT] Found: ${count} contacts for accountId: ${accountId}`,
+    );
+
     if (count === 0) {
       logger.warn("⚠️ No contacts found for Account ID", {
         accountId,
@@ -119,6 +124,10 @@ export async function getContactsByAccountId(
         resultCount: 0,
       });
     } else {
+      console.log(
+        `[CONTACTS FOUND] Contacts: ${result.value?.map((c) => c.emailaddress1).join(", ")}`,
+      );
+
       logger.info(`✅ Found ${count} contact(s) for Account ID`, {
         accountId,
         duration,

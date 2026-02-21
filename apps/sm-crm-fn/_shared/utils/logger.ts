@@ -255,24 +255,18 @@ export function logHttpResponse(
 
   const message = `HTTP ${method} ← ${statusCode} (${duration}ms)${resultCount !== undefined ? ` - ${resultCount} results` : ""}`;
 
+  // Simplified metadata without full URL to avoid log truncation
+  const simpleMetadata = {
+    statusCode,
+    duration,
+    resultCount,
+    ...metadata,
+  };
+
   if (level === LogLevel.ERROR) {
-    logger.error(message, undefined, {
-      method,
-      url: sanitizedUrl,
-      statusCode,
-      duration,
-      resultCount,
-      ...metadata,
-    });
+    logger.error(message, undefined, simpleMetadata);
   } else {
-    logger.info(message, {
-      method,
-      url: sanitizedUrl,
-      statusCode,
-      duration,
-      resultCount,
-      ...metadata,
-    });
+    logger.info(message, simpleMetadata);
   }
 }
 
