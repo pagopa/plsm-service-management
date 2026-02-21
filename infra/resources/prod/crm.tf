@@ -37,5 +37,9 @@ module "crm_function" {
   app_settings      = merge(local.common_app_settings, local.crm_func_app_settings)
   slot_app_settings = merge(local.common_app_settings, local.crm_func_slot_app_settings)
 
+  # Application Insights
+  application_insights_connection_string = data.azurerm_key_vault_secret.appinsights_connection_string.value
+  application_insights_key               = data.azurerm_key_vault_secret.appinsights_instrumentationkey.value
+
   depends_on = [module.azure_core_infra]
 }
