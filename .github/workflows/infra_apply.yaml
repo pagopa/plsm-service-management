@@ -21,6 +21,7 @@ jobs:
     name: Apply Infrastructure - Production
     secrets: inherit
     with:
-      environment: app-prod-cd
+      environment: prod
       base_path: infra/resources
       use_private_agent: true
+      override_github_environment: app-prod

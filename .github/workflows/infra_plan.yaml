@@ -26,6 +26,7 @@ jobs:
     name: Plan Infrastructure - Production
     secrets: inherit
     with:
-      environment: app-prod-ci
+      environment: prod
       base_path: infra/resources
       use_private_agent: true
+      override_github_environment: app-prod
