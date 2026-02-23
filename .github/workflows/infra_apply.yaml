@@ -24,5 +24,3 @@ jobs:
       environment: prod
       base_path: infra/resources
       use_private_agent: true
-      use_labels: true
-      override_labels: prod
