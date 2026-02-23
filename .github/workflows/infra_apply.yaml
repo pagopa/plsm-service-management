@@ -21,6 +21,6 @@ jobs:
     name: Apply Infrastructure - Production
     secrets: inherit
     with:
-      environment: prod
+      environment: app-prod-cd
       base_path: infra/resources
       use_private_agent: true
