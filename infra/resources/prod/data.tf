@@ -12,6 +12,30 @@ data "azuread_group" "keyvault_admin_group" {
 }
 
 # -----------------------------------------------------------------------------
+# Terraform Variables (from Key Vault)
+# -----------------------------------------------------------------------------
+
+data "azurerm_key_vault_secret" "tf_subscription_id" {
+  name         = "tf-subscription-id"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "tf_eventhub_subscription_id" {
+  name         = "tf-eventhub-subscription-id"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "tf_container_pf" {
+  name         = "tf-container-pf"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "tf_storage_account_fatppublic_id" {
+  name         = "tf-storage-account-fatppublic-id"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+# -----------------------------------------------------------------------------
 # Valori env per PF - Portale Fatturazione
 # -----------------------------------------------------------------------------
 

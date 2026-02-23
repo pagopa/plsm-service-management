@@ -47,7 +47,7 @@ resource "azurerm_private_endpoint" "fatppublic_storage_pep" {
 
   private_service_connection {
     name                           = "fatppublic-storage-psc"
-    private_connection_resource_id = var.storage_account_fatppublic_id
+    private_connection_resource_id = data.azurerm_key_vault_secret.tf_storage_account_fatppublic_id.value
     is_manual_connection           = true
     subresource_names              = ["blob"]
     request_message                = "Richiesta di Private Link per la Function App 'Funzione FAT Public'"
@@ -66,7 +66,7 @@ resource "azurerm_private_endpoint" "fatppublic_storage_pep" {
 # -----------------------------------------------------------------------------
 
 resource "azurerm_role_assignment" "pfatt_container_contributor" {
-  scope                = var.container_pf
+  scope                = data.azurerm_key_vault_secret.tf_container_pf.value
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = module.portalefatturazione_function.function_app_principal_id
 

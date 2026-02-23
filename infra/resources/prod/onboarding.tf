@@ -44,7 +44,7 @@ resource "azurerm_private_endpoint" "onboarding_func_to_selc_eventhub" {
 
   private_service_connection {
     name                           = "plsm-p-itn-selc-evhns-psc-01"
-    private_connection_resource_id = "/subscriptions/${var.eventhub_subscription_id}/resourceGroups/selc-p-event-rg/providers/Microsoft.EventHub/namespaces/selc-p-eventhub-ns"
+    private_connection_resource_id = "/subscriptions/${data.azurerm_key_vault_secret.tf_eventhub_subscription_id.value}/resourceGroups/selc-p-event-rg/providers/Microsoft.EventHub/namespaces/selc-p-eventhub-ns"
     is_manual_connection           = true
     request_message                = "Connessione da Azure Function 'plsm-p-itn-onboarding-func-01' per Onboarding"
     subresource_names              = ["namespace"]
@@ -52,7 +52,7 @@ resource "azurerm_private_endpoint" "onboarding_func_to_selc_eventhub" {
 
   private_dns_zone_group {
     name                 = "default"
-    private_dns_zone_ids = ["/subscriptions/${var.subscription_id}/resourceGroups/plsm-p-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.servicebus.windows.net"]
+    private_dns_zone_ids = ["/subscriptions/${data.azurerm_key_vault_secret.tf_subscription_id.value}/resourceGroups/plsm-p-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.servicebus.windows.net"]
   }
 }
 
