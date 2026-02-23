@@ -5,6 +5,8 @@ import { betterFetch } from "@better-fetch/fetch";
 import { Readable } from "node:stream";
 import { z } from "zod";
 
+import logger from "@/lib/logger/logger.server";
+
 async function streamToBuffer(stream: Readable): Promise<Buffer> {
   const chunks: Buffer[] = [];
   for await (const chunk of stream) {
@@ -145,8 +147,18 @@ export async function getOnboardingProducts(): Promise<{
   error: string | null;
 }> {
   if (!AZURE_STORAGE_CONNECTION_STRING) {
-    console.error(
-      "getOnboardingProducts: configurare FE_SMCR_AZURE_STORAGE_CONNECTION_STRING + CONTAINER + ONBOARDING_PRODUCTS_BLOB, oppure ONBOARDING_PRODUCTS_BLOB come URL completo del blob",
+    logger.warn(
+      {
+        info: {
+          event: "product.onboarding.config_missing",
+          actor: "smcr-ui",
+          subject: "getOnboardingProducts",
+          metadata: {
+            hint: "FE_SMCR_AZURE_STORAGE_CONNECTION_STRING + CONTAINER + ONBOARDING_PRODUCTS_BLOB oppure ONBOARDING_PRODUCTS_BLOB come URL completo",
+          },
+        },
+      },
+      "Configurazione storage non disponibile per getOnboardingProducts",
     );
     return {
       data: null,
@@ -174,9 +186,16 @@ export async function getOnboardingProducts(): Promise<{
       AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX,
     );
     if (!latestName) {
-      console.error(
-        "getOnboardingProducts: nessun blob trovato con prefisso",
-        AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX,
+      logger.warn(
+        {
+          info: {
+            event: "product.onboarding.no_blob",
+            actor: "smcr-ui",
+            subject: "getOnboardingProducts",
+            metadata: { prefix: AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX },
+          },
+        },
+        "Nessun blob trovato con prefisso per prodotti onboarding",
       );
       return {
         data: null,
@@ -187,7 +206,17 @@ export async function getOnboardingProducts(): Promise<{
     const downloadResponse = await blobClient.download();
 
     if (!downloadResponse.readableStreamBody) {
-      console.error("getOnboardingProducts: blob senza contenuto");
+      logger.error(
+        {
+          info: {
+            event: "product.onboarding.empty_blob",
+            actor: "smcr-ui",
+            subject: "getOnboardingProducts",
+            metadata: { blobName: latestName },
+          },
+        },
+        "Blob prodotti onboarding senza contenuto",
+      );
       return {
         data: null,
         error: "Si è verificato un errore nel caricamento dei prodotti.",
@@ -202,7 +231,23 @@ export async function getOnboardingProducts(): Promise<{
     const parsed = onboardingProductsSchema.parse(raw);
     return { data: parsed, error: null };
   } catch (error) {
-    console.error("getOnboardingProducts: Azure Storage / parse error", error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(
+      {
+        error: {
+          name: err.name,
+          message: err.message,
+          stack: err.stack,
+        },
+        info: {
+          event: "product.onboarding.fetch_error",
+          actor: "smcr-ui",
+          subject: "getOnboardingProducts",
+          metadata: {},
+        },
+      },
+      "getOnboardingProducts: Azure Storage / parse error",
+    );
     return {
       data: null,
       error: "Si è verificato un errore, riprova più tardi.",
