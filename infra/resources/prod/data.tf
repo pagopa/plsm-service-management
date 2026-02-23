@@ -51,6 +51,12 @@ data "azurerm_key_vault_secret" "appinsights_instrumentationkey" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+# Application Insights resource reference
+data "azurerm_application_insights" "common" {
+  name                = "plsm-p-itn-common-appi-01"
+  resource_group_name = module.azure_core_infra.common_resource_group_name
+}
+
 # -----------------------------------------------------------------------------
 # Database PostgreSQL
 # -----------------------------------------------------------------------------
