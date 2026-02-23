@@ -95,10 +95,20 @@ const AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX =
   process.env.FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX;
 
 function normalizeConnectionString(connectionString: string): string {
-  const s = connectionString.trim();
-  if (/^(https?);/.test(s) && !/^DefaultEndpointsProtocol=/i.test(s)) {
-    return `DefaultEndpointsProtocol=${s}`;
+  let s = connectionString.trim();
+  if (/^(https?);/i.test(s) && !/^DefaultEndpointsProtocol=/i.test(s)) {
+    const protocol = /^https;/i.test(s) ? "https" : "http";
+    s = `DefaultEndpointsProtocol=${protocol};${s.replace(/^https?;/i, "").trim()}`;
   }
+  s = s.replace(
+    /DefaultEndpointsProtocol\s*=\s*([^;]*)/gi,
+    (_match, value: string) => {
+      const v = (value ?? "").trim().toLowerCase();
+      return v.startsWith("https")
+        ? "DefaultEndpointsProtocol=https"
+        : "DefaultEndpointsProtocol=http";
+    },
+  );
   return s;
 }
 
