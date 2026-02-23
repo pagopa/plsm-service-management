@@ -1,0 +1,28 @@
+name: Infra Apply
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/resources/prod/**"
+      - "infra/resources/_modules/**"
+      - "infra/resources/environments/**"
+      - ".github/workflows/infra_apply.yaml"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  apply_prod:
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: Apply Infrastructure - Production
+    secrets: inherit
+    with:
+      environment: prod
+      base_path: infra/resources
+      use_private_agent: true
+      use_labels: true
+      override_labels: prod
