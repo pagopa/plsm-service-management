@@ -30,9 +30,3 @@ jobs:
       base_path: infra/resources
       use_private_agent: true
       override_github_environment: app-prod
-      env_vars: |
-        TF_VAR_subscription_id=${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
-        TF_VAR_eventhub_subscription_id=${{ secrets.TF_VAR_EVENTHUB_SUBSCRIPTION_ID }}
-        TF_VAR_container_pf=${{ secrets.TF_VAR_CONTAINER_PF }}
-        TF_VAR_bsmcr_principal_id=${{ secrets.TF_VAR_BSMCR_PRINCIPAL_ID }}
-        TF_VAR_storage_account_fatppublic_id=${{ secrets.TF_VAR_STORAGE_ACCOUNT_FATPPUBLIC_ID }}
