@@ -41,18 +41,18 @@ variable "health_check_path" {
 
 variable "node_version" {
   type        = number
-  default = 20
+  default     = 20
   description = "Versione di Node.js da utilizzare per la Function App."
 }
 
 variable "application_insights_connection_string" {
-  type        = string
-  default     = null
-  sensitive   = true
+  type      = string
+  default   = null
+  sensitive = true
 }
 
 variable "application_insights_instrumentation_key" {
-  type        = string
-  default     = null
-  sensitive   = true
+  type      = string
+  default   = null
+  sensitive = true
 }
