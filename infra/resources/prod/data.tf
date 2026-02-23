@@ -99,6 +99,11 @@ data "azurerm_key_vault_secret" "fe_smcr_ocp_apim_subscription_key_uat" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+data "azurerm_key_vault_secret" "fe_smcr_azure_storage_connection_string" {
+  name         = "fe-smcr-azure-storage-connection-string"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
 data "azurerm_key_vault_secret" "fe_smcr_onboarding_base_path_uat" {
   name         = "fe-smcr-onboarding-base-path-uat"
   key_vault_id = module.azure_core_infra.common_key_vault.id
