@@ -101,7 +101,10 @@ function normalizeConnectionString(connectionString: string): string {
 }
 
 function getContainerName(containerEnv: string): string {
-  if (!containerEnv.startsWith("https://") && !containerEnv.startsWith("http://")) {
+  if (
+    !containerEnv.startsWith("https://") &&
+    !containerEnv.startsWith("http://")
+  ) {
     return containerEnv;
   }
   try {
@@ -202,7 +205,7 @@ export async function getOnboardingProducts(): Promise<{
     console.error("getOnboardingProducts: Azure Storage / parse error", error);
     return {
       data: null,
-      error: "Si è verificato un errore nel caricamento dei prodotti.",
+      error: "Si è verificato un errore, riprova più tardi.",
     };
   }
 }
