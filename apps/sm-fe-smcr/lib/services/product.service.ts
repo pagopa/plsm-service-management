@@ -1,7 +1,19 @@
 "use server";
 
+import { BlobServiceClient } from "@azure/storage-blob";
 import { betterFetch } from "@better-fetch/fetch";
+import { Readable } from "node:stream";
 import { z } from "zod";
+
+import logger from "@/lib/logger/logger.server";
+
+async function streamToBuffer(stream: Readable): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
 
 export async function verifyContract(product: string) {
   const { data, error } = await betterFetch(
@@ -60,6 +72,197 @@ export async function getOnboardingByProduct(
     data: result.data?.at(0) ?? { productId: product, notificationCount: 0 },
     error: null,
   };
+}
+
+const onboardingProductsSchema = z.array(
+  z.object({
+    product: z.string(),
+    count_current_month: z.number(),
+    count_previous_month: z.number(),
+    variazione_percentuale: z.number(),
+  }),
+);
+
+export type OnboardingProduct = z.infer<
+  typeof onboardingProductsSchema
+>[number];
+
+const AZURE_STORAGE_CONNECTION_STRING =
+  process.env.FE_SMCR_AZURE_STORAGE_CONNECTION_STRING;
+const AZURE_STORAGE_CONTAINER =
+  process.env.FE_SMCR_AZURE_STORAGE_CONTAINER ?? "config";
+const AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX =
+  process.env.FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX;
+
+function normalizeConnectionString(connectionString: string): string {
+  let s = connectionString.trim();
+  if (/^(https?);/i.test(s) && !/^DefaultEndpointsProtocol=/i.test(s)) {
+    const protocol = /^https;/i.test(s) ? "https" : "http";
+    s = `DefaultEndpointsProtocol=${protocol};${s.replace(/^https?;/i, "").trim()}`;
+  }
+  s = s.replace(
+    /DefaultEndpointsProtocol\s*=\s*([^;]*)/gi,
+    (_match, value: string) => {
+      const v = (value ?? "").trim().toLowerCase();
+      return v.startsWith("https")
+        ? "DefaultEndpointsProtocol=https"
+        : "DefaultEndpointsProtocol=http";
+    },
+  );
+  return s;
+}
+
+function getContainerName(containerEnv: string): string {
+  if (
+    !containerEnv.startsWith("https://") &&
+    !containerEnv.startsWith("http://")
+  ) {
+    return containerEnv;
+  }
+  try {
+    const parsed = new URL(containerEnv);
+    const hostname = parsed.hostname.toLowerCase();
+    const allowedHost =
+      hostname === "blob.core.windows.net" ||
+      hostname.endsWith(".blob.core.windows.net");
+    if (!allowedHost) {
+      return containerEnv;
+    }
+    const pathname = parsed.pathname.replace(/^\/+|\/+$/g, "").split("/")[0];
+    return pathname || containerEnv;
+  } catch {
+    return containerEnv;
+  }
+}
+
+async function getLatestBlobNameByPrefix(
+  containerClient: ReturnType<BlobServiceClient["getContainerClient"]>,
+  prefix: string,
+): Promise<string | null> {
+  const blobs: { name: string; lastModified: Date }[] = [];
+  for await (const blob of containerClient.listBlobsFlat({ prefix })) {
+    const lastModified = blob.properties.lastModified;
+    if (lastModified) {
+      blobs.push({ name: blob.name, lastModified });
+    }
+  }
+  if (blobs.length === 0) return null;
+  blobs.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
+  const latest = blobs[0];
+  return latest ? latest.name : null;
+}
+
+export async function getOnboardingProducts(): Promise<{
+  data: OnboardingProduct[] | null;
+  error: string | null;
+}> {
+  if (!AZURE_STORAGE_CONNECTION_STRING) {
+    logger.warn(
+      {
+        info: {
+          event: "product.onboarding.config_missing",
+          actor: "smcr-ui",
+          subject: "getOnboardingProducts",
+          metadata: {
+            hint: "FE_SMCR_AZURE_STORAGE_CONNECTION_STRING + CONTAINER + ONBOARDING_PRODUCTS_BLOB oppure ONBOARDING_PRODUCTS_BLOB come URL completo",
+          },
+        },
+      },
+      "Configurazione storage non disponibile per getOnboardingProducts",
+    );
+    return {
+      data: null,
+      error: "Configurazione storage non disponibile.",
+    };
+  }
+
+  try {
+    const connectionString = normalizeConnectionString(
+      AZURE_STORAGE_CONNECTION_STRING!,
+    );
+    const blobServiceClient =
+      BlobServiceClient.fromConnectionString(connectionString);
+    const containerName = getContainerName(AZURE_STORAGE_CONTAINER);
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+
+    if (!AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX) {
+      return {
+        data: null,
+        error: "Nessun prefisso per i prodotti onboarding configurato.",
+      };
+    }
+    const latestName = await getLatestBlobNameByPrefix(
+      containerClient,
+      AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX,
+    );
+    if (!latestName) {
+      logger.warn(
+        {
+          info: {
+            event: "product.onboarding.no_blob",
+            actor: "smcr-ui",
+            subject: "getOnboardingProducts",
+            metadata: { prefix: AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX },
+          },
+        },
+        "Nessun blob trovato con prefisso per prodotti onboarding",
+      );
+      return {
+        data: null,
+        error: "Nessun file prodotti onboarding trovato nello storage.",
+      };
+    }
+    const blobClient = containerClient.getBlobClient(latestName);
+    const downloadResponse = await blobClient.download();
+
+    if (!downloadResponse.readableStreamBody) {
+      logger.error(
+        {
+          info: {
+            event: "product.onboarding.empty_blob",
+            actor: "smcr-ui",
+            subject: "getOnboardingProducts",
+            metadata: { blobName: latestName },
+          },
+        },
+        "Blob prodotti onboarding senza contenuto",
+      );
+      return {
+        data: null,
+        error: "Si è verificato un errore nel caricamento dei prodotti.",
+      };
+    }
+
+    const buffer = await streamToBuffer(
+      downloadResponse.readableStreamBody as Readable,
+    );
+
+    const raw = JSON.parse(buffer.toString("utf-8")) as unknown;
+    const parsed = onboardingProductsSchema.parse(raw);
+    return { data: parsed, error: null };
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(
+      {
+        error: {
+          name: err.name,
+          message: err.message,
+          stack: err.stack,
+        },
+        info: {
+          event: "product.onboarding.fetch_error",
+          actor: "smcr-ui",
+          subject: "getOnboardingProducts",
+          metadata: {},
+        },
+      },
+      "getOnboardingProducts: Azure Storage / parse error",
+    );
+    return {
+      data: null,
+      error: "Si è verificato un errore, riprova più tardi.",
+    };
+  }
 }
 
 export async function sendQueueMessage(onboarding: string) {

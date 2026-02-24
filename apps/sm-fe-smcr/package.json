@@ -17,6 +17,7 @@
     "@azure/msal-browser": "^4.13.2",
     "@azure/msal-node": "^3.6.1",
     "@azure/msal-react": "^3.0.13",
+    "@azure/storage-blob": "^12.24.0",
     "@better-fetch/fetch": "^1.1.17",
     "@daveyplate/better-auth-ui": "^1.5.2",
     "@hcaptcha/react-hcaptcha": "^1.12.0",

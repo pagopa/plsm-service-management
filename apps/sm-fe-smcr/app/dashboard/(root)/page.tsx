@@ -2,10 +2,9 @@ export const dynamic = "force-dynamic";
 
 import dayjs from "dayjs";
 
-import TextAnalytics from "@/components/dashboard/text-analytics";
-import { getOnboardingByProduct } from "@/lib/services/product.service";
 import { ChartPie } from "@/components/dashboard/chart";
-import { format } from "date-fns";
+import TextAnalytics from "@/components/dashboard/text-analytics";
+import { getOnboardingProducts } from "@/lib/services/product.service";
 
 const PRODUCT_CARDS = [
   { label: "IO", productId: "prod-io", color: "#3b82f6" },
@@ -18,23 +17,23 @@ const PRODUCT_CARDS = [
 export default async function DashboardPage() {
   const dateRanges = buildDateRanges();
   const analytics = [];
+  const products = await getOnboardingProducts();
+
+  if (products.error) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        Errore: {products.error}
+      </div>
+    );
+  }
 
   for (const card of PRODUCT_CARDS) {
-    const current = await getOnboardingByProduct(
-      card.productId,
-      dateRanges.current.from,
-      dateRanges.current.to,
-    );
-    const previous = await getOnboardingByProduct(
-      card.productId,
-      dateRanges.previous.from,
-      dateRanges.previous.to,
-    );
-
+    const product = products.data?.find((p) => p.product === card.productId);
     analytics.push({
       ...card,
-      currentCount: extractCount(current),
-      previousCount: extractCount(previous),
+      currentCount: product?.count_current_month ?? 0,
+      previousCount: product?.count_previous_month ?? 0,
+      variationPercentage: product?.variazione_percentuale ?? 0,
     });
   }
 
@@ -49,13 +48,14 @@ export default async function DashboardPage() {
             currentCount={card.currentCount}
             previousCount={card.previousCount}
             bgColor={card.color}
+            variationPercentage={card.variationPercentage}
           />
         ))}
       </section>
 
       <section className="w-full">
         <ChartPie
-          period={`${format(dateRanges.current.from, "MMMM")} - ${format(dateRanges.current.to, "MMMM")}`}
+          period={`${dayjs(dateRanges.current.from).format("MMMM")} - ${dayjs(dateRanges.current.to).format("MMMM")}`}
           chartData={(() => {
             const total =
               analytics.reduce(
@@ -98,10 +98,4 @@ function buildDateRanges() {
       to: now.subtract(30, "days").format("YYYY-MM-DD"),
     },
   };
-}
-
-function extractCount(
-  result: Awaited<ReturnType<typeof getOnboardingByProduct>>,
-) {
-  return result.data?.notificationCount ?? 0;
 }
