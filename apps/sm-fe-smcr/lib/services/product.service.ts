@@ -260,7 +260,7 @@ export async function getOnboardingProducts(): Promise<{
     );
     return {
       data: null,
-      error: err.message ?? "Si è verificato un errore, riprova più tardi.",
+      error: "Si è verificato un errore, riprova più tardi.",
     };
   }
 }
