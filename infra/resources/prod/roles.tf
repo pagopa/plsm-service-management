@@ -33,3 +33,10 @@ resource "azurerm_role_assignment" "kv_ci_func_contributor_infra" {
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = data.azurerm_user_assigned_identity.github_ci_identity_infra.principal_id
 }
+
+# Permesso per la CI sul PF
+resource "azurerm_role_assignment" "ci_infra_identity_website_contributor_on_func" {
+  scope                = data.azurerm_linux_function_app.plsm_cert_func.id
+  role_definition_name = "Website Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.github_ci_identity_infra.principal_id
+}
