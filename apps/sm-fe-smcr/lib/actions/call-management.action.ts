@@ -5,6 +5,7 @@ import { it } from "date-fns/locale";
 import z from "zod";
 import { PRODUCT_MAP } from "../types/product";
 import logger from "@/lib/logger/logger.server";
+import { serverEnv } from "@/config/env";
 
 const formatItalianDateTime = (value: string) => {
   const isoMatch =
@@ -89,8 +90,8 @@ export async function sendToSlackAction(
   }
 
   const webhooks = {
-    test: process.env.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST,
-    prod: process.env.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD,
+    test: serverEnv.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST,
+    prod: serverEnv.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD,
   };
   const webhook = webhooks[validation.data.target];
 

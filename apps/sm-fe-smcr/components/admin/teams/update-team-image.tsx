@@ -4,8 +4,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ImageTeam from "@/components/admin/teams/image-teams";
 import { useRouter } from "next/navigation";
+import { clientEnv } from "@/config/env";
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const baseUrl = clientEnv.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export default function UpdateTeamImage({ teamId }: { teamId: string }) {
   const [isLoading, setIsLoading] = useState(false);
