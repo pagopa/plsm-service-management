@@ -81,5 +81,7 @@ fe_smcr:
   get_ipa_uo: "external/internal/v1/uo/"
   get_ipa_aoo: "external/internal/v1/aoo/"
   get_status: "external/support/v1/onboarding/institutionOnboardings"
+  get_users_path: "external/v2/users"
   onboarding_base_path: "https://api.selfcare.pagopa.it/"
   upload: "external/internal/v1/onboarding/"
+  testend: "mytestendpoint"

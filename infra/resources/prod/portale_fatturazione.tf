@@ -80,3 +80,11 @@ resource "azurerm_role_assignment" "cd_identity_website_contrib_pf_fa" {
 
   depends_on = [module.portalefatturazione_function]
 }
+
+resource "azurerm_role_assignment" "ci_identity_website_contrib_pf_fa" {
+  scope                = module.portalefatturazione_function.function_app_id
+  role_definition_name = "Website Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.github_ci_identity.principal_id
+
+  depends_on = [module.portalefatturazione_function]
+}

@@ -223,9 +223,12 @@ locals {
     GET_IPA_UO               = local.common_config.fe_smcr.get_ipa_uo
     GET_IPA_AOO              = local.common_config.fe_smcr.get_ipa_aoo
     GET_STATUS               = local.common_config.fe_smcr.get_status
+    GET_USERS_PATH           = local.common_config.fe_smcr.get_users_path
     ONBOARDING_BASE_PATH     = local.common_config.fe_smcr.onboarding_base_path
     ONBOARDING_BASE_PATH_UAT = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
     UPLOAD                   = local.common_config.fe_smcr.upload
+
+    TEST_ENDPOINT            = local.common_config.fe_smcr.testend
 
     NEXT_PUBLIC_APP_URL             = local.env_config.fe_smcr.production.next_public_app_url
     NEXT_PUBLIC_MSAL_REDIRECT_URI   = local.env_config.fe_smcr.production.next_public_msal_redirect_uri
@@ -270,9 +273,13 @@ locals {
     GET_IPA_UO               = local.common_config.fe_smcr.get_ipa_uo
     GET_IPA_AOO              = local.common_config.fe_smcr.get_ipa_aoo
     GET_STATUS               = local.common_config.fe_smcr.get_status
+    GET_USERS_PATH           = local.common_config.fe_smcr.get_users_path
     ONBOARDING_BASE_PATH     = local.common_config.fe_smcr.onboarding_base_path
     ONBOARDING_BASE_PATH_UAT = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
     UPLOAD                   = local.common_config.fe_smcr.upload
+
+    TEST_ENDPOINT            = local.common_config.fe_smcr.testend
+
 
     NEXT_PUBLIC_APP_URL             = local.env_config.fe_smcr.staging.next_public_app_url
     NEXT_PUBLIC_MSAL_REDIRECT_URI   = local.env_config.fe_smcr.staging.next_public_msal_redirect_uri
