@@ -18,16 +18,17 @@ async function probeMetadata(): Promise<{
 }> {
   const url = buildUrl({
     endpoint: "/api/data/v9.2/EntityDefinitions",
-    filter: "startswith(LogicalName, 'pgp_')",
     select: "LogicalName,EntitySetName",
   });
 
   try {
     const data = await get<Record<string, unknown>>(url);
-    const pgpEntities = (data.value ?? []).map((e) => ({
-      logicalName: e["LogicalName"] as string,
-      entitySetName: e["EntitySetName"] as string,
-    }));
+    const pgpEntities = (data.value ?? [])
+      .filter((e) => (e["LogicalName"] as string)?.startsWith("pgp_"))
+      .map((e) => ({
+        logicalName: e["LogicalName"] as string,
+        entitySetName: e["EntitySetName"] as string,
+      }));
     return { pgpEntities, error: null };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
