@@ -40,3 +40,9 @@ resource "azurerm_role_assignment" "ci_infra_identity_website_contributor_on_fun
   role_definition_name = "Website Contributor"
   principal_id         = data.azurerm_user_assigned_identity.github_ci_identity_infra.principal_id
 }
+
+resource "azurerm_role_assignment" "enable_ci_infra_to_manage_pf_roles" {
+  scope                = data.azurerm_key_vault_secret.tf_storage_account_fatppublic_id.value
+  role_definition_name = "Role Based Access Control Administrator"
+  principal_id         = data.azurerm_user_assigned_identity.github_ci_identity_infra.principal_id
+}
