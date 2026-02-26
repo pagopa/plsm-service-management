@@ -12,6 +12,7 @@ import {
   validateOrchestratorRequest,
 } from "../_shared/services/orchestrator";
 import { listAppointments } from "../_shared/services/appointments";
+import { createLogger } from "../_shared/utils/logger";
 
 // -----------------------------------------------------------------------------
 // POST /meetings - Crea appuntamento (orchestrato)
@@ -92,26 +93,32 @@ export async function listMeetingsHandler(
   request: HttpRequest,
   context: InvocationContext,
 ): Promise<HttpResponseInit> {
-  context.log("=== List Meetings Request ===");
+  const logger = createLogger(context);
+  logger.info("List Meetings request received");
 
   try {
     const top = request.query.get("top") ?? "50";
     const filter = request.query.get("filter") ?? undefined;
 
-    const result = await listAppointments({ top, filter });
+    logger.info("Listing appointments", { odataTop: top, odataFilter: filter });
+
+    const result = await listAppointments({ top, filter }, logger);
+    const count = result.value?.length ?? 0;
+
+    logger.info("Appointments listed successfully", { resultCount: count });
 
     return {
       status: 200,
       jsonBody: {
         success: true,
         data: result.value,
-        count: result.value?.length ?? 0,
+        count,
         timestamp: new Date().toISOString(),
       },
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    context.error("Failed to list meetings:", errorMessage);
+    logger.error("Failed to list meetings", error);
 
     return {
       status: 500,

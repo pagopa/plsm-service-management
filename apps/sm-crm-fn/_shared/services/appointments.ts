@@ -10,26 +10,35 @@ import type {
 } from "../types/dynamics";
 import { get, post, buildUrl } from "./httpClient";
 import { getConfigOrThrow } from "../utils/config";
+import { type Logger } from "../utils/logger";
 
 // -----------------------------------------------------------------------------
 // Lista Appuntamenti
 // -----------------------------------------------------------------------------
 
-export async function listAppointments(params?: {
-  filter?: string;
-  select?: string;
-  top?: string;
-}): Promise<DynamicsList<Appointment>> {
+export async function listAppointments(
+  params?: {
+    filter?: string;
+    select?: string;
+    top?: string;
+  },
+  logger?: Logger,
+): Promise<DynamicsList<Appointment>> {
   const url = buildUrl({
     endpoint: "/api/data/v9.2/appointments",
     filter: params?.filter,
     select:
       params?.select ??
-      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,nextstep",
+      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode",
     top: params?.top,
   });
 
-  console.log(`[Appointments] Fetching appointments from: ${url}`);
+  logger?.info("Fetching appointments from Dynamics", {
+    url,
+    odataFilter: params?.filter,
+    odataTop: params?.top,
+  });
+
   return get<Appointment>(url);
 }
 
@@ -43,7 +52,6 @@ export interface CreateFullAppointmentParams {
   scheduledend: string;
   location?: string;
   description?: string;
-  nextstep?: string;
   dataProssimoContatto?: string;
   accountId: string;
   contactIds: string[];
@@ -68,7 +76,6 @@ export interface CreateFullAppointmentParams {
  * @param params.contactIds - Array di GUID dei contatti partecipanti
  * @param params.location - Luogo (default: "Meet")
  * @param params.description - Descrizione
- * @param params.nextstep - Prossimi passi
  * @returns Appuntamento creato con activityid
  */
 export async function createAppointment(
@@ -101,7 +108,6 @@ export async function createAppointment(
     location: params.location ?? "Meet",
     description: params.description,
     statuscode: 5, // Busy
-    nextstep: params.nextstep,
     "regardingobjectid_account@odata.bind": `/accounts(${params.accountId})`,
     appointment_activity_parties: activityParties,
   };
@@ -135,7 +141,7 @@ export async function getAppointmentById(
   const url = buildUrl({
     endpoint: `/api/data/v9.2/appointments(${activityId})`,
     select:
-      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,nextstep",
+      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode",
   });
 
   console.log(`[Appointments] Fetching appointment: ${activityId}`);

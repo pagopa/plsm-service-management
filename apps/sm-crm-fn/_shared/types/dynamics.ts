@@ -48,7 +48,6 @@ export interface Appointment {
   description?: string;
   statecode?: number;
   statuscode?: number;
-  nextstep?: string;
   new_dataprossimocontatto?: string;
 }
 
@@ -73,7 +72,6 @@ export interface CreateAppointmentRequest {
   location?: string;
   description?: string;
   statuscode?: number;
-  nextstep?: string;
   new_dataprossimocontatto?: string;
   "ownerid@odata.bind"?: string;
   "regardingobjectid_account@odata.bind"?: string;
@@ -147,7 +145,6 @@ export interface CreateMeetingOrchestratorRequest {
   scheduledend: string;
   location?: string;
   description?: string;
-  nextstep?: string;
   dataProssimoContatto?: string;
 
   // Opzioni
