@@ -34,7 +34,7 @@ servers:
     description: Ambiente DEV
   - url: https://sm-u-itn-pg-<service>-fn.azurewebsites.net/api/v1
     description: Ambiente UAT
-  - url: https://sm-p-itn-pg-<service>-fn.azurewebsites.net/api/v1
+  - url: https://plsm-p-itn-crm-func-01.azurewebsites.net/api/v1
     description: Ambiente PROD
 
 tags:
@@ -46,6 +46,8 @@ tags:
     description: Gestione Contatti CRM
   - name: Meetings
     description: Gestione appuntamenti CRM
+  - name: Diagnostics
+    description: Endpoint diagnostici per verifica configurazione e metadati Dynamics
 
 paths:
   /health:
@@ -376,6 +378,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateMeetingResponse"
+
+  /diagnostics/probe:
+    get:
+      tags:
+        - Diagnostics
+      summary: Probe metadati Dynamics
+      description: |
+        Endpoint diagnostico interno per verificare la configurazione dell'integrazione
+        con Dynamics 365 CRM.
+
+        **Funzionalità:**
+        - Rileva l'ambiente corrente (DEV/UAT/PROD)
+        - Proba i candidati per i nomi degli entity set OData
+        - Lista le relazioni ManyToOne del contact verso entità `product`
+        - Lista tutte le entità custom con prefisso `pgp_` e i loro entity set name
+        - Lookup opzionale di un account per GUID → restituisce `pgp_identificativoselfcare`
+
+        **Nota:** Questo endpoint richiede la function key (`authLevel: function`).
+        Non è destinato all'uso in produzione da parte del frontend.
+      operationId: diagnosticsProbe
+      parameters:
+        - name: accountId
+          in: query
+          required: false
+          description: |
+            GUID Dynamics di un account. Se specificato, restituisce i dati dell'account
+            incluso `pgp_identificativoselfcare` (selfcareId).
+          schema:
+            type: string
+            format: uuid
+            example: "b0afc1d6-56d0-f011-bbd3-000d3a658478"
+      responses:
+        "200":
+          description: Probe completato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticsProbeResponse"
 
 components:
   schemas:
@@ -801,6 +841,107 @@ components:
         timestamp:
           type: string
           format: date-time
+
+    DiagnosticsProbeResponse:
+      type: object
+      properties:
+        environment:
+          type: string
+          enum: [DEV, UAT, PROD]
+          description: Ambiente rilevato dal DYNAMICS_BASE_URL
+        dynamicsBaseUrl:
+          type: string
+          description: URL base Dynamics configurato
+          example: "https://uat-pagopa.crm4.dynamics.com"
+        accountLookup:
+          type: object
+          description: Presente solo se `accountId` è stato passato come query param
+          properties:
+            accountid:
+              type: string
+              format: uuid
+            name:
+              type: string
+              nullable: true
+            pgp_identificativoselfcare:
+              type: string
+              format: uuid
+              nullable: true
+              description: SelfcareId dell'ente — da usare come `institutionIdSelfcare` nella POST /meetings
+        contactProductRelationships:
+          type: object
+          properties:
+            relationships:
+              type: array
+              description: Relazioni ManyToOne del contact verso entità product
+              items:
+                type: object
+                properties:
+                  schemaName:
+                    type: string
+                    example: "pgp_contact_Prodottoid_product"
+                  referencingNavigationPropertyName:
+                    type: string
+                    description: Nome da usare nell'@odata.bind sul contact
+                    example: "pgp_Prodottoid"
+                  referencedEntity:
+                    type: string
+                    example: "product"
+            error:
+              type: string
+              nullable: true
+        metadata:
+          type: object
+          properties:
+            pgpEntities:
+              type: array
+              description: Tutte le entità custom con prefisso pgp_
+              items:
+                type: object
+                properties:
+                  logicalName:
+                    type: string
+                    example: "pgp_comune"
+                  entitySetName:
+                    type: string
+                    example: "pgp_comunes"
+            error:
+              type: string
+              nullable: true
+        recommendation:
+          type: string
+          nullable: true
+          description: Entity set name raccomandato per il prodotto (se trovato)
+        products:
+          type: object
+          description: Mappa productIdSelfcare → GUID CRM per l'ambiente corrente
+          additionalProperties:
+            type: string
+            format: uuid
+        candidates:
+          type: object
+          description: Risultati del probe sui candidati per l'entity set del prodotto
+          additionalProperties:
+            oneOf:
+              - type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                  sample:
+                    type: object
+              - type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  statusCode:
+                    type: integer
+                    nullable: true
+                  error:
+                    type: string
 
     # ==========================================================================
     # Enums

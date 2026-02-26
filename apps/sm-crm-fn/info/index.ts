@@ -3,7 +3,7 @@ import { handler } from "./handler";
 
 export default app.http("health", {
   methods: ["GET"],
-  authLevel: "anonymous",
+  authLevel: "function",
   route: "health",
   handler,
 });
