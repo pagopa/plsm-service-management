@@ -203,6 +203,64 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+    post:
+      tags:
+        - Contacts
+      summary: Crea contatti
+      description: |
+        Crea uno o più contatti in Dynamics CRM associati a un ente, senza dover
+        creare un appuntamento.
+
+        Il flusso è:
+        1. Verifica l'ente tramite `institutionIdSelfcare`
+        2. Per ogni partecipante, crea il contatto collegandolo all'account e al prodotto
+      operationId: createContacts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContactsRequest"
+            example:
+              institutionIdSelfcare: "f1806fd6-5bd0-42bb-a2c8-04603190decd"
+              productIdSelfcare: "prod-pagopa"
+              partecipanti:
+                - email: "mario.rossi@ente.it"
+                  nome: "Mario"
+                  cognome: "Rossi"
+                  tipologiaReferente: "TECNICO"
+      responses:
+        "201":
+          description: Tutti i contatti creati con successo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateContactsResponse"
+        "207":
+          description: Alcuni contatti creati, altri falliti
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateContactsResponse"
+        "400":
+          description: Parametri mancanti o invalidi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Ente non trovato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Tutti i contatti falliti o errore interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateContactsResponse"
+
   /meetings:
     get:
       tags:
@@ -221,10 +279,12 @@ paths:
             maximum: 500
         - name: filter
           in: query
-          description: Filtro OData (es. `statecode eq 0`)
+          description: |
+            Filtro OData. Gli appuntamenti creati dal sistema hanno `statecode eq 3` (Scheduled/Busy).
+            Valori statecode: 0=Open, 1=Completed, 2=Cancelled, 3=Scheduled.
           schema:
             type: string
-            example: "statecode eq 0"
+            example: "statecode eq 3"
       responses:
         "200":
           description: Lista appuntamenti
@@ -838,6 +898,79 @@ components:
           type: array
           items:
             type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    CreateContactsRequest:
+      type: object
+      required:
+        - institutionIdSelfcare
+        - productIdSelfcare
+        - partecipanti
+      properties:
+        institutionIdSelfcare:
+          type: string
+          format: uuid
+          description: ID Selfcare dell'ente
+          example: "f1806fd6-5bd0-42bb-a2c8-04603190decd"
+        productIdSelfcare:
+          $ref: "#/components/schemas/ProductIdSelfcare"
+        partecipanti:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+              - email
+              - nome
+              - cognome
+            properties:
+              email:
+                type: string
+                format: email
+                example: "mario.rossi@ente.it"
+              nome:
+                type: string
+                example: "Mario"
+              cognome:
+                type: string
+                example: "Rossi"
+              tipologiaReferente:
+                $ref: "#/components/schemas/TipologiaReferente"
+
+    CreateContactsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        accountId:
+          type: string
+          format: uuid
+          description: GUID dell'account Dynamics
+        created:
+          type: integer
+          description: Numero di contatti creati con successo
+        total:
+          type: integer
+          description: Numero totale di partecipanti elaborati
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+                format: email
+              success:
+                type: boolean
+              contactId:
+                type: string
+                format: uuid
+                description: Presente solo se success è true
+              error:
+                type: string
+                description: Presente solo se success è false
         timestamp:
           type: string
           format: date-time
