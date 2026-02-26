@@ -48,16 +48,16 @@ locals {
   # =============================================================================
 
   # 1. Portale Fatturazione
-  pf_app_settings      = local.yaml_pf_app_settings
-  pf_slot_app_settings = local.yaml_pf_slot_app_settings
+  pf_app_settings      = local.yaml_pf_func_app_settings
+  pf_slot_app_settings = local.yaml_pf_func_slot_app_settings
 
   # 2. Certificates Function
   certificates_func_app_settings      = local.yaml_certificates_func_app_settings
-  certificates_slot_func_app_settings = local.yaml_certificates_slot_func_app_settings
+  certificates_slot_func_app_settings = local.yaml_certificates_func_slot_app_settings
 
   # 3. Onboarding Function
   onboarding_func_app_settings      = local.yaml_onboarding_func_app_settings
-  onboarding_slot_func_app_settings = local.yaml_onboarding_slot_func_app_settings
+  onboarding_slot_func_app_settings = local.yaml_onboarding_func_slot_app_settings
 
   # 4. Ask Me Bot Function (Exposed)
   askmebot_func_app_settings      = local.yaml_askmebot_func_app_settings
