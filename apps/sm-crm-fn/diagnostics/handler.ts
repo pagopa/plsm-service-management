@@ -10,7 +10,7 @@ import { createLogger } from "../_shared/utils/logger";
 
 type CandidateResult =
   | { success: true; count: number; sample: Record<string, unknown> }
-  | { success: false; statusCode: number | null; error: string };
+  | { success: false; statusCode: number | undefined; error: string };
 
 export async function probeDynamicsHandler(
   _request: HttpRequest,
@@ -44,7 +44,7 @@ export async function probeDynamicsHandler(
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       const statusMatch = errorMessage.match(/failed: (\d+)/);
-      const statusCode = statusMatch ? parseInt(statusMatch[1], 10) : null;
+      const statusCode = statusMatch ? parseInt(statusMatch[1], 10) : undefined;
       results[candidate] = {
         success: false,
         statusCode,
