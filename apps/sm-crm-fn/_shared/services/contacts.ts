@@ -323,7 +323,7 @@ export async function createContact(
     emailaddress1: params.email,
     pgp_tipologiareferente: tipologiaId,
     "parentcustomerid_account@odata.bind": `/accounts(${params.accountId})`,
-    "pgp_ProdottoId@odata.bind": `/products(${productGuid})`,
+    "pgp_prodottoid@odata.bind": `/products(${productGuid})`,
   };
 
   console.log(
