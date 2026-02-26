@@ -36,6 +36,41 @@ async function probeMetadata(): Promise<{
   }
 }
 
+async function probeContactProductRelationship(): Promise<{
+  relationships: Array<{
+    schemaName: string;
+    referencingNavigationPropertyName: string;
+    referencedEntity: string;
+  }>;
+  error: string | null;
+}> {
+  // Cerca tutte le ManyToOne relationships del contact verso entità che contengono "product"
+  const url = buildUrl({
+    endpoint:
+      "/api/data/v9.2/EntityDefinitions(LogicalName='contact')/ManyToOneRelationships",
+    select:
+      "SchemaName,ReferencingEntityNavigationPropertyName,ReferencedEntity",
+  });
+
+  try {
+    const data = await get<Record<string, unknown>>(url);
+    const relationships = (data.value ?? [])
+      .filter((r) =>
+        (r["ReferencedEntity"] as string)?.includes("product"),
+      )
+      .map((r) => ({
+        schemaName: r["SchemaName"] as string,
+        referencingNavigationPropertyName:
+          r["ReferencingEntityNavigationPropertyName"] as string,
+        referencedEntity: r["ReferencedEntity"] as string,
+      }));
+    return { relationships, error: null };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { relationships: [], error: errorMessage };
+  }
+}
+
 async function lookupAccount(accountId: string): Promise<{
   accountid: string;
   name: string | null;
@@ -80,7 +115,13 @@ export async function probeDynamicsHandler(
     });
   }
 
-  // Step 1: lista tutte le entità pgp_ dai metadati di Dynamics
+  // Step 1: relazioni ManyToOne del contact verso entità "product"
+  const contactProductRel = await probeContactProductRelationship();
+  logger.info("Contact→Product relationships found", {
+    count: contactProductRel.relationships.length,
+  });
+
+  // Step 2: lista tutte le entità pgp_ dai metadati di Dynamics
   const metadata = await probeMetadata();
   logger.info("Metadata probe result", { count: metadata.pgpEntities.length });
 
@@ -134,6 +175,7 @@ export async function probeDynamicsHandler(
       environment,
       dynamicsBaseUrl: cfg.DYNAMICS_BASE_URL,
       ...(accountLookup !== undefined && { accountLookup }),
+      contactProductRelationships: contactProductRel,
       metadata,
       recommendation,
       products: PRODUCTS_MAP[environment],
