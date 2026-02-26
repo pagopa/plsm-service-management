@@ -36,8 +36,31 @@ async function probeMetadata(): Promise<{
   }
 }
 
+async function lookupAccount(accountId: string): Promise<{
+  accountid: string;
+  name: string | null;
+  pgp_identificativoselfcare: string | null;
+} | null> {
+  const url = buildUrl({
+    endpoint: `/api/data/v9.2/accounts(${accountId})`,
+    select: "accountid,name,pgp_identificativoselfcare",
+  });
+
+  try {
+    const data = await get<Record<string, unknown>>(url);
+    const account = data.value?.[0] ?? (data as unknown as Record<string, unknown>);
+    return {
+      accountid: account["accountid"] as string,
+      name: (account["name"] as string) ?? null,
+      pgp_identificativoselfcare: (account["pgp_identificativoselfcare"] as string) ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function probeDynamicsHandler(
-  _request: HttpRequest,
+  request: HttpRequest,
   context: InvocationContext,
 ): Promise<HttpResponseInit> {
   const logger = createLogger(context);
@@ -45,6 +68,17 @@ export async function probeDynamicsHandler(
   const environment = resolveEnvironment(cfg.DYNAMICS_BASE_URL);
 
   logger.info("Diagnostics probe started", { environment });
+
+  // Lookup opzionale: ?accountId=<guid>
+  const accountIdParam = request.query.get("accountId");
+  let accountLookup: Awaited<ReturnType<typeof lookupAccount>> | undefined;
+  if (accountIdParam) {
+    accountLookup = await lookupAccount(accountIdParam) ?? undefined;
+    logger.info("Account lookup result", {
+      accountId: accountIdParam,
+      found: accountLookup != null,
+    });
+  }
 
   // Step 1: lista tutte le entità pgp_ dai metadati di Dynamics
   const metadata = await probeMetadata();
@@ -99,6 +133,7 @@ export async function probeDynamicsHandler(
     jsonBody: {
       environment,
       dynamicsBaseUrl: cfg.DYNAMICS_BASE_URL,
+      ...(accountLookup !== undefined && { accountLookup }),
       metadata,
       recommendation,
       products: PRODUCTS_MAP[environment],
