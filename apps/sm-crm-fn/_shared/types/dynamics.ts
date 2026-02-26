@@ -62,7 +62,7 @@ export interface CreateContactRequest {
   pgp_tipologiareferente: number;
   // Navigation Properties for lookups (use @odata.bind)
   "parentcustomerid_account@odata.bind": string;
-  "pgp_ProdottoId@odata.bind"?: string; // Optional - correct Navigation Property name unknown
+  "pgp_prodottoid@odata.bind"?: string;
 }
 
 export interface CreateAppointmentRequest {
