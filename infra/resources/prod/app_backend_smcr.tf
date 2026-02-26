@@ -48,7 +48,7 @@ resource "azurerm_role_assignment" "ci_identity_website_contrib_backend_smcr" {
 
 resource "azurerm_role_assignment" "smcr_portalefatturazione_storage_contributor" {
   principal_id         = module.azure_app_service_backend_smcr.principal_id
-  scope                = var.container_pf
+  scope                = data.azurerm_key_vault_secret.tf_container_pf.value
   role_definition_name = "Storage Blob Data Contributor"
 
   depends_on = [module.azure_app_service_backend_smcr]

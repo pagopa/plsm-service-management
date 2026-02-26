@@ -26,3 +26,62 @@ runtime:
 # Health check configuration
 health_check:
   path: "/api/v1/health"
+
+# =============================================================================
+# Shared Application Configuration (Non-Secret Values Only)
+# =============================================================================
+# NOTE: Secrets are always read from Azure Key Vault via data.azurerm_key_vault_secret
+# Only non-secret configuration values belong here
+
+# Database Configuration (Common)
+database:
+  port: 5432
+  ssl: true
+
+# Portale Fatturazione - No common configuration needed (all values are secrets)
+
+# Certificates Function - Common database settings
+certificates:
+  db_name: "certificates"
+  db_table: "certificates"
+
+# Onboarding Function - Common configuration
+onboarding:
+  contracts_topic_consumer_group: "$Default"
+  contracts_topic_name: "sc-contracts"
+  endpoint_get_institution_from_taxcode: "https://api.selfcare.pagopa.it/external/v2/institutions/?taxCode="
+
+# Ask Me Bot Function - Common configuration
+askmebot:
+  service_name: "Ask Me Bot"
+  slack_api_url: "https://slack.com/api"
+  institution_url: "https://api.selfcare.pagopa.it/external/support/v1/institutions"
+  users_url: "https://api.selfcare.pagopa.it/external/internal/v1/institutions"
+  contract_url: "https://api.selfcare.pagopa.it/external/support/v1/institutions"
+  smtp_host: "smtp.gmail.com"
+  smtp_port: "587"
+  smtp_secure: false
+  smtp_username: "noreply@pagopa.it"
+  from_email: "noreply@pagopa.it"
+  ccn_email: "Bot_Selfcare@pagopa.it"
+  max_data_length: "10"
+  appinsights_sampling_percentage: 5
+
+# Backend SMCR - No common configuration (empty settings)
+
+# Frontend FE-SMCR - Common configuration
+fe_smcr:
+  azure_storage_container: "selfcare"
+  azure_storage_onboarding_products_blob_prefix: "Selfcare_onboarding_mensili_"
+  db_name: "dbsmcr"
+  db_table: "dbsmcr"
+  get_infocamere: "external/internal/v1/infocamere-pdnd/institution/"
+  get_institution: "external/support/v1/institutions"
+  get_ipa: "external/internal/v1/institutions/"
+  get_ipa_uo: "external/internal/v1/uo/"
+  get_ipa_aoo: "external/internal/v1/aoo/"
+  get_status: "external/support/v1/onboarding/institutionOnboardings"
+  get_users_path: "external/v2/users"
+  onboarding_base_path: "https://api.selfcare.pagopa.it/"
+  upload: "external/internal/v1/onboarding/"
+  testend: "mytestendpoint"

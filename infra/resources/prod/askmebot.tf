@@ -29,7 +29,7 @@ module "askmebot_function" {
 
 # Trigger per forzare la riesecuzione della VNet integration dopo modifiche al modulo
 resource "terraform_data" "askmebot_vnet_trigger" {
-  input = module.askmebot_function.function_app_id
+  input = timestamp()
 }
 
 resource "azapi_update_resource" "askmebot_vnet_integration" {

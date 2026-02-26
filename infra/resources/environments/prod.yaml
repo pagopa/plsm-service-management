@@ -1,7 +1,8 @@
 # =============================================================================
 # Production Environment Configuration
 # =============================================================================
-# This file contains production-specific configuration for SM-CRM-FN (Dynamics CRM Function)
+# This file contains production-specific configuration for all 6 applications
+# NOTE: Only non-secret values are stored here. Secrets are read from Azure Key Vault.
 
 environment:
   name: "prod"
@@ -20,7 +21,195 @@ tags:
   Source: "https://github.com/pagopa/plsm-service-management/tree/main"
 
 # =============================================================================
-# CRM Function App Settings
+# Portale Fatturazione Function (PF)
+# =============================================================================
+
+portale_fatturazione:
+  app_name: "pf"
+  instance_number: "01"
+  node_version: 22
+
+  # Production slot (all values are secrets from Key Vault)
+  production:
+    # Secrets: apikey_endpoint_pf, storage_pf_name, container_pf_name
+
+  # Staging slot (all values are secrets from Key Vault)
+  staging:
+    # Secrets: apikey_endpoint_pf, storage_pf_name, container_pf_name
+
+# =============================================================================
+# Certificates Function
+# =============================================================================
+
+certificates:
+  app_name: "certificates"
+  instance_number: "01"
+  node_version: 22
+
+  # Production slot
+  production:
+    # Secrets from Key Vault: db_host, db_user, db_password
+    # Non-secret values from common.yaml: db_name, db_table, db_port, db_ssl
+
+  # Staging slot
+  staging:
+    # Secrets from Key Vault: db_host, db_user, db_password
+    # Non-secret values from common.yaml: db_name, db_table, db_port, db_ssl
+
+# =============================================================================
+# Onboarding Function
+# =============================================================================
+
+onboarding:
+  app_name: "onboarding"
+  instance_number: "01"
+  node_version: 22
+
+  # Production slot
+  production:
+    # Secrets from Key Vault:
+    # - sc_contracts_conn_string
+    # - slack_webhook_log
+    # - slack_webhook_onboarding_io
+    # - slack_webhook_onboarding_io_premium
+    # - slack_webhook_onboarding_pn
+    # - slack_webhook_onboarding_interop
+    # - slack_webhook_onboarding_pagopa
+    # - ocp_apim_subscription_key
+    # Non-secret values from common.yaml:
+    # - contracts_topic_consumer_group, contracts_topic_name, endpoint_get_institution_from_taxcode
+
+  # Staging slot
+  staging:
+    # Secrets from Key Vault:
+    # - appinsights_instrumentationkey
+    # - sc_contracts_conn_string
+    # - slack_webhook_log
+    # - slack_webhook_onboarding_io
+    # - slack_webhook_onboarding_io_premium
+    # - slack_webhook_onboarding_pn
+    # - slack_webhook_onboarding_interop
+    # - slack_webhook_onboarding_pagopa
+    # - FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY
+    # Non-secret values from common.yaml:
+    # - contracts_topic_consumer_group, contracts_topic_name, endpoint_get_institution_from_taxcode
+
+# =============================================================================
+# Ask Me Bot Function (Exposed)
+# =============================================================================
+
+askmebot:
+  app_name: "askmebot"
+  instance_number: "01"
+  node_version: 22
+
+  # Production slot
+  production:
+    node_env: "production"
+    # Secrets from Key Vault:
+    # - askmebot_slack_bot_token
+    # - askmebot_slack_signing_secret
+    # - askmebot_enabled_emails_secret
+    # - askmebot_legal_enabled_emails_secret
+    # - askmebot_FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY
+    # - askmebot_users_apim_subscription_key
+    # - askmebot_contract_apim_subscription_key
+    # - askmebot_smtp_password
+    # - appinsights_connection_string
+    # - appinsights_instrumentationkey
+    # Non-secret values from common.yaml:
+    # - service_name, slack_api_url, institution_url, users_url, contract_url
+    # - smtp_host, smtp_port, smtp_secure, smtp_username, from_email, ccn_email
+    # - max_data_length, appinsights_sampling_percentage
+
+  # Staging slot
+  staging:
+    node_env: "production"
+    # Secrets from Key Vault:
+    # - askmebot_slack_bot_token
+    # - askmebot_slack_signing_secret
+    # - askmebot_enabled_emails_secret
+    # - askmebot_legal_enabled_emails_secret
+    # - askmebot_ocp_apim_subscription_key (different key for staging!)
+    # - askmebot_users_apim_subscription_key
+    # - askmebot_contract_apim_subscription_key
+    # - askmebot_smtp_password
+    # - appinsights_connection_string
+    # - appinsights_instrumentationkey
+    # Non-secret values from common.yaml: same as production
+
+# =============================================================================
+# Backend SMCR App Service
+# =============================================================================
+
+backend_smcr:
+  app_name: "backend-smcr"
+  instance_number: "01"
+  node_version: 22
+
+  # Production slot (currently empty)
+  production: {}
+
+  # Staging slot (currently empty)
+  staging: {}
+
+# =============================================================================
+# Frontend FE-SMCR App Service (Next.js)
+# =============================================================================
+
+fe_smcr:
+  app_name: "FE-SMCR"
+  instance_number: "01"
+  node_version: 22
+  startup_command: "node server.js"
+  health_check_path: "/api/health"
+
+  # Production slot
+  production:
+    next_public_app_url: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
+    next_public_msal_redirect_uri: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
+    next_public_post_login_redirect: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
+
+    # Secrets from Key Vault:
+    # - fe_smcr_ocp_apim_subscription_key_uat
+    # - fe_smcr_api_slack_call_management_hook_test
+    # - fe_smcr_api_slack_call_management_hook_prod
+    # - fe_smcr_users_api_key
+    # - fe_smcr_ocp_apim_subscription_key
+    # - fe_smcr_api_key_institution
+    # - fe_smcr_api_key_prod_get_users
+    # - fe_smcr_api_key_services
+    # - fe_smcr_api_key_pnpg
+    # - fe_smcr_api_key_firma_con_io
+    # - fe_smcr_slack_report_hook
+    # - fe_smcr_slack_call_management_hook
+    # - fe_smcr_azure_storage_connection_string
+    # - fe_smcr_webhook_manual_storage
+    # - fe_smcr_storage_token
+    # - db_host, db_user, db_password_b64
+    # - fe_smcr_slack_call_management_hook_test
+    # - fe_smcr_slack_call_management_hook_prod
+    # - fe_smcr_onboarding_base_path_uat
+    # - fe_smcr_plsm_p_platformsm_client_id
+    # - fe_smcr_plsm_p_platformsm_tenant_id
+
+    # Non-secret values from common.yaml:
+    # - azure_storage_container, azure_storage_onboarding_products_blob_prefix
+    # - db_name, db_table, db_port, db_ssl
+    # - get_infocamere, get_institution, get_ipa, get_ipa_uo, get_ipa_aoo
+    # - get_status, onboarding_base_path, upload
+
+  # Staging slot
+  staging:
+    next_public_app_url: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
+    next_public_msal_redirect_uri: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
+    next_public_post_login_redirect: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
+
+    # Secrets from Key Vault: same as production
+    # Non-secret values from common.yaml: same as production
+
+# =============================================================================
+# CRM Function (Dynamics CRM Integration)
 # =============================================================================
 
 crm_function:
