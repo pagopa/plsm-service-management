@@ -22,7 +22,7 @@ export async function probeDynamicsHandler(
 
   logger.info("Diagnostics probe started", { environment });
 
-  const candidates = ["pgp_prodottos", "pgp_prodottoes"] as const;
+  const candidates = ["pgp_prodotti", "pgp_products"] as const;
   const results: Record<string, CandidateResult> = {};
 
   for (const candidate of candidates) {
