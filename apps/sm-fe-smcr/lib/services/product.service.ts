@@ -6,6 +6,7 @@ import { Readable } from "node:stream";
 import { z } from "zod";
 
 import logger from "@/lib/logger/logger.server";
+import { serverEnv } from "@/config/env";
 
 async function streamToBuffer(stream: Readable): Promise<Buffer> {
   const chunks: Buffer[] = [];
@@ -20,8 +21,8 @@ export async function verifyContract(product: string) {
     `https://api.selfcare.pagopa.it/external/internal/v1/tokens/contract-report?onboardingId=${product}`,
     {
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env
-          .FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY as string,
+        "Ocp-Apim-Subscription-Key":
+          serverEnv.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY as string,
       },
       output: z.object({
         cades: z.boolean(),
@@ -47,8 +48,8 @@ export async function getOnboardingByProduct(
       `https://api.selfcare.pagopa.it/external/support/v1/api/onboardings/notifications/count?from=${startDate}&to=${endDate}&productId=${product}`,
       {
         headers: {
-          "Ocp-Apim-Subscription-Key": process.env
-            .FE_SMCR_API_KEY_INSTITUTION as string,
+          "Ocp-Apim-Subscription-Key":
+            serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
         },
         output: z.array(
           z.object({
@@ -88,11 +89,10 @@ export type OnboardingProduct = z.infer<
 >[number];
 
 const AZURE_STORAGE_CONNECTION_STRING =
-  process.env.FE_SMCR_AZURE_STORAGE_CONNECTION_STRING;
-const AZURE_STORAGE_CONTAINER =
-  process.env.FE_SMCR_AZURE_STORAGE_CONTAINER ?? "config";
+  serverEnv.FE_SMCR_AZURE_STORAGE_CONNECTION_STRING;
+const AZURE_STORAGE_CONTAINER = serverEnv.FE_SMCR_AZURE_STORAGE_CONTAINER;
 const AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX =
-  process.env.FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX;
+  serverEnv.FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX;
 
 function normalizeConnectionString(connectionString: string): string {
   let s = connectionString.trim();
@@ -271,8 +271,8 @@ export async function sendQueueMessage(onboarding: string) {
     {
       method: "PUT",
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env
-          .FE_SMCR_API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key":
+          serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
         "content-type": "application/json",
       },
       body: JSON.stringify({}),

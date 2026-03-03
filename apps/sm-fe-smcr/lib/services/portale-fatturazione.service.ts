@@ -1,8 +1,9 @@
 "use server";
 import { betterFetch } from "@better-fetch/fetch";
+import { serverEnv } from "@/config/env";
 
-const STORAGE_TOKEN = process.env.STORAGE_TOKEN! as string;
-const WEBHOOK_MANUAL_STORAGE = process.env.WEBHOOK_MANUAL_STORAGE! as string;
+const STORAGE_TOKEN = serverEnv.STORAGE_TOKEN as string;
+const WEBHOOK_MANUAL_STORAGE = serverEnv.WEBHOOK_MANUAL_STORAGE as string;
 
 export async function updateManual(file: File, fileName: string) {
   if (!file) {

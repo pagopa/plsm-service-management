@@ -1,6 +1,7 @@
 "use server";
 
 import z from "zod";
+import { serverEnv } from "@/config/env";
 
 const reportErrorSchema = z.object({
   title: z
@@ -42,7 +43,7 @@ export async function reportError(
     return { fields: input, errors };
   }
 
-  const webhook = process.env.FE_SMCR_API_SLACK_REPORT_HOOK;
+  const webhook = serverEnv.FE_SMCR_API_SLACK_REPORT_HOOK;
   if (!webhook) {
     console.error(
       "Errore durante l'invio della segnalazione, env FE_SMCR_API_SLACK_REPORT_HOOK mancante.",

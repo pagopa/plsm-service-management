@@ -2,6 +2,7 @@
 
 import { betterFetch } from "@better-fetch/fetch";
 import z from "zod";
+import { serverEnv } from "@/config/env";
 
 const LIMIT = 20;
 
@@ -40,7 +41,7 @@ export async function getServices(query: string) {
     {
       method: "GET",
       headers: {
-        "x-api-key": process.env.FE_SMCR_API_KEY_SERVICES as string,
+        "x-api-key": serverEnv.FE_SMCR_API_KEY_SERVICES as string,
       },
       output: z.object({
         items: z.array(
@@ -145,7 +146,7 @@ export async function getMessagesCount(
     {
       method: "GET",
       headers: {
-        "x-api-key": process.env.FE_SMCR_API_KEY_SERVICES as string,
+        "x-api-key": serverEnv.FE_SMCR_API_KEY_SERVICES as string,
       },
       output: z.any(),
     },

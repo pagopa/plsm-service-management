@@ -1,6 +1,7 @@
 // app/api/auth/callback/microsoft/route.tsx
 import { NextResponse } from "next/server";
 import { getMsalInstance } from "@/lib/msalConfig";
+import { clientEnv } from "@/config/env";
 
 export async function GET(request: Request) {
   try {
@@ -9,7 +10,7 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(
       new URL(
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+        `${clientEnv.NEXT_PUBLIC_APP_URL}/dashboard`,
         request.url,
       ),
     );
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
     console.error("Errore durante l'autenticazione:", error);
     return NextResponse.redirect(
       new URL(
-        `${process.env.NEXT_PUBLIC_APP_URL}/auth/error?cause=callback`,
+        `${clientEnv.NEXT_PUBLIC_APP_URL}/auth/error?cause=callback`,
         request.url,
       ),
     );

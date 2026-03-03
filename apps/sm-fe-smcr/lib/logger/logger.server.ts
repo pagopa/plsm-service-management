@@ -1,13 +1,14 @@
 import { randomUUID } from "crypto";
 import pino from "pino";
 import pinoPretty from "pino-pretty";
+import { serverEnv } from "@/config/env";
 
 const remoteStream = {
   write: async (input: string) => {
     try {
       const log = JSON.parse(input);
 
-      await fetch(process.env.FE_SMCR_LOGS_ENDPOINT as string, {
+      await fetch(serverEnv.FE_SMCR_LOGS_ENDPOINT as string, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(log),
@@ -20,7 +21,7 @@ const remoteStream = {
 
 const logger = pino(
   {
-    level: (process.env.FE_SMCR_LOG_LEVEL as string) || "info",
+    level: (serverEnv.FE_SMCR_LOG_LEVEL as string) || "info",
     messageKey: "message",
     base: {
       service: "SMCR",

@@ -1,3 +1,5 @@
+import { serverEnv } from "@/config/env";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
@@ -26,7 +28,7 @@ export async function GET(request: Request) {
     const apiRes = await fetch(apiUrl, {
       method: "GET",
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env.FE_SMCR_API_KEY_INSTITUTION!,
+        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_INSTITUTION!,
       },
     });
 
