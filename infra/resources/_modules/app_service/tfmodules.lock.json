@@ -1,0 +1,8 @@
+{
+  "azure_app_service": {
+    "hash": "1578c3d974a6e23784264e334d4a5fc51fc11bb42e73d650d7f6ff335346184c",
+    "version": "1.0.1",
+    "name": "azure_app_service",
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-app-service/azurerm/1.0.1"
+  }
+}

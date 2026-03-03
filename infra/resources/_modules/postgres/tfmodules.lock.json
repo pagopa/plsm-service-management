@@ -1,0 +1,8 @@
+{
+  "postgres": {
+    "hash": "9777adb9f883f60142c4607a503d2500f6b179356bb63ee75c442caf938a9a49",
+    "version": "1.0.7",
+    "name": "azure_postgres_server",
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-postgres-server/azurerm/1.0.7"
+  }
+}

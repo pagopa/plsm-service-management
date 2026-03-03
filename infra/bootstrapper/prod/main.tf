@@ -51,7 +51,7 @@ module "azure-github-environment-bootstrap" {
     resource_group_name = "terraform-state-rg"
   }
 
-  
+
 
   github_private_runner = {
     container_app_environment_id       = data.azurerm_container_app_environment.runner.id

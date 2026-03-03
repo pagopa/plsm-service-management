@@ -1,0 +1,15 @@
+# Pre-commit hooks configuration
+# This file is required by the DX infra_plan workflow to resolve the correct
+# pre-commit-terraform Docker image version from GHCR.
+
+repos:
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.96.2
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_validate
+
+  - repo: https://github.com/pagopa/dx
+    rev: main
+    hooks:
+      - id: lock_modules

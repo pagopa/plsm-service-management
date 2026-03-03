@@ -1,0 +1,118 @@
+# =============================================================================
+# Production Environment Configuration
+# =============================================================================
+# I blocchi con __local sono processati da infra/scripts/generate_locals.py.
+# Le sezioni environment e tags generano yaml_environment e yaml_tags.
+# NOTE: Solo valori non-segreti qui. I segreti usano "kv:<terraform_resource_name>".
+
+# ─── Metadati ambiente ────────────────────────────────────────────────────────
+
+environment:
+  name: "prod"
+  prefix: "plsm"
+  env_short: "p"
+  location: "italynorth"
+  instance_number: "01"
+
+# ─── Tag risorse ─────────────────────────────────────────────────────────────
+
+tags:
+  CostCenter:     "TS310 - PAGAMENTI & SERVIZI"
+  CreatedBy:      "Terraform"
+  Environment:    "Prod"
+  Owner:          "PLSM"
+  ManagementTeam: "Service Management"
+  Source:         "https://github.com/pagopa/plsm-service-management/tree/main"
+
+# =============================================================================
+# Risorse Azure — processate da generate_locals.py (__local = prefisso local TF)
+# =============================================================================
+
+# ─── Portale Fatturazione (PF) ────────────────────────────────────────────────
+# Tutti i valori sono segreti; production = staging
+
+portale_fatturazione:
+  __local: yaml_pf_func
+  API_KEY_SECRET:       "kv:apikey_endpoint_pf"
+  STORAGE_ACCOUNT_NAME: "kv:storage_pf_name"
+  CONTAINER_NAME:       "kv:container_pf_name"
+
+# ─── Backend SMCR ─────────────────────────────────────────────────────────────
+# Nessun app setting al momento
+
+backend_smcr:
+  __local: yaml_backend
+
+# ─── Frontend FE-SMCR (Next.js) ───────────────────────────────────────────────
+# Shared: tutti i settings tranne gli URL pubblici
+# Slot-specifici: NEXT_PUBLIC_* (URL diversi tra production e staging)
+
+fe_smcr:
+  __local: yaml_fe_smcr
+  # Segreti KV
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT:                 "kv:fe_smcr_ocp_apim_subscription_key_uat"
+  FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST:            "kv:fe_smcr_api_slack_call_management_hook_test"
+  FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD:            "kv:fe_smcr_api_slack_call_management_hook_prod"
+  FE_SMCR_USERS_API_KEY:                                  "kv:fe_smcr_users_api_key"
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY:                      "kv:fe_smcr_ocp_apim_subscription_key"
+  FE_SMCR_API_KEY_INSTITUTION:                            "kv:fe_smcr_api_key_institution"
+  FE_SMCR_API_KEY_PROD_GET_USERS:                         "kv:fe_smcr_api_key_prod_get_users"
+  FE_SMCR_API_KEY_SERVICES:                               "kv:fe_smcr_api_key_services"
+  FE_SMCR_API_KEY_PNPG:                                   "kv:fe_smcr_api_key_pnpg"
+  FE_SMCR_API_KEY_FIRMA_CON_IO:                           "kv:fe_smcr_api_key_firma_con_io"
+  FE_SMCR_SLACK_REPORT_HOOK:                              "kv:fe_smcr_slack_report_hook"
+  FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK:                     "kv:fe_smcr_slack_call_management_hook"
+  FE_SMCR_AZURE_STORAGE_CONNECTION_STRING:                "kv:fe_smcr_azure_storage_connection_string"
+  WEBHOOK_MANUAL_STORAGE:                                 "kv:fe_smcr_webhook_manual_storage"
+  STORAGE_TOKEN:                                          "kv:fe_smcr_storage_token"
+  DB_HOST:                                                "kv:db_host"
+  DB_USER:                                                "kv:db_user"
+  DB_PASSWORD_B64:                                        "kv:db_password_b64"
+  SLACK_CALL_MANAGEMENT_HOOK_TEST:                        "kv:fe_smcr_slack_call_management_hook_test"
+  SLACK_CALL_MANAGEMENT_HOOK_PROD:                        "kv:fe_smcr_slack_call_management_hook_prod"
+  ONBOARDING_BASE_PATH_UAT:                               "kv:fe_smcr_onboarding_base_path_uat"
+  NEXT_PUBLIC_MSAL_CLIENT_ID:                             "kv:fe_smcr_plsm_p_platformsm_client_id"
+  NEXT_PUBLIC_MSAL_TENANT_ID:                             "kv:fe_smcr_plsm_p_platformsm_tenant_id"
+  # Valori non-segreti condivisi
+  FE_SMCR_AZURE_STORAGE_CONTAINER:                       "selfcare"
+  FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX: "Selfcare_onboarding_mensili_"
+  DB_NAME:              "dbsmcr"
+  DB_TABLE:             "dbsmcr"
+  DB_PORT:              "5432"
+  DB_SSL:               "true"
+  GET_INFOCAMERE:       "external/internal/v1/infocamere-pdnd/institution/"
+  GET_INSTITUTION:      "external/support/v1/institutions"
+  GET_IPA:              "external/internal/v1/institutions/"
+  GET_IPA_UO:           "external/internal/v1/uo/"
+  GET_IPA_AOO:          "external/internal/v1/aoo/"
+  GET_STATUS:           "external/support/v1/onboarding/institutionOnboardings"
+  GET_USERS_PATH:       "external/v2/users"
+  ONBOARDING_BASE_PATH: "https://api.selfcare.pagopa.it/"
+  UPLOAD:               "external/internal/v1/onboarding/"
+  TEST_ENDPOINT:        "mytestendpoint"
+  # Slot-specifici: URL pubblici
+  production:
+    NEXT_PUBLIC_APP_URL:             "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
+    NEXT_PUBLIC_MSAL_REDIRECT_URI:   "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
+    NEXT_PUBLIC_POST_LOGIN_REDIRECT: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
+  staging:
+    NEXT_PUBLIC_APP_URL:             "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
+    NEXT_PUBLIC_MSAL_REDIRECT_URI:   "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
+    NEXT_PUBLIC_POST_LOGIN_REDIRECT: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
+
+# ─── CRM Function (Dynamics CRM Integration) ─────────────────────────────────
+# Production = Staging (stessi valori per entrambi gli slot)
+
+crm_function:
+  __local: yaml_crm_func
+  DYNAMICS_BASE_URL:        "kv:dynamics_base_url"
+  DYNAMICS_URL_CONTACTS:    "kv:dynamics_url_contacts"
+  NODE_ENV:                 "production"
+  WEBSITE_RUN_FROM_PACKAGE: "1"
+  DEBUG:                    "true"
+
+# ─── Network (non processato dallo script) ────────────────────────────────────
+
+network:
+  subnet_cidr_block: "10.0.0.0/24"
+  use_private_endpoint: true

@@ -3,7 +3,7 @@ import { handler } from "./handler";
 
 export default app.http("ping", {
   methods: ["GET"],
-  authLevel: "anonymous",
+  authLevel: "function",
   route: "dynamics/ping",
   handler,
 });

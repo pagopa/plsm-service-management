@@ -12,6 +12,30 @@ data "azuread_group" "keyvault_admin_group" {
 }
 
 # -----------------------------------------------------------------------------
+# Terraform Variables (from Key Vault)
+# -----------------------------------------------------------------------------
+
+data "azurerm_key_vault_secret" "tf_subscription_id" {
+  name         = "tf-subscription-id"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "tf_eventhub_subscription_id" {
+  name         = "tf-eventhub-subscription-id"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "tf_container_pf" {
+  name         = "tf-container-pf"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "tf_storage_account_fatppublic_id" {
+  name         = "tf-storage-account-fatppublic-id"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+# -----------------------------------------------------------------------------
 # Valori env per PF - Portale Fatturazione
 # -----------------------------------------------------------------------------
 
@@ -51,6 +75,12 @@ data "azurerm_key_vault_secret" "appinsights_instrumentationkey" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
+# Application Insights resource reference
+data "azurerm_application_insights" "common" {
+  name                = "plsm-p-itn-common-appi-01"
+  resource_group_name = module.azure_core_infra.common_resource_group_name
+}
+
 # -----------------------------------------------------------------------------
 # Database PostgreSQL
 # -----------------------------------------------------------------------------
@@ -84,6 +114,17 @@ data "azurerm_user_assigned_identity" "github_ci_identity" {
   # Assicurati che questo sia il resource group dove hai creato le identità
   resource_group_name = "plsm-p-itn-sm-rg-01"
   name                = "plsm-p-itn-sm-app-github-ci-id-01"
+}
+
+data "azurerm_user_assigned_identity" "github_cd_identity_infra" {
+  # Assicurati che questo sia il resource group dove hai creato le identità
+  resource_group_name = "plsm-p-itn-sm-rg-01"
+  name                = "plsm-p-itn-sm-infra-github-cd-id-01"
+}
+data "azurerm_user_assigned_identity" "github_ci_identity_infra" {
+  # Assicurati che questo sia il resource group dove hai creato le identità
+  resource_group_name = "plsm-p-itn-sm-rg-01"
+  name                = "plsm-p-itn-sm-infra-github-ci-id-01"
 }
 
 data "azurerm_linux_function_app" "plsm_cert_func" {

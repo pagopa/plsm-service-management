@@ -36,7 +36,7 @@ module "azure_fe_app_service_smcr" {
 # -----------------------------------------------------------------------------
 
 resource "terraform_data" "fe_smcr_startup_trigger" {
-  input = module.azure_fe_app_service_smcr.web_app_id
+  input = timestamp()
 }
 
 resource "azapi_update_resource" "fe_smcr_startup_command" {
