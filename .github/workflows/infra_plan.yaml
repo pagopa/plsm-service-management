@@ -10,6 +10,7 @@ on:
         type: choice
         options:
           - dev
+          - dev-base
           - prod
   pull_request:
     types:
@@ -31,11 +32,34 @@ permissions:
 
 jobs:
   plan_prod:
+    if: github.event_name == 'pull_request' || github.event.inputs.target_env == 'prod'
     uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
-    name: Plan Infrastructure - ${{ github.event.inputs.target_env }}
+    name: Plan Infrastructure - prod
     secrets: inherit
     with:
-      environment: ${{ github.event.inputs.target_env }}
+      environment: prod
       base_path: infra/resources
       use_private_agent: true
-      override_github_environment: infra-${{ github.event.inputs.target_env }}
+      override_github_environment: infra-prod
+
+  plan_dev:
+    if: github.event.inputs.target_env == 'dev'
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    name: Plan Infrastructure - dev
+    secrets: inherit
+    with:
+      environment: dev
+      base_path: infra/resources
+      use_private_agent: true
+      override_github_environment: infra-dev
+
+  plan_dev_base:
+    if: github.event.inputs.target_env == 'dev-base'
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    name: Plan Infrastructure - dev-base
+    secrets: inherit
+    with:
+      environment: dev-base
+      base_path: infra/resources
+      use_private_agent: true
+      override_github_environment: infra-dev
