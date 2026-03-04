@@ -77,6 +77,9 @@ module "azure-github-environment-bootstrap" {
   opex_resource_group_id             = data.azurerm_resource_group.opex_rg.id
   repository                         = local.repository
 
+  additional_resource_group_ids = [
+    data.azurerm_resource_group.apps_rg.id,
+  ]
 
   tags = local.tags
 }
