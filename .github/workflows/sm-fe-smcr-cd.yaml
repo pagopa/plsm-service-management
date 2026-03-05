@@ -43,7 +43,7 @@ jobs:
   build:
     name: Build & Package Artifact
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.environment }}-cd
 
     env:
       NEXT_PUBLIC_MSAL_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_MSAL_CLIENT_ID }}
