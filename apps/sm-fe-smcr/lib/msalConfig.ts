@@ -1,9 +1,10 @@
 import { LogLevel, PublicClientApplication } from "@azure/msal-browser";
+import { clientEnv } from "@/config/env";
 
-const CLIENT_ID = process.env.NEXT_PUBLIC_MSAL_CLIENT_ID || "";
-const TENANT_ID = process.env.NEXT_PUBLIC_MSAL_TENANT_ID;
-const REDIRECT_URI = process.env.NEXT_PUBLIC_MSAL_REDIRECT_URI;
-// const BASE_PATH = process.env.NEXT_PUBLIC_APP_URL ?? "/";
+const CLIENT_ID = clientEnv.NEXT_PUBLIC_MSAL_CLIENT_ID;
+const TENANT_ID = clientEnv.NEXT_PUBLIC_MSAL_TENANT_ID;
+const REDIRECT_URI = clientEnv.NEXT_PUBLIC_MSAL_REDIRECT_URI;
+// const BASE_PATH = clientEnv.NEXT_PUBLIC_APP_URL ?? "/";
 // console.log("🔍 MSAL Config Debug:");
 // console.log("- CLIENT_ID:", CLIENT_ID ? "✅ Set" : "❌ Missing");
 // console.log("- TENANT_ID:", TENANT_ID ? "✅ Set" : "❌ Missing");
@@ -72,5 +73,5 @@ export async function ensureInitialized() {
 // Request di login
 export const loginRequest = {
   scopes: ["User.Read"],
-  redirectUri: process.env.NEXT_PUBLIC_MSAL_REDIRECT_URI,
+  redirectUri: clientEnv.NEXT_PUBLIC_MSAL_REDIRECT_URI,
 };

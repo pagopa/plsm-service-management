@@ -2,7 +2,9 @@ import { UserWithMembers, Member } from "../types/member";
 import { Team } from "../types/team";
 import { User } from "../types/user";
 import { Preferences } from "../types/userProfile";
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"; // fallback in dev
+import { clientEnv } from "@/config/env";
+
+const baseUrl = clientEnv.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export const getUser = async () =>
   /*setUsers: React.Dispatch<React.SetStateAction<(User & { teams: Team[] })[]>>,*/

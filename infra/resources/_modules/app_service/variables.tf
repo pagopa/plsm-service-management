@@ -58,6 +58,6 @@ variable "tags" {
 
 variable "node_version" {
   type        = number
-  default = 20
+  default     = 20
   description = "Versione di Node.js da utilizzare per la Function App."
 }

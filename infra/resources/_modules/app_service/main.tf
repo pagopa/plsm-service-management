@@ -6,9 +6,9 @@ module "azure_app_service" {
 
 
   environment = {
-    prefix          = var.environment.prefix
-    env_short       = var.environment.env_short
-    location        = var.environment.location
+    prefix    = var.environment.prefix
+    env_short = var.environment.env_short
+    location  = var.environment.location
     # domain          = "sm" # var.environment.domain
     app_name        = var.environment.app_name
     instance_number = var.environment.instance_number
@@ -16,7 +16,7 @@ module "azure_app_service" {
 
   tier                = var.tier
   resource_group_name = var.resource_group_name
-  node_version = var.node_version
+  node_version        = var.node_version
 
   virtual_network = {
     name                = var.virtual_network.name

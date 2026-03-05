@@ -1,0 +1,19 @@
+# Terraform temporary files
+*.tfplan
+*.tfstate
+*.tfstate.*
+plan_output.txt
+
+# Backup files
+*.bak
+*.backup
+
+# IDE files
+.DS_Store
+.vscode/
+.idea/
+
+# Test files (do not commit actual UAT/DEV configs until validated)
+# Uncomment these if you want to keep uat.yaml as private
+# uat.yaml
+# dev.yaml

@@ -1,5 +1,7 @@
 // import { Team } from "../types/team";
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"; // fallback in dev
+import { clientEnv } from "@/config/env";
+
+const baseUrl = clientEnv.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export const getTeams = async () =>
   /*setTeams: React.Dispatch<React.SetStateAction<Team[]>>,*/

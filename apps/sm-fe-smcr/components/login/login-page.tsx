@@ -5,9 +5,10 @@ import logoPagoPa from "public/logo_4.svg";
 import { LoginForm } from "../auth/login";
 import { Switch } from "../ui/switch";
 import { useEffect, useState } from "react";
+import { clientEnv } from "@/config/env";
 
 export const LoginPage = () => {
-  const redirectURL = process.env.NEXT_PUBLIC_APP_URL;
+  const redirectURL = clientEnv.NEXT_PUBLIC_APP_URL;
 
   const [isVisible, setIsVisible] = useState(false);
 

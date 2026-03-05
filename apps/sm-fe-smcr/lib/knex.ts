@@ -1,23 +1,24 @@
 // lib/knex.ts
 import knex, { Knex } from "knex";
+import { serverEnv } from "@/config/env";
 
 // Per evitare di creare più istanze su ogni import (utile in dev/hot reload o serverless)
 declare global {
   var knexInstance: Knex | undefined;
 }
 
-const port = parseInt(process.env.DB_PORT ?? "5432", 10);
-const sslEnabled = process.env.DB_SSL?.toLowerCase() === "true";
+const port = parseInt(serverEnv.DB_PORT ?? "5432", 10);
+const sslEnabled = serverEnv.DB_SSL?.toLowerCase() === "true";
 
 // Decodifica sicura della password (Base64)
-const encodedUser = encodeURIComponent(process.env.DB_USER ?? "");
+const encodedUser = encodeURIComponent(serverEnv.DB_USER ?? "");
 const rawPassword = Buffer.from(
-  process.env.DB_PASSWORD_B64 ?? "",
+  serverEnv.DB_PASSWORD_B64 ?? "",
   "base64",
 ).toString("utf-8");
 
 // Connection string
-const connectionString = `postgresql://${encodedUser}:${rawPassword}@${process.env.DB_HOST}:${port}/${process.env.DB_NAME}${sslEnabled ? "?sslmode=require" : ""}`;
+const connectionString = `postgresql://${encodedUser}:${rawPassword}@${serverEnv.DB_HOST}:${port}/${serverEnv.DB_NAME}${sslEnabled ? "?sslmode=require" : ""}`;
 
 // Solo in sviluppo, stampa dettagli (evita in prod per sicurezza)
 // if (process.env.NODE_ENV !== "production") {

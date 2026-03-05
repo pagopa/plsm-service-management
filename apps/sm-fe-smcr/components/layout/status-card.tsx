@@ -3,6 +3,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { clientEnv } from "@/config/env";
 
 type DBStatus = "loading" | "online" | "offline";
 
@@ -76,27 +77,27 @@ export const StatusCard = () => {
           <span className="font-semibold">🔁 Redirect URI:</span>
           <br />
           <code>
-            {process.env.NEXT_PUBLIC_MSAL_REDIRECT_URI ?? "Non definito"}
+            {clientEnv.NEXT_PUBLIC_MSAL_REDIRECT_URI ?? "Non definito"}
           </code>
         </div>
         <div>
           <span className="font-semibold">🆔 Client ID:</span>
           <br />
           <code>
-            {process.env.NEXT_PUBLIC_MSAL_CLIENT_ID ?? "Non definito"}
+            {clientEnv.NEXT_PUBLIC_MSAL_CLIENT_ID ?? "Non definito"}
           </code>
         </div>
         <div>
           <span className="font-semibold">🏢 Tenant ID:</span>
           <br />
           <code>
-            {process.env.NEXT_PUBLIC_MSAL_TENANT_ID ?? "Non definito"}
+            {clientEnv.NEXT_PUBLIC_MSAL_TENANT_ID ?? "Non definito"}
           </code>
         </div>
         <div>
           <span className="font-semibold">🏢 Public App URL:</span>
           <br />
-          <code>{process.env.NEXT_PUBLIC_APP_URL ?? "Non definito"}</code>
+          <code>{clientEnv.NEXT_PUBLIC_APP_URL ?? "Non definito"}</code>
         </div>
       </CardContent>
     </Card>

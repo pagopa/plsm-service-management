@@ -19,7 +19,7 @@ module "azurerm_linux_function_app" {
   tier          = "l"
 
   # Application Insights
-  application_insights_connection_string = var.application_insights_connection_string
-  application_insights_key               = var.application_insights_key
+  application_insights_connection_string   = var.application_insights_connection_string
+  application_insights_key                 = var.application_insights_key
   application_insights_sampling_percentage = var.application_insights_sampling_percentage
 }
