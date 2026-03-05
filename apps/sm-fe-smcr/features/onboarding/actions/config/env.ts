@@ -7,6 +7,8 @@ export const FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT =
   process.env.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT;
 export const FE_SMCR_API_KEY_INSTITUTION =
   process.env.FE_SMCR_API_KEY_INSTITUTION;
+export const FE_SMCR_API_KEY_INSTITUTION_UAT =
+  process.env.FE_SMCR_API_KEY_INSTITUTION_UAT;
 export const GET_STATUS = process.env.GET_STATUS;
 export const GET_USERS_PATH = process.env.GET_USERS_PATH;
 export const FE_SMCR_API_KEY_PROD_GET_USERS =

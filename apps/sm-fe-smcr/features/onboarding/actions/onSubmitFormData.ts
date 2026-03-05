@@ -7,6 +7,7 @@ import { productKeys, productsMap, OutputOption } from "../utils/constants";
 import { generatePayload } from "../utils/generatePayload";
 import {
   FE_SMCR_API_KEY_INSTITUTION,
+  FE_SMCR_API_KEY_INSTITUTION_UAT,
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY,
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT,
   GET_STATUS,
@@ -74,9 +75,10 @@ export async function onSubmitFormData(state: any, formData: FormData) {
         `${GET_STATUS}?taxcode=${dataFromUIParsed.taxcode}${isSubunit ? `&subunitCode=${dataFromUIParsed.subunitCode}` : ""}`,
         {
           method: "GET",
-          baseURL: ONBOARDING_BASE_PATH,
+          baseURL:
+            output === "prod" ? ONBOARDING_BASE_PATH : ONBOARDING_BASE_PATH_UAT,
           headers: {
-            "Ocp-Apim-Subscription-Key": `${FE_SMCR_API_KEY_INSTITUTION}`,
+            "Ocp-Apim-Subscription-Key": `${output === "prod" ? FE_SMCR_API_KEY_INSTITUTION : FE_SMCR_API_KEY_INSTITUTION_UAT}`,
           },
           output: getOnboardingStatusSchema,
         },
