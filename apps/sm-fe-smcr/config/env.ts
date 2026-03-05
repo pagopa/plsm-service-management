@@ -19,6 +19,10 @@ const serverEnvSchema = z.object({
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST: optionalString,
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD: optionalString,
 
+  // CRM API (Meetings)
+  FE_SMCR_CRM_API_URL: optionalString,
+  FE_SMCR_CRM_API_KEY: optionalString,
+
   // Database
   DB_HOST: optionalString,
   DB_NAME: optionalString,
@@ -84,6 +88,8 @@ const rawServerEnv = {
     process.env.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST,
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD:
     process.env.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD,
+  FE_SMCR_CRM_API_URL: process.env.FE_SMCR_CRM_API_URL,
+  FE_SMCR_CRM_API_KEY: process.env.FE_SMCR_CRM_API_KEY,
   DB_HOST: process.env.DB_HOST,
   DB_NAME: process.env.DB_NAME,
   DB_USER: process.env.DB_USER,
