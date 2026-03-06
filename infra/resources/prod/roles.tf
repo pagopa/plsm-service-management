@@ -34,6 +34,13 @@ resource "azurerm_role_assignment" "kv_ci_func_contributor_infra" {
   principal_id         = data.azurerm_user_assigned_identity.github_ci_identity_infra.principal_id
 }
 
+# Permesso per la CD sul Key Vault
+resource "azurerm_role_assignment" "kv_cd_secrets_officer_infra" {
+  scope                = module.azure_core_infra.common_key_vault.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_user_assigned_identity.github_cd_identity_infra.principal_id
+}
+
 # Permesso per la CI sul PF
 resource "azurerm_role_assignment" "ci_infra_identity_website_contributor_on_func" {
   scope                = data.azurerm_linux_function_app.plsm_cert_func.id
