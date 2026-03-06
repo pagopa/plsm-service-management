@@ -13,7 +13,7 @@ module "azure_core_infra" {
   })
 
   nat_enabled  = false
-  vpn_enabled  = false
+  vpn_enabled  = true
   test_enabled = false
 
   tags = local.tags
