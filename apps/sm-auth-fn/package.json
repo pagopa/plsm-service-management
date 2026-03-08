@@ -2,9 +2,9 @@
   "name": "sm-auth-fn",
   "version": "1.0.0",
   "description": "MSAL Authentication Service - Token Validation & JWT Generation",
-  "main": "dist/**/*/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run postbuild",
+    "postbuild": "cp host.json package.json dist/",
     "start": "func start",
     "watch": "tsc --watch",
     "lint": "echo 'No linter configured yet'",
