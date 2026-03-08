@@ -1,7 +1,7 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-07 17:21
-# Per aggiornare: python3 infra/scripts/generate_locals.py
+# Generato il: 2026-03-08 17:34
+# Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
 data "azurerm_key_vault_secret" "fe_smcr_api_key_firma_con_io_signer_id" {

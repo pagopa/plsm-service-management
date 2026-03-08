@@ -1,10 +1,36 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-04 21:57
+# Generato il: 2026-03-08 17:34
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
 locals {
+
+  # ────────────────────────────────────────────────────────────
+  # auth_func
+  # ────────────────────────────────────────────────────────────
+
+  yaml_auth_func_app_settings = {
+    MSAL_CLIENT_ID           = data.azurerm_key_vault_secret.auth_msal_client_id_dev.value
+    MSAL_TENANT_ID           = data.azurerm_key_vault_secret.auth_msal_tenant_id_dev.value
+    JWT_SECRET               = data.azurerm_key_vault_secret.auth_jwt_secret_dev.value
+    JWT_EXPIRY_SECONDS       = "3600"
+    JWT_ISSUER               = "plsm-auth-service-dev"
+    JWT_AUDIENCE             = "plsm-fe-smcr-dev"
+    NODE_ENV                 = "development"
+    WEBSITE_RUN_FROM_PACKAGE = "1"
+  }
+
+  yaml_auth_func_slot_app_settings = {
+    MSAL_CLIENT_ID           = data.azurerm_key_vault_secret.auth_msal_client_id_dev.value
+    MSAL_TENANT_ID           = data.azurerm_key_vault_secret.auth_msal_tenant_id_dev.value
+    JWT_SECRET               = data.azurerm_key_vault_secret.auth_jwt_secret_dev.value
+    JWT_EXPIRY_SECONDS       = "3600"
+    JWT_ISSUER               = "plsm-auth-service-dev-staging"
+    JWT_AUDIENCE             = "plsm-fe-smcr-dev-staging"
+    NODE_ENV                 = "development"
+    WEBSITE_RUN_FROM_PACKAGE = "1"
+  }
 
   # ────────────────────────────────────────────────────────────
   # fe_smcr

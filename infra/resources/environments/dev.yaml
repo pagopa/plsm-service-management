@@ -106,3 +106,30 @@ fe_smcr:
     NEXT_PUBLIC_APP_URL: "https://plsm-d-itn-fe-smcr-app-01-staging.azurewebsites.net"
     NEXT_PUBLIC_MSAL_REDIRECT_URI: "https://plsm-d-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT: "https://plsm-d-itn-fe-smcr-app-01-staging.azurewebsites.net"
+
+# ─── Auth Function ─────────────────────────────────────────────────────
+# Configurazione per MSAL Token Validation in ambiente dev
+
+auth_func:
+  __local: yaml_auth_func
+  # Segreti da Key Vault (dev usa secrets separati da prod)
+  MSAL_CLIENT_ID: "kv:auth_msal_client_id_dev"
+  MSAL_TENANT_ID: "kv:auth_msal_tenant_id_dev"
+  JWT_SECRET: "kv:auth_jwt_secret_dev"
+  # Configurazione JWT
+  JWT_EXPIRY_SECONDS: "3600"
+  JWT_ISSUER: "plsm-auth-service-dev"
+  JWT_AUDIENCE: "plsm-fe-smcr-dev"
+  # Node.js configuration
+  NODE_ENV: "development"
+  WEBSITE_RUN_FROM_PACKAGE: "1"
+  # Slot staging (per testing)
+  staging:
+    MSAL_CLIENT_ID: "kv:auth_msal_client_id_dev"
+    MSAL_TENANT_ID: "kv:auth_msal_tenant_id_dev"
+    JWT_SECRET: "kv:auth_jwt_secret_dev"
+    JWT_EXPIRY_SECONDS: "3600"
+    JWT_ISSUER: "plsm-auth-service-dev-staging"
+    JWT_AUDIENCE: "plsm-fe-smcr-dev-staging"
+    NODE_ENV: "development"
+    WEBSITE_RUN_FROM_PACKAGE: "1"
