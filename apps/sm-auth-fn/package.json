@@ -1,6 +1,7 @@
 {
   "name": "sm-auth-fn",
   "version": "1.0.0",
+  "main": "dist/**/*/index.js",
   "description": "MSAL Authentication Service - Token Validation & JWT Generation",
   "scripts": {
     "build": "tsc && npm run postbuild",
