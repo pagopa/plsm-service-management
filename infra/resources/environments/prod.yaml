@@ -117,3 +117,11 @@ crm_function:
 network:
   subnet_cidr_block: "10.0.0.0/24"
   use_private_endpoint: true
+
+
+# ─── Auth Function ─────────────────────────────────────────────────────
+
+auth_func:
+  __local: yaml_auth_func
+  NODE_ENV: "production"
+  WEBSITE_RUN_FROM_PACKAGE: "1"

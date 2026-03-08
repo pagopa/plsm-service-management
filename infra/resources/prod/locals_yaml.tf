@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-04 13:09
+# Generato il: 2026-03-07 17:21
 # Per aggiornare: python3 infra/scripts/generate_locals.py
 # =============================================================================
 
@@ -129,6 +129,17 @@ locals {
     NODE_ENV                          = "production"
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY = data.azurerm_key_vault_secret.askmebot_ocp_apim_subscription_key.value
   }
+
+  # ────────────────────────────────────────────────────────────
+  # auth_func
+  # ────────────────────────────────────────────────────────────
+
+  yaml_auth_func_app_settings = {
+    NODE_ENV                 = "production"
+    WEBSITE_RUN_FROM_PACKAGE = "1"
+  }
+
+  yaml_auth_func_slot_app_settings = local.yaml_auth_func_app_settings
 
   # ────────────────────────────────────────────────────────────
   # portale_fatturazione
