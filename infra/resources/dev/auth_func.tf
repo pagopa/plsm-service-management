@@ -10,8 +10,8 @@ module "auth_function" {
     instance_number = "01"
   })
 
-  application_insights_connection_string = azurerm_key_vault_secret.appinsights_connection_string.value
-  application_insights_key               = azurerm_key_vault_secret.appinsights_instrumentationkey.value
+  application_insights_connection_string = data.azurerm_key_vault_secret.appinsights_connection_string.value
+  application_insights_key               = data.azurerm_key_vault_secret.appinsights_instrumentationkey.value
 
   resource_group_name = data.azurerm_resource_group.apps_rg.name
   tags                = local.tags

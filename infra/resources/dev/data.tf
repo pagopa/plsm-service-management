@@ -48,3 +48,17 @@ data "azurerm_user_assigned_identity" "github_ci_identity" {
   resource_group_name = "plsm-d-itn-sm-rg-01"
   name                = "plsm-d-itn-sm-app-github-ci-id-01"
 }
+
+# =============================================================================
+# Application Insights Secrets — used by Azure Functions
+# =============================================================================
+
+data "azurerm_key_vault_secret" "appinsights_connection_string" {
+  name         = "appinsights-connection-string"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "appinsights_instrumentationkey" {
+  name         = "appinsights-instrumentation-key"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}

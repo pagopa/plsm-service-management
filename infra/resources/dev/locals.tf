@@ -39,4 +39,8 @@ locals {
 
   fe_smcr_app_settings      = local.yaml_fe_smcr_app_settings
   fe_smcr_slot_app_settings = local.yaml_fe_smcr_slot_app_settings
+
+  # Auth Function
+  auth_func_app_settings      = local.yaml_auth_func_app_settings
+  auth_slot_func_app_settings = local.yaml_auth_func_slot_app_settings
 }
