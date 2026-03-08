@@ -65,6 +65,28 @@ data "azurerm_key_vault_secret" "fe_smcr_plsm_p_platformsm_client_id" {
   name         = "fe-smcr-plsm-p-platformsm-client-id"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
+
+# -----------------------------------------------------------------------------
+# Auth Function Secrets
+# -----------------------------------------------------------------------------
+# NOTE: Using Token Validation approach (no Client Secret/Certificate needed)
+# The Auth Function validates Azure AD tokens and generates internal JWTs
+
+data "azurerm_key_vault_secret" "auth_msal_client_id" {
+  name         = "auth-msal-client-id"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "auth_msal_tenant_id" {
+  name         = "auth-msal-tenant-id"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "auth_jwt_secret" {
+  name         = "auth-jwt-secret"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
 data "azurerm_key_vault_secret" "appinsights_connection_string" {
   name         = "APPINSIGHTS-CONNECTION-STRING"
   key_vault_id = module.azure_core_infra.common_key_vault.id
