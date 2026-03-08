@@ -35,7 +35,9 @@ jobs:
     name: Plan Infrastructure - ${{ github.event.inputs.target_env }}
     secrets: inherit
     with:
-      environment: ${{ github.event.inputs.target_env }}
+    with:
+      environment: ${{ github.event.inputs.target_env || 'prod' }}
       base_path: infra/resources
       use_private_agent: true
-      override_github_environment: infra-${{ github.event.inputs.target_env }}
+      override_github_environment: infra-${{ github.event.inputs.target_env || 'prod' }}
+
