@@ -1,0 +1,21 @@
+# Azure Functions
+local.settings.json
+bin
+obj
+appsettings.json
+*.user
+*.suo
+
+# Build output
+dist/
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
