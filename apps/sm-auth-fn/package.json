@@ -6,7 +6,9 @@
   "scripts": {
     "build": "tsc",
     "start": "func start",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "lint": "echo 'No linter configured yet'",
+    "test": "echo 'No tests configured yet'"
   },
   "keywords": [
     "msal",
