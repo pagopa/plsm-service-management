@@ -40,3 +40,14 @@ resource "azurerm_role_assignment" "cd_identity_website_contributor_auth_func" {
   role_definition_name = "Website Contributor"
   principal_id         = data.azurerm_user_assigned_identity.github_cd_identity.principal_id
 }
+
+# -----------------------------------------------------------------------------
+# Key Vault Access for Managed Identity
+# -----------------------------------------------------------------------------
+# Allow the Auth Function to read secrets from Key Vault
+
+resource "azurerm_role_assignment" "auth_func_keyvault_reader" {
+  scope                = module.azure_core_infra.common_key_vault.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = module.auth_function.function_app_principal_id
+}

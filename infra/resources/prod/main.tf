@@ -9,6 +9,11 @@ terraform {
       version = "~>4"
     }
 
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 3.0"
+    }
+
     azapi = {
       source  = "azure/azapi"
       version = "~> 2.0"
@@ -38,5 +43,7 @@ provider "azurerm" {
   storage_use_azuread = true
   features {}
 }
+
+provider "azuread" {}
 
 provider "azapi" {}
