@@ -127,3 +127,21 @@ askmebot:
 
 auth_func:
   __local: yaml_auth_func
+  # Segreti da Key Vault
+  MSAL_CLIENT_ID: "kv:auth_msal_client_id"
+  MSAL_TENANT_ID: "kv:auth_msal_tenant_id"
+  JWT_SECRET: "kv:auth_jwt_secret"
+  # Configurazione JWT
+  JWT_EXPIRY_SECONDS: "3600"
+  JWT_ISSUER: "plsm-auth-service"
+  JWT_AUDIENCE: "plsm-fe-smcr"
+  # Node.js configuration
+  NODE_ENV: "production"
+  WEBSITE_RUN_FROM_PACKAGE: "1"
+  # Production e staging hanno redirect URI diversi
+  production:
+    MSAL_REDIRECT_URI: "https://plsm-p-itn-auth-func-01.azurewebsites.net/api/v1/auth/callback"
+  staging:
+    MSAL_REDIRECT_URI: "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net/api/v1/auth/callback"
+    JWT_ISSUER: "plsm-auth-service-staging"
+    JWT_AUDIENCE: "plsm-fe-smcr-staging"

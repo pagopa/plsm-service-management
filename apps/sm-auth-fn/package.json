@@ -5,7 +5,7 @@
   "description": "MSAL Authentication Service - Token Validation & JWT Generation",
   "scripts": {
     "build": "tsc && npm run postbuild",
-    "postbuild": "cp host.json package.json dist/",
+    "postbuild": "cp host.json dist/ && node -e \"const pkg = require('./package.json'); pkg.main = '**/*/index.js'; require('fs').writeFileSync('dist/package.json', JSON.stringify(pkg, null, 2))\"",
     "start": "func start",
     "watch": "tsc --watch",
     "lint": "echo 'No linter configured yet'",
@@ -21,8 +21,8 @@
   "license": "ISC",
   "dependencies": {
     "@azure/functions": "^4.10.0",
-    "jsonwebtoken": "^9.0.2",
-    "jwks-rsa": "^3.1.0"
+    "@azure/msal-node": "^2.16.0",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.7",

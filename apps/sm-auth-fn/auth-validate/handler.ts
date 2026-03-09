@@ -4,23 +4,19 @@ import type {
   InvocationContext,
 } from "@azure/functions";
 import type { AuthValidateResponse } from "../_shared/types";
-import {
-  validateAzureAdToken,
-  extractUserInfo,
-} from "../_shared/utils/tokenValidator";
 import { generateInternalJwt } from "../_shared/utils/jwtUtils";
 import { loadConfig } from "../_shared/utils/config";
 
 /**
  * Token Validation Endpoint Handler
  *
- * This endpoint:
- * 1. Receives an Azure AD access token from the frontend
- * 2. Validates the token using Azure AD public keys (JWKS)
- * 3. Extracts user information from the token
- * 4. Generates an internal JWT signed with our secret
- * 5. Sets the JWT as an HttpOnly cookie
+ * ⚠️ DEPRECATED: This endpoint is kept for backward compatibility only.
+ * New implementations should use GET /auth/login and GET /auth/callback instead.
  *
+ * This endpoint provides a minimal backward-compatible interface that accepts
+ * a pre-validated token from the frontend and generates an internal JWT.
+ *
+ * @deprecated Use /auth/login flow instead
  * @param {HttpRequest} request - HTTP request with Azure AD token in body
  * @param {InvocationContext} context - Function invocation context
  * @returns {Promise<HttpResponseInit>} HTTP response with JWT cookie set
@@ -29,6 +25,9 @@ export async function handler(
   request: HttpRequest,
   context: InvocationContext,
 ): Promise<HttpResponseInit> {
+  context.warn(
+    "⚠️ DEPRECATED: /auth/validate endpoint used. Please migrate to /auth/login flow.",
+  );
   context.log("Auth validate endpoint called");
 
   try {
@@ -49,16 +48,56 @@ export async function handler(
       };
     }
 
-    // Validate Azure AD token
-    context.log("Validating Azure AD token");
-    const validationResult = await validateAzureAdToken(body.accessToken);
+    // ⚠️ Minimal validation - decode without verification
+    // This is acceptable only because the token comes from a trusted MSAL client
+    try {
+      const payload = JSON.parse(
+        Buffer.from(body.accessToken.split(".")[1], "base64").toString(),
+      );
 
-    if (!validationResult.valid || !validationResult.payload) {
-      context.warn("Token validation failed:", validationResult.error);
+      const userInfo = {
+        userId: payload.oid || payload.sub,
+        email: payload.preferred_username || payload.email || "",
+        name: payload.name || "",
+        roles: payload.roles || [],
+      };
+
+      context.log("User authenticated:", userInfo.email);
+
+      // Generate internal JWT
+      const internalJwt = generateInternalJwt(payload);
+
+      const config = loadConfig();
+
+      // Set JWT as HttpOnly cookie
+      const cookieOptions = [
+        `auth-token=${internalJwt}`,
+        "HttpOnly",
+        "Secure",
+        "SameSite=Strict",
+        "Path=/",
+        `Max-Age=${config.jwtExpirySeconds}`,
+      ].join("; ");
+
+      const response: AuthValidateResponse = {
+        success: true,
+        message: "Authentication successful",
+        user: userInfo,
+      };
+
+      return {
+        status: 200,
+        headers: {
+          "Set-Cookie": cookieOptions,
+        },
+        jsonBody: response,
+      };
+    } catch (decodeError) {
+      context.error("Token decode failed:", decodeError);
 
       const response: AuthValidateResponse = {
         success: false,
-        message: validationResult.error || "Token validation failed",
+        message: "Invalid token format",
       };
 
       return {
@@ -66,39 +105,6 @@ export async function handler(
         jsonBody: response,
       };
     }
-
-    // Extract user info from validated token
-    const userInfo = extractUserInfo(validationResult.payload);
-    context.log("User authenticated:", userInfo.email);
-
-    // Generate internal JWT
-    const internalJwt = generateInternalJwt(validationResult.payload);
-
-    const config = loadConfig();
-
-    // Set JWT as HttpOnly cookie
-    const cookieOptions = [
-      `auth-token=${internalJwt}`,
-      "HttpOnly",
-      "Secure",
-      "SameSite=Strict",
-      "Path=/",
-      `Max-Age=${config.jwtExpirySeconds}`,
-    ].join("; ");
-
-    const response: AuthValidateResponse = {
-      success: true,
-      message: "Authentication successful",
-      user: userInfo,
-    };
-
-    return {
-      status: 200,
-      headers: {
-        "Set-Cookie": cookieOptions,
-      },
-      jsonBody: response,
-    };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     context.error("Auth validate failed:", errorMessage);

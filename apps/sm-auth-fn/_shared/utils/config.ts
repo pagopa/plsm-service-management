@@ -10,6 +10,7 @@ export function loadConfig(): AuthConfig {
   const config: AuthConfig = {
     msalClientId: process.env.MSAL_CLIENT_ID || "",
     msalTenantId: process.env.MSAL_TENANT_ID || "",
+    msalRedirectUri: process.env.MSAL_REDIRECT_URI || "",
     jwtSecret: process.env.JWT_SECRET || "",
     jwtExpirySeconds: parseInt(process.env.JWT_EXPIRY_SECONDS || "3600", 10),
     jwtIssuer: process.env.JWT_ISSUER || "plsm-auth-service",
@@ -21,6 +22,7 @@ export function loadConfig(): AuthConfig {
 
   if (!config.msalClientId) missing.push("MSAL_CLIENT_ID");
   if (!config.msalTenantId) missing.push("MSAL_TENANT_ID");
+  if (!config.msalRedirectUri) missing.push("MSAL_REDIRECT_URI");
   if (!config.jwtSecret) missing.push("JWT_SECRET");
 
   if (missing.length > 0) {

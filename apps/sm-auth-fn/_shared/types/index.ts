@@ -47,6 +47,7 @@ export interface TokenValidationResult {
 export interface AuthConfig {
   msalClientId: string;
   msalTenantId: string;
+  msalRedirectUri: string;
   jwtSecret: string;
   jwtExpirySeconds: number;
   jwtIssuer: string;
