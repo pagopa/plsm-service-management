@@ -75,6 +75,11 @@ locals {
   crm_func_app_settings      = local.yaml_crm_func_app_settings
   crm_func_slot_app_settings = local.yaml_crm_func_slot_app_settings
 
+  # 8. Auth Function
+  auth_func_app_settings      = local.yaml_auth_func_app_settings
+  auth_slot_func_app_settings = local.yaml_auth_func_slot_app_settings
+
+
   # OLD HARDCODED CONFIGURATION (COMMENTED OUT FOR REFERENCE)
   # crm_func_app_settings = {
   #   DYNAMICS_BASE_URL     = "${data.azurerm_key_vault_secret.dynamics_base_url.value}"

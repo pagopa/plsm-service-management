@@ -72,8 +72,9 @@ fe_smcr:
   SLACK_CALL_MANAGEMENT_HOOK_TEST: "kv:fe_smcr_slack_call_management_hook_test"
   SLACK_CALL_MANAGEMENT_HOOK_PROD: "kv:fe_smcr_slack_call_management_hook_prod"
   ONBOARDING_BASE_PATH_UAT: "kv:fe_smcr_onboarding_base_path_uat"
-  NEXT_PUBLIC_MSAL_CLIENT_ID: "kv:fe_smcr_plsm_p_platformsm_client_id"
-  NEXT_PUBLIC_MSAL_TENANT_ID: "kv:fe_smcr_plsm_p_platformsm_tenant_id"
+  # MSAL settings removed - now handled by Auth Function
+  # NEXT_PUBLIC_MSAL_CLIENT_ID: "kv:fe_smcr_plsm_p_platformsm_client_id"
+  # NEXT_PUBLIC_MSAL_TENANT_ID: "kv:fe_smcr_plsm_p_platformsm_tenant_id"
   # Valori non-segreti condivisi
   FE_SMCR_AZURE_STORAGE_CONTAINER: "selfcare"
   FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX: "Selfcare_onboarding_mensili_"
@@ -94,12 +95,14 @@ fe_smcr:
   # Slot-specifici: URL pubblici
   production:
     NEXT_PUBLIC_APP_URL: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
-    NEXT_PUBLIC_MSAL_REDIRECT_URI: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
+    # NEXT_PUBLIC_MSAL_REDIRECT_URI: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
+    AUTH_FUNCTION_BASE_URL: "https://plsm-p-itn-auth-func-01.azurewebsites.net"
   staging:
     NEXT_PUBLIC_APP_URL: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
-    NEXT_PUBLIC_MSAL_REDIRECT_URI: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
+    # NEXT_PUBLIC_MSAL_REDIRECT_URI: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
+    AUTH_FUNCTION_BASE_URL: "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net"
 
 # ─── CRM Function (Dynamics CRM Integration) ─────────────────────────────────
 # Production = Staging (stessi valori per entrambi gli slot)
@@ -117,3 +120,18 @@ crm_function:
 network:
   subnet_cidr_block: "10.0.0.0/24"
   use_private_endpoint: true
+
+# ─── Auth Function ─────────────────────────────────────────────────────
+
+auth_func:
+  __local: yaml_auth_func
+  NODE_ENV: "production"
+  WEBSITE_RUN_FROM_PACKAGE: "1"
+  # MSAL Configuration (Token Validation approach - no Client Secret needed)
+  MSAL_CLIENT_ID: "kv:auth_msal_client_id"
+  MSAL_TENANT_ID: "kv:auth_msal_tenant_id"
+  # JWT Configuration
+  JWT_SECRET: "kv:auth_jwt_secret"
+  JWT_EXPIRY_SECONDS: "3600"
+  JWT_ISSUER: "plsm-auth-service"
+  JWT_AUDIENCE: "plsm-fe-smcr"
