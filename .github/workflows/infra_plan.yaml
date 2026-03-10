@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       target_env:
-        description: 'Seleziona l''ambiente di deploy'
+        description: "Seleziona l'ambiente di deploy"
         required: true
-        default: 'prod'
+        default: "prod"
         type: choice
         options:
           - dev
@@ -32,10 +32,10 @@ permissions:
 jobs:
   plan_prod:
     uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
-    name: Plan Infrastructure - ${{ github.event.inputs.target_env }}
+    name: Plan Infrastructure - ${{ github.event.inputs.target_env || 'prod' }}
     secrets: inherit
     with:
-      environment: ${{ github.event.inputs.target_env }}
+      environment: ${{ github.event.inputs.target_env || 'prod' }}
       base_path: infra/resources
       use_private_agent: true
-      override_github_environment: infra-${{ github.event.inputs.target_env }}
+      override_github_environment: infra-${{ github.event.inputs.target_env || 'prod' }}
