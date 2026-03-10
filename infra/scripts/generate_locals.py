@@ -62,13 +62,21 @@ from pathlib import Path
 from datetime import datetime
 
 # ─── Percorsi ────────────────────────────────────────────────────────────────
-BASE         = Path(__file__).resolve().parent.parent / "resources"
-ENV_DIR      = BASE / "environments"
-OUTPUT       = BASE / "prod" / "locals_yaml.tf"
-DATA_TF      = BASE / "prod" / "data.tf"
-DATA_KV_OUT  = BASE / "prod" / "data_kv.tf"
+BASE    = Path(__file__).resolve().parent.parent / "resources"
+ENV_DIR = BASE / "environments"
 
-YAML_FILES = ["common.yaml", "prod.yaml"]   # ordine di lettura; prod sovrascrive common in caso di duplicati
+# Riferimento al Key Vault per ambiente (usato in data_kv.tf generato)
+_KV_REF = {
+    "prod": "module.azure_core_infra.common_key_vault.id",
+    "dev":  "data.azurerm_key_vault.common_kv.id",
+}
+
+# Impostati in main() dopo il parsing degli argomenti
+OUTPUT      = None
+DATA_TF     = None
+DATA_KV_OUT = None
+YAML_FILES  = None
+KV_REF      = None
 
 # Sezioni top-level da ignorare (non sono risorse Azure)
 _SKIP_SECTIONS = {"environment", "tags", "network", "app_insights", "common",
@@ -101,6 +109,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Output dettagliato step by step.",
     )
+    parser.add_argument(
+        "--env",
+        default="prod",
+        choices=list(_KV_REF.keys()),
+        help="Ambiente target (default: prod).",
+    )
     return parser.parse_args()
 
 
@@ -123,6 +137,10 @@ def tf_expr(val) -> str:
         # Supporta sia "kv:tf_name" che "kv:tf_name:kv-secret-name"
         tf_name = val[3:].split(":")[0].replace("-", "_")
         return f"data.azurerm_key_vault_secret.{tf_name}.value"
+    if isinstance(val, str) and val.startswith("res:"):
+        # Espressione Terraform raw (es. riferimento a risorsa, non data source)
+        # "res:azurerm_key_vault_secret.db_host.value" → azurerm_key_vault_secret.db_host.value
+        return val[4:]
     if isinstance(val, bool):
         return f'"{str(val).lower()}"'
     return f'"{val}"'
@@ -318,7 +336,7 @@ def generate_data_kv_file(
         "# =============================================================================",
         "# AUTO-GENERATED — NON modificare manualmente.",
         f"# Generato il: {timestamp}",
-        "# Per aggiornare: python3 infra/scripts/generate_locals.py",
+        f"# Per aggiornare: python3 infra/scripts/generate_locals.py --env {ENV_NAME}",
         "# =============================================================================",
         "",
     ]
@@ -334,7 +352,7 @@ def generate_data_kv_file(
         lines += [
             f'data "azurerm_key_vault_secret" "{tf_name}" {{',
             f'  name         = "{kv_name}"',
-            f'  key_vault_id = module.azure_core_infra.common_key_vault.id',
+            f'  key_vault_id = {KV_REF}',
             "}",
             "",
         ]
@@ -345,9 +363,18 @@ def generate_data_kv_file(
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
-    global VERBOSE
-    args   = parse_args()
+    global VERBOSE, OUTPUT, DATA_TF, DATA_KV_OUT, YAML_FILES, KV_REF, ENV_NAME
+    args    = parse_args()
     VERBOSE = args.verbose
+    ENV_NAME = args.env
+
+    OUTPUT      = BASE / ENV_NAME / "locals_yaml.tf"
+    DATA_TF     = BASE / ENV_NAME / "data.tf"
+    DATA_KV_OUT = BASE / ENV_NAME / "data_kv.tf"
+    YAML_FILES  = ["common.yaml", f"{ENV_NAME}.yaml"]
+    KV_REF      = _KV_REF[ENV_NAME]
+
+    print(f"Ambiente: {ENV_NAME}  |  KV ref: {KV_REF}")
 
     TOTAL_STEPS = 5
 
@@ -363,11 +390,15 @@ def main():
     # ── Step 2: Scoperta risorse con __local ─────────────────────────────────
     step(2, TOTAL_STEPS, "Scoperta risorse con __local")
     seen: dict[str, dict] = {}
-    for source_name in ["common", "prod"]:
+    for source_name in ["common", ENV_NAME]:
         for app_key, app_cfg in data[source_name].items():
             if app_key in _SKIP_SECTIONS:
                 continue
             if not isinstance(app_cfg, dict):
+                continue
+            if app_cfg.get("__skip", False):
+                vlog(f"SKIP  {app_key}  (__skip: true)", indent=1)
+                seen.pop(app_key, None)  # rimuovi se già aggiunto da common.yaml
                 continue
             if "__local" not in app_cfg:
                 vlog(f"SKIP  {app_key}  (nessun __local, ignorata)", indent=1)
@@ -393,7 +424,7 @@ def main():
         "# =============================================================================",
         "# AUTO-GENERATED — NON modificare manualmente.",
         f"# Generato il: {timestamp}",
-        "# Per aggiornare: python3 infra/scripts/generate_locals.py",
+        f"# Per aggiornare: python3 infra/scripts/generate_locals.py --env {ENV_NAME}",
         "# =============================================================================",
         "",
         "locals {",
