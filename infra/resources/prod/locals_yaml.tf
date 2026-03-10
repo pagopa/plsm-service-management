@@ -131,6 +131,34 @@ locals {
   }
 
   # ────────────────────────────────────────────────────────────
+  # auth_func
+  # ────────────────────────────────────────────────────────────
+
+  yaml_auth_func_app_settings = {
+    MSAL_CLIENT_ID           = data.azurerm_key_vault_secret.auth_msal_client_id.value
+    MSAL_TENANT_ID           = data.azurerm_key_vault_secret.auth_msal_tenant_id.value
+    JWT_SECRET               = data.azurerm_key_vault_secret.auth_jwt_secret.value
+    JWT_EXPIRY_SECONDS       = "3600"
+    JWT_ISSUER               = "plsm-auth-service"
+    JWT_AUDIENCE             = "plsm-fe-smcr"
+    NODE_ENV                 = "production"
+    WEBSITE_RUN_FROM_PACKAGE = "1"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-auth-func-01.azurewebsites.net/api/v1/auth/callback"
+  }
+
+  yaml_auth_func_slot_app_settings = {
+    MSAL_CLIENT_ID           = data.azurerm_key_vault_secret.auth_msal_client_id.value
+    MSAL_TENANT_ID           = data.azurerm_key_vault_secret.auth_msal_tenant_id.value
+    JWT_SECRET               = data.azurerm_key_vault_secret.auth_jwt_secret.value
+    JWT_EXPIRY_SECONDS       = "3600"
+    JWT_ISSUER               = "plsm-auth-service-staging"
+    JWT_AUDIENCE             = "plsm-fe-smcr-staging"
+    NODE_ENV                 = "production"
+    WEBSITE_RUN_FROM_PACKAGE = "1"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net/api/v1/auth/callback"
+  }
+
+  # ────────────────────────────────────────────────────────────
   # portale_fatturazione
   # ────────────────────────────────────────────────────────────
 
@@ -178,8 +206,6 @@ locals {
     SLACK_CALL_MANAGEMENT_HOOK_TEST                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value
     SLACK_CALL_MANAGEMENT_HOOK_PROD                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value
     ONBOARDING_BASE_PATH_UAT                              = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
-    NEXT_PUBLIC_MSAL_CLIENT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_client_id.value
-    NEXT_PUBLIC_MSAL_TENANT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_tenant_id.value
     FE_SMCR_AZURE_STORAGE_CONTAINER                       = "selfcare"
     FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX = "Selfcare_onboarding_mensili_"
     DB_NAME                                               = "dbsmcr"
@@ -197,8 +223,8 @@ locals {
     UPLOAD                                                = "external/internal/v1/onboarding/"
     TEST_ENDPOINT                                         = "mytestendpoint"
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
-    NEXT_PUBLIC_MSAL_REDIRECT_URI                         = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
+    AUTH_FUNCTION_BASE_URL                                = "https://plsm-p-itn-auth-func-01.azurewebsites.net"
   }
 
   yaml_fe_smcr_slot_app_settings = {
@@ -225,8 +251,6 @@ locals {
     SLACK_CALL_MANAGEMENT_HOOK_TEST                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value
     SLACK_CALL_MANAGEMENT_HOOK_PROD                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value
     ONBOARDING_BASE_PATH_UAT                              = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
-    NEXT_PUBLIC_MSAL_CLIENT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_client_id.value
-    NEXT_PUBLIC_MSAL_TENANT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_p_platformsm_tenant_id.value
     FE_SMCR_AZURE_STORAGE_CONTAINER                       = "selfcare"
     FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX = "Selfcare_onboarding_mensili_"
     DB_NAME                                               = "dbsmcr"
@@ -244,8 +268,8 @@ locals {
     UPLOAD                                                = "external/internal/v1/onboarding/"
     TEST_ENDPOINT                                         = "mytestendpoint"
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
-    NEXT_PUBLIC_MSAL_REDIRECT_URI                         = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
+    AUTH_FUNCTION_BASE_URL                                = "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net"
   }
 
   # ────────────────────────────────────────────────────────────

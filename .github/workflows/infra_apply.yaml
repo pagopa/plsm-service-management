@@ -10,6 +10,7 @@ on:
         type: choice
         options:
           - dev
+          - dev-base
           - prod
       confirm:
         description: 'Scrivi "apply" per confermare'
@@ -65,3 +66,25 @@ jobs:
       base_path: infra/resources
       use_private_agent: true
       override_github_environment: infra-${{ github.event.inputs.target_env || 'prod' }}
+
+  apply_dev:
+    if: github.event.inputs.target_env == 'dev'
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: Apply Infrastructure - dev
+    secrets: inherit
+    with:
+      environment: dev
+      base_path: infra/resources
+      use_private_agent: true
+      override_github_environment: infra-dev
+
+  apply_dev_base:
+    if: github.event.inputs.target_env == 'dev-base'
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: Apply Infrastructure - dev-base
+    secrets: inherit
+    with:
+      environment: dev-base
+      base_path: infra/resources
+      use_private_agent: true
+      override_github_environment: infra-dev
