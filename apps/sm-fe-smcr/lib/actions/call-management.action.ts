@@ -253,17 +253,7 @@ export async function sendToSlackAction(
 
 // --- CRM Meeting (OpenAPI sm-crm-fn POST /meetings) ---
 
-const TIPOLOGIA_REFERENTE = [
-  "APICALE",
-  "DIRETTO",
-  "TECNICO",
-  "BUSINESS",
-  "ACCOUNT",
-  "RESPONSABILE_DI_TRASFORMAZIONE_DIGITALE",
-  "REFERENTE_CONTRATTUALE",
-  "RESPONSABILE_PROTEZIONE_DATI",
-  "REFERENTE_BUSINESS_APICALE_ACCOUNT",
-] as const;
+const TIPOLOGIA_REFERENTE = ["TECNICO"] as const;
 
 export type TipologiaReferente = (typeof TIPOLOGIA_REFERENTE)[number];
 

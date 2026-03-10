@@ -40,27 +40,14 @@ import {
   crmFormSchema,
   type CrmFormSchema,
 } from "./crm-form-schema";
-import type { TipologiaReferente } from "@/lib/actions/call-management.action";
+import {
+  createMeetingAction,
+  CreateMeetingInput,
+  type TipologiaReferente,
+} from "@/lib/actions/call-management.action";
 
 const TIPOLOGIA_OPTIONS: { value: TipologiaReferente; label: string }[] = [
   { value: "TECNICO", label: "TECNICO" },
-  { value: "BUSINESS", label: "BUSINESS" },
-  { value: "APICALE", label: "APICALE" },
-  { value: "DIRETTO", label: "DIRETTO" },
-  { value: "ACCOUNT", label: "ACCOUNT" },
-  {
-    value: "RESPONSABILE_DI_TRASFORMAZIONE_DIGITALE",
-    label: "Responsabile trasformazione digitale",
-  },
-  { value: "REFERENTE_CONTRATTUALE", label: "Referente contrattuale" },
-  {
-    value: "RESPONSABILE_PROTEZIONE_DATI",
-    label: "Responsabile protezione dati",
-  },
-  {
-    value: "REFERENTE_BUSINESS_APICALE_ACCOUNT",
-    label: "Referente business apicale account",
-  },
 ];
 
 function toIsoDateTime(dateStr: string, timeStr: string): string {
@@ -131,7 +118,7 @@ export default function CRMForm() {
       toast.error("Aggiungi almeno un partecipante con email");
       return;
     }
-    const payLoad = {
+    const payLoad: CreateMeetingInput = {
       institutionIdSelfcare: values.institutionIdSelfcare,
       productIdSelfcare: values.productId,
       partecipanti,
@@ -142,22 +129,13 @@ export default function CRMForm() {
       enableCreateContact: values.enableCreateContact,
     };
     console.log("payLoad", payLoad);
-    // const result = await createMeetingAction({
-    //   institutionIdSelfcare: values.institutionIdSelfcare,
-    //   productIdSelfcare: values.productId,
-    //   partecipanti,
-    //   subject: values.subject,
-    //   scheduledstart: toIsoDateTime(values.startDate, values.startTime),
-    //   scheduledend: toIsoDateTime(values.endDate, values.endTime),
-    //   description: values.description?.trim() || undefined,
-    //   enableCreateContact: values.enableCreateContact,
-    // });
+    const result = await createMeetingAction(payLoad);
 
-    // if (result.success) {
-    //   toast.success(result.message ?? "Appuntamento creato con successo");
-    // } else {
-    //   toast.error(result.error);
-    // }
+    if (result.success) {
+      toast.success(result.message ?? "Appuntamento creato con successo");
+    } else {
+      toast.error(result.error);
+    }
   };
 
   return (

@@ -8,17 +8,7 @@ const productIds = [
   "prod-io-sign",
 ] as const;
 
-export const tipologiaReferenteValues = [
-  "APICALE",
-  "DIRETTO",
-  "TECNICO",
-  "BUSINESS",
-  "ACCOUNT",
-  "RESPONSABILE_DI_TRASFORMAZIONE_DIGITALE",
-  "REFERENTE_CONTRATTUALE",
-  "RESPONSABILE_PROTEZIONE_DATI",
-  "REFERENTE_BUSINESS_APICALE_ACCOUNT",
-] as const;
+export const tipologiaReferenteValues = ["TECNICO"] as const;
 
 export const partecipanteSchema = z.object({
   nome: z.string().optional(),
