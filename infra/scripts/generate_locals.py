@@ -1,4 +1,10 @@
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["pyyaml"]
+# ///
+
 #!/usr/bin/env python3
+
 """
 generate_locals.py
 ==================
