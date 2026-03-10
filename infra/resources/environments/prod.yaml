@@ -64,7 +64,6 @@ fe_smcr:
   FE_SMCR_SLACK_CALL_MANAGEMENT_HOOK: "kv:fe_smcr_slack_call_management_hook"
   FE_SMCR_AZURE_STORAGE_CONNECTION_STRING: "kv:fe_smcr_azure_storage_connection_string"
   FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID: "kv:fe_smcr_api_key_firma_con_io_signer_id:fe-smcr-api-key-firma-con-io-signerid"
-  FE_SMCR_API_KEY_INSTITUTION_UAT: "kv:fe_smcr_api_key_institution_uat"
   WEBHOOK_MANUAL_STORAGE: "kv:fe_smcr_webhook_manual_storage"
   STORAGE_TOKEN: "kv:fe_smcr_storage_token"
   DB_HOST: "kv:db_host"
