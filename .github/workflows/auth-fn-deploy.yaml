@@ -25,12 +25,7 @@ on:
         description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
         type: boolean
         required: false
-        default: false
-      override_labels:
-        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
-        type: string
-        required: false
-        default: ""
+        default: true
 
 permissions:
   contents: read
@@ -42,6 +37,7 @@ jobs:
     outputs:
       resource_group_name: ${{ steps.set-vars.outputs.resource_group_name }}
       function_app_name: ${{ steps.set-vars.outputs.function_app_name }}
+      runner_label: ${{ steps.set-vars.outputs.runner_label }}
     steps:
       - name: Set environment-specific variables
         id: set-vars
@@ -49,9 +45,11 @@ jobs:
           if [ "${{ inputs.environment }}" = "app-prod" ]; then
             echo "resource_group_name=plsm-p-itn-fn-rg-01" >> "$GITHUB_OUTPUT"
             echo "function_app_name=plsm-p-itn-auth-func-01" >> "$GITHUB_OUTPUT"
+            echo "runner_label=prod" >> "$GITHUB_OUTPUT"
           else
             echo "resource_group_name=plsm-d-itn-apps-rg-01" >> "$GITHUB_OUTPUT"
             echo "function_app_name=plsm-d-itn-auth-func-01" >> "$GITHUB_OUTPUT"
+            echo "runner_label=dev" >> "$GITHUB_OUTPUT"
           fi
 
   deploy:
@@ -66,5 +64,5 @@ jobs:
       use_staging_slot: ${{ inputs.use_staging_slot }}
       use_private_agent: ${{ inputs.use_private_agent }}
       use_labels: ${{ inputs.use_labels }}
-      override_labels: ${{ inputs.override_labels }}
+      override_labels: ${{ needs.resolve-env.outputs.runner_label }}
     secrets: inherit
