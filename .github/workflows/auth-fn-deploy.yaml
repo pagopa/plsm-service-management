@@ -5,19 +5,12 @@ on:
     inputs:
       environment:
         description: Environment where the artifact will be deployed.
-        type: string
+        type: choice
         required: true
-        default: "app-prod"
-      resource_group_name:
-        description: "Function App resource group name"
-        type: string
-        required: true
-        default: "plsm-p-itn-fn-rg-01"
-      function_app_name:
-        description: "Function App name"
-        type: string
-        required: true
-        default: "plsm-p-itn-auth-func-01"
+        default: "app-dev-cd"
+        options:
+          - app-dev-cd
+          - app-prod-cd
       use_staging_slot:
         description: True if artifact should be deployed to staging slot
         type: boolean
@@ -38,18 +31,38 @@ on:
         type: string
         required: false
         default: ""
+
 permissions:
   contents: read
   id-token: write
+
 jobs:
+  resolve-env:
+    runs-on: ubuntu-latest
+    outputs:
+      resource_group_name: ${{ steps.set-vars.outputs.resource_group_name }}
+      function_app_name: ${{ steps.set-vars.outputs.function_app_name }}
+    steps:
+      - name: Set environment-specific variables
+        id: set-vars
+        run: |
+          if [ "${{ inputs.environment }}" = "app-prod-cd" ]; then
+            echo "resource_group_name=plsm-p-itn-fn-rg-01" >> "$GITHUB_OUTPUT"
+            echo "function_app_name=plsm-p-itn-auth-func-01" >> "$GITHUB_OUTPUT"
+          else
+            echo "resource_group_name=plsm-d-itn-apps-rg-01" >> "$GITHUB_OUTPUT"
+            echo "function_app_name=plsm-d-itn-auth-func-01" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
+    needs: resolve-env
     if: github.event_name == 'workflow_dispatch'
     uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@main
     with:
       workspace_name: sm-auth-fn
       environment: ${{ inputs.environment }}
-      resource_group_name: ${{ inputs.resource_group_name }}
-      function_app_name: ${{ inputs.function_app_name }}
+      resource_group_name: ${{ needs.resolve-env.outputs.resource_group_name }}
+      function_app_name: ${{ needs.resolve-env.outputs.function_app_name }}
       use_staging_slot: ${{ inputs.use_staging_slot }}
       use_private_agent: ${{ inputs.use_private_agent }}
       use_labels: ${{ inputs.use_labels }}
