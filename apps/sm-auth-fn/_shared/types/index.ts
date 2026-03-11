@@ -79,7 +79,7 @@ export interface AuthLogoutResponse {
 }
 
 export interface HealthCheckResponse {
-  status: "healthy" | "unhealthy";
+  status: "healthy" | "unhealthy" | "degraded";
   message: string;
   timestamp: string;
   config: {
