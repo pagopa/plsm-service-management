@@ -7,10 +7,10 @@ on:
         description: Environment where the artifact will be deployed.
         type: choice
         required: true
-        default: "app-dev-cd"
+        default: "app-dev"
         options:
-          - app-dev-cd
-          - app-prod-cd
+          - app-dev
+          - app-prod
       use_staging_slot:
         description: True if artifact should be deployed to staging slot
         type: boolean
@@ -46,7 +46,7 @@ jobs:
       - name: Set environment-specific variables
         id: set-vars
         run: |
-          if [ "${{ inputs.environment }}" = "app-prod-cd" ]; then
+          if [ "${{ inputs.environment }}" = "app-prod" ]; then
             echo "resource_group_name=plsm-p-itn-fn-rg-01" >> "$GITHUB_OUTPUT"
             echo "function_app_name=plsm-p-itn-auth-func-01" >> "$GITHUB_OUTPUT"
           else
