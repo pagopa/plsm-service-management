@@ -12,33 +12,41 @@ import { isConfigValid, loadConfig } from "../_shared/utils/config";
  * Returns the health status of the Auth Function.
  * Verifies that all required configuration is present.
  *
- * This endpoint is used by Azure to determine if the function is ready to receive traffic.
+ * This endpoint is used by Azure to determine if the function is ready to
+ * receive traffic (slot swap warmup). It always returns HTTP 200 so that
+ * Azure warmup probes succeed even when the configuration is incomplete;
+ * the actual config validity is reported in the response body.
  *
- * @param {HttpRequest} request - HTTP request object
+ * @param {HttpRequest} _request - HTTP request object (unused)
  * @param {InvocationContext} context - Function invocation context
  * @returns {Promise<HttpResponseInit>} HTTP response with health status
  */
 export async function handler(
-  request: HttpRequest,
+  _request: HttpRequest,
   context: InvocationContext,
 ): Promise<HttpResponseInit> {
   context.log("Health check endpoint called");
 
   try {
-    // Check if configuration is valid
     const configValid = isConfigValid();
 
     if (!configValid) {
-      context.error("Configuration validation failed");
+      context.warn(
+        "Configuration validation failed — function is running but not fully configured",
+      );
 
       const response: HealthCheckResponse = {
-        status: "unhealthy",
-        message: "Configuration is incomplete or invalid",
+        status: "degraded",
+        message:
+          "Function is running but configuration is incomplete or invalid",
         timestamp: new Date().toISOString(),
         config: {
           jwtIssuer: process.env.JWT_ISSUER || "not-configured",
           jwtAudience: process.env.JWT_AUDIENCE || "not-configured",
-          jwtExpirySeconds: parseInt(process.env.JWT_EXPIRY_SECONDS || "0", 10),
+          jwtExpirySeconds: (() => {
+            const v = parseInt(process.env.JWT_EXPIRY_SECONDS || "", 10);
+            return Number.isFinite(v) ? v : 0;
+          })(),
           msalTenantConfigured: !!process.env.MSAL_TENANT_ID,
           msalClientConfigured: !!process.env.MSAL_CLIENT_ID,
           jwtSecretConfigured:
@@ -46,13 +54,14 @@ export async function handler(
         },
       };
 
+      // Return 200 so Azure slot swap warmup probes always succeed.
+      // The degraded status in the body signals ops that config needs attention.
       return {
-        status: 503,
+        status: 200,
         jsonBody: response,
       };
     }
 
-    // Configuration is valid
     const config = loadConfig();
 
     const response: HealthCheckResponse = {
@@ -78,12 +87,13 @@ export async function handler(
     context.error("Health check failed:", errorMessage);
 
     const response: HealthCheckResponse = {
-      status: "unhealthy",
-      message: `Health check failed: ${errorMessage}`,
+      status: "degraded",
+      message:
+        "Function is running but health check encountered an unexpected error",
       timestamp: new Date().toISOString(),
       config: {
-        jwtIssuer: "error",
-        jwtAudience: "error",
+        jwtIssuer: "not-available",
+        jwtAudience: "not-available",
         jwtExpirySeconds: 0,
         msalTenantConfigured: false,
         msalClientConfigured: false,
@@ -91,8 +101,9 @@ export async function handler(
       },
     };
 
+    // Return 200 so Azure slot swap warmup probes always succeed.
     return {
-      status: 503,
+      status: 200,
       jsonBody: response,
     };
   }

@@ -19,6 +19,7 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr-dev"
     NODE_ENV                 = "development"
     WEBSITE_RUN_FROM_PACKAGE = "1"
+    MSAL_REDIRECT_URI        = "https://plsm-d-itn-auth-func-01.azurewebsites.net/api/v1/auth/callback"
   }
 
   yaml_auth_func_slot_app_settings = {
@@ -30,6 +31,7 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr-dev-staging"
     NODE_ENV                 = "development"
     WEBSITE_RUN_FROM_PACKAGE = "1"
+    MSAL_REDIRECT_URI        = "https://plsm-d-itn-auth-func-01-staging.azurewebsites.net/api/v1/auth/callback"
   }
 
   # ────────────────────────────────────────────────────────────
