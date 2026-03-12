@@ -65,6 +65,7 @@ jobs:
       environment: ${{ github.event.inputs.target_env || 'prod' }}
       base_path: infra/resources
       use_private_agent: true
+      use_labels: true
       override_github_environment: infra-${{ github.event.inputs.target_env || 'prod' }}
 
   apply_dev:
@@ -76,6 +77,7 @@ jobs:
       environment: dev
       base_path: infra/resources
       use_private_agent: true
+      use_labels: true
       override_github_environment: infra-dev
 
   apply_dev_base:
@@ -87,4 +89,6 @@ jobs:
       environment: dev-base
       base_path: infra/resources
       use_private_agent: true
+      use_labels: true
+      # dev-base shares the infra-dev GitHub Environment (no dedicated infra-dev-base exists)
       override_github_environment: infra-dev
