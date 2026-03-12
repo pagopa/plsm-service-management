@@ -91,7 +91,7 @@ fe_smcr:
   GET_STATUS: "external/support/v1/onboarding/institutionOnboardings"
   GET_USERS_PATH: "external/v2/users"
   ONBOARDING_BASE_PATH: "https://api.selfcare.pagopa.it/"
-  UPLOAD: "external/internal/v1/onboarding/"
+  UPLOAD: "external/internal/v1/onboarding"
   TEST_ENDPOINT: "mytestendpoint"
   # Slot-specifici: URL pubblici
   production:
