@@ -1,5 +1,6 @@
 "use server";
 
+import logger from "@/lib/logger/logger.server";
 import { OutputOptionsStepFour } from "../components/StepFour";
 import {
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY,
@@ -53,15 +54,53 @@ export async function uploadContract(state: any, formData: FormData) {
       } catch {
         if (errorBody) message = errorBody;
       }
+      logger.warn(
+        {
+          info: {
+            event: "onboarding.uploadContract.failed",
+            actor: "smcr-ui",
+            subject: "onboarding",
+            metadata: { status: response.status, message, id, output },
+          },
+        },
+        "Upload contratto fallito",
+      );
       return { success: false, message };
     }
 
+    logger.info(
+      {
+        info: {
+          event: "onboarding.uploadContract.success",
+          actor: "smcr-ui",
+          subject: "onboarding",
+          metadata: { id, output },
+        },
+      },
+      "Upload del contratto avvenuto con successo",
+    );
     return {
       success: true,
       message: "Upload del contratto avvenuto con successo!",
     };
   } catch (error) {
-    console.error("Upload error", error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(
+      {
+        error: {
+          name: err.name,
+          message: err.message,
+          stack: err.stack,
+        },
+        info: {
+          event: "onboarding.uploadContract.exception",
+          actor: "smcr-ui",
+          subject: "onboarding",
+          metadata: { id, output },
+        },
+      },
+      "Upload contratto errore",
+    );
     return {
       success: false,
       message: "C'è stato un errore nell'upload del contratto",
