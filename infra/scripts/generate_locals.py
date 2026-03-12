@@ -44,8 +44,8 @@ Convenzioni YAML
 
 Sezioni speciali (senza __local)
 ---------------------------------
-- environment              → genera local yaml_environment (da prod.yaml)
-- tags                     → genera local yaml_tags         (da prod.yaml)
+- environment              → genera local yaml_environment (da <env>.yaml)
+- tags                     → genera local yaml_tags         (da <env>.yaml)
 
 Gestione data_kv.tf
 --------------------
@@ -62,35 +62,45 @@ from pathlib import Path
 from datetime import datetime
 
 # ─── Percorsi ────────────────────────────────────────────────────────────────
-BASE    = Path(__file__).resolve().parent.parent / "resources"
+BASE = Path(__file__).resolve().parent.parent / "resources"
 ENV_DIR = BASE / "environments"
 
 # Riferimento al Key Vault per ambiente (usato in data_kv.tf generato)
 _KV_REF = {
     "prod": "module.azure_core_infra.common_key_vault.id",
-    "dev":  "data.azurerm_key_vault.common_kv.id",
+    "dev": "data.azurerm_key_vault.common_kv.id",
 }
 
 # Impostati in main() dopo il parsing degli argomenti
-OUTPUT      = None
-DATA_TF     = None
+OUTPUT = None
+DATA_TF = None
 DATA_KV_OUT = None
-YAML_FILES  = None
-KV_REF      = None
+YAML_FILES = None
+KV_REF = None
 
 # Sezioni top-level da ignorare (non sono risorse Azure)
-_SKIP_SECTIONS = {"environment", "tags", "network", "app_insights", "common",
-                  "runtime", "health_check", "database"}
+_SKIP_SECTIONS = {
+    "environment",
+    "tags",
+    "network",
+    "app_insights",
+    "common",
+    "runtime",
+    "health_check",
+    "database",
+}
 
 # ─── Verbose logging ─────────────────────────────────────────────────────────
 
 VERBOSE = False
+
 
 def vlog(msg: str = "", indent: int = 0) -> None:
     """Stampa msg solo se VERBOSE è attivo."""
     if VERBOSE:
         prefix = "  " * indent
         print(f"{prefix}{msg}")
+
 
 def step(n: int, total: int, label: str) -> None:
     """Stampa l'intestazione di uno step se VERBOSE è attivo."""
@@ -100,12 +110,14 @@ def step(n: int, total: int, label: str) -> None:
 
 # ─── CLI ─────────────────────────────────────────────────────────────────────
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Genera locals_yaml.tf e data_kv.tf dai file YAML di configurazione.",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Output dettagliato step by step.",
     )
@@ -120,6 +132,7 @@ def parse_args() -> argparse.Namespace:
 
 # ─── Caricamento YAML ────────────────────────────────────────────────────────
 
+
 def load(filename: str) -> dict:
     path = ENV_DIR / filename
     if not path.exists():
@@ -130,6 +143,7 @@ def load(filename: str) -> dict:
 
 
 # ─── Conversione valori → espressioni Terraform ──────────────────────────────
+
 
 def tf_expr(val) -> str:
     """Converte un valore YAML nell'espressione Terraform corrispondente."""
@@ -152,13 +166,13 @@ def render_map(settings: dict, indent: int = 4) -> str:
         return "{}"
     width = max(len(k) for k in settings)
     rows = "\n".join(
-        f"{' ' * indent}{k:{width}} = {tf_expr(v)}"
-        for k, v in settings.items()
+        f"{' ' * indent}{k:{width}} = {tf_expr(v)}" for k, v in settings.items()
     )
     return "{\n" + rows + f"\n{' ' * (indent - 2)}}}"
 
 
 # ─── Parsing della sezione app ────────────────────────────────────────────────
+
 
 def split_settings(app_cfg: dict) -> tuple[dict, dict, dict]:
     """
@@ -172,18 +186,23 @@ def split_settings(app_cfg: dict) -> tuple[dict, dict, dict]:
     shared, prod_only, staging_only = {}, {}, {}
     for k, v in (app_cfg or {}).items():
         if k.startswith("__"):
-            continue            # metadata
+            continue  # metadata
         if k == "production":
-            prod_only = {kk: vv for kk, vv in (v or {}).items() if not kk.startswith("__")}
+            prod_only = {
+                kk: vv for kk, vv in (v or {}).items() if not kk.startswith("__")
+            }
         elif k == "staging":
-            staging_only = {kk: vv for kk, vv in (v or {}).items() if not kk.startswith("__")}
+            staging_only = {
+                kk: vv for kk, vv in (v or {}).items() if not kk.startswith("__")
+            }
         elif not isinstance(v, dict):
-            shared[k] = v       # valore piatto → condiviso
+            shared[k] = v  # valore piatto → condiviso
         # dict non-slot → ignorato (es. sub-oggetti di configurazione infrastruttura)
     return shared, prod_only, staging_only
 
 
 # ─── Generazione blocco Terraform per una risorsa ────────────────────────────
+
 
 def generate_app_block(app_key: str, app_cfg: dict) -> str:
     """
@@ -197,13 +216,16 @@ def generate_app_block(app_key: str, app_cfg: dict) -> str:
     local_name = app_cfg["__local"]
     shared, prod_only, staging_only = split_settings(app_cfg)
 
-    prod    = {**shared, **prod_only}
+    prod = {**shared, **prod_only}
     staging = {**shared, **staging_only}
 
-    slots_identical = (prod == staging)
+    slots_identical = prod == staging
 
     vlog(f"  {app_key}  →  {local_name}", indent=1)
-    vlog(f"shared={len(shared)} key(s)  |  prod_only={len(prod_only)}  |  staging_only={len(staging_only)}", indent=2)
+    vlog(
+        f"shared={len(shared)} key(s)  |  prod_only={len(prod_only)}  |  staging_only={len(staging_only)}",
+        indent=2,
+    )
     if slots_identical:
         vlog("slot identici: staging punta a production", indent=2)
     else:
@@ -219,7 +241,9 @@ def generate_app_block(app_key: str, app_cfg: dict) -> str:
     ]
 
     if slots_identical:
-        lines.append(f"  {local_name}_slot_app_settings = local.{local_name}_app_settings")
+        lines.append(
+            f"  {local_name}_slot_app_settings = local.{local_name}_app_settings"
+        )
     else:
         lines.append(f"  {local_name}_slot_app_settings = {render_map(staging)}")
 
@@ -228,6 +252,7 @@ def generate_app_block(app_key: str, app_cfg: dict) -> str:
 
 # ─── Sezioni speciali: environment e tags ────────────────────────────────────
 
+
 def generate_special_sections(prod_data: dict) -> list[str]:
     """Genera yaml_environment e yaml_tags dalla sezione prod.yaml."""
     lines = []
@@ -235,9 +260,9 @@ def generate_special_sections(prod_data: dict) -> list[str]:
     env = prod_data.get("environment", {})
     if env:
         env_map = {
-            "prefix":          env.get("prefix", ""),
-            "env_short":       env.get("env_short", ""),
-            "location":        env.get("location", ""),
+            "prefix": env.get("prefix", ""),
+            "env_short": env.get("env_short", ""),
+            "location": env.get("location", ""),
             "instance_number": env.get("instance_number", ""),
         }
         lines += [
@@ -257,6 +282,7 @@ def generate_special_sections(prod_data: dict) -> list[str]:
 
 
 # ─── Raccolta riferimenti KV dai YAML ────────────────────────────────────────
+
 
 def _iter_kv_values(app_cfg: dict):
     """Itera su tutti i valori kv: di una sezione app (shared + production + staging)."""
@@ -293,12 +319,18 @@ def collect_kv_refs(seen: dict[str, dict]) -> dict[str, str]:
         if VERBOSE and app_refs:
             vlog(f"{app_key}  ({len(app_refs)} riferimenti kv:)", indent=1)
             for tf_name, kv_name in app_refs:
-                explicit = " [nome esplicito]" if f":{kv_name}" in f"kv:{tf_name.replace('_','-')}:{kv_name}" and tf_name.replace("_", "-") != kv_name else ""
-                vlog(f"{tf_name}  →  \"{kv_name}\"{explicit}", indent=2)
+                explicit = (
+                    " [nome esplicito]"
+                    if f":{kv_name}" in f"kv:{tf_name.replace('_', '-')}:{kv_name}"
+                    and tf_name.replace("_", "-") != kv_name
+                    else ""
+                )
+                vlog(f'{tf_name}  →  "{kv_name}"{explicit}', indent=2)
     return refs
 
 
 # ─── Lettura data.tf esistente ───────────────────────────────────────────────
+
 
 def load_existing_kv_resource_names(path: Path) -> set[str]:
     """
@@ -313,6 +345,7 @@ def load_existing_kv_resource_names(path: Path) -> set[str]:
 
 # ─── Generazione data_kv.tf ──────────────────────────────────────────────────
 
+
 def generate_data_kv_file(
     kv_refs: dict[str, str],
     already_in_data_tf: set[str],
@@ -322,7 +355,7 @@ def generate_data_kv_file(
     Genera il contenuto di data_kv.tf.
     Restituisce (contenuto_file, lista_nomi_skippati).
     """
-    skipped     = sorted(k for k in kv_refs if k in already_in_data_tf)
+    skipped = sorted(k for k in kv_refs if k in already_in_data_tf)
     to_generate = {k: v for k, v in kv_refs.items() if k not in already_in_data_tf}
 
     if VERBOSE:
@@ -330,7 +363,7 @@ def generate_data_kv_file(
             if tf_name in already_in_data_tf:
                 vlog(f"SKIP  {tf_name}  (già in data.tf)", indent=1)
             else:
-                vlog(f"NEW   {tf_name}  →  \"{kv_refs[tf_name]}\"", indent=1)
+                vlog(f'NEW   {tf_name}  →  "{kv_refs[tf_name]}"', indent=1)
 
     lines = [
         "# =============================================================================",
@@ -352,7 +385,7 @@ def generate_data_kv_file(
         lines += [
             f'data "azurerm_key_vault_secret" "{tf_name}" {{',
             f'  name         = "{kv_name}"',
-            f'  key_vault_id = {KV_REF}',
+            f"  key_vault_id = {KV_REF}",
             "}",
             "",
         ]
@@ -362,17 +395,18 @@ def generate_data_kv_file(
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
+
 def main():
     global VERBOSE, OUTPUT, DATA_TF, DATA_KV_OUT, YAML_FILES, KV_REF, ENV_NAME
-    args    = parse_args()
+    args = parse_args()
     VERBOSE = args.verbose
     ENV_NAME = args.env
 
-    OUTPUT      = BASE / ENV_NAME / "locals_yaml.tf"
-    DATA_TF     = BASE / ENV_NAME / "data.tf"
+    OUTPUT = BASE / ENV_NAME / "locals_yaml.tf"
+    DATA_TF = BASE / ENV_NAME / "data.tf"
     DATA_KV_OUT = BASE / ENV_NAME / "data_kv.tf"
-    YAML_FILES  = ["common.yaml", f"{ENV_NAME}.yaml"]
-    KV_REF      = _KV_REF[ENV_NAME]
+    YAML_FILES = ["common.yaml", f"{ENV_NAME}.yaml"]
+    KV_REF = _KV_REF[ENV_NAME]
 
     print(f"Ambiente: {ENV_NAME}  |  KV ref: {KV_REF}")
 
@@ -385,7 +419,10 @@ def main():
         source_name = filename.replace(".yaml", "")
         data[source_name] = load(filename)
         sections = [k for k in data[source_name] if k not in _SKIP_SECTIONS]
-        vlog(f"{filename}  ({len(data[source_name])} sezioni totali, {len(sections)} risorse candidate)", indent=1)
+        vlog(
+            f"{filename}  ({len(data[source_name])} sezioni totali, {len(sections)} risorse candidate)",
+            indent=1,
+        )
 
     # ── Step 2: Scoperta risorse con __local ─────────────────────────────────
     step(2, TOTAL_STEPS, "Scoperta risorse con __local")
@@ -405,13 +442,22 @@ def main():
                 continue
             if app_key in seen:
                 seen[app_key] = {**seen[app_key], **app_cfg}
-                vlog(f"MERGE {app_key}  →  {app_cfg['__local']}  (prod.yaml arricchisce common.yaml)", indent=1)
+                vlog(
+                    f"MERGE {app_key}  →  {app_cfg['__local']}  (prod.yaml arricchisce common.yaml)",
+                    indent=1,
+                )
             else:
                 seen[app_key] = app_cfg
-                vlog(f"OK    {app_key}  →  {app_cfg['__local']}  (da {source_name}.yaml)", indent=1)
+                vlog(
+                    f"OK    {app_key}  →  {app_cfg['__local']}  (da {source_name}.yaml)",
+                    indent=1,
+                )
 
     if not seen:
-        print("ERRORE: nessuna sezione con __local trovata nei file YAML.", file=sys.stderr)
+        print(
+            "ERRORE: nessuna sezione con __local trovata nei file YAML.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     vlog(f"\nTotale risorse da processare: {len(seen)}", indent=0)
@@ -434,10 +480,13 @@ def main():
         out.append("")
         out.append(generate_app_block(app_key, app_cfg))
 
-    special = generate_special_sections(data.get("prod", {}))
+    special = generate_special_sections(data.get(ENV_NAME, {}))
     if special:
         out.append("")
-        out.extend(f"  {line}" if line and not line.startswith("  ") else line for line in special)
+        out.extend(
+            f"  {line}" if line and not line.startswith("  ") else line
+            for line in special
+        )
         vlog("sezioni speciali: yaml_environment + yaml_tags", indent=1)
 
     out.append("}\n")
@@ -452,7 +501,10 @@ def main():
 
     step(5, TOTAL_STEPS, f"Lettura data.tf + generazione data_kv.tf")
     already_in_data = load_existing_kv_resource_names(DATA_TF)
-    vlog(f"data.tf: {len(already_in_data)} data block azurerm_key_vault_secret esistenti", indent=1)
+    vlog(
+        f"data.tf: {len(already_in_data)} data block azurerm_key_vault_secret esistenti",
+        indent=1,
+    )
     vlog()
 
     content, skipped = generate_data_kv_file(kv_refs, already_in_data, timestamp)
@@ -465,7 +517,9 @@ def main():
     print(f"\n✓ Generato: {OUTPUT}")
     print(f"  Risorse processate ({len(seen)}): {', '.join(seen.keys())}")
     print(f"✓ Generato: {DATA_KV_OUT}")
-    print(f"  Segreti KV nel YAML: {len(kv_refs)}  |  generati: {new_count}  |  già in data.tf (skippati): {len(skipped)}")
+    print(
+        f"  Segreti KV nel YAML: {len(kv_refs)}  |  generati: {new_count}  |  già in data.tf (skippati): {len(skipped)}"
+    )
     if skipped and not VERBOSE:
         print(f"  Skippati: {', '.join(skipped)}")
 
