@@ -1,7 +1,7 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-10 11:13
-# Per aggiornare: python3 infra/scripts/generate_locals.py
+# Generato il: 2026-03-12 10:21
+# Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
 locals {
@@ -220,7 +220,7 @@ locals {
     GET_STATUS                                            = "external/support/v1/onboarding/institutionOnboardings"
     GET_USERS_PATH                                        = "external/v2/users"
     ONBOARDING_BASE_PATH                                  = "https://api.selfcare.pagopa.it/"
-    UPLOAD                                                = "external/internal/v1/onboarding/"
+    UPLOAD                                                = "external/internal/v1/onboarding"
     TEST_ENDPOINT                                         = "mytestendpoint"
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
@@ -265,7 +265,7 @@ locals {
     GET_STATUS                                            = "external/support/v1/onboarding/institutionOnboardings"
     GET_USERS_PATH                                        = "external/v2/users"
     ONBOARDING_BASE_PATH                                  = "https://api.selfcare.pagopa.it/"
-    UPLOAD                                                = "external/internal/v1/onboarding/"
+    UPLOAD                                                = "external/internal/v1/onboarding"
     TEST_ENDPOINT                                         = "mytestendpoint"
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
