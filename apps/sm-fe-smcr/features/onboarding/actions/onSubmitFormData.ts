@@ -61,6 +61,12 @@ export async function onSubmitFormData(state: any, formData: FormData) {
     console.log("DATA: ", data);
     if (error) {
       console.error(error);
+      if (error.status === 409) {
+        return {
+          success: false,
+          message: "Conflitto: Onboarding già effettuato",
+        };
+      }
       return {
         success: false,
         message: "Onboarding non riuscito.",
