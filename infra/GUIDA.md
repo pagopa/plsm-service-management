@@ -32,12 +32,14 @@ python3 infra/scripts/generate_locals.py
 ```
 
 Output atteso:
+
 ```
 ✓ Generato: .../infra/resources/prod/locals_yaml.tf
   Risorse processate (8): common_app_settings, certificates, onboarding, ...
 ```
 
 **Prerequisiti**: Python 3.9+ e il pacchetto `pyyaml`.
+
 ```bash
 pip install pyyaml
 ```
@@ -47,17 +49,21 @@ pip install pyyaml
 ## Convenzioni YAML
 
 ### Valore normale (non segreto)
+
 ```yaml
 MY_SETTING: "valore"
-MY_PORT:    "5432"
-MY_FLAG:    "true"     # I booleani vanno sempre come stringa
+MY_PORT: "5432"
+MY_FLAG: "true" # I booleani vanno sempre come stringa
 ```
+
 → generato: `MY_SETTING = "valore"`
 
 ### Segreto da Azure Key Vault
+
 ```yaml
 MY_SECRET: "kv:nome_risorsa_terraform"
 ```
+
 → generato: `MY_SECRET = data.azurerm_key_vault_secret.nome_risorsa_terraform.value`
 
 Il nome dopo `kv:` deve corrispondere al nome della risorsa
@@ -65,6 +71,7 @@ Il nome dopo `kv:` deve corrispondere al nome della risorsa
 (i trattini `-` vengono convertiti automaticamente in underscore `_`).
 
 ### Valori slot-specifici (production ≠ staging)
+
 ```yaml
 mia_risorsa:
   __local: yaml_mia_risorsa
@@ -79,6 +86,7 @@ mia_risorsa:
 
 Se `production:` e `staging:` sono identici (o assenti), lo script ottimizza
 automaticamente:
+
 ```hcl
 yaml_mia_risorsa_slot_app_settings = local.yaml_mia_risorsa_app_settings
 ```
@@ -97,10 +105,11 @@ yaml_mia_risorsa_slot_app_settings = local.yaml_mia_risorsa_app_settings
 fe_smcr:
   __local: yaml_fe_smcr
   # ... settings esistenti ...
-  LOG_LEVEL: "info"          # ← aggiungi qui
+  LOG_LEVEL: "info" # ← aggiungi qui
 ```
 
 3. Esegui lo script:
+
 ```bash
 python3 infra/scripts/generate_locals.py
 ```
@@ -143,7 +152,7 @@ sono specifici per la produzione.
 ```yaml
 # prod.yaml
 nuova_risorsa:
-  __local: yaml_nuova_risorsa          # scegli il nome del local Terraform
+  __local: yaml_nuova_risorsa # scegli il nome del local Terraform
   SETTING_1: "valore"
   SETTING_2: "kv:nome_kv_secret"
   production:
@@ -153,8 +162,9 @@ nuova_risorsa:
 ```
 
 **Convenzione nomi `__local`**:
-- Function App: `yaml_<nome>_func`  (es. `yaml_nuova_func`)
-- App Service:  `yaml_<nome>`       (es. `yaml_nuova_risorsa`)
+
+- Function App: `yaml_<nome>_func` (es. `yaml_nuova_func`)
+- App Service: `yaml_<nome>` (es. `yaml_nuova_risorsa`)
 
 ### Passo 2 — Esegui lo script
 
@@ -198,10 +208,10 @@ segui questa checklist completa.
 # prod.yaml
 nuova_func:
   __local: yaml_nuova_func
-  NODE_ENV:                 "production"
+  NODE_ENV: "production"
   WEBSITE_RUN_FROM_PACKAGE: "1"
-  API_URL:                  "https://api.example.com"
-  API_KEY:                  "kv:nuova_func_api_key"
+  API_URL: "https://api.example.com"
+  API_KEY: "kv:nuova_func_api_key"
   production:
     DEBUG: "false"
   staging:
@@ -284,13 +294,60 @@ git commit -m "feat: aggiungi LOG_LEVEL a fe_smcr"
 
 ## Dove mettere le nuove risorse: common.yaml vs prod.yaml?
 
-| Criterio | `common.yaml` | `prod.yaml` |
-|---|---|---|
-| Valori identici in tutti gli ambienti | ✓ | |
-| Valori diversi per prod/uat/dev | | ✓ |
-| URL pubblici, endpoint prod | | ✓ |
-| URL API interni (stesso per tutti) | ✓ | |
-| Segreti KV (il nome resource TF è uguale) | ✓ | |
-| Segreti KV con resource TF diversa per ambiente | | ✓ |
+| Criterio                                        | `common.yaml` | `prod.yaml` / `dev.yaml` |
+| ----------------------------------------------- | ------------- | ------------------------ |
+| Valori identici in tutti gli ambienti           | ✓             |                          |
+| Valori diversi per prod/dev                     |               | ✓                        |
+| URL pubblici, endpoint prod                     |               | ✓                        |
+| URL API interni (stesso per tutti)              | ✓             |                          |
+| Segreti KV (il nome resource TF è uguale)       | ✓             |                          |
+| Segreti KV con resource TF diversa per ambiente |               | ✓                        |
 
-In caso di dubbio, usa `prod.yaml`.
+In caso di dubbio, usa il file dell'ambiente specifico (`prod.yaml` o `dev.yaml`).
+
+---
+
+## Regola critica: blocchi `production:` e `staging:` nel merge
+
+Lo script carica i YAML in ordine `common.yaml` → `<env>.yaml` e fa un **merge shallow** (primo livello).
+I blocchi `production:` e `staging:` sono trattati come un'unica chiave: se `dev.yaml` non li ridefinisce entrambi, quelli di `common.yaml` sopravvivono intatti — portando eventuali URL o valori di produzione nell'ambiente dev.
+
+**Regola**: se in `common.yaml` una risorsa ha `production:` o `staging:`, in `dev.yaml` devi sempre ridefinirli **entrambi**.
+
+```yaml
+# common.yaml
+auth_func:
+  __local: yaml_auth_func
+  NODE_ENV: "production"
+  production:
+    MSAL_REDIRECT_URI: "https://plsm-p-itn-auth-func-01.azurewebsites.net/..."   # prod
+  staging:
+    MSAL_REDIRECT_URI: "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net/..."
+
+# dev.yaml — CORRETTO: ridefinisce ENTRAMBI i blocchi slot
+auth_func:
+  __local: yaml_auth_func
+  NODE_ENV: "development"
+  production:                          # ← obbligatorio, altrimenti eredita l'URL di prod
+    MSAL_REDIRECT_URI: "https://plsm-d-itn-auth-func-01.azurewebsites.net/..."
+  staging:
+    MSAL_REDIRECT_URI: "https://plsm-d-itn-auth-func-01-staging.azurewebsites.net/..."
+```
+
+Per escludere completamente una risorsa di `common.yaml` in DEV, usa `__skip: true`:
+
+```yaml
+# dev.yaml
+certificates:
+  __skip: true # certificates-fn non deployata in DEV
+```
+
+---
+
+## Come eseguire lo script per ambiente
+
+```bash
+python3 infra/scripts/generate_locals.py              # default: prod
+python3 infra/scripts/generate_locals.py --env dev    # ambiente dev
+python3 infra/scripts/generate_locals.py --env prod --verbose
+```
