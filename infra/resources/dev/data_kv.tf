@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-12 14:14
+# Generato il: 2026-03-12 15:17
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -61,6 +61,11 @@ data "azurerm_key_vault_secret" "fe_smcr_api_slack_call_management_hook_test" {
 
 data "azurerm_key_vault_secret" "fe_smcr_azure_storage_connection_string" {
   name         = "fe-smcr-azure-storage-connection-string"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_logs_endpoint" {
+  name         = "fe-smcr-logs-endpoint"
   key_vault_id = data.azurerm_key_vault.common_kv.id
 }
 
