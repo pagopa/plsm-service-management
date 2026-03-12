@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-12 10:21
+# Generato il: 2026-03-12 15:00
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -159,30 +159,11 @@ locals {
   }
 
   # ────────────────────────────────────────────────────────────
-  # portale_fatturazione
-  # ────────────────────────────────────────────────────────────
-
-  yaml_pf_func_app_settings = {
-    API_KEY_SECRET       = data.azurerm_key_vault_secret.apikey_endpoint_pf.value
-    STORAGE_ACCOUNT_NAME = data.azurerm_key_vault_secret.storage_pf_name.value
-    CONTAINER_NAME       = data.azurerm_key_vault_secret.container_pf_name.value
-  }
-
-  yaml_pf_func_slot_app_settings = local.yaml_pf_func_app_settings
-
-  # ────────────────────────────────────────────────────────────
-  # backend_smcr
-  # ────────────────────────────────────────────────────────────
-
-  yaml_backend_app_settings = {}
-
-  yaml_backend_slot_app_settings = local.yaml_backend_app_settings
-
-  # ────────────────────────────────────────────────────────────
   # fe_smcr
   # ────────────────────────────────────────────────────────────
 
   yaml_fe_smcr_app_settings = {
+    FE_SMCR_LOGS_ENDPOINT                                 = data.azurerm_key_vault_secret.fe_smcr_logs_endpoint.value
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT                 = data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value
@@ -228,6 +209,7 @@ locals {
   }
 
   yaml_fe_smcr_slot_app_settings = {
+    FE_SMCR_LOGS_ENDPOINT                                 = data.azurerm_key_vault_secret.fe_smcr_logs_endpoint.value
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT                 = data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value
@@ -271,6 +253,26 @@ locals {
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL                                = "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net"
   }
+
+  # ────────────────────────────────────────────────────────────
+  # portale_fatturazione
+  # ────────────────────────────────────────────────────────────
+
+  yaml_pf_func_app_settings = {
+    API_KEY_SECRET       = data.azurerm_key_vault_secret.apikey_endpoint_pf.value
+    STORAGE_ACCOUNT_NAME = data.azurerm_key_vault_secret.storage_pf_name.value
+    CONTAINER_NAME       = data.azurerm_key_vault_secret.container_pf_name.value
+  }
+
+  yaml_pf_func_slot_app_settings = local.yaml_pf_func_app_settings
+
+  # ────────────────────────────────────────────────────────────
+  # backend_smcr
+  # ────────────────────────────────────────────────────────────
+
+  yaml_backend_app_settings = {}
+
+  yaml_backend_slot_app_settings = local.yaml_backend_app_settings
 
   # ────────────────────────────────────────────────────────────
   # crm_function
