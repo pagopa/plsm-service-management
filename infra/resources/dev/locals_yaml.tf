@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-08 18:04
+# Generato il: 2026-03-12 15:17
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -39,6 +39,7 @@ locals {
   # ────────────────────────────────────────────────────────────
 
   yaml_fe_smcr_app_settings = {
+    FE_SMCR_LOGS_ENDPOINT                                 = data.azurerm_key_vault_secret.fe_smcr_logs_endpoint.value
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT                 = data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value
@@ -85,6 +86,7 @@ locals {
   }
 
   yaml_fe_smcr_slot_app_settings = {
+    FE_SMCR_LOGS_ENDPOINT                                 = data.azurerm_key_vault_secret.fe_smcr_logs_endpoint.value
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT                 = data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value
@@ -128,5 +130,25 @@ locals {
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-d-itn-fe-smcr-app-01-staging.azurewebsites.net"
     NEXT_PUBLIC_MSAL_REDIRECT_URI                         = "https://plsm-d-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-d-itn-fe-smcr-app-01-staging.azurewebsites.net"
+  }
+
+  # ────────────────────────────────────────────────────────────────
+  # Metadati ambiente
+  # ────────────────────────────────────────────────────────────────
+
+  yaml_environment = {
+    prefix          = "plsm"
+    env_short       = "d"
+    location        = "italynorth"
+    instance_number = "01"
+  }
+
+  yaml_tags = {
+    CostCenter     = "TS310 - PAGAMENTI & SERVIZI"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    Owner          = "PLSM"
+    ManagementTeam = "Service Management"
+    Source         = "https://github.com/pagopa/plsm-service-management/tree/main"
   }
 }
