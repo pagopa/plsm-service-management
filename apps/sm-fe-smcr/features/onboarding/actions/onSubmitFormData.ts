@@ -1,12 +1,14 @@
 "use server";
 
 import { $fetch } from "@/lib/fetch";
+import logger from "@/lib/logger/logger.server";
 import { getOnboardingStatusSchema } from "../types/getOnboardingStatusSchema";
 import { onboardingSchema } from "../types/onboardingSchema";
 import { productKeys, productsMap, OutputOption } from "../utils/constants";
 import { generatePayload } from "../utils/generatePayload";
 import {
   FE_SMCR_API_KEY_INSTITUTION,
+  FE_SMCR_API_KEY_INSTITUTION_UAT,
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY,
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT,
   GET_STATUS,
@@ -35,7 +37,17 @@ export async function onSubmitFormData(state: any, formData: FormData) {
       for (const { path, message } of parseError?.issues ?? []) {
         errors[path.join(".")] = { message };
       }
-      console.log(errors);
+      logger.warn(
+        {
+          info: {
+            event: "onboarding.formData.parseError",
+            actor: "smcr-ui",
+            subject: "onboarding",
+            metadata: { errors },
+          },
+        },
+        "Onboarding form data validation failed",
+      );
 
       let result = "";
       for (const [key, value] of Object.entries(errors)) {
@@ -57,9 +69,40 @@ export async function onSubmitFormData(state: any, formData: FormData) {
       },
       body: JSON.stringify(generatePayload(dataFromUIParsed)),
     });
-    console.log("DATA: ", data);
+    logger.info(
+      {
+        info: {
+          event: "onboarding.upload.response",
+          actor: "smcr-ui",
+          subject: "onboarding",
+          metadata: { hasData: !!data, output },
+        },
+      },
+      "Onboarding upload response",
+    );
     if (error) {
-      console.error(error);
+      logger.error(
+        {
+          error: {
+            name: "UploadError",
+            message: error.message ?? "Onboarding upload failed",
+            stack: undefined,
+          },
+          info: {
+            event: "onboarding.upload.error",
+            actor: "smcr-ui",
+            subject: "onboarding",
+            metadata: { status: error.status, statusText: error.statusText, output },
+          },
+        },
+        "Onboarding upload failed",
+      );
+      if (error.status === 409) {
+        return {
+          success: false,
+          message: "Conflitto: Onboarding già effettuato",
+        };
+      }
       return {
         success: false,
         message: "Onboarding non riuscito.",
@@ -74,23 +117,51 @@ export async function onSubmitFormData(state: any, formData: FormData) {
         `${GET_STATUS}?taxcode=${dataFromUIParsed.taxcode}${isSubunit ? `&subunitCode=${dataFromUIParsed.subunitCode}` : ""}`,
         {
           method: "GET",
-          baseURL: ONBOARDING_BASE_PATH,
+          baseURL:
+            output === "prod" ? ONBOARDING_BASE_PATH : ONBOARDING_BASE_PATH_UAT,
           headers: {
-            "Ocp-Apim-Subscription-Key": `${FE_SMCR_API_KEY_INSTITUTION}`,
+            "Ocp-Apim-Subscription-Key": `${output === "prod" ? FE_SMCR_API_KEY_INSTITUTION : FE_SMCR_API_KEY_INSTITUTION_UAT}`,
           },
           output: getOnboardingStatusSchema,
         },
       );
-      console.log({ dataStatus, errorStatus });
-
+      logger.info(
+        {
+          info: {
+            event: "onboarding.getStatus.response",
+            actor: "smcr-ui",
+            subject: "onboarding",
+            metadata: {
+              hasData: !!dataStatus,
+              dataLength: dataStatus?.length ?? 0,
+              hasError: !!errorStatus,
+              taxcode: dataFromUIParsed.taxcode,
+            },
+          },
+        },
+        "GetOnboardingStatus response",
+      );
       if (errorStatus) {
+        logger.warn(
+          {
+            info: {
+              event: "onboarding.getStatus.error",
+              actor: "smcr-ui",
+              subject: "onboarding",
+              metadata: {
+                status: errorStatus.status,
+                message: errorStatus.message,
+              },
+            },
+          },
+          "GetOnboardingStatus failed",
+        );
         if (errorStatus.status === 404) {
           return {
             success: false,
             message: errorStatus.message,
           };
         } else {
-          console.log(errorStatus);
           return {
             success: false,
             message: `Onbording effettuato con successo ma GetOnboardingStatus è fallita: ${JSON.stringify(errorStatus)}`,
@@ -104,8 +175,20 @@ export async function onSubmitFormData(state: any, formData: FormData) {
             "Onbording effettuato con successo ma GetOnboardingStatus non ha ritornato nessun record.",
         };
       }
-      console.log({ dataStatus });
-      console.log("dataFromUIParsed.productId", dataFromUIParsed.productId);
+      logger.info(
+        {
+          info: {
+            event: "onboarding.getStatus.data",
+            actor: "smcr-ui",
+            subject: "onboarding",
+            metadata: {
+              dataLength: dataStatus?.length ?? 0,
+              productId: dataFromUIParsed.productId,
+            },
+          },
+        },
+        "GetOnboardingStatus data",
+      );
 
       const dataTable = dataStatus
         ?.map((el) => {
@@ -129,8 +212,20 @@ export async function onSubmitFormData(state: any, formData: FormData) {
             el.product === dataFromUIParsed.productId &&
             el.status === "PENDING",
         );
-      console.log("onSubmitFormData");
-      console.log({ dataTable });
+      logger.info(
+        {
+          info: {
+            event: "onboarding.submit.completed",
+            actor: "smcr-ui",
+            subject: "onboarding",
+            metadata: {
+              dataTableLength: dataTable?.length ?? 0,
+              productId: dataFromUIParsed.productId,
+            },
+          },
+        },
+        "onSubmitFormData completed",
+      );
       if (!dataTable || dataTable.length === 0) {
         return {
           success: false,
@@ -167,14 +262,46 @@ export async function onSubmitFormData(state: any, formData: FormData) {
         };
       }
     } catch (error) {
-      console.log(error);
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error(
+        {
+          error: {
+            name: err.name,
+            message: err.message,
+            stack: err.stack,
+          },
+          info: {
+            event: "onboarding.getStatus.exception",
+            actor: "smcr-ui",
+            subject: "onboarding",
+            metadata: { taxcode: dataFromUIParsed.taxcode },
+          },
+        },
+        "GetOnboardingStatus exception",
+      );
       return {
         success: false,
         message: `Onboarding riuscito ma GetOnboardingStatus non riuscito, Errore: \n ${JSON.stringify(error)}`,
       };
     }
   } catch (error) {
-    console.log(error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(
+      {
+        error: {
+          name: err.name,
+          message: err.message,
+          stack: err.stack,
+        },
+        info: {
+          event: "onboarding.submit.exception",
+          actor: "smcr-ui",
+          subject: "onboarding",
+          metadata: {},
+        },
+      },
+      "Onboarding submit failed",
+    );
     return {
       success: false,
       message: `Onboarding non riuscito, errore: \n ${JSON.stringify(error)}`,
