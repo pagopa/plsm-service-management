@@ -8,6 +8,7 @@ const serverEnvSchema = z.object({
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY: optionalString,
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT: optionalString,
   FE_SMCR_API_KEY_INSTITUTION: optionalString,
+  FE_SMCR_API_KEY_INSTITUTION_UAT: optionalString,
   FE_SMCR_API_KEY_PROD_GET_USERS: optionalString,
   FE_SMCR_API_KEY_SERVICES: optionalString,
   FE_SMCR_API_KEY_PNPG: optionalString,
@@ -77,6 +78,7 @@ const rawServerEnv = {
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT:
     process.env.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT,
   FE_SMCR_API_KEY_INSTITUTION: process.env.FE_SMCR_API_KEY_INSTITUTION,
+  FE_SMCR_API_KEY_INSTITUTION_UAT: process.env.FE_SMCR_API_KEY_INSTITUTION_UAT,
   FE_SMCR_API_KEY_PROD_GET_USERS: process.env.FE_SMCR_API_KEY_PROD_GET_USERS,
   FE_SMCR_API_KEY_SERVICES: process.env.FE_SMCR_API_KEY_SERVICES,
   FE_SMCR_API_KEY_PNPG: process.env.FE_SMCR_API_KEY_PNPG,
@@ -108,8 +110,7 @@ const rawServerEnv = {
   GET_INFOCAMERE: process.env.GET_INFOCAMERE,
   FE_SMCR_AZURE_STORAGE_CONNECTION_STRING:
     process.env.FE_SMCR_AZURE_STORAGE_CONNECTION_STRING,
-  FE_SMCR_AZURE_STORAGE_CONTAINER:
-    process.env.FE_SMCR_AZURE_STORAGE_CONTAINER,
+  FE_SMCR_AZURE_STORAGE_CONTAINER: process.env.FE_SMCR_AZURE_STORAGE_CONTAINER,
   FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX:
     process.env.FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX,
   STORAGE_TOKEN: process.env.STORAGE_TOKEN,
@@ -131,13 +132,19 @@ const rawClientEnv = {
 
 const serverEnvParse = serverEnvSchema.safeParse(rawServerEnv);
 if (!serverEnvParse.success) {
-  console.error("Invalid server env configuration:", serverEnvParse.error.issues);
+  console.error(
+    "Invalid server env configuration:",
+    serverEnvParse.error.issues,
+  );
   throw new Error("Invalid server env configuration");
 }
 
 const clientEnvParse = clientEnvSchema.safeParse(rawClientEnv);
 if (!clientEnvParse.success) {
-  console.error("Invalid client env configuration:", clientEnvParse.error.issues);
+  console.error(
+    "Invalid client env configuration:",
+    clientEnvParse.error.issues,
+  );
   throw new Error("Invalid client env configuration");
 }
 

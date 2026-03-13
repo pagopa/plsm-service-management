@@ -1,0 +1,120 @@
+name: Infra Branch Check
+
+# This workflow checks if the current branch is allowed to apply infrastructure changes
+# Rules:
+#   ✅ infra/* branches: CAN apply (for infrastructure-only changes)
+#   ✅ main branch: CAN apply (auto-deploy after merge)
+#   ❌ All other branches: CANNOT apply (only plan)
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - "infra/resources/prod/**"
+      - "infra/resources/dev/**"
+      - "infra/resources/_modules/**"
+      - "infra/resources/environments/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check_branch_permissions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch naming convention
+        id: check
+        run: |
+          BRANCH_NAME="${GITHUB_HEAD_REF}"
+          BASE_BRANCH="${GITHUB_BASE_REF}"
+
+          echo "### 🏗️ Infrastructure Change Detection" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Source Branch:** \`$BRANCH_NAME\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Branch:** \`$BASE_BRANCH\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Check if branch follows infra/* convention
+          if [[ "$BRANCH_NAME" == infra/* ]]; then
+            echo "**Status:** ✅ **Infrastructure branch detected**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "This branch follows the \`infra/*\` naming convention." >> $GITHUB_STEP_SUMMARY
+            echo "After merge to \`main\`, you can run **Terraform Apply** using workflow_dispatch." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Workflow:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. ✅ Terraform Plan (automatic on PR)" >> $GITHUB_STEP_SUMMARY
+            echo "2. 👀 Review infrastructure changes" >> $GITHUB_STEP_SUMMARY
+            echo "3. ✅ Merge to main" >> $GITHUB_STEP_SUMMARY
+            echo "4. 🚀 Manually trigger Apply from this branch OR wait for auto-apply from main" >> $GITHUB_STEP_SUMMARY
+            
+            # Add comment on PR
+            echo "✅ **Infrastructure branch detected**" > /tmp/comment.txt
+            echo "" >> /tmp/comment.txt
+            echo "This branch can apply infrastructure changes." >> /tmp/comment.txt
+            echo "After review and merge, terraform apply can be triggered." >> /tmp/comment.txt
+            
+          elif [[ "$BASE_BRANCH" == "main" ]]; then
+            echo "**Status:** ⚠️ **Feature branch with infra changes**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ This is not an \`infra/*\` branch but contains infrastructure changes." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Recommended approach:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Create a separate \`infra/$BRANCH_NAME\` branch from \`main\`" >> $GITHUB_STEP_SUMMARY
+            echo "2. Move infrastructure changes to the \`infra/*\` branch" >> $GITHUB_STEP_SUMMARY
+            echo "3. Merge \`infra/*\` branch first" >> $GITHUB_STEP_SUMMARY
+            echo "4. Rebase this branch on \`main\`" >> $GITHUB_STEP_SUMMARY
+            echo "5. Continue with application code changes" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "This ensures infrastructure changes are applied before application code deployment." >> $GITHUB_STEP_SUMMARY
+            
+            # Add comment on PR
+            echo "⚠️ **Infrastructure changes detected on feature branch**" > /tmp/comment.txt
+            echo "" >> /tmp/comment.txt
+            echo "Consider creating an \`infra/*\` branch for these changes." >> /tmp/comment.txt
+            echo "This provides better control and traceability of infrastructure modifications." >> /tmp/comment.txt
+          fi
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const commentPath = '/tmp/comment.txt';
+
+            if (fs.existsSync(commentPath)) {
+              const comment = fs.readFileSync(commentPath, 'utf8');
+              
+              // Find existing comment
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+              
+              const botComment = comments.find(c => 
+                c.user.type === 'Bot' && c.body.includes('Infrastructure branch')
+              );
+              
+              if (botComment) {
+                // Update existing comment
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: comment
+                });
+              } else {
+                // Create new comment
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: comment
+                });
+              }
+            }

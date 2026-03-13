@@ -40,3 +40,7 @@ data "azurerm_resource_group" "network_rg" {
 data "azurerm_resource_group" "opex_rg" {
   name = "plsm-p-itn-opex-rg-01"
 }
+
+data "azurerm_resource_group" "apps_rg" {
+  name = "plsm-p-itn-apps-rg-01"
+}
