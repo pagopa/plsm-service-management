@@ -56,8 +56,15 @@ vengono saltati per evitare duplicati Terraform.
 
 import re
 import argparse
-import yaml
 import sys
+
+try:
+    import yaml
+except ImportError:
+    print("Errore: il pacchetto 'pyyaml' non è installato.", file=sys.stderr)
+    print("Esegui:  pip install pyyaml", file=sys.stderr)
+    sys.exit(1)
+
 from pathlib import Path
 from datetime import datetime
 
