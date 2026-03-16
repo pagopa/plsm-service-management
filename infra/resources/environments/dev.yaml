@@ -73,6 +73,8 @@ fe_smcr:
   SLACK_CALL_MANAGEMENT_HOOK_TEST: "kv:fe_smcr_slack_call_management_hook_test"
   SLACK_CALL_MANAGEMENT_HOOK_PROD: "kv:fe_smcr_slack_call_management_hook_prod"
   ONBOARDING_BASE_PATH_UAT: "kv:fe_smcr_onboarding_base_path_uat"
+  FE_SMCR_CRM_API_URL: "kv:fe_smcr_crm_api_url"
+  FE_SMCR_CRM_API_KEY: "kv:fe_smcr_crm_api_key"
   # MSAL — app registration DEV (diversa da prod)
   NEXT_PUBLIC_MSAL_CLIENT_ID: "kv:fe_smcr_plsm_d_platformsm_client_id:fe-smcr-plsm-d-platformsm-client-id"
   NEXT_PUBLIC_MSAL_TENANT_ID: "kv:fe_smcr_plsm_d_platformsm_tenant_id:fe-smcr-plsm-d-platformsm-tenant-id"
