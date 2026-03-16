@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-12 15:17
+# Generato il: 2026-03-16 09:50
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -59,6 +59,8 @@ locals {
     SLACK_CALL_MANAGEMENT_HOOK_TEST                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value
     SLACK_CALL_MANAGEMENT_HOOK_PROD                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value
     ONBOARDING_BASE_PATH_UAT                              = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
+    FE_SMCR_CRM_API_URL                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_url.value
+    FE_SMCR_CRM_API_KEY                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_key.value
     NEXT_PUBLIC_MSAL_CLIENT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_d_platformsm_client_id.value
     NEXT_PUBLIC_MSAL_TENANT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_d_platformsm_tenant_id.value
     DB_HOST                                               = azurerm_key_vault_secret.db_host.value
@@ -106,6 +108,8 @@ locals {
     SLACK_CALL_MANAGEMENT_HOOK_TEST                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value
     SLACK_CALL_MANAGEMENT_HOOK_PROD                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value
     ONBOARDING_BASE_PATH_UAT                              = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
+    FE_SMCR_CRM_API_URL                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_url.value
+    FE_SMCR_CRM_API_KEY                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_key.value
     NEXT_PUBLIC_MSAL_CLIENT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_d_platformsm_client_id.value
     NEXT_PUBLIC_MSAL_TENANT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_d_platformsm_tenant_id.value
     DB_HOST                                               = azurerm_key_vault_secret.db_host.value
