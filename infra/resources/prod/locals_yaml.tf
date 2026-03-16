@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-12 15:17
+# Generato il: 2026-03-16 09:50
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -187,6 +187,8 @@ locals {
     SLACK_CALL_MANAGEMENT_HOOK_TEST                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value
     SLACK_CALL_MANAGEMENT_HOOK_PROD                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value
     ONBOARDING_BASE_PATH_UAT                              = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
+    FE_SMCR_CRM_API_URL                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_url.value
+    FE_SMCR_CRM_API_KEY                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_key.value
     FE_SMCR_AZURE_STORAGE_CONTAINER                       = "selfcare"
     FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX = "Selfcare_onboarding_mensili_"
     DB_NAME                                               = "dbsmcr"
@@ -233,6 +235,8 @@ locals {
     SLACK_CALL_MANAGEMENT_HOOK_TEST                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value
     SLACK_CALL_MANAGEMENT_HOOK_PROD                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value
     ONBOARDING_BASE_PATH_UAT                              = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
+    FE_SMCR_CRM_API_URL                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_url.value
+    FE_SMCR_CRM_API_KEY                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_key.value
     FE_SMCR_AZURE_STORAGE_CONTAINER                       = "selfcare"
     FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX = "Selfcare_onboarding_mensili_"
     DB_NAME                                               = "dbsmcr"
