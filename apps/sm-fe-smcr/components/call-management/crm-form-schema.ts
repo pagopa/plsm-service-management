@@ -37,7 +37,20 @@ export const crmFormSchema = z
   .refine((data) => data.partecipanti.some((p) => p.email?.trim().length > 0), {
     message: "Almeno un partecipante deve avere un'email",
     path: ["partecipanti"],
-  });
+  })
+  .refine(
+    (data) => {
+      const start =
+        new Date(`${data.startDate}T${data.startTime.length <= 5 ? `${data.startTime}:00` : data.startTime}`).getTime();
+      const end =
+        new Date(`${data.endDate}T${data.endTime.length <= 5 ? `${data.endTime}:00` : data.endTime}`).getTime();
+      return start < end;
+    },
+    {
+      message: "Data e ora di inizio devono essere prima di data e ora di fine",
+      path: ["endDate"],
+    }
+  );
 
 export type CrmFormSchema = z.infer<typeof crmFormSchema>;
 export type PartecipanteForm = z.infer<typeof partecipanteSchema>;
