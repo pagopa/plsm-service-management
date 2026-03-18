@@ -250,3 +250,121 @@ export async function sendToSlackAction(
     submittedAt: Date.now(),
   };
 }
+
+// --- CRM Meeting (OpenAPI sm-crm-fn POST /meetings) ---
+
+const TIPOLOGIA_REFERENTE = ["TECNICO"] as const;
+
+export type TipologiaReferente = (typeof TIPOLOGIA_REFERENTE)[number];
+
+export type CreateMeetingPartecipante = {
+  email: string;
+  nome?: string;
+  cognome?: string;
+  tipologiaReferente?: TipologiaReferente;
+};
+
+export type CreateMeetingInput = {
+  institutionIdSelfcare: string;
+  productIdSelfcare: string;
+  partecipanti: CreateMeetingPartecipante[];
+  subject: string;
+  scheduledstart: string;
+  scheduledend: string;
+  description?: string;
+  enableCreateContact?: boolean;
+  dryRun?: boolean;
+};
+
+export type CreateMeetingResult =
+  | { success: true; activityId?: string; message?: string }
+  | { success: false; error: string };
+
+export async function createMeetingAction(
+  input: CreateMeetingInput,
+): Promise<CreateMeetingResult> {
+  const baseUrl = serverEnv.FE_SMCR_CRM_API_URL?.replace(/\/$/, "");
+  if (!baseUrl) {
+    logger.warn(
+      { info: { event: "call-management.create-meeting.missing-env" } },
+      "FE_SMCR_CRM_API_URL not set",
+    );
+    return { success: false, error: "API CRM non configurata." };
+  }
+
+  const url = `${baseUrl}/meetings`;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (serverEnv.FE_SMCR_CRM_API_KEY) {
+    headers["x-functions-key"] = serverEnv.FE_SMCR_CRM_API_KEY;
+  }
+
+  const body = {
+    institutionIdSelfcare: input.institutionIdSelfcare,
+    productIdSelfcare: input.productIdSelfcare,
+    partecipanti: input.partecipanti,
+    subject: input.subject,
+    scheduledstart: input.scheduledstart,
+    scheduledend: input.scheduledend,
+    ...(input.description !== undefined && input.description !== ""
+      ? { description: input.description }
+      : {}),
+    ...(input.enableCreateContact !== undefined
+      ? { enableCreateContact: input.enableCreateContact }
+      : {}),
+    ...(input.dryRun !== undefined ? { dryRun: input.dryRun } : {}),
+  };
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      const message =
+        typeof data?.message === "string"
+          ? data.message
+          : (data?.error ?? `HTTP ${res.status}`);
+      logger.error(
+        {
+          request: { method: "POST", path: url, statusCode: res.status },
+          error: { message },
+          info: { event: "call-management.create-meeting.failed" },
+        },
+        "createMeetingAction failed",
+      );
+      return { success: false, error: message };
+    }
+
+    logger.info(
+      {
+        info: {
+          event: "call-management.create-meeting.success",
+          metadata: { activityId: data?.activityId },
+        },
+      },
+      "createMeetingAction success",
+    );
+    return {
+      success: true,
+      activityId: data?.activityId,
+      message: data?.message ?? "Appuntamento creato con successo",
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Errore di connessione al CRM.";
+    logger.error(
+      {
+        error: { name: "CreateMeetingError", message },
+        info: { event: "call-management.create-meeting.error" },
+      },
+      "createMeetingAction error",
+    );
+    return { success: false, error: message };
+  }
+}
