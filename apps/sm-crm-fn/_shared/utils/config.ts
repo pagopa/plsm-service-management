@@ -5,10 +5,19 @@ const configSchema = z.object({
     .string()
     .url("DYNAMICS_BASE_URL deve essere un URL valido")
     .min(1, "Il base URL non puo essere una stringa vuota"),
+  DYNAMICS_BASE_URL_UAT: z
+    .string()
+    .url("DYNAMICS_BASE_URL_UAT deve essere un URL valido")
+    .min(1, "Il base URL UAT non puo essere una stringa vuota"),
   DYNAMICS_URL_CONTACTS: z
     .string()
     .url("DYNAMICS_URL_CONTACTS deve essere un URL valido")
     .min(1, "L'URL Dynamics non puo essere una stringa vuota")
+    .optional(),
+  DYNAMICS_URL_CONTACTS_UAT: z
+    .string()
+    .url("DYNAMICS_URL_CONTACTS_UAT deve essere un URL valido")
+    .min(1, "L'URL Dynamics UAT non puo essere una stringa vuota")
     .optional(),
   DYNAMICS_SCOPE: z.string().min(1).optional(),
   NODE_ENV: z
@@ -38,7 +47,9 @@ export function validateConfig(config: unknown): AppConfig {
 export function getConfigOrThrow(): AppConfig {
   const raw = {
     DYNAMICS_BASE_URL: process.env.DYNAMICS_BASE_URL,
+    DYNAMICS_BASE_URL_UAT: process.env.DYNAMICS_BASE_URL_UAT,
     DYNAMICS_URL_CONTACTS: process.env.DYNAMICS_URL_CONTACTS,
+    DYNAMICS_URL_CONTACTS_UAT: process.env.DYNAMICS_URL_CONTACTS_UAT,
     DYNAMICS_SCOPE: process.env.DYNAMICS_SCOPE,
     NODE_ENV: process.env.NODE_ENV,
   };
