@@ -22,12 +22,16 @@ import { createLogger, logODataQuery, Timer } from "../utils/logger";
 // Lista Contatti (usato da ping e altre utility)
 // -----------------------------------------------------------------------------
 
-export async function listContacts(params?: {
-  filter?: string;
-  select?: string;
-  top?: string;
-}): Promise<DynamicsList<Contact>> {
+export async function listContacts(
+  baseUrl: string,
+  params?: {
+    filter?: string;
+    select?: string;
+    top?: string;
+  },
+): Promise<DynamicsList<Contact>> {
   const url = buildUrl({
+    baseUrl,
     endpoint: "/api/data/v9.2/contacts",
     filter: params?.filter,
     select:
@@ -36,7 +40,7 @@ export async function listContacts(params?: {
   });
 
   console.log(`[Contacts] Fetching contacts from: ${url}`);
-  return get<Contact>(url);
+  return get<Contact>(url, baseUrl);
 }
 
 // -----------------------------------------------------------------------------
@@ -44,9 +48,11 @@ export async function listContacts(params?: {
 // -----------------------------------------------------------------------------
 
 export async function getContactById(
+  baseUrl: string,
   contactId: string,
 ): Promise<Contact | null> {
   const url = buildUrl({
+    baseUrl,
     endpoint: `/api/data/v9.2/contacts(${contactId})`,
     select: "contactid,fullname,emailaddress1,firstname,lastname,telephone1",
   });
@@ -54,7 +60,7 @@ export async function getContactById(
   console.log(`[Contacts] Fetching contact: ${contactId}`);
 
   try {
-    const result = await get<Contact>(url);
+    const result = await get<Contact>(url, baseUrl);
     return result.value?.[0] ?? (result as unknown as Contact);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
@@ -70,9 +76,10 @@ export async function getContactById(
 // -----------------------------------------------------------------------------
 
 export async function searchContactsByEmail(
+  baseUrl: string,
   email: string,
 ): Promise<DynamicsList<Contact>> {
-  return listContacts({
+  return listContacts(baseUrl, {
     filter: `emailaddress1 eq '${email}'`,
   });
 }
@@ -84,10 +91,12 @@ export async function searchContactsByEmail(
 /**
  * Recupera tutti i contatti associati a un Ente (Account).
  *
+ * @param baseUrl - Base URL per le chiamate Dynamics 365
  * @param accountId - GUID dell'account in Dynamics
  * @returns Lista di contatti associati all'ente
  */
 export async function getContactsByAccountId(
+  baseUrl: string,
   accountId: string,
 ): Promise<DynamicsList<Contact>> {
   const logger = createLogger(undefined, { accountId });
@@ -100,6 +109,7 @@ export async function getContactsByAccountId(
     "contactid,fullname,emailaddress1,firstname,lastname,telephone1,pgp_identificativoselfcarecliente,_pgp_prodottoid_value,_parentcustomerid_value,pgp_tipologiareferente";
 
   const url = buildUrl({
+    baseUrl,
     endpoint: "/api/data/v9.2/contacts",
     filter,
     select,
@@ -108,7 +118,7 @@ export async function getContactsByAccountId(
   logODataQuery(logger, "/api/data/v9.2/contacts", filter, select);
 
   try {
-    const result = await get<Contact>(url);
+    const result = await get<Contact>(url, baseUrl);
     const count = result.value?.length ?? 0;
     const duration = timer.elapsed();
 
@@ -156,8 +166,15 @@ export async function getContactsByAccountId(
 
 /**
  * Cerca un Contatto in Dynamics per email, ente e prodotto.
+ *
+ * @param baseUrl - Base URL per le chiamate Dynamics 365
+ * @param email - Email del contatto
+ * @param institutionIdSelfcare - ID Selfcare dell'ente
+ * @param productIdSelfcare - ID Selfcare del prodotto
+ * @returns Contatto trovato o null
  */
 export async function getContactByEmailAndInstitution(
+  baseUrl: string,
   email: string,
   institutionIdSelfcare: string,
   productIdSelfcare: string,
@@ -181,6 +198,7 @@ export async function getContactByEmailAndInstitution(
     "contactid,fullname,emailaddress1,firstname,lastname,telephone1,pgp_identificativoselfcarecliente,_pgp_prodottoid_value,_parentcustomerid_value,pgp_tipologiareferente";
 
   const url = buildUrl({
+    baseUrl,
     endpoint: "/api/data/v9.2/contacts",
     filter,
     select,
@@ -189,7 +207,7 @@ export async function getContactByEmailAndInstitution(
   logODataQuery(logger, "/api/data/v9.2/contacts", filter, select);
 
   try {
-    const result = await get<Contact>(url);
+    const result = await get<Contact>(url, baseUrl);
     const duration = timer.elapsed();
 
     if (!result.value || result.value.length === 0) {
@@ -227,8 +245,14 @@ export async function getContactByEmailAndInstitution(
 
 /**
  * Cerca un Contatto in Dynamics per email e GUID prodotto (fallback).
+ *
+ * @param baseUrl - Base URL per le chiamate Dynamics 365
+ * @param email - Email del contatto
+ * @param productGuidCRM - GUID del prodotto in Dynamics
+ * @returns Contatto trovato o null
  */
 export async function getContactByEmailAndProduct(
+  baseUrl: string,
   email: string,
   productGuidCRM: string,
 ): Promise<Contact | null> {
@@ -249,6 +273,7 @@ export async function getContactByEmailAndProduct(
     "contactid,fullname,emailaddress1,firstname,lastname,telephone1,_pgp_prodottoid_value,_parentcustomerid_value,pgp_tipologiareferente";
 
   const url = buildUrl({
+    baseUrl,
     endpoint: "/api/data/v9.2/contacts",
     filter,
     select,
@@ -257,7 +282,7 @@ export async function getContactByEmailAndProduct(
   logODataQuery(logger, "/api/data/v9.2/contacts", filter, select);
 
   try {
-    const result = await get<Contact>(url);
+    const result = await get<Contact>(url, baseUrl);
     const duration = timer.elapsed();
 
     if (!result.value || result.value.length === 0) {
@@ -302,10 +327,11 @@ export interface CreateContactParams {
 }
 
 export async function createContact(
+  baseUrl: string,
   params: CreateContactParams,
 ): Promise<Contact> {
   const cfg = getConfigOrThrow();
-  const environment = resolveEnvironment(cfg.DYNAMICS_BASE_URL);
+  const environment = resolveEnvironment(baseUrl);
 
   const productGuid = getProductGuid(params.productIdSelfcare, environment);
   if (!productGuid) {
@@ -315,7 +341,7 @@ export async function createContact(
   }
 
   const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente);
-  const url = `${cfg.DYNAMICS_BASE_URL}/api/data/v9.2/contacts`;
+  const url = `${baseUrl}/api/data/v9.2/contacts`;
 
   const body: CreateContactRequest = {
     firstname: params.firstname,
@@ -330,7 +356,7 @@ export async function createContact(
     `[Contacts] Creazione contatto: ${params.firstname} ${params.lastname} <${params.email}>`,
   );
 
-  const result = await post<CreateContactRequest, Contact>(url, body);
+  const result = await post<CreateContactRequest, Contact>(url, body, baseUrl);
 
   console.log(`[Contacts] Contatto creato: ${result.contactid}`);
   return result;
@@ -341,6 +367,7 @@ export async function createContact(
 // -----------------------------------------------------------------------------
 
 export interface VerifyOrCreateContactParams {
+  baseUrl: string;
   email: string;
   nome?: string;
   cognome?: string;
@@ -375,7 +402,7 @@ export async function verifyOrCreateContact(
   });
 
   const cfg = getConfigOrThrow();
-  const environment = resolveEnvironment(cfg.DYNAMICS_BASE_URL);
+  const environment = resolveEnvironment(params.baseUrl);
   const productGuid = getProductGuid(params.productIdSelfcare, environment);
 
   // Step 1: Search by institution
@@ -385,6 +412,7 @@ export async function verifyOrCreateContact(
     });
 
     const contact = await getContactByEmailAndInstitution(
+      params.baseUrl,
       params.email,
       params.institutionIdSelfcare,
       params.productIdSelfcare,
@@ -406,6 +434,7 @@ export async function verifyOrCreateContact(
     logger.debug("Step 2: Fallback search by product GUID", { productGuid });
 
     const contact = await getContactByEmailAndProduct(
+      params.baseUrl,
       params.email,
       productGuid,
     );
@@ -447,7 +476,7 @@ export async function verifyOrCreateContact(
         cognome: params.cognome,
       });
 
-      const newContact = await createContact({
+      const newContact = await createContact(params.baseUrl, {
         firstname: params.nome,
         lastname: params.cognome,
         email: params.email,
