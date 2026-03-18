@@ -16,11 +16,13 @@ import { createLogger, logODataQuery, Timer } from "../utils/logger";
  * Endpoint 1: GET /api/data/v9.2/accounts?$filter=pgp_identificativoselfcare eq '{id}'
  *
  * @param institutionIdSelfcare - ID Selfcare dell'ente
+ * @param baseUrl - Base URL for Dynamics environment
  * @returns Account trovato o null se non esiste
  * @throws Error se trovati più enti (ambiguità)
  */
 export async function getAccountBySelfcareId(
   institutionIdSelfcare: string,
+  baseUrl: string,
 ): Promise<Account | null> {
   const logger = createLogger(undefined, { institutionIdSelfcare });
   const timer = new Timer();
@@ -32,6 +34,7 @@ export async function getAccountBySelfcareId(
     "accountid,name,pgp_identificativoselfcare,pgp_denominazioneselfcare,emailaddress1,telephone1,address1_composite,statecode";
 
   const url = buildUrl({
+    baseUrl,
     endpoint: "/api/data/v9.2/accounts",
     filter,
     select,
@@ -40,7 +43,7 @@ export async function getAccountBySelfcareId(
   logODataQuery(logger, "/api/data/v9.2/accounts", filter, select);
 
   try {
-    const result = await get<Account>(url);
+    const result = await get<Account>(url, baseUrl);
     const duration = timer.elapsed();
 
     // Simple console log for Azure Log Stream visibility
@@ -94,11 +97,13 @@ export async function getAccountBySelfcareId(
  * Endpoint 2: GET /api/data/v9.2/accounts?$filter=contains(tolower(name), '{nome}')
  *
  * @param nomeEnte - Nome dell'ente da cercare
+ * @param baseUrl - Base URL for Dynamics environment
  * @returns Account trovato o null se non esiste
  * @throws Error se trovati più enti (ambiguità)
  */
 export async function getAccountByName(
   nomeEnte: string,
+  baseUrl: string,
 ): Promise<Account | null> {
   const logger = createLogger(undefined, { nomeEnte });
   const timer = new Timer();
@@ -113,6 +118,7 @@ export async function getAccountByName(
     "accountid,name,pgp_identificativoselfcare,pgp_denominazioneselfcare,emailaddress1,telephone1,address1_composite,statecode";
 
   const url = buildUrl({
+    baseUrl,
     endpoint: "/api/data/v9.2/accounts",
     filter,
     select,
@@ -121,7 +127,7 @@ export async function getAccountByName(
   logODataQuery(logger, "/api/data/v9.2/accounts", filter, select);
 
   try {
-    const result = await get<Account>(url);
+    const result = await get<Account>(url, baseUrl);
     const duration = timer.elapsed();
 
     if (!result.value || result.value.length === 0) {
@@ -168,6 +174,7 @@ export interface VerifyAccountParams {
   institutionIdSelfcare?: string;
   nomeEnte?: string;
   enableFallback: boolean;
+  baseUrl: string;
 }
 
 export interface VerifyAccountResult {
@@ -185,6 +192,7 @@ export async function verifyAccount(
     try {
       const account = await getAccountBySelfcareId(
         params.institutionIdSelfcare,
+        params.baseUrl,
       );
       if (account) {
         return { found: true, account, method: "selfcareId" };
@@ -206,7 +214,7 @@ export async function verifyAccount(
   // Fallback su nome ente se ho passato nomeEnte ed enableFallback è true (default false!)
   if (params.nomeEnte && params.enableFallback) {
     try {
-      const account = await getAccountByName(params.nomeEnte);
+      const account = await getAccountByName(params.nomeEnte, params.baseUrl);
       if (account) {
         return { found: true, account, method: "name" };
       }
