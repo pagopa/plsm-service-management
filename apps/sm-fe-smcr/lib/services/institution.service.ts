@@ -110,6 +110,8 @@ type GetInstitutionWithSubunitsResponse =
 export async function getInstitutionWithSubunits(
   taxCode: string,
 ): Promise<GetInstitutionWithSubunitsResponse> {
+  const safeTaxCode = taxCode.replace(/[\r\n]/g, "");
+
   const { data, error } = await betterFetch(
     `https://api.selfcare.pagopa.it/external/support/v1/institutions?taxCode=${taxCode}&enableSubunits=true`,
     {
@@ -126,7 +128,7 @@ export async function getInstitutionWithSubunits(
       {
         request: {
           method: "GET",
-          path: `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${taxCode}&enableSubunits=true`,
+          path: `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${safeTaxCode}&enableSubunits=true`,
         },
         error: {
           name: error.status,
@@ -134,7 +136,7 @@ export async function getInstitutionWithSubunits(
           stack: error.statusText,
         },
       },
-      `getInstitution ${taxCode} - empty`,
+      `getInstitution ${safeTaxCode} - empty`,
     );
     return { data: [], error: "Errore nel recupero dati" };
   }
@@ -144,14 +146,14 @@ export async function getInstitutionWithSubunits(
       {
         request: {
           method: "GET",
-          path: `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${taxCode}&enableSubunits=true`,
+          path: `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${safeTaxCode}&enableSubunits=true`,
         },
         info: {
           event: "getInstitution",
           metadata: data,
         },
       },
-      `getInstitution ${taxCode} - empty`,
+      `getInstitution ${safeTaxCode} - empty`,
     );
     return { data: [], error: "Nessun ente trovato" };
   }
@@ -160,14 +162,14 @@ export async function getInstitutionWithSubunits(
     {
       request: {
         method: "GET",
-        path: `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${taxCode}&enableSubunits=true`,
+        path: `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${safeTaxCode}&enableSubunits=true`,
       },
       info: {
         event: "getInstitution",
         metadata: data,
       },
     },
-    `getInstitution called with ${taxCode}`,
+    `getInstitution called with ${safeTaxCode}`,
   );
 
   return { data: data.institutions, error: null };
