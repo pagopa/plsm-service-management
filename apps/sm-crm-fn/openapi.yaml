@@ -19,6 +19,16 @@ info:
     ## Dry-Run Mode
     Tutti gli endpoint di creazione supportano la modalità `dryRun` per testare 
     il flusso senza effettuare modifiche su Dynamics CRM.
+
+    ## Supporto Multi-Ambiente
+    La funzione supporta il routing verso istanze UAT o PROD di Dynamics 365.
+
+    - **Header**: `x-dynamics-environment` (valori: `UAT` o `PROD`, case-insensitive)
+    - **Default**: Se l'header non è fornito, viene utilizzato PROD per retrocompatibilità
+    - **Validazione**: Se il valore dell'header non è valido, viene restituito un errore 400
+
+    Questo permette di testare le integrazioni in UAT e utilizzare PROD in produzione,
+    utilizzando lo stesso endpoint dell'Azure Function.
   version: 1.0.0
   contact:
     name: PagoPA S.p.A.
@@ -74,6 +84,8 @@ paths:
         Verifica la connettività con Microsoft Dynamics 365 CRM 
         effettuando una query di test sui contatti.
       operationId: pingDynamics
+      parameters:
+        - $ref: "#/components/parameters/DynamicsEnvironment"
       responses:
         "200":
           description: Connessione riuscita
@@ -81,6 +93,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PingResponse"
+        "400":
+          description: Parametri mancanti o invalidi (es. header x-dynamics-environment non valido)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "503":
           description: Connessione fallita
           content:
@@ -101,6 +119,7 @@ paths:
         - **name**: Nome dell'ente (fallback)
       operationId: getAccount
       parameters:
+        - $ref: "#/components/parameters/DynamicsEnvironment"
         - name: selfcareId
           in: query
           description: ID Selfcare dell'ente
@@ -161,6 +180,7 @@ paths:
         **Nota**: Specificare solo uno dei due parametri.
       operationId: getContacts
       parameters:
+        - $ref: "#/components/parameters/DynamicsEnvironment"
         - name: accountId
           in: query
           description: GUID dell'account (ente) per ottenere tutti i suoi contatti
@@ -215,6 +235,8 @@ paths:
         1. Verifica l'ente tramite `institutionIdSelfcare`
         2. Per ogni partecipante, crea il contatto collegandolo all'account e al prodotto
       operationId: createContacts
+      parameters:
+        - $ref: "#/components/parameters/DynamicsEnvironment"
       requestBody:
         required: true
         content:
@@ -269,6 +291,7 @@ paths:
       description: Recupera la lista degli appuntamenti da Dynamics CRM.
       operationId: listMeetings
       parameters:
+        - $ref: "#/components/parameters/DynamicsEnvironment"
         - name: top
           in: query
           description: Numero massimo di risultati da restituire
@@ -292,6 +315,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ListMeetingsResponse"
+        "400":
+          description: Parametri mancanti o invalidi (es. header x-dynamics-environment non valido)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Errore interno
           content:
@@ -314,6 +343,8 @@ paths:
         ### Dry-Run Mode
         Impostare `dryRun: true` per testare il flusso senza modifiche a Dynamics.
       operationId: createMeeting
+      parameters:
+        - $ref: "#/components/parameters/DynamicsEnvironment"
       requestBody:
         required: true
         content:
@@ -419,6 +450,8 @@ paths:
 
         Equivalente a `POST /meetings` con `dryRun: true`.
       operationId: dryRunMeeting
+      parameters:
+        - $ref: "#/components/parameters/DynamicsEnvironment"
       requestBody:
         required: true
         content:
@@ -459,6 +492,7 @@ paths:
         Non è destinato all'uso in produzione da parte del frontend.
       operationId: diagnosticsProbe
       parameters:
+        - $ref: "#/components/parameters/DynamicsEnvironment"
         - name: accountId
           in: query
           required: false
@@ -476,8 +510,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DiagnosticsProbeResponse"
+        "400":
+          description: Parametri mancanti o invalidi (es. header x-dynamics-environment non valido)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
+  parameters:
+    DynamicsEnvironment:
+      name: x-dynamics-environment
+      in: header
+      required: false
+      description: |
+        Specifica l'ambiente Dynamics 365 di destinazione.
+
+        - `UAT`: Ambiente di test Dynamics UAT
+        - `PROD`: Ambiente di produzione Dynamics (default)
+
+        Se l'header non è fornito, viene utilizzato PROD per retrocompatibilità.
+      schema:
+        type: string
+        enum: [UAT, PROD]
+        default: PROD
+      example: UAT
+
   schemas:
     # ==========================================================================
     # Request Schemas

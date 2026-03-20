@@ -12,6 +12,10 @@ import {
   getContactById,
 } from "../_shared/services/contacts";
 import { createLogger } from "../_shared/utils/logger";
+import {
+  resolveDynamicsEnvironment,
+  getDynamicsBaseUrl,
+} from "../_shared/utils/requestEnvironment";
 
 /**
  * Handler per GET /api/v1/contacts
@@ -32,6 +36,10 @@ export async function getContactsHandler(
   logger.info("HTTP GET /contacts request received");
 
   try {
+    // Resolve Dynamics environment from header
+    const environment = resolveDynamicsEnvironment(request);
+    const baseUrl = getDynamicsBaseUrl(environment);
+
     const accountId = request.query.get("accountId");
     const contactId = request.query.get("contactId");
 
@@ -79,7 +87,7 @@ export async function getContactsHandler(
     // Ricerca per Contact ID (singolo contatto)
     if (contactId) {
       logger.info("Searching contact by ID", { contactId });
-      const contact = await getContactById(contactId);
+      const contact = await getContactById(baseUrl, contactId);
 
       if (!contact) {
         logger.warn("Contact not found", { contactId });
@@ -112,7 +120,7 @@ export async function getContactsHandler(
     // Ricerca per Account ID (lista contatti dell'ente)
     if (accountId) {
       logger.info("Searching contacts by Account ID", { accountId });
-      const result = await getContactsByAccountId(accountId);
+      const result = await getContactsByAccountId(baseUrl, accountId);
 
       const count = result.value?.length ?? 0;
 
@@ -149,6 +157,18 @@ export async function getContactsHandler(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error("Unexpected error in getContactsHandler", error);
+
+    // Check for environment resolution errors
+    if (errorMessage.includes("x-dynamics-environment")) {
+      return {
+        status: 400,
+        jsonBody: {
+          success: false,
+          message: errorMessage,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
 
     return {
       status: 500,

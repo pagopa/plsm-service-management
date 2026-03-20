@@ -155,6 +155,13 @@ export interface CreateMeetingOrchestratorRequest {
    * @default false
    */
   enableGrantAccess?: boolean;
+
+  /**
+   * Base URL for Dynamics 365 environment.
+   * Used for all API calls to Dynamics (accounts, contacts, appointments, grantAccess).
+   * @example "https://org.crm4.dynamics.com"
+   */
+  baseUrl: string;
 }
 
 export interface OrchestratorStepResult {
