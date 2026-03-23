@@ -16,6 +16,7 @@ type Props = {
   name: string;
   label: string;
   value?: string;
+  valueClassName?: string;
   isEditable?: boolean;
   isCopyable?: boolean;
   icon?: React.ReactNode;
@@ -25,6 +26,7 @@ export default function InfoItem({
   name,
   label,
   value = "Non presente",
+  valueClassName,
   isEditable = false,
   className,
   children,
@@ -48,6 +50,7 @@ export default function InfoItem({
         <InfoItemContent
           name={name}
           value={value}
+          valueClassName={valueClassName}
           isEditable={isEditable}
           isCopyable={isCopyable}
         />
@@ -59,11 +62,13 @@ export default function InfoItem({
 function InfoItemContent({
   name,
   value,
+  valueClassName,
   isEditable = false,
   isCopyable = false,
 }: {
   name: string;
   value: string;
+  valueClassName?: string;
   isEditable?: boolean;
   isCopyable?: boolean;
 }) {
@@ -137,7 +142,7 @@ function InfoItemContent({
 
   return (
     <div className={cn("inline-flex items-center gap-2 group min-h-8 h-fit")}>
-      <span className="w-full">
+      <span className={cn("w-full", valueClassName)}>
         {values[name as InstitutionStoreValues] || value}
       </span>
 
