@@ -199,7 +199,7 @@ jobs:
   deploy:
     name: ${{ fromJSON(needs.validate.outputs.use_staging_slot) && 'Deploy to Staging' || 'Deploy to Production' }}
     needs: [validate, migrate]
-    if: ${{ always() && (needs.migrate.result == 'success' || needs.migrate.result == 'skipped') }}
+    if: ${{ needs.validate.result == 'success' && (needs.migrate.result == 'success' || needs.migrate.result == 'skipped') }}
     runs-on: ${{ inputs.environment == 'app-prod' && 'prod' || 'dev' }}
     environment: ${{ inputs.environment }}-cd
 
