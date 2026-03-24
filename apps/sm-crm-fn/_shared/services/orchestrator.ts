@@ -254,29 +254,29 @@ export async function createMeetingOrchestrator(
         if (contactResult.contact) {
           contactIds.push(contactResult.contact.contactid);
           contactResults.push({
-            email: partecipante.email,
+            email: partecipante.email ?? "(no email)",
             contactId: contactResult.contact.contactid,
             created: contactResult.created,
           });
           logger.info(
             `✅ Contact ${contactResult.created ? "created" : "found"}`,
             {
-              email: partecipante.email,
+              email: partecipante.email ?? "(no email)",
               contactId: contactResult.contact.contactid,
               created: contactResult.created,
             },
           );
         } else {
           contactResults.push({
-            email: partecipante.email,
+            email: partecipante.email ?? "(no email)",
             created: false,
             error: contactResult.error,
           });
           warnings.push(
-            `Contatto ${partecipante.email}: ${contactResult.error}`,
+            `Contatto ${partecipante.email ?? "(senza email)"}: ${contactResult.error}`,
           );
           logger.warn(`⚠️ Contact processing failed`, {
-            email: partecipante.email,
+            email: partecipante.email ?? "(no email)",
             error: contactResult.error,
           });
         }
@@ -373,7 +373,9 @@ export async function createMeetingOrchestrator(
         scheduledend: request.scheduledend,
         location: request.location,
         description: request.description,
+        nextstep: request.nextstep,
         dataProssimoContatto: request.dataProssimoContatto,
+        oggettoDelContatto: request.oggettoDelContatto,
         accountId,
         contactIds,
         baseUrl: request.baseUrl,
@@ -586,8 +588,17 @@ export function validateOrchestratorRequest(
   } else {
     for (let i = 0; i < req.partecipanti.length; i++) {
       const p = req.partecipanti[i] as Record<string, unknown>;
-      if (!p.email) {
-        errors.push(`partecipanti[${i}].email è obbligatorio`);
+      // Validazione formato email opzionale (feature flag ENABLE_EMAIL_FORMAT_VALIDATION)
+      if (
+        p.email &&
+        process.env.ENABLE_EMAIL_FORMAT_VALIDATION?.toLowerCase() === "true"
+      ) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (typeof p.email !== "string" || !emailRegex.test(p.email)) {
+          errors.push(
+            `partecipanti[${i}].email non è un indirizzo email valido`,
+          );
+        }
       }
     }
   }

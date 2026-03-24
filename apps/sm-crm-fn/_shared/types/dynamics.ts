@@ -48,7 +48,9 @@ export interface Appointment {
   description?: string;
   statecode?: number;
   statuscode?: number;
+  nextstep?: string;
   new_dataprossimocontatto?: string;
+  pgp_oggettodelcontatto?: string;
 }
 
 // -----------------------------------------------------------------------------
@@ -58,7 +60,7 @@ export interface Appointment {
 export interface CreateContactRequest {
   firstname: string;
   lastname: string;
-  emailaddress1: string;
+  emailaddress1?: string;
   pgp_tipologiareferente: number;
   // Navigation Properties for lookups (use @odata.bind)
   "parentcustomerid_account@odata.bind": string;
@@ -71,8 +73,10 @@ export interface CreateAppointmentRequest {
   scheduledend: string;
   location?: string;
   description?: string;
+  nextstep?: string;
   statuscode?: number;
   new_dataprossimocontatto?: string;
+  pgp_oggettodelcontatto?: string;
   "ownerid@odata.bind"?: string;
   "regardingobjectid_account@odata.bind"?: string;
   appointment_activity_parties?: AppointmentParty[];
@@ -120,7 +124,7 @@ export interface DynamicsError {
 // -----------------------------------------------------------------------------
 
 export interface Partecipante {
-  email: string;
+  email?: string;
   nome?: string;
   cognome?: string;
   tipologiaReferente?: TipologiaReferente;
@@ -145,7 +149,9 @@ export interface CreateMeetingOrchestratorRequest {
   scheduledend: string;
   location?: string;
   description?: string;
+  nextstep?: string;
   dataProssimoContatto?: string;
+  oggettoDelContatto?: string;
 
   // Opzioni
   dryRun?: boolean;
@@ -211,4 +217,4 @@ export type ProductIdSelfcare =
   | "prod-io-sign"
   | "prod-rtp";
 
-export type Environment = "DEV" | "UAT" | "PROD";
+export type Environment = "UAT" | "PROD";

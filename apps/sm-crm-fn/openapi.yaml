@@ -40,8 +40,6 @@ info:
 servers:
   - url: http://localhost:7071/api/v1
     description: Sviluppo locale
-  - url: https://sm-d-itn-pg-<service>-fn.azurewebsites.net/api/v1
-    description: Ambiente DEV
   - url: https://sm-u-itn-pg-<service>-fn.azurewebsites.net/api/v1
     description: Ambiente UAT
   - url: https://plsm-p-itn-crm-func-01.azurewebsites.net/api/v1
@@ -482,7 +480,7 @@ paths:
         con Dynamics 365 CRM.
 
         **Funzionalità:**
-        - Rileva l'ambiente corrente (DEV/UAT/PROD)
+        - Rileva l'ambiente corrente (UAT/PROD)
         - Proba i candidati per i nomi degli entity set OData
         - Lista le relazioni ManyToOne del contact verso entità `product`
         - Lista tutte le entità custom con prefisso `pgp_` e i loro entity set name
@@ -603,6 +601,10 @@ components:
           format: date
           description: Data del prossimo contatto previsto
           example: "2025-02-20"
+        oggettoDelContatto:
+          type: string
+          description: Oggetto del contatto (campo personalizzato Dynamics `pgp_oggettodelcontatto`)
+          example: "Supporto integrazione pagoPA"
         enableCreateContact:
           type: boolean
           default: false
@@ -624,7 +626,7 @@ components:
             Se `false` o omesso, lo step viene saltato completamente.
 
             **Nota**: GrantAccess richiede che l'API Custom Action sia disponibile 
-            nell'ambiente Dynamics. Potrebbe non essere disponibile in DEV/UAT.
+            nell'ambiente Dynamics. Potrebbe non essere disponibile in UAT.
 
             **Utilizzo consigliato**:
             - `false` (default): Per la maggior parte degli appuntamenti
@@ -639,13 +641,13 @@ components:
 
     Partecipante:
       type: object
-      required:
-        - email
       properties:
         email:
           type: string
-          format: email
-          description: Email del partecipante
+          description: |
+            Email del partecipante. Opzionale: se assente, il contatto non verrà
+            cercato per email. Può essere una stringa non formattata come indirizzo
+            email standard.
           example: "mario.rossi@ente.it"
         nome:
           type: string
@@ -928,6 +930,12 @@ components:
           type: integer
         statuscode:
           type: integer
+        nextstep:
+          type: string
+          description: Prossimi passi da intraprendere
+        pgp_oggettodelcontatto:
+          type: string
+          description: Oggetto del contatto (campo personalizzato Dynamics)
 
     ErrorResponse:
       type: object
@@ -1038,7 +1046,7 @@ components:
       properties:
         environment:
           type: string
-          enum: [DEV, UAT, PROD]
+          enum: [UAT, PROD]
           description: Ambiente rilevato dal DYNAMICS_BASE_URL
         dynamicsBaseUrl:
           type: string
@@ -1099,6 +1107,17 @@ components:
             error:
               type: string
               nullable: true
+        fieldValidation:
+          type: object
+          description: |
+            Verifica dell'esistenza dei campi utilizzati dall'applicazione sulle entità
+            `appointment` e `contact` in Dynamics 365. Utile per diagnosticare se un campo
+            custom (es. `pgp_oggettodelcontatto`) è presente nell'ambiente target.
+          properties:
+            appointment:
+              $ref: "#/components/schemas/EntityFieldProbeResult"
+            contact:
+              $ref: "#/components/schemas/EntityFieldProbeResult"
         recommendation:
           type: string
           nullable: true
@@ -1133,6 +1152,56 @@ components:
                     nullable: true
                   error:
                     type: string
+
+    EntityFieldProbeResult:
+      type: object
+      description: |
+        Risultato della validazione dei campi di un'entità Dynamics 365.
+        Riporta i campi trovati, quelli mancanti rispetto a quelli attesi,
+        e i navigation property (che non compaiono tra gli Attributes standard).
+      properties:
+        entity:
+          type: string
+          description: Nome logico dell'entità interrogata
+          example: "appointment"
+        fields:
+          type: array
+          description: Campi attesi effettivamente trovati in Dynamics (con tipo)
+          items:
+            type: object
+            properties:
+              logicalName:
+                type: string
+                example: "pgp_oggettodelcontatto"
+              attributeType:
+                type: string
+                example: "String"
+              expected:
+                type: boolean
+                description: True se il campo è nell'elenco dei campi attesi dall'applicazione
+              found:
+                type: boolean
+                description: Sempre true per i campi restituiti da Dynamics
+        missing:
+          type: array
+          description: |
+            Campi attesi dall'applicazione ma non trovati tra gli Attributes dell'entità.
+            Un campo in `missing` indica una potenziale incompatibilità con l'ambiente Dynamics.
+          items:
+            type: string
+          example: ["pgp_oggettodelcontatto"]
+        navigationProperties:
+          type: array
+          description: |
+            Navigation property dichiarati esplicitamente (es. lookup come `pgp_Prodottoid`).
+            Non compaiono tra gli Attributes standard di Dynamics e non vengono contati come `missing`.
+          items:
+            type: string
+          example: ["pgp_Prodottoid"]
+        error:
+          type: string
+          nullable: true
+          description: Errore durante l'interrogazione dei metadati, null se la chiamata è riuscita
 
     # ==========================================================================
     # Enums

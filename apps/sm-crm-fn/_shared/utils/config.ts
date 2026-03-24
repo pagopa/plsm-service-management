@@ -24,6 +24,10 @@ const configSchema = z.object({
     .string()
     .min(1, "L'ambiente di esecuzione non puo essere una stringa vuota")
     .default("production"),
+  ENABLE_EMAIL_FORMAT_VALIDATION: z
+    .string()
+    .optional()
+    .transform((val) => val?.toLowerCase() === "true"),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
@@ -52,6 +56,7 @@ export function getConfigOrThrow(): AppConfig {
     DYNAMICS_URL_CONTACTS_UAT: process.env.DYNAMICS_URL_CONTACTS_UAT,
     DYNAMICS_SCOPE: process.env.DYNAMICS_SCOPE,
     NODE_ENV: process.env.NODE_ENV,
+    ENABLE_EMAIL_FORMAT_VALIDATION: process.env.ENABLE_EMAIL_FORMAT_VALIDATION,
   };
   try {
     return validateConfig(raw);

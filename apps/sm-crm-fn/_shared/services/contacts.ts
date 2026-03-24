@@ -15,7 +15,6 @@ import {
   getTipologiaReferenteId,
   resolveEnvironment,
 } from "../utils/mappings";
-import { getConfigOrThrow } from "../utils/config";
 import { createLogger, logODataQuery, Timer } from "../utils/logger";
 
 // -----------------------------------------------------------------------------
@@ -79,8 +78,9 @@ export async function searchContactsByEmail(
   baseUrl: string,
   email: string,
 ): Promise<DynamicsList<Contact>> {
+  const escapedEmail = email.replace(/'/g, "''");
   return listContacts(baseUrl, {
-    filter: `emailaddress1 eq '${email}'`,
+    filter: `emailaddress1 eq '${escapedEmail}'`,
   });
 }
 
@@ -320,7 +320,7 @@ export async function getContactByEmailAndProduct(
 export interface CreateContactParams {
   firstname: string;
   lastname: string;
-  email: string;
+  email?: string;
   productIdSelfcare: ProductIdSelfcare;
   tipologiaReferente: TipologiaReferente;
   accountId: string;
@@ -330,7 +330,6 @@ export async function createContact(
   baseUrl: string,
   params: CreateContactParams,
 ): Promise<Contact> {
-  const cfg = getConfigOrThrow();
   const environment = resolveEnvironment(baseUrl);
 
   const productGuid = getProductGuid(params.productIdSelfcare, environment);
@@ -346,14 +345,18 @@ export async function createContact(
   const body: CreateContactRequest = {
     firstname: params.firstname,
     lastname: params.lastname,
-    emailaddress1: params.email,
     pgp_tipologiareferente: tipologiaId,
     "parentcustomerid_account@odata.bind": `/accounts(${params.accountId})`,
     "pgp_Prodottoid@odata.bind": `/products(${productGuid})`,
   };
 
+  // Solo se email è presente
+  if (params.email) {
+    body.emailaddress1 = params.email;
+  }
+
   console.log(
-    `[Contacts] Creazione contatto: ${params.firstname} ${params.lastname} <${params.email}>`,
+    `[Contacts] Creazione contatto: ${params.firstname} ${params.lastname}${params.email ? ` <${params.email}>` : ""}`,
   );
 
   const result = await post<CreateContactRequest, Contact>(url, body, baseUrl);
@@ -368,7 +371,7 @@ export async function createContact(
 
 export interface VerifyOrCreateContactParams {
   baseUrl: string;
-  email: string;
+  email?: string;
   nome?: string;
   cognome?: string;
   institutionIdSelfcare?: string;
@@ -401,12 +404,11 @@ export async function verifyOrCreateContact(
     enableCreateContact: params.enableCreateContact,
   });
 
-  const cfg = getConfigOrThrow();
   const environment = resolveEnvironment(params.baseUrl);
   const productGuid = getProductGuid(params.productIdSelfcare, environment);
 
-  // Step 1: Search by institution
-  if (params.institutionIdSelfcare) {
+  // Step 1: Search by institution (solo se email è presente)
+  if (params.email && params.institutionIdSelfcare) {
     logger.debug("Step 1: Searching by institution ID and product", {
       institutionId: params.institutionIdSelfcare,
     });
@@ -429,8 +431,8 @@ export async function verifyOrCreateContact(
     logger.debug("Step 1 complete: Contact not found by institution");
   }
 
-  // Step 2: Fallback search by product GUID
-  if (productGuid) {
+  // Step 2: Fallback search by product GUID (solo se email è presente)
+  if (params.email && productGuid) {
     logger.debug("Step 2: Fallback search by product GUID", { productGuid });
 
     const contact = await getContactByEmailAndProduct(
@@ -452,13 +454,22 @@ export async function verifyOrCreateContact(
 
   // Step 3: Create contact if enabled
   if (params.enableCreateContact) {
+    // Loggare warning se email è assente
+    if (!params.email) {
+      logger.warn("⚠️ Creating contact without email address", {
+        hasNome: !!params.nome,
+        hasCognome: !!params.cognome,
+      });
+    }
+
     logger.info("Step 3: Contact creation enabled, attempting to create", {
       hasNome: !!params.nome,
       hasCognome: !!params.cognome,
+      hasEmail: !!params.email,
     });
 
     if (!params.nome || !params.cognome) {
-      const error = `Contatto ${params.email} non trovato e dati insufficienti per la creazione (nome/cognome mancanti)`;
+      const error = `Contatto ${params.email ?? "(senza email)"} non trovato e dati insufficienti per la creazione (nome/cognome mancanti)`;
       logger.warn("⚠️ Cannot create contact: missing name/surname", {
         duration: overallTimer.elapsed(),
       });
@@ -474,6 +485,7 @@ export async function verifyOrCreateContact(
       logger.info("Creating new contact in Dynamics", {
         nome: params.nome,
         cognome: params.cognome,
+        email: params.email ?? "(no email)",
       });
 
       const newContact = await createContact(params.baseUrl, {
@@ -506,7 +518,7 @@ export async function verifyOrCreateContact(
   }
 
   // Contact not found and creation disabled
-  const error = `Contatto ${params.email} non trovato e abilitazione alla creazione disattivata`;
+  const error = `Contatto ${params.email ?? "(senza email)"} non trovato e abilitazione alla creazione disattivata`;
   logger.warn("⚠️ Contact not found and creation is disabled", {
     duration: overallTimer.elapsed(),
   });

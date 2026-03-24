@@ -8,7 +8,7 @@
 // SICUREZZA:
 // - NON esporre questi dati pubblicamente
 // - Considerare lo spostamento in Azure Key Vault per produzione
-// - I GUID sono specifici per ogni ambiente Dynamics (DEV/UAT/PROD)
+// - I GUID sono specifici per ogni ambiente Dynamics (UAT/PROD)
 // - Accesso limitato solo a personale autorizzato
 //
 // =============================================================================
@@ -27,28 +27,17 @@ export const PRODUCTS_MAP: Record<
   Environment,
   Record<ProductIdSelfcare, string>
 > = {
-  DEV: {
-    "prod-pn": "617cbe1b-bb58-f011-877b-000d3a662132",
-    "prod-io": "26a975ef-a205-f011-bae4-000d3ab7023d",
-    "prod-pagopa": "c00c3e9a-a205-f011-bae3-000d3adf9667",
-    "prod-idpay": "04c4d12b-a205-f011-bae3-000d3adf9667",
-    "prod-idpay-merchant": "637cbe1b-bb58-f011-877b-000d3a662132",
-    "prod-checkiban": "22a975ef-a205-f011-bae4-000d3ab7023d",
-    "prod-interop": "24a975ef-a205-f011-bae4-000d3ab7023d",
-    "prod-io-premium": "46af0f1c-bb58-f011-877b-6045bdde77c4",
-    "prod-io-sign": "ca089f05-bd58-f011-877b-6045bdde7236",
-    "prod-rtp": "dde9d520-5f11-f011-998b-000d3adf9667",
-  },
+  // NOTA: UAT usa GUID specifici per l'ambiente di test
   UAT: {
     "prod-pn": "617cbe1b-bb58-f011-877b-000d3a662132",
-    "prod-io": "26a975ef-a205-f011-bae4-000d3ab7023d",
-    "prod-pagopa": "c00c3e9a-a205-f011-bae3-000d3adf9667",
-    "prod-idpay": "04c4d12b-a205-f011-bae3-000d3adf9667",
     "prod-idpay-merchant": "637cbe1b-bb58-f011-877b-000d3a662132",
     "prod-checkiban": "22a975ef-a205-f011-bae4-000d3ab7023d",
     "prod-interop": "24a975ef-a205-f011-bae4-000d3ab7023d",
-    "prod-io-premium": "46af0f1c-bb58-f011-877b-6045bdde77c4",
+    "prod-io": "26a975ef-a205-f011-bae4-000d3ab7023d",
+    "prod-idpay": "04c4d12b-a205-f011-bae3-000d3adf9667",
+    "prod-pagopa": "c00c3e9a-a205-f011-bae3-000d3adf9667",
     "prod-io-sign": "ca089f05-bd58-f011-877b-6045bdde7236",
+    "prod-io-premium": "46af0f1c-bb58-f011-877b-6045bdde77c4",
     "prod-rtp": "dde9d520-5f11-f011-998b-000d3adf9667",
   },
   PROD: {
@@ -87,7 +76,6 @@ export const TIPOLOGIA_REFERENTE_MAP: Record<TipologiaReferente, number> = {
 // -----------------------------------------------------------------------------
 
 export const TEAMS_MAP: Record<Environment, string> = {
-  DEV: "5f9c165c-1e7d-ef11-ac20-000d3ad807dc",
   UAT: "5f9c165c-1e7d-ef11-ac20-000d3ad807dc",
   PROD: "5f9c165c-1e7d-ef11-ac20-000d3ad807dc",
 };
@@ -97,7 +85,6 @@ export const TEAMS_MAP: Record<Environment, string> = {
 // -----------------------------------------------------------------------------
 
 export const BASE_URLS: Record<Environment, string> = {
-  DEV: "https://dev-pagopa.crm4.dynamics.com",
   UAT: "https://uat-pagopa.crm4.dynamics.com",
   PROD: "https://pagopa.crm4.dynamics.com",
 };
@@ -133,8 +120,6 @@ export function getBaseUrl(environment: Environment): string {
 }
 
 export function resolveEnvironment(baseUrl: string): Environment {
-  if (baseUrl.includes("dev-pagopa")) return "DEV";
   if (baseUrl.includes("uat-pagopa")) return "UAT";
-  if (baseUrl.includes("pagopa.crm4")) return "PROD";
-  return "UAT"; // Default
+  return "PROD"; // Default a PROD
 }

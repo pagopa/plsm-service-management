@@ -46,7 +46,6 @@ sm-crm-fn/
 
 | Ambiente | URL                               |
 | -------- | --------------------------------- |
-| DEV      | `https://********.***.****.com`   |
 | UAT      | `https://********.***.****.com`   |
 | PROD     | `https://*********.****.****.com` |
 
@@ -542,6 +541,7 @@ Body:
   "scheduledend": "2025-02-15T11:00:00Z",
   "location": "Google Meet",
   "description": "Discussione requisiti",
+  "nextstep": "Preparare documentazione",
   "dryRun": false
 }
 ```

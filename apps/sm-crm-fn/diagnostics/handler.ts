@@ -3,7 +3,6 @@ import type {
   HttpResponseInit,
   InvocationContext,
 } from "@azure/functions";
-import { getConfigOrThrow } from "../_shared/utils/config";
 import { resolveEnvironment, PRODUCTS_MAP } from "../_shared/utils/mappings";
 import { get, buildUrl } from "../_shared/services/httpClient";
 import { createLogger } from "../_shared/utils/logger";
@@ -29,7 +28,11 @@ async function probeMetadata(baseUrl: string): Promise<{
   try {
     const data = await get<Record<string, unknown>>(url, baseUrl);
     const pgpEntities = (data.value ?? [])
-      .filter((e) => (e["LogicalName"] as string)?.startsWith("pgp_"))
+      .filter(
+        (e) =>
+          typeof e["LogicalName"] === "string" &&
+          (e["LogicalName"] as string).startsWith("pgp_"),
+      )
       .map((e) => ({
         logicalName: e["LogicalName"] as string,
         entitySetName: e["EntitySetName"] as string,
@@ -74,6 +77,174 @@ async function probeContactProductRelationship(baseUrl: string): Promise<{
     const errorMessage = error instanceof Error ? error.message : String(error);
     return { relationships: [], error: errorMessage };
   }
+}
+
+/**
+ * Risultato della validazione di un singolo campo su Dynamics 365.
+ */
+interface FieldValidationEntry {
+  logicalName: string;
+  attributeType: string;
+  expected: boolean;
+  found: boolean;
+  /** Se true, il campo è un navigation property e non compare tra gli Attributes standard */
+  isNavigationProperty?: boolean;
+}
+
+/**
+ * Risultato complessivo della validazione dei campi di un'entità Dynamics 365.
+ */
+interface EntityFieldProbeResult {
+  entity: string;
+  fields: FieldValidationEntry[];
+  /** Campi attesi ma non trovati tra gli Attributes di Dynamics (esclusi i navigation property) */
+  missing: string[];
+  /** Navigation property dichiarati esplicitamente: non vengono inclusi in missing */
+  navigationProperties: string[];
+  error: string | null;
+}
+
+/**
+ * Verifica l'esistenza dei campi (Attributes) di una specifica entità in Dynamics 365
+ * tramite l'API OData dei metadati.
+ *
+ * I navigation property (es. lookup come `pgp_Prodottoid`) non compaiono tra gli Attributes
+ * standard: devono essere dichiarati esplicitamente tramite il parametro `navigationPropertyFields`
+ * e vengono esclusi dal conteggio dei campi mancanti.
+ *
+ * @param baseUrl - URL base dell'ambiente Dynamics (es. https://org.crm4.dynamics.com)
+ * @param entityLogicalName - Nome logico dell'entità da interrogare (es. 'appointment', 'contact')
+ * @param expectedFields - Lista dei nomi logici dei campi standard attesi
+ * @param navigationPropertyFields - Lista dei navigation property da segnalare separatamente
+ * @returns Oggetto contenente l'elenco dei campi con flag expected/found, la lista dei missing e dei navigation property
+ */
+async function probeEntityFields(
+  baseUrl: string,
+  entityLogicalName: string,
+  expectedFields: string[],
+  navigationPropertyFields: string[] = [],
+): Promise<EntityFieldProbeResult> {
+  const url = buildUrl({
+    baseUrl,
+    endpoint: `/api/data/v9.2/EntityDefinitions(LogicalName='${entityLogicalName}')/Attributes`,
+    select: "LogicalName,AttributeType",
+  });
+
+  try {
+    const data = await get<Record<string, unknown>>(url, baseUrl);
+    const attributes = data.value ?? [];
+
+    // Costruisce la mappa case-insensitive dei campi trovati (solo quelli con LogicalName valido)
+    const foundFieldsMap = new Map<string, string>();
+    for (const attr of attributes) {
+      const logicalName = attr["LogicalName"];
+      const attributeType = attr["AttributeType"];
+      if (
+        typeof logicalName === "string" &&
+        typeof attributeType === "string"
+      ) {
+        foundFieldsMap.set(logicalName.toLowerCase(), attributeType);
+      }
+    }
+
+    // Costruisce l'elenco dei campi trovati con flag expected/found
+    const fields: FieldValidationEntry[] = [];
+    for (const attr of attributes) {
+      const logicalName = attr["LogicalName"];
+      const attributeType = attr["AttributeType"];
+      if (typeof logicalName !== "string" || typeof attributeType !== "string")
+        continue;
+
+      const isExpected = expectedFields.some(
+        (exp) => exp.toLowerCase() === logicalName.toLowerCase(),
+      );
+      if (isExpected) {
+        fields.push({
+          logicalName,
+          attributeType,
+          expected: true,
+          found: true,
+        });
+      }
+    }
+
+    // Aggiunge i campi attesi ma non trovati (missing)
+    const missing = expectedFields.filter(
+      (exp) => !foundFieldsMap.has(exp.toLowerCase()),
+    );
+
+    // I navigation property vengono segnalati separatamente, non come missing
+    const navigationProperties = navigationPropertyFields;
+
+    return {
+      entity: entityLogicalName,
+      fields,
+      missing,
+      navigationProperties,
+      error: null,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return {
+      entity: entityLogicalName,
+      fields: [],
+      missing: expectedFields,
+      navigationProperties: navigationPropertyFields,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Esegue in parallelo la validazione dei campi per le entità `appointment` e `contact`,
+ * verificando l'esistenza di tutti i campi custom e standard utilizzati dall'applicazione.
+ *
+ * @param baseUrl - URL base dell'ambiente Dynamics
+ * @returns Oggetto consolidato con i risultati di validazione per entrambe le entità
+ */
+async function probeFieldValidation(baseUrl: string): Promise<{
+  appointment: EntityFieldProbeResult;
+  contact: EntityFieldProbeResult;
+}> {
+  // Campi standard attesi per l'entità appointment
+  const appointmentExpectedFields = [
+    "pgp_oggettodelcontatto",
+    "nextstep",
+    "new_dataprossimocontatto",
+    "subject",
+    "scheduledstart",
+    "scheduledend",
+    "location",
+    "description",
+    "statuscode",
+    "statecode",
+  ];
+
+  // Campi standard attesi per l'entità contact
+  const contactExpectedFields = [
+    "emailaddress1",
+    "firstname",
+    "lastname",
+    "pgp_tipologiareferente",
+  ];
+
+  // Navigation property di contact: sono lookup/relation e non compaiono tra gli Attributes
+  const contactNavigationProperties = ["pgp_Prodottoid"];
+
+  const [appointmentResult, contactResult] = await Promise.all([
+    probeEntityFields(baseUrl, "appointment", appointmentExpectedFields),
+    probeEntityFields(
+      baseUrl,
+      "contact",
+      contactExpectedFields,
+      contactNavigationProperties,
+    ),
+  ]);
+
+  return {
+    appointment: appointmentResult,
+    contact: contactResult,
+  };
 }
 
 async function lookupAccount(
@@ -134,15 +305,17 @@ export async function probeDynamicsHandler(
     const contactProductRel = await probeContactProductRelationship(baseUrl);
     logger.info("Contact→Product relationships found", {
       count: contactProductRel.relationships.length,
+      error: contactProductRel.error,
     });
 
     // Step 2: lista tutte le entità pgp_ dai metadati di Dynamics
     const metadata = await probeMetadata(baseUrl);
     logger.info("Metadata probe result", {
       count: metadata.pgpEntities.length,
+      error: metadata.error,
     });
 
-    // Step 2: proba i candidati noti come fallback
+    // Step 2b: proba i candidati noti come fallback per la entity dei prodotti
     const candidates = ["pgp_prodotti", "pgp_products"] as const;
     const results: Record<string, CandidateResult> = {};
 
@@ -161,7 +334,7 @@ export async function probeDynamicsHandler(
           count: data.value?.length ?? 0,
           sample,
         };
-        logger.info(`Candidate probe succeeded`, { candidate });
+        logger.info("Candidate probe succeeded", { candidate });
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
@@ -174,7 +347,7 @@ export async function probeDynamicsHandler(
           statusCode,
           error: errorMessage,
         };
-        logger.warn(`Candidate probe failed`, { candidate, statusCode });
+        logger.warn("Candidate probe failed", { candidate, statusCode });
       }
     }
 
@@ -188,6 +361,17 @@ export async function probeDynamicsHandler(
       candidates.find((c) => results[c]?.success === true) ??
       null;
 
+    // Step 3: validazione dei campi per le entità appointment e contact
+    const fieldValidation = await probeFieldValidation(baseUrl);
+    logger.info("Field validation completed", {
+      appointmentMissing: fieldValidation.appointment.missing,
+      contactMissing: fieldValidation.contact.missing,
+      appointmentFoundCount: fieldValidation.appointment.fields.length,
+      contactFoundCount: fieldValidation.contact.fields.length,
+      appointmentError: fieldValidation.appointment.error,
+      contactError: fieldValidation.contact.error,
+    });
+
     logger.info("Diagnostics probe completed", { environment, recommendation });
 
     return {
@@ -198,6 +382,7 @@ export async function probeDynamicsHandler(
         ...(accountLookup !== undefined && { accountLookup }),
         contactProductRelationships: contactProductRel,
         metadata,
+        fieldValidation,
         recommendation,
         products: PRODUCTS_MAP[environment],
         candidates: results,

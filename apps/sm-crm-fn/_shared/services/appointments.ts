@@ -9,7 +9,6 @@ import type {
   AppointmentParty,
 } from "../types/dynamics";
 import { get, post, buildUrl } from "./httpClient";
-import { getConfigOrThrow } from "../utils/config";
 import { type Logger } from "../utils/logger";
 
 // -----------------------------------------------------------------------------
@@ -42,7 +41,7 @@ export async function listAppointments(
     filter: params?.filter,
     select:
       params?.select ??
-      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode",
+      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,nextstep,new_dataprossimocontatto,pgp_oggettodelcontatto",
     top: params?.top,
   });
 
@@ -65,7 +64,9 @@ export interface CreateFullAppointmentParams {
   scheduledend: string;
   location?: string;
   description?: string;
+  nextstep?: string;
   dataProssimoContatto?: string;
+  oggettoDelContatto?: string;
   accountId: string;
   contactIds: string[];
   ownerId?: string;
@@ -90,13 +91,15 @@ export interface CreateFullAppointmentParams {
  * @param params.contactIds - Array di GUID dei contatti partecipanti
  * @param params.location - Luogo (default: "Meet")
  * @param params.description - Descrizione
+ * @param params.nextstep - Prossimi passi (nextstep field per Dynamics)
+ * @param params.dataProssimoContatto - Data prossimo contatto (campo personalizzato Dynamics new_dataprossimocontatto)
+ * @param params.oggettoDelContatto - Oggetto del contatto (campo personalizzato Dynamics pgp_oggettodelcontatto)
  * @param params.baseUrl - Base URL di Dynamics 365
  * @returns Appuntamento creato con activityid
  */
 export async function createAppointment(
   params: CreateFullAppointmentParams,
 ): Promise<Appointment> {
-  const cfg = getConfigOrThrow();
   const url = buildUrl({
     baseUrl: params.baseUrl,
     endpoint: "/api/data/v9.2/appointments",
@@ -125,6 +128,7 @@ export async function createAppointment(
     scheduledend: params.scheduledend,
     location: params.location ?? "Meet",
     description: params.description,
+    nextstep: params.nextstep,
     statuscode: 5, // Busy
     "regardingobjectid_account@odata.bind": `/accounts(${params.accountId})`,
     appointment_activity_parties: activityParties,
@@ -138,6 +142,11 @@ export async function createAppointment(
   // Aggiungi data prossimo contatto se specificata
   if (params.dataProssimoContatto) {
     body.new_dataprossimocontatto = params.dataProssimoContatto;
+  }
+
+  // Aggiungi oggetto del contatto se specificato
+  if (params.oggettoDelContatto) {
+    body.pgp_oggettodelcontatto = params.oggettoDelContatto;
   }
 
   console.log(`[Appointments] Creazione appuntamento: ${params.subject}`);
@@ -174,7 +183,7 @@ export async function getAppointmentById(
     baseUrl,
     endpoint: `/api/data/v9.2/appointments(${activityId})`,
     select:
-      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode",
+      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,nextstep,new_dataprossimocontatto,pgp_oggettodelcontatto",
   });
 
   console.log(`[Appointments] Fetching appointment: ${activityId}`);

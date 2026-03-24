@@ -264,7 +264,7 @@ Products use string identifiers in Selfcare that must be mapped to Dynamics GUID
 | `prod-interop`        | Interoperabilità | ✅ All environments    |
 | `prod-io-premium`     | IO Premium       | ✅ All environments    |
 | `prod-io-sign`        | Firma con IO     | ✅ All environments    |
-| `prod-rtp`            | Request To Pay   | ⚠️ DEV/UAT only        |
+| `prod-rtp`            | Request To Pay   | ⚠️ UAT only            |
 
 #### Example Mapping (UAT Environment)
 
@@ -587,9 +587,11 @@ RESPONSABILE_PROTEZIONE_DATI | REFERENTE_BUSINESS_APICALE_ACCOUNT
 
 #### `nextstep` (string)
 
-**Description**: Next steps to be taken after this meeting.
+**Description**: Next steps to be taken after this meeting. This field is sent to Dynamics 365 as a native appointment field.
 
 **Example**: `"Preparare documentazione tecnica entro 7 giorni"`
+
+**Dynamics Field**: Stored in the native `nextstep` field of the appointment entity
 
 ---
 
@@ -1338,14 +1340,14 @@ GET /api/data/v9.2/accounts?$filter=pgp_identificativoselfcare eq '{uuid}'
 1. GrantAccess Custom Action not deployed in environment
 2. Team ID not configured correctly
 3. Team doesn't exist in Dynamics
-4. DEV/UAT environment limitations
+4. UAT environment limitations
 
 **Solutions**:
 
 1. Verify with CRM admin that GrantAccess API is available
 2. Check team ID in `_shared/utils/mappings.ts`
 3. Set `enableGrantAccess: false` to skip this step
-4. In DEV/UAT, always use `enableGrantAccess: false` unless specifically testing
+4. In UAT, always use `enableGrantAccess: false` unless specifically testing
 
 **⚠️ Non-Blocking**: This error doesn't prevent appointment creation!
 
@@ -1476,21 +1478,21 @@ traces
 
 ### DEV vs UAT vs PROD Differences
 
-| Aspect               | DEV                                    | UAT                                    | PROD                               |
-| -------------------- | -------------------------------------- | -------------------------------------- | ---------------------------------- |
-| **Base URL**         | `https://dev-pagopa.crm4.dynamics.com` | `https://uat-pagopa.crm4.dynamics.com` | `https://pagopa.crm4.dynamics.com` |
-| **Product GUIDs**    | DEV-specific                           | UAT-specific                           | PROD-specific                      |
-| **Team ID**          | Same as UAT                            | `5f9c165c-...`                         | `5f9c165c-...`                     |
-| **GrantAccess API**  | ⚠️ May not be available                | ⚠️ May not be available                | ✅ Available                       |
-| **Data Quality**     | Test data                              | Pre-production data                    | Production data                    |
-| **prod-rtp Product** | ✅ Available                           | ✅ Available                           | ❌ Not available                   |
+| Aspect               | UAT                                    | PROD                               |
+| -------------------- | -------------------------------------- | ---------------------------------- |
+| **Base URL**         | `https://uat-pagopa.crm4.dynamics.com` | `https://pagopa.crm4.dynamics.com` |
+| **Product GUIDs**    | UAT-specific                           | PROD-specific                      |
+| **Team ID**          | `5f9c165c-...`                         | `5f9c165c-...`                     |
+| **GrantAccess API**  | ⚠️ May not be available                | ✅ Available                       |
+| **Data Quality**     | Pre-production data                    | Production data                    |
+| **prod-rtp Product** | ✅ Available                           | ❌ Not available                   |
 
 #### Important Notes
 
 1. **Product GUIDs are different**: Don't copy configuration from one environment to another
-2. **GrantAccess in DEV/UAT**: May not be deployed; always test with `enableGrantAccess: false` first
-3. **Data Sync**: DEV and UAT may have outdated or incomplete data
-4. **prod-rtp**: Only available in DEV and UAT, not in PROD
+2. **GrantAccess in UAT**: May not be deployed; always test with `enableGrantAccess: false` first
+3. **Data Sync**: UAT may have outdated or incomplete data
+4. **prod-rtp**: Only available in UAT, not in PROD
 
 ---
 
@@ -1500,7 +1502,7 @@ traces
 
 - ✅ Standard appointments
 - ✅ Internal meetings
-- ✅ Testing in DEV/UAT environments
+- ✅ Testing in UAT environment
 - ✅ When Sales team visibility is not required
 - ✅ When you're unsure if GrantAccess is available
 
