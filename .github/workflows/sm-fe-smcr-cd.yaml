@@ -158,11 +158,48 @@ jobs:
           fi
 
   # --------------------------------------------------------------------
+  # MIGRATE DB (solo app-dev)
+  # Eseguito prima del deploy per garantire che lo schema DB sia aggiornato
+  # --------------------------------------------------------------------
+  migrate:
+    name: Run DB Migrations
+    needs: build
+    if: ${{ inputs.environment == 'app-dev' }}
+    runs-on: dev
+    environment: app-dev-cd
+
+    env:
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD_B64: ${{ secrets.DB_PASSWORD_B64 }}
+      DB_SSL: ${{ secrets.DB_SSL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run migrations
+        run: yarn workspace sm-fe-smcr migrate
+
+  # --------------------------------------------------------------------
   # DEPLOY (staging o production)
   # --------------------------------------------------------------------
   deploy:
     name: ${{ fromJSON(needs.validate.outputs.use_staging_slot) && 'Deploy to Staging' || 'Deploy to Production' }}
-    needs: [validate]
+    needs: [validate, migrate]
+    if: ${{ always() && (needs.migrate.result == 'success' || needs.migrate.result == 'skipped') }}
     runs-on: ${{ inputs.environment == 'app-prod' && 'prod' || 'dev' }}
     environment: ${{ inputs.environment }}-cd
 
