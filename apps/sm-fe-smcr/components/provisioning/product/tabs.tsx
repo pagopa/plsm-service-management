@@ -1,13 +1,16 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
+  ClipboardListIcon,
   FileTextIcon,
   LayoutDashboardIcon,
   ServerIcon,
   UsersIcon,
 } from "lucide-react";
+import type { Product } from "@/lib/services/institution.service";
 import ContractTab from "./contract/contract-tab";
 import GroupsTab from "./groups/groups-tab";
+import OnboardingTab from "./onboarding/onboarding-tab";
 import ServicesTab from "./services/services-tab";
 import UsersTab from "./users/users-tab";
 import DelegationsTab from "./delegations/delegations-tab";
@@ -15,6 +18,7 @@ enum TABS {
   GROUPS = "groups",
   USERS = "users",
   CONTRACT = "contract",
+  ONBOARDING = "onboarding",
   SERVICES = "services",
   DELEGATIONS = "delegactions",
 }
@@ -24,6 +28,7 @@ type Props = {
   institutionDescription: string;
   product: string;
   onboarding: string;
+  onboardings: Array<Product>;
   isPNPG?: boolean;
 };
 export default function TabsSection({
@@ -32,6 +37,7 @@ export default function TabsSection({
   institutionDescription,
   product,
   onboarding,
+  onboardings,
   isPNPG = false,
 }: Props) {
   return (
@@ -69,6 +75,14 @@ export default function TabsSection({
                 Contratto
               </TabsTrigger>
             )}
+
+            <TabsTrigger value={TABS.ONBOARDING} className="group">
+              <ClipboardListIcon
+                className="size-3.5 -ms-0.5 me-1.5 opacity-60"
+                aria-hidden="true"
+              />
+              Onboarding
+            </TabsTrigger>
 
             {product === "prod-io" && (
               <TabsTrigger
@@ -129,6 +143,12 @@ export default function TabsSection({
             />
           </TabsContent>
         )}
+        <TabsContent
+          value={TABS.ONBOARDING}
+          className="flex flex-1 min-h-0 flex-col"
+        >
+          <OnboardingTab onboardings={onboardings} />
+        </TabsContent>
         {product === "prod-io" && (
           <TabsContent
             value={TABS.SERVICES}
