@@ -190,6 +190,17 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Check DB connectivity
+        run: |
+          echo "→ Testing TCP connectivity to $DB_HOST:$DB_PORT..."
+          timeout 5 bash -c "cat < /dev/null > /dev/tcp/$DB_HOST/$DB_PORT" \
+            && echo "✅ TCP connection OK" \
+            || echo "❌ TCP connection FAILED (host unreachable or port closed)"
+          echo "→ Testing with psql..."
+          PGPASSWORD=$(echo "$DB_PASSWORD_B64" | base64 -d) \
+            psql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER sslmode=require" \
+            -c "SELECT 1" 2>&1 || true
+
       - name: Run migrations
         run: yarn workspace sm-fe-smcr db:migrate
 
