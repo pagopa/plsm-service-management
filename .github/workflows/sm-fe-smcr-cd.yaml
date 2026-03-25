@@ -215,31 +215,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Check DB connectivity
-        run: |
-          echo "→ Testing TCP connectivity to $DB_HOST:$DB_PORT..."
-          timeout 5 bash -c "cat < /dev/null > /dev/tcp/$DB_HOST/$DB_PORT" \
-            && echo "✅ TCP connection OK" \
-            || echo "❌ TCP connection FAILED (host unreachable or port closed)"
-          echo "→ Testing with Node.js pg driver..."
-          node -e "
-            const { Client } = require('pg');
-            const password = Buffer.from(process.env.DB_PASSWORD_B64 || '', 'base64').toString('utf-8');
-            const client = new Client({
-              host: process.env.DB_HOST,
-              port: parseInt(process.env.DB_PORT || '5432'),
-              user: process.env.DB_USER,
-              password,
-              database: process.env.DB_NAME,
-              ssl: { rejectUnauthorized: false },
-              connectionTimeoutMillis: 5000,
-            });
-            client.connect()
-              .then(() => { console.log('✅ Node.js pg connection OK'); return client.query('SELECT version()'); })
-              .then(r => { console.log('PostgreSQL version:', r.rows[0].version); client.end(); })
-              .catch(e => { console.error('❌ Node.js pg connection FAILED:', e.message); process.exit(1); });
-          " || true
-
       - name: Run migrations
         run: yarn workspace sm-fe-smcr db:migrate
 
