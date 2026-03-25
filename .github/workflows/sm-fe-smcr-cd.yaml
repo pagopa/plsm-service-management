@@ -18,6 +18,12 @@ on:
         required: false
         default: false
 
+      create_db_if_not_exists:
+        description: Crea il database se non esiste (utile dopo un teardown dell'infra DEV)
+        type: boolean
+        required: false
+        default: false
+
 permissions:
   id-token: write
   contents: read
@@ -178,6 +184,25 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Azure Login
+        if: ${{ inputs.create_db_if_not_exists == true }}
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Create DB if not exists
+        if: ${{ inputs.create_db_if_not_exists == true }}
+        run: |
+          az postgres flexible-server db create \
+            --server-name "${{ secrets.DB_SERVER_NAME }}" \
+            --resource-group "${{ secrets.DB_RESOURCE_GROUP }}" \
+            --database-name "${{ secrets.DB_NAME }}" \
+            --subscription "${{ secrets.ARM_SUBSCRIPTION_ID }}" \
+            2>&1 | grep -v "WARNING" || true
+          echo "✅ Database '${{ secrets.DB_NAME }}' ready"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
