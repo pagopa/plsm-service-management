@@ -202,7 +202,7 @@ jobs:
             -c "SELECT 1" 2>&1 || true
 
       - name: Run migrations
-        run: yarn workspace sm-fe-smcr db:migrate
+        run: yarn workspace sm-fe-smcr db:migrate --verbose
 
   # --------------------------------------------------------------------
   # DEPLOY (staging o production)
