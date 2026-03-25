@@ -7,11 +7,6 @@ export const memberRelations = relations(member, ({ one }) => ({
     references: [user.id],
     relationName: "member_userId_user_id"
   }),
-  user_userId: one(user, {
-    fields: [member.userId],
-    references: [user.id],
-    relationName: "member_userId_user_id"
-  }),
   team: one(team, {
     fields: [member.teamId],
     references: [team.id]
@@ -19,9 +14,6 @@ export const memberRelations = relations(member, ({ one }) => ({
 }));
 
 export const userRelations = relations(user, ({ many }) => ({
-  members_userId: many(member, {
-    relationName: "member_userId_user_id"
-  }),
   members_userId: many(member, {
     relationName: "member_userId_user_id"
   }),
