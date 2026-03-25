@@ -191,7 +191,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Run migrations
-        run: yarn workspace sm-fe-smcr migrate
+        run: yarn workspace sm-fe-smcr db:migrate
 
   # --------------------------------------------------------------------
   # DEPLOY (staging o production)
