@@ -37,6 +37,10 @@ export default async function Page({
   const institutionsResponse = await getInstitutionPNPG(taxCode as string);
 
   const onboarding = findOnboardingId(institutionsResponse.data, product);
+  const selectedInstitution = institutionsResponse.data?.find(
+    (item) => item.id === institution,
+  );
+  const onboardings = selectedInstitution?.onboarding ?? [];
 
   if (institutionsResponse.error || !institutionsResponse.data) {
     return (
@@ -73,6 +77,7 @@ export default async function Page({
           }
           product={product}
           onboarding={onboarding?.tokenId || ""}
+          onboardings={onboardings}
           isPNPG
         />
       )}
