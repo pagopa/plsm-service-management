@@ -6,6 +6,7 @@ import z from "zod";
 import { PRODUCT_MAP } from "../types/product";
 import logger from "@/lib/logger/logger.server";
 import { serverEnv } from "@/config/env";
+import { tipologiaReferenteValues } from "@/components/call-management/crm-form-schema";
 
 const formatItalianDateTime = (value: string) => {
   const isoMatch =
@@ -253,16 +254,16 @@ export async function sendToSlackAction(
 
 // --- CRM Meeting (OpenAPI sm-crm-fn POST /meetings) ---
 
-const TIPOLOGIA_REFERENTE = ["TECNICO"] as const;
-
-export type TipologiaReferente = (typeof TIPOLOGIA_REFERENTE)[number];
+export type TipologiaReferente = (typeof tipologiaReferenteValues)[number];
 
 export type CreateMeetingPartecipante = {
-  email: string;
+  email?: string;
   nome?: string;
   cognome?: string;
   tipologiaReferente?: TipologiaReferente;
 };
+
+export type DynamicsCrmEnvironment = "UAT" | "PROD";
 
 export type CreateMeetingInput = {
   institutionIdSelfcare: string;
@@ -273,7 +274,7 @@ export type CreateMeetingInput = {
   scheduledend: string;
   description?: string;
   enableCreateContact?: boolean;
-  dryRun?: boolean;
+  dynamicsEnvironment?: DynamicsCrmEnvironment;
 };
 
 export type CreateMeetingResult =
@@ -283,6 +284,7 @@ export type CreateMeetingResult =
 export async function createMeetingAction(
   input: CreateMeetingInput,
 ): Promise<CreateMeetingResult> {
+  console.log("input", input);
   const baseUrl = serverEnv.FE_SMCR_CRM_API_URL?.replace(/\/$/, "");
   if (!baseUrl) {
     logger.warn(
@@ -293,8 +295,11 @@ export async function createMeetingAction(
   }
 
   const url = `${baseUrl}/meetings`;
+  const dynamicsEnv: DynamicsCrmEnvironment =
+    input.dynamicsEnvironment ?? "PROD";
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "x-dynamics-environment": dynamicsEnv,
   };
   if (serverEnv.FE_SMCR_CRM_API_KEY) {
     headers["x-functions-key"] = serverEnv.FE_SMCR_CRM_API_KEY;
@@ -313,7 +318,6 @@ export async function createMeetingAction(
     ...(input.enableCreateContact !== undefined
       ? { enableCreateContact: input.enableCreateContact }
       : {}),
-    ...(input.dryRun !== undefined ? { dryRun: input.dryRun } : {}),
   };
 
   try {
@@ -334,7 +338,10 @@ export async function createMeetingAction(
         {
           request: { method: "POST", path: url, statusCode: res.status },
           error: { message },
-          info: { event: "call-management.create-meeting.failed" },
+          info: {
+            event: "call-management.create-meeting.failed",
+            metadata: { dynamicsEnvironment: dynamicsEnv },
+          },
         },
         "createMeetingAction failed",
       );
@@ -345,7 +352,10 @@ export async function createMeetingAction(
       {
         info: {
           event: "call-management.create-meeting.success",
-          metadata: { activityId: data?.activityId },
+          metadata: {
+            activityId: data?.activityId,
+            dynamicsEnvironment: dynamicsEnv,
+          },
         },
       },
       "createMeetingAction success",

@@ -107,18 +107,19 @@ export default function CRMForm() {
 
   const onSubmit = async (values: CrmFormSchema) => {
     const partecipanti = values.partecipanti
-      .filter((p) => p.email.trim())
+      .filter((p) => p.nome.trim() && p.cognome.trim())
       .map((p) => ({
-        email: p.email.trim(),
-        nome: p.nome?.trim() || undefined,
-        cognome: p.cognome?.trim() || undefined,
+        email: p.email?.trim() || undefined,
+        nome: p.nome!.trim(),
+        cognome: p.cognome!.trim(),
         tipologiaReferente: p.tipologiaReferente,
       }));
     if (partecipanti.length === 0) {
-      toast.error("Aggiungi almeno un partecipante con email");
+      toast.error("Aggiungi almeno un partecipante con nome e cognome");
       return;
     }
     const payLoad: CreateMeetingInput = {
+      dynamicsEnvironment: values.dynamicsEnvironment,
       institutionIdSelfcare: values.institutionIdSelfcare,
       productIdSelfcare: values.productId,
       partecipanti,
@@ -146,6 +147,31 @@ export default function CRMForm() {
       >
         <FieldSet className="pt-4">
           <FieldGroup>
+            <FormField
+              control={form.control}
+              name="dynamicsEnvironment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="dynamics-environment">Ambiente</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger
+                        id="dynamics-environment"
+                        className="w-full"
+                      >
+                        <SelectValue placeholder="Seleziona ambiente" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="PROD">PROD</SelectItem>
+                      <SelectItem value="UAT">UAT</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="subject"
