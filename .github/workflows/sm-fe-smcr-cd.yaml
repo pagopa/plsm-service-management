@@ -18,6 +18,12 @@ on:
         required: false
         default: false
 
+      create_db_if_not_exists:
+        description: Crea il database se non esiste (utile dopo un teardown dell'infra DEV)
+        type: boolean
+        required: false
+        default: false
+
 permissions:
   id-token: write
   contents: read
@@ -169,15 +175,43 @@ jobs:
     environment: app-dev-cd
 
     env:
-      DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
       DB_NAME: ${{ secrets.DB_NAME }}
       DB_USER: ${{ secrets.DB_USER }}
-      DB_PASSWORD_B64: ${{ secrets.DB_PASSWORD_B64 }}
       DB_SSL: ${{ secrets.DB_SSL }}
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Read secrets from Key Vault
+        run: |
+          set -euo pipefail
+          DB_HOST=$(az keyvault secret show --vault-name "${{ secrets.KV_NAME }}" --name "db-host" --query value -o tsv)
+          DB_PASSWORD_B64=$(az keyvault secret show --vault-name "${{ secrets.KV_NAME }}" --name "db-password-b64" --query value -o tsv)
+          test -n "$DB_HOST" || { echo "❌ db-host secret is empty or missing from Key Vault"; exit 1; }
+          test -n "$DB_PASSWORD_B64" || { echo "❌ db-password-b64 secret is empty or missing from Key Vault"; exit 1; }
+          echo "::add-mask::$DB_HOST"
+          echo "::add-mask::$DB_PASSWORD_B64"
+          echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+          echo "DB_PASSWORD_B64=$DB_PASSWORD_B64" >> $GITHUB_ENV
+
+      - name: Create DB if not exists
+        if: ${{ inputs.create_db_if_not_exists == true }}
+        run: |
+          az postgres flexible-server db create \
+            --server-name "${{ secrets.DB_SERVER_NAME }}" \
+            --resource-group "${{ secrets.DB_RESOURCE_GROUP }}" \
+            --database-name "${{ secrets.DB_NAME }}" \
+            --subscription "${{ secrets.ARM_SUBSCRIPTION_ID }}" \
+            2>&1 | grep -v "WARNING" || true
+          echo "✅ Database '${{ secrets.DB_NAME }}' ready"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
