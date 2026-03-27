@@ -209,6 +209,8 @@ async function probeFieldValidation(baseUrl: string): Promise<{
   // Campi standard attesi per l'entità appointment
   const appointmentExpectedFields = [
     "pgp_oggettodelcontatto",
+    "nextstep",
+    "new_dataprossimocontatto",
     "subject",
     "scheduledstart",
     "scheduledend",
