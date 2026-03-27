@@ -209,8 +209,6 @@ async function probeFieldValidation(baseUrl: string): Promise<{
   // Campi standard attesi per l'entità appointment
   const appointmentExpectedFields = [
     "pgp_oggettodelcontatto",
-    "nextstep",
-    "new_dataprossimocontatto",
     "subject",
     "scheduledstart",
     "scheduledend",
@@ -273,6 +271,75 @@ async function lookupAccount(
     };
   } catch {
     return null;
+  }
+}
+
+/**
+ * Recupera i valori dell'OptionSet (Picklist) di un attributo specifico di un'entità Dynamics 365.
+ *
+ * Utilizza l'API dei metadati OData per ottenere i valori interi e le etichette
+ * associate alla picklist, necessari per mappare stringhe UI → valori Dynamics.
+ *
+ * @param baseUrl - URL base dell'ambiente Dynamics (es. https://org.crm4.dynamics.com)
+ * @param entityLogicalName - Nome logico dell'entità (es. 'appointment')
+ * @param attributeLogicalName - Nome logico dell'attributo Picklist (es. 'pgp_oggettodelcontatto')
+ * @returns Oggetto con i valori dell'OptionSet o un errore
+ */
+async function probePicklistValues(
+  baseUrl: string,
+  entityLogicalName: string,
+  attributeLogicalName: string,
+): Promise<{
+  options: Array<{ value: number; label: string }>;
+  error: string | null;
+}> {
+  const url = buildUrl({
+    baseUrl,
+    endpoint: `/api/data/v9.2/EntityDefinitions(LogicalName='${entityLogicalName}')/Attributes(LogicalName='${attributeLogicalName}')/Microsoft.Dynamics.CRM.PicklistAttributeMetadata`,
+    select: "OptionSet",
+  });
+
+  try {
+    const response = await get<Record<string, unknown>>(url, baseUrl);
+    // Per questo endpoint specifico, la risposta non ha 'value' ma i dati diretti
+    const data =
+      response.value?.[0] ?? (response as unknown as Record<string, unknown>);
+    const optionSet = data["OptionSet"] as Record<string, unknown> | undefined;
+    if (!optionSet) {
+      return {
+        options: [],
+        error:
+          "OptionSet non trovato nella risposta Dynamics — verificare che il campo sia di tipo Picklist",
+      };
+    }
+
+    const rawOptions = (optionSet["Options"] ?? []) as Array<
+      Record<string, unknown>
+    >;
+
+    const parsedOptions = rawOptions
+      .filter((opt) => typeof opt["Value"] === "number")
+      .map((opt) => {
+        const value = opt["Value"] as number;
+        const labelObj = opt["Label"] as Record<string, unknown> | undefined;
+        const localizedLabels = (labelObj?.["LocalizedLabels"] ?? []) as Array<
+          Record<string, unknown>
+        >;
+        // Cerca prima etichetta italiana (LanguageCode 1040), poi primo elemento disponibile
+        const italianLabel = localizedLabels.find(
+          (l) => l["LanguageCode"] === 1040,
+        );
+        const label =
+          ((italianLabel ?? localizedLabels[0])?.["Label"] as
+            | string
+            | undefined) ?? String(value);
+        return { value, label };
+      });
+
+    return { options: parsedOptions, error: null };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { options: [], error: errorMessage };
   }
 }
 
@@ -372,6 +439,17 @@ export async function probeDynamicsHandler(
       contactError: fieldValidation.contact.error,
     });
 
+    // Step 4: valori Picklist di pgp_oggettodelcontatto su appointment
+    const oggettoDelContattoPicklist = await probePicklistValues(
+      baseUrl,
+      "appointment",
+      "pgp_oggettodelcontatto",
+    );
+    logger.info("Picklist pgp_oggettodelcontatto probe", {
+      optionCount: oggettoDelContattoPicklist.options.length,
+      error: oggettoDelContattoPicklist.error,
+    });
+
     logger.info("Diagnostics probe completed", { environment, recommendation });
 
     return {
@@ -383,6 +461,7 @@ export async function probeDynamicsHandler(
         contactProductRelationships: contactProductRel,
         metadata,
         fieldValidation,
+        oggettoDelContattoPicklist,
         recommendation,
         products: PRODUCTS_MAP[environment],
         candidates: results,

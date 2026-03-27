@@ -381,8 +381,7 @@ paths:
                   scheduledend: "2025-02-15T11:00:00Z"
                   location: "Google Meet"
                   description: "Discussione requisiti integrazione"
-                  nextstep: "Preparare documentazione tecnica"
-                  dataProssimoContatto: "2025-02-20"
+                  oggettoDelContatto: 100000000
                   enableCreateContact: true
                   enableGrantAccess: true
                   dryRun: false
@@ -592,19 +591,13 @@ components:
           type: string
           description: Descrizione dettagliata
           example: "Discussione requisiti integrazione pagoPA"
-        nextstep:
-          type: string
-          description: Prossimi passi da intraprendere
-          example: "Preparare documentazione tecnica"
-        dataProssimoContatto:
-          type: string
-          format: date
-          description: Data del prossimo contatto previsto
-          example: "2025-02-20"
         oggettoDelContatto:
-          type: string
-          description: Oggetto del contatto (campo personalizzato Dynamics `pgp_oggettodelcontatto`)
-          example: "Supporto integrazione pagoPA"
+          type: integer
+          description: |
+            Oggetto del contatto (campo personalizzato Dynamics `pgp_oggettodelcontatto`).
+            È un valore **Picklist (Edm.Int32)** di Dynamics 365 — non una stringa libera.
+            I valori validi si recuperano tramite `GET /diagnostics/probe` (campo `oggettoDelContattoPicklist.options`).
+          example: 100000000
         enableCreateContact:
           type: boolean
           default: false
@@ -930,12 +923,11 @@ components:
           type: integer
         statuscode:
           type: integer
-        nextstep:
-          type: string
-          description: Prossimi passi da intraprendere
         pgp_oggettodelcontatto:
-          type: string
-          description: Oggetto del contatto (campo personalizzato Dynamics)
+          type: integer
+          description: |
+            Oggetto del contatto — valore Picklist (Edm.Int32) da Dynamics 365.
+            I valori validi si recuperano tramite `GET /diagnostics/probe` (campo `oggettoDelContattoPicklist.options`).
 
     ErrorResponse:
       type: object
@@ -1118,6 +1110,31 @@ components:
               $ref: "#/components/schemas/EntityFieldProbeResult"
             contact:
               $ref: "#/components/schemas/EntityFieldProbeResult"
+        oggettoDelContattoPicklist:
+          type: object
+          description: |
+            Valori della Picklist `pgp_oggettodelcontatto` sull'entità `appointment`.
+            Contiene i valori interi (Edm.Int32) e le etichette recuperati dai metadati Dynamics.
+            Usare questi valori come `oggettoDelContatto` nella POST /meetings.
+          properties:
+            options:
+              type: array
+              description: Valori disponibili nella Picklist
+              items:
+                type: object
+                properties:
+                  value:
+                    type: integer
+                    description: Valore intero da inviare a Dynamics
+                    example: 100000000
+                  label:
+                    type: string
+                    description: Etichetta leggibile (preferibilmente in italiano)
+                    example: "Post-vendita"
+            error:
+              type: string
+              nullable: true
+              description: Errore durante il recupero dei valori, null se la chiamata è riuscita
         recommendation:
           type: string
           nullable: true

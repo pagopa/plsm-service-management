@@ -48,9 +48,8 @@ export interface Appointment {
   description?: string;
   statecode?: number;
   statuscode?: number;
-  nextstep?: string;
-  new_dataprossimocontatto?: string;
-  pgp_oggettodelcontatto?: string;
+  /** Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365 */
+  pgp_oggettodelcontatto?: number;
 }
 
 // -----------------------------------------------------------------------------
@@ -73,10 +72,9 @@ export interface CreateAppointmentRequest {
   scheduledend: string;
   location?: string;
   description?: string;
-  nextstep?: string;
   statuscode?: number;
-  new_dataprossimocontatto?: string;
-  pgp_oggettodelcontatto?: string;
+  /** Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365 */
+  pgp_oggettodelcontatto?: number;
   "ownerid@odata.bind"?: string;
   "regardingobjectid_account@odata.bind"?: string;
   appointment_activity_parties?: AppointmentParty[];
@@ -149,9 +147,8 @@ export interface CreateMeetingOrchestratorRequest {
   scheduledend: string;
   location?: string;
   description?: string;
-  nextstep?: string;
-  dataProssimoContatto?: string;
-  oggettoDelContatto?: string;
+  /** Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365 */
+  oggettoDelContatto?: number;
 
   // Opzioni
   dryRun?: boolean;

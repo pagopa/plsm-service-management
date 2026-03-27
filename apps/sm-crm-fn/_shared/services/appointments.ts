@@ -41,7 +41,7 @@ export async function listAppointments(
     filter: params?.filter,
     select:
       params?.select ??
-      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,nextstep,new_dataprossimocontatto,pgp_oggettodelcontatto",
+      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,pgp_oggettodelcontatto",
     top: params?.top,
   });
 
@@ -64,9 +64,7 @@ export interface CreateFullAppointmentParams {
   scheduledend: string;
   location?: string;
   description?: string;
-  nextstep?: string;
-  dataProssimoContatto?: string;
-  oggettoDelContatto?: string;
+  oggettoDelContatto?: number;
   accountId: string;
   contactIds: string[];
   ownerId?: string;
@@ -91,9 +89,7 @@ export interface CreateFullAppointmentParams {
  * @param params.contactIds - Array di GUID dei contatti partecipanti
  * @param params.location - Luogo (default: "Meet")
  * @param params.description - Descrizione
- * @param params.nextstep - Prossimi passi (nextstep field per Dynamics)
- * @param params.dataProssimoContatto - Data prossimo contatto (campo personalizzato Dynamics new_dataprossimocontatto)
- * @param params.oggettoDelContatto - Oggetto del contatto (campo personalizzato Dynamics pgp_oggettodelcontatto)
+ * @param params.oggettoDelContatto - Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365
  * @param params.baseUrl - Base URL di Dynamics 365
  * @returns Appuntamento creato con activityid
  */
@@ -128,7 +124,6 @@ export async function createAppointment(
     scheduledend: params.scheduledend,
     location: params.location ?? "Meet",
     description: params.description,
-    nextstep: params.nextstep,
     statuscode: 5, // Busy
     "regardingobjectid_account@odata.bind": `/accounts(${params.accountId})`,
     appointment_activity_parties: activityParties,
@@ -139,13 +134,8 @@ export async function createAppointment(
     body["ownerid@odata.bind"] = `/systemusers(${params.ownerId})`;
   }
 
-  // Aggiungi data prossimo contatto se specificata
-  if (params.dataProssimoContatto) {
-    body.new_dataprossimocontatto = params.dataProssimoContatto;
-  }
-
   // Aggiungi oggetto del contatto se specificato
-  if (params.oggettoDelContatto) {
+  if (params.oggettoDelContatto !== undefined) {
     body.pgp_oggettodelcontatto = params.oggettoDelContatto;
   }
 
@@ -183,7 +173,7 @@ export async function getAppointmentById(
     baseUrl,
     endpoint: `/api/data/v9.2/appointments(${activityId})`,
     select:
-      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,nextstep,new_dataprossimocontatto,pgp_oggettodelcontatto",
+      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,pgp_oggettodelcontatto",
   });
 
   console.log(`[Appointments] Fetching appointment: ${activityId}`);
