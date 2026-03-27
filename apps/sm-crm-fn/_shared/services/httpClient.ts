@@ -17,9 +17,8 @@ import {
 // Headers standard per Dynamics OData API
 // -----------------------------------------------------------------------------
 
-async function getHeaders(): Promise<Record<string, string>> {
-  const cfg = getConfigOrThrow();
-  const scope = buildScope(cfg.DYNAMICS_BASE_URL);
+async function getHeaders(baseUrl: string): Promise<Record<string, string>> {
+  const scope = buildScope(baseUrl);
   const token = await getAccessToken(scope);
 
   return {
@@ -37,6 +36,7 @@ async function getHeaders(): Promise<Record<string, string>> {
 // -----------------------------------------------------------------------------
 
 export interface BuildUrlParams {
+  baseUrl: string;
   endpoint: string;
   filter?: string;
   select?: string;
@@ -45,8 +45,7 @@ export interface BuildUrlParams {
 }
 
 export function buildUrl(params: BuildUrlParams): string {
-  const cfg = getConfigOrThrow();
-  const url = new URL(params.endpoint, cfg.DYNAMICS_BASE_URL);
+  const url = new URL(params.endpoint, params.baseUrl);
 
   if (params.filter) url.searchParams.set("$filter", params.filter);
   if (params.select) url.searchParams.set("$select", params.select);
@@ -116,7 +115,10 @@ function generateMockUuid(): string {
 // HTTP Methods con supporto dry-run
 // -----------------------------------------------------------------------------
 
-export async function get<T>(url: string): Promise<DynamicsList<T>> {
+export async function get<T>(
+  url: string,
+  baseUrl: string,
+): Promise<DynamicsList<T>> {
   const logger = createLogger();
   const timer = new Timer();
 
@@ -147,7 +149,7 @@ export async function get<T>(url: string): Promise<DynamicsList<T>> {
   logHttpRequest(logger, "GET", url);
 
   try {
-    const headers = await getHeaders();
+    const headers = await getHeaders(baseUrl);
     const response = await fetch(url, { method: "GET", headers });
     const duration = timer.elapsed();
 
@@ -232,6 +234,7 @@ function generateMockForEndpoint<T>(url: string): T | null {
 export async function post<TRequest, TResponse>(
   url: string,
   body: TRequest,
+  baseUrl: string,
 ): Promise<TResponse> {
   const logger = createLogger();
   const timer = new Timer();
@@ -264,7 +267,7 @@ export async function post<TRequest, TResponse>(
   logger.debug("POST body", { body });
 
   try {
-    const headers = await getHeaders();
+    const headers = await getHeaders(baseUrl);
     const response = await fetch(url, {
       method: "POST",
       headers,
@@ -321,6 +324,7 @@ export async function post<TRequest, TResponse>(
 export async function postAction<TRequest>(
   url: string,
   body: TRequest,
+  baseUrl: string,
 ): Promise<void> {
   if (dryRunContext.enabled) {
     console.log(`🧪 [DRY-RUN] POST (Action) ${url}`);
@@ -329,7 +333,7 @@ export async function postAction<TRequest>(
     return;
   }
 
-  const headers = await getHeaders();
+  const headers = await getHeaders(baseUrl);
   const response = await fetch(url, {
     method: "POST",
     headers,
