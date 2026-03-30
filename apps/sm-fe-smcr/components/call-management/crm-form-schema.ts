@@ -8,7 +8,17 @@ const productIds = [
   "prod-io-sign",
 ] as const;
 
-export const tipologiaReferenteValues = ["TECNICO"] as const;
+export const tipologiaReferenteValues = [
+  "APICALE",
+  "DIRETTO",
+  "TECNICO",
+  "BUSINESS",
+  "ACCOUNT",
+  "RESPONSABILE_DI_TRASFORMAZIONE_DIGITALE",
+  "REFERENTE_CONTRATTUALE",
+  "RESPONSABILE_PROTEZIONE_DATI",
+  "REFERENTE_BUSINESS_APICALE_ACCOUNT",
+] as const;
 
 export const partecipanteSchema = z.object({
   nome: z.string().min(1, "Nome obbligatorio"),
@@ -35,7 +45,13 @@ export const crmFormSchema = z
       .array(partecipanteSchema)
       .min(1, "Aggiungi almeno un partecipante"),
     enableCreateContact: z.boolean(),
+    enableGrantAccess: z.boolean(),
+    dryRun: z.boolean(),
+    location: z.string().optional(),
     description: z.string().optional(),
+    nextstep: z.string().optional(),
+    dataProssimoContatto: z.string().optional(),
+    oggettoDelContatto: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -79,6 +95,12 @@ export function getCrmFormDefaultValues(): CrmFormSchema {
     institutionIdSelfcare: "",
     partecipanti: [],
     enableCreateContact: true,
+    enableGrantAccess: false,
+    dryRun: false,
+    location: "",
     description: "",
+    nextstep: "",
+    dataProssimoContatto: "",
+    oggettoDelContatto: "",
   };
 }

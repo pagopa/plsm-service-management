@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import {
   getCrmFormDefaultValues,
   crmFormSchema,
+  tipologiaReferenteValues,
   type CrmFormSchema,
 } from "./crm-form-schema";
 import {
@@ -46,9 +47,11 @@ import {
   type TipologiaReferente,
 } from "@/lib/actions/call-management.action";
 
-const TIPOLOGIA_OPTIONS: { value: TipologiaReferente; label: string }[] = [
-  { value: "TECNICO", label: "TECNICO" },
-];
+const TIPOLOGIA_OPTIONS: { value: TipologiaReferente; label: string }[] =
+  tipologiaReferenteValues.map((value) => ({
+    value,
+    label: value,
+  }));
 
 function toIsoDateTime(dateStr: string, timeStr: string): string {
   const normalized = timeStr.length <= 5 ? `${timeStr}:00` : timeStr;
@@ -126,8 +129,14 @@ export default function CRMForm() {
       subject: values.subject,
       scheduledstart: toIsoDateTime(values.startDate, values.startTime),
       scheduledend: toIsoDateTime(values.endDate, values.endTime),
+      location: values.location?.trim() || undefined,
       description: values.description?.trim() || undefined,
+      nextstep: values.nextstep?.trim() || undefined,
+      dataProssimoContatto: values.dataProssimoContatto || undefined,
+      oggettoDelContatto: values.oggettoDelContatto?.trim() || undefined,
       enableCreateContact: values.enableCreateContact,
+      enableGrantAccess: values.enableGrantAccess,
+      dryRun: values.dryRun,
     };
     console.log("payLoad", payLoad);
     const result = await createMeetingAction(payLoad);
@@ -508,6 +517,125 @@ export default function CRMForm() {
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="location">Luogo</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="location"
+                      placeholder="Es. Meet / Teams / sede"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="nextstep"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="nextstep">Prossimi passi</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      id="nextstep"
+                      placeholder="Azioni successive concordate"
+                      rows={3}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="dataProssimoContatto"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor="dataProssimoContatto">
+                      Data prossimo contatto
+                    </FormLabel>
+                    <FormControl>
+                      <Input id="dataProssimoContatto" type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="oggettoDelContatto"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor="oggettoDelContatto">
+                      Oggetto del contatto
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        id="oggettoDelContatto"
+                        placeholder="Es. supporto integrazione"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="enableGrantAccess"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Switch
+                      id="enableGrantAccess"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-0.5 leading-none">
+                    <FormLabel
+                      htmlFor="enableGrantAccess"
+                      className="cursor-pointer"
+                    >
+                      Abilita Grant Access
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dryRun"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Switch
+                      id="dryRun"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-0.5 leading-none">
+                    <FormLabel htmlFor="dryRun" className="cursor-pointer">
+                      Esegui in Dry Run
+                    </FormLabel>
+                  </div>
                 </FormItem>
               )}
             />

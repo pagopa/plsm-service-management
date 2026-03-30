@@ -272,8 +272,14 @@ export type CreateMeetingInput = {
   subject: string;
   scheduledstart: string;
   scheduledend: string;
+  location?: string;
   description?: string;
+  nextstep?: string;
+  dataProssimoContatto?: string;
+  oggettoDelContatto?: string;
   enableCreateContact?: boolean;
+  enableGrantAccess?: boolean;
+  dryRun?: boolean;
   dynamicsEnvironment?: DynamicsCrmEnvironment;
 };
 
@@ -312,12 +318,30 @@ export async function createMeetingAction(
     subject: input.subject,
     scheduledstart: input.scheduledstart,
     scheduledend: input.scheduledend,
+    ...(input.location !== undefined && input.location !== ""
+      ? { location: input.location }
+      : {}),
     ...(input.description !== undefined && input.description !== ""
       ? { description: input.description }
+      : {}),
+    ...(input.nextstep !== undefined && input.nextstep !== ""
+      ? { nextstep: input.nextstep }
+      : {}),
+    ...(input.dataProssimoContatto !== undefined &&
+    input.dataProssimoContatto !== ""
+      ? { dataProssimoContatto: input.dataProssimoContatto }
+      : {}),
+    ...(input.oggettoDelContatto !== undefined &&
+    input.oggettoDelContatto !== ""
+      ? { oggettoDelContatto: input.oggettoDelContatto }
       : {}),
     ...(input.enableCreateContact !== undefined
       ? { enableCreateContact: input.enableCreateContact }
       : {}),
+    ...(input.enableGrantAccess !== undefined
+      ? { enableGrantAccess: input.enableGrantAccess }
+      : {}),
+    ...(input.dryRun !== undefined ? { dryRun: input.dryRun } : {}),
   };
 
   try {
