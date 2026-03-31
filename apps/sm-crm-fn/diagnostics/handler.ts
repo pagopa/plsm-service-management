@@ -9,6 +9,7 @@ import { createLogger } from "../_shared/utils/logger";
 import {
   resolveDynamicsEnvironment,
   getDynamicsBaseUrl,
+  isInvalidDynamicsEnvironmentError,
 } from "../_shared/utils/requestEnvironment";
 
 type CandidateResult =
@@ -470,20 +471,20 @@ export async function probeDynamicsHandler(
       },
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error("Diagnostics probe failed", error);
 
     // Check for environment resolution errors
-    if (errorMessage.includes("x-dynamics-environment")) {
+    if (isInvalidDynamicsEnvironmentError(error)) {
       return {
         status: 400,
         jsonBody: {
-          error: errorMessage,
+          error: error.message,
           timestamp: new Date().toISOString(),
         },
       };
     }
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 500,
       jsonBody: {

@@ -7,6 +7,7 @@ import { listContacts } from "../_shared/services/contacts";
 import {
   resolveDynamicsEnvironment,
   getDynamicsBaseUrl,
+  isInvalidDynamicsEnvironmentError,
 } from "../_shared/utils/requestEnvironment";
 
 export async function handler(
@@ -32,21 +33,21 @@ export async function handler(
       },
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    context.error("Dynamics connectivity test failed:", errorMessage);
+    context.error("Dynamics connectivity test failed:", error);
 
     // Check for environment resolution errors
-    if (errorMessage.includes("x-dynamics-environment")) {
+    if (isInvalidDynamicsEnvironmentError(error)) {
       return {
         status: 400,
         jsonBody: {
           status: "error",
-          message: errorMessage,
+          message: error.message,
           timestamp: new Date().toISOString(),
         },
       };
     }
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 503,
       jsonBody: {

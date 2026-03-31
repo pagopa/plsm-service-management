@@ -523,15 +523,15 @@ components:
       in: header
       required: false
       description: |
-        Specifica l'ambiente Dynamics 365 di destinazione.
+        Specifica l'ambiente Dynamics 365 di destinazione (case-insensitive).
 
-        - `UAT`: Ambiente di test Dynamics UAT
-        - `PROD`: Ambiente di produzione Dynamics (default)
+        - `UAT` o `uat`: Ambiente di test Dynamics UAT
+        - `PROD` o `prod`: Ambiente di produzione Dynamics (default)
 
         Se l'header non è fornito, viene utilizzato PROD per retrocompatibilità.
       schema:
         type: string
-        enum: [UAT, PROD]
+        enum: [UAT, PROD, uat, prod]
         default: PROD
       example: UAT
 
@@ -1068,7 +1068,7 @@ components:
       properties:
         environment:
           type: string
-          enum: [UAT, PROD]
+          enum: [UAT, PROD, uat, prod]
           description: Ambiente rilevato dal DYNAMICS_BASE_URL
         dynamicsBaseUrl:
           type: string

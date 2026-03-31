@@ -8,7 +8,8 @@ const configSchema = z.object({
   DYNAMICS_BASE_URL_UAT: z
     .string()
     .url("DYNAMICS_BASE_URL_UAT deve essere un URL valido")
-    .min(1, "Il base URL UAT non puo essere una stringa vuota"),
+    .min(1, "Il base URL UAT non puo essere una stringa vuota")
+    .optional(),
   DYNAMICS_URL_CONTACTS: z
     .string()
     .url("DYNAMICS_URL_CONTACTS deve essere un URL valido")

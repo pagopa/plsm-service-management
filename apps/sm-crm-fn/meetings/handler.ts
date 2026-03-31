@@ -16,6 +16,7 @@ import { createLogger } from "../_shared/utils/logger";
 import {
   resolveDynamicsEnvironment,
   getDynamicsBaseUrl,
+  isInvalidDynamicsEnvironmentError,
 } from "../_shared/utils/requestEnvironment";
 
 // -----------------------------------------------------------------------------
@@ -82,21 +83,21 @@ export async function createMeetingHandler(
       },
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    context.error("Unexpected error:", errorMessage);
+    context.error("Unexpected error:", error);
 
     // Check for environment resolution errors
-    if (errorMessage.includes("x-dynamics-environment")) {
+    if (isInvalidDynamicsEnvironmentError(error)) {
       return {
         status: 400,
         jsonBody: {
           success: false,
-          message: errorMessage,
+          message: error.message,
           timestamp: new Date().toISOString(),
         },
       };
     }
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 500,
       jsonBody: {
@@ -130,7 +131,7 @@ export async function listMeetingsHandler(
 
     logger.info("Listing appointments", { odataTop: top, odataFilter: filter });
 
-    const result = await listAppointments({ top, filter }, logger, baseUrl);
+    const result = await listAppointments(baseUrl, { top, filter }, logger);
     const count = result.value?.length ?? 0;
 
     logger.info("Appointments listed successfully", { resultCount: count });
@@ -145,21 +146,21 @@ export async function listMeetingsHandler(
       },
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error("Failed to list meetings", error);
 
     // Check for environment resolution errors
-    if (errorMessage.includes("x-dynamics-environment")) {
+    if (isInvalidDynamicsEnvironmentError(error)) {
       return {
         status: 400,
         jsonBody: {
           success: false,
-          message: errorMessage,
+          message: error.message,
           timestamp: new Date().toISOString(),
         },
       };
     }
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 500,
       jsonBody: {
@@ -222,21 +223,21 @@ export async function dryRunMeetingHandler(
       },
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    context.error("Dry-run error:", errorMessage);
+    context.error("Dry-run error:", error);
 
     // Check for environment resolution errors
-    if (errorMessage.includes("x-dynamics-environment")) {
+    if (isInvalidDynamicsEnvironmentError(error)) {
       return {
         status: 400,
         jsonBody: {
           success: false,
-          message: errorMessage,
+          message: error.message,
           timestamp: new Date().toISOString(),
         },
       };
     }
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 500,
       jsonBody: {

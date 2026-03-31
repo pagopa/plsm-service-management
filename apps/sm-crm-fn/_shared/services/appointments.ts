@@ -16,25 +16,30 @@ import { type Logger } from "../utils/logger";
 // -----------------------------------------------------------------------------
 
 /**
- * Lista appuntamenti da Dynamics 365.
+ * Lista tutti gli appuntamenti in Dynamics CRM.
  *
+ * @param baseUrl - Base URL di Dynamics 365
  * @param params - Parametri di query
  * @param params.filter - Filtro OData
  * @param params.select - Campi da selezionare
  * @param params.top - Numero massimo di risultati
  * @param logger - Logger opzionale
- * @param baseUrl - Base URL di Dynamics 365
  * @returns Lista di appuntamenti
  */
 export async function listAppointments(
+  baseUrl: string,
   params?: {
     filter?: string;
     select?: string;
     top?: string;
   },
   logger?: Logger,
-  baseUrl: string = "",
 ): Promise<DynamicsList<Appointment>> {
+  if (!baseUrl) {
+    throw new Error(
+      "listAppointments: baseUrl is required and cannot be empty",
+    );
+  }
   const url = buildUrl({
     baseUrl,
     endpoint: "/api/data/v9.2/appointments",
@@ -220,11 +225,11 @@ export async function listAppointmentsByContact(
   baseUrl: string,
 ): Promise<DynamicsList<Appointment>> {
   return listAppointments(
+    baseUrl,
     {
       filter: `_regardingobjectid_value eq ${contactId}`,
     },
     undefined,
-    baseUrl,
   );
 }
 
@@ -244,10 +249,10 @@ export async function listAppointmentsByAccount(
   baseUrl: string,
 ): Promise<DynamicsList<Appointment>> {
   return listAppointments(
+    baseUrl,
     {
       filter: `_regardingobjectid_value eq ${accountId}`,
     },
     undefined,
-    baseUrl,
   );
 }

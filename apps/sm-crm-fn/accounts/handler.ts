@@ -14,6 +14,7 @@ import {
 import {
   resolveDynamicsEnvironment,
   getDynamicsBaseUrl,
+  isInvalidDynamicsEnvironmentError,
 } from "../_shared/utils/requestEnvironment";
 
 /**
@@ -116,20 +117,21 @@ export async function getAccountHandler(
       },
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     context.error("Errore durante la ricerca account:", error);
 
     // Check for environment resolution errors
-    if (errorMessage.includes("x-dynamics-environment")) {
+    if (isInvalidDynamicsEnvironmentError(error)) {
       return {
         status: 400,
         jsonBody: {
           success: false,
-          message: errorMessage,
+          message: error.message,
           timestamp: new Date().toISOString(),
         },
       };
     }
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     // Se è un errore di ambiguità, ritorna 409
     if (errorMessage.includes("Ambiguità")) {

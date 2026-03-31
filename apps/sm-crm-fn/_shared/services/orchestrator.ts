@@ -588,13 +588,21 @@ export function validateOrchestratorRequest(
   } else {
     for (let i = 0; i < req.partecipanti.length; i++) {
       const p = req.partecipanti[i] as Record<string, unknown>;
+
+      // Valida sempre il tipo di email se presente
+      if (p.email !== undefined && typeof p.email !== "string") {
+        errors.push(`partecipanti[${i}].email deve essere una stringa`);
+        continue; // Skip ulteriori validazioni su questa email
+      }
+
       // Validazione formato email opzionale (feature flag ENABLE_EMAIL_FORMAT_VALIDATION)
       if (
         p.email &&
+        typeof p.email === "string" &&
         process.env.ENABLE_EMAIL_FORMAT_VALIDATION?.toLowerCase() === "true"
       ) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (typeof p.email !== "string" || !emailRegex.test(p.email)) {
+        if (!emailRegex.test(p.email)) {
           errors.push(
             `partecipanti[${i}].email non è un indirizzo email valido`,
           );

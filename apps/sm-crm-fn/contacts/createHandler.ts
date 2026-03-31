@@ -17,6 +17,7 @@ import type {
 import {
   resolveDynamicsEnvironment,
   getDynamicsBaseUrl,
+  isInvalidDynamicsEnvironmentError,
 } from "../_shared/utils/requestEnvironment";
 
 interface CreateContactsRequestBody {
@@ -165,21 +166,21 @@ export async function createContactsHandler(
       },
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error("Unexpected error in createContactsHandler", error);
 
     // Check for environment resolution errors
-    if (errorMessage.includes("x-dynamics-environment")) {
+    if (isInvalidDynamicsEnvironmentError(error)) {
       return {
         status: 400,
         jsonBody: {
           success: false,
-          message: errorMessage,
+          message: error.message,
           timestamp: new Date().toISOString(),
         },
       };
     }
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 500,
       jsonBody: {

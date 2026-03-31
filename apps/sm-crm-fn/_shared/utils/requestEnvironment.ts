@@ -13,18 +13,42 @@ export type DynamicsEnvironment = "UAT" | "PROD";
 export const DYNAMICS_ENVIRONMENT_HEADER = "x-dynamics-environment";
 
 /**
+ * Custom error thrown when an invalid Dynamics environment header value is provided.
+ */
+export class InvalidDynamicsEnvironmentError extends Error {
+  constructor(
+    public readonly headerName: string,
+    public readonly headerValue: string,
+  ) {
+    super(
+      `Invalid ${headerName} header value: "${headerValue}". Must be "UAT" or "PROD".`,
+    );
+    this.name = "InvalidDynamicsEnvironmentError";
+  }
+}
+
+/**
+ * Type guard to check if an error is an InvalidDynamicsEnvironmentError.
+ */
+export function isInvalidDynamicsEnvironmentError(
+  error: unknown,
+): error is InvalidDynamicsEnvironmentError {
+  return error instanceof InvalidDynamicsEnvironmentError;
+}
+
+/**
  * Resolves the target Dynamics environment from the request header.
  *
  * @param request - Azure Functions HTTP request object
  * @returns The resolved environment type ("UAT" or "PROD")
- * @throws Error if the header value is invalid (not "UAT" or "PROD")
+ * @throws InvalidDynamicsEnvironmentError if the header value is invalid (not "UAT" or "PROD")
  *
  * @example
  * ```typescript
  * const env = resolveDynamicsEnvironment(request);
  * // Returns "UAT" if header is "uat", "UAT", etc.
  * // Returns "PROD" if header is "prod", "PROD", missing, etc.
- * // Throws error if header is "invalid"
+ * // Throws InvalidDynamicsEnvironmentError if header is "invalid"
  * ```
  */
 export function resolveDynamicsEnvironment(
@@ -43,8 +67,9 @@ export function resolveDynamicsEnvironment(
     return normalized as DynamicsEnvironment;
   }
 
-  throw new Error(
-    `Invalid ${DYNAMICS_ENVIRONMENT_HEADER} header value: "${headerValue}". Must be "UAT" or "PROD".`,
+  throw new InvalidDynamicsEnvironmentError(
+    DYNAMICS_ENVIRONMENT_HEADER,
+    headerValue,
   );
 }
 
