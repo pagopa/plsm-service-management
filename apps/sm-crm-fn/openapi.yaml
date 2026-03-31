@@ -381,7 +381,9 @@ paths:
                   scheduledend: "2025-02-15T11:00:00Z"
                   location: "Google Meet"
                   description: "Discussione requisiti integrazione"
-                  oggettoDelContatto: 100000000
+                  oggettoDelContatto: 100000005
+                  categoria: "Follow-up tecnico"
+                  dataProssimoContatto: "2025-03-01T10:00:00Z"
                   enableCreateContact: true
                   enableGrantAccess: true
                   dryRun: false
@@ -595,9 +597,29 @@ components:
           type: integer
           description: |
             Oggetto del contatto (campo personalizzato Dynamics `pgp_oggettodelcontatto`).
-            È un valore **Picklist (Edm.Int32)** di Dynamics 365 — non una stringa libera.
-            I valori validi si recuperano tramite `GET /diagnostics/probe` (campo `oggettoDelContattoPicklist.options`).
-          example: 100000000
+            È un valore **Picklist (Edm.Int32)** di Dynamics 365.
+
+            **Valori validi:**
+            - `100000000`: Opportunità
+            - `100000001`: Post-Vendita
+            - `100000002`: Informativa
+            - `100000003`: Comunicazione
+            - `100000004`: Pre-Sales
+            - `100000005`: Integrazione Tecnica (default suggerito)
+          example: 100000005
+        categoria:
+          type: string
+          description: |
+            Categoria appuntamento (campo standard Dynamics `category`).
+            Campo testuale libero opzionale.
+          example: "Follow-up tecnico"
+        dataProssimoContatto:
+          type: string
+          format: date-time
+          description: |
+            Data prossimo contatto previsto (campo standard Dynamics `sortdate`).
+            Formato ISO 8601.
+          example: "2025-03-01T10:00:00Z"
         enableCreateContact:
           type: boolean
           default: false
@@ -927,7 +949,15 @@ components:
           type: integer
           description: |
             Oggetto del contatto — valore Picklist (Edm.Int32) da Dynamics 365.
-            I valori validi si recuperano tramite `GET /diagnostics/probe` (campo `oggettoDelContattoPicklist.options`).
+            Valori: 100000000 (Opportunità), 100000001 (Post-Vendita), 100000002 (Informativa),
+            100000003 (Comunicazione), 100000004 (Pre-Sales), 100000005 (Integrazione Tecnica).
+        category:
+          type: string
+          description: Categoria appuntamento (campo standard Dynamics)
+        sortdate:
+          type: string
+          format: date-time
+          description: Data prossimo contatto previsto (campo standard Dynamics)
 
     ErrorResponse:
       type: object

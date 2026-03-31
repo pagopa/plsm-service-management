@@ -50,6 +50,10 @@ export interface Appointment {
   statuscode?: number;
   /** Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365 */
   pgp_oggettodelcontatto?: number;
+  /** Categoria appuntamento (campo standard Dynamics) */
+  category?: string;
+  /** Data ordinamento - prossimo contatto previsto (campo standard Dynamics) */
+  sortdate?: string;
 }
 
 // -----------------------------------------------------------------------------
@@ -75,6 +79,10 @@ export interface CreateAppointmentRequest {
   statuscode?: number;
   /** Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365 */
   pgp_oggettodelcontatto?: number;
+  /** Categoria appuntamento (campo standard Dynamics) */
+  category?: string;
+  /** Data ordinamento - prossimo contatto previsto (campo standard Dynamics, DateTime) */
+  sortdate?: string;
   "ownerid@odata.bind"?: string;
   "regardingobjectid_account@odata.bind"?: string;
   appointment_activity_parties?: AppointmentParty[];
@@ -147,8 +155,12 @@ export interface CreateMeetingOrchestratorRequest {
   scheduledend: string;
   location?: string;
   description?: string;
-  /** Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365 */
+  /** Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365. Default suggerito: 100000005 (Integrazione Tecnica) */
   oggettoDelContatto?: number;
+  /** Categoria appuntamento (campo standard Dynamics) */
+  categoria?: string;
+  /** Data prossimo contatto previsto (campo standard Dynamics, formato ISO 8601) */
+  dataProssimoContatto?: string;
 
   // Opzioni
   dryRun?: boolean;

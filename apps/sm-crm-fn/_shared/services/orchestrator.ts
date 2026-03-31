@@ -374,6 +374,8 @@ export async function createMeetingOrchestrator(
         location: request.location,
         description: request.description,
         oggettoDelContatto: request.oggettoDelContatto,
+        categoria: request.categoria,
+        dataProssimoContatto: request.dataProssimoContatto,
         accountId,
         contactIds,
         baseUrl: request.baseUrl,

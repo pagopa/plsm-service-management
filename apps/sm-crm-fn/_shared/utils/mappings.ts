@@ -72,18 +72,25 @@ export const TIPOLOGIA_REFERENTE_MAP: Record<TipologiaReferente, number> = {
 };
 
 /**
- * Mapping placeholder per i valori della Picklist pgp_oggettodelcontatto su appointment.
- * I valori interi reali devono essere recuperati tramite il probe diagnostics (/api/diagnostics)
- * chiamando l'endpoint con il campo oggettoDelContattoPicklist nella risposta.
+ * Mapping dei valori della Picklist pgp_oggettodelcontatto su appointment.
  *
- * @example
- * // Chiamare GET /api/diagnostics?accountId=... con header x-dynamics-environment: UAT
- * // e leggere oggettoDelContattoPicklist.options per i valori reali
+ * Valori forniti dal team Dynamics - identici in UAT e PROD.
+ *
+ * @default 100000005 (Integrazione Tecnica) - valore suggerito per il caso d'uso corrente
  */
 export const OGGETTO_DEL_CONTATTO_MAP: Record<string, number> = {
-  // TODO: popolare con i valori reali una volta eseguito il probe diagnostics in UAT
-  // es. 'post-vendita': 100000000,
+  opportunita: 100000000,
+  "post-vendita": 100000001,
+  informativa: 100000002,
+  comunicazione: 100000003,
+  "pre-sales": 100000004,
+  "integrazione-tecnica": 100000005, // Default suggerito
 };
+
+/**
+ * Tipo per i valori validi di oggettoDelContatto
+ */
+export type OggettoDelContatto = keyof typeof OGGETTO_DEL_CONTATTO_MAP;
 
 // -----------------------------------------------------------------------------
 // Mapping Team per GrantAccess

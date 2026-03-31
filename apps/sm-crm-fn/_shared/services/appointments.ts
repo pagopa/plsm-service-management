@@ -41,7 +41,7 @@ export async function listAppointments(
     filter: params?.filter,
     select:
       params?.select ??
-      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,pgp_oggettodelcontatto",
+      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,pgp_oggettodelcontatto,category,sortdate",
     top: params?.top,
   });
 
@@ -65,6 +65,8 @@ export interface CreateFullAppointmentParams {
   location?: string;
   description?: string;
   oggettoDelContatto?: number;
+  categoria?: string;
+  dataProssimoContatto?: string;
   accountId: string;
   contactIds: string[];
   ownerId?: string;
@@ -89,7 +91,9 @@ export interface CreateFullAppointmentParams {
  * @param params.contactIds - Array di GUID dei contatti partecipanti
  * @param params.location - Luogo (default: "Meet")
  * @param params.description - Descrizione
- * @param params.oggettoDelContatto - Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365
+ * @param params.oggettoDelContatto - Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365. Default suggerito: 100000005 (Integrazione Tecnica)
+ * @param params.categoria - Categoria appuntamento (campo standard Dynamics)
+ * @param params.dataProssimoContatto - Data prossimo contatto previsto (campo standard Dynamics, formato ISO 8601)
  * @param params.baseUrl - Base URL di Dynamics 365
  * @returns Appuntamento creato con activityid
  */
@@ -139,6 +143,16 @@ export async function createAppointment(
     body.pgp_oggettodelcontatto = params.oggettoDelContatto;
   }
 
+  // Aggiungi categoria se specificata
+  if (params.categoria !== undefined) {
+    body.category = params.categoria;
+  }
+
+  // Aggiungi data prossimo contatto se specificata
+  if (params.dataProssimoContatto !== undefined) {
+    body.sortdate = params.dataProssimoContatto;
+  }
+
   console.log(`[Appointments] Creazione appuntamento: ${params.subject}`);
   console.log(
     `[Appointments] Partecipanti: ${params.contactIds.length} contatti + 1 account`,
@@ -173,7 +187,7 @@ export async function getAppointmentById(
     baseUrl,
     endpoint: `/api/data/v9.2/appointments(${activityId})`,
     select:
-      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,pgp_oggettodelcontatto",
+      "activityid,subject,scheduledstart,scheduledend,location,description,statecode,statuscode,pgp_oggettodelcontatto,category,sortdate",
   });
 
   console.log(`[Appointments] Fetching appointment: ${activityId}`);
