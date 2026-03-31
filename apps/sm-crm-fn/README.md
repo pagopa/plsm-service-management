@@ -306,7 +306,9 @@ Content-Type: application/json
   "scheduledend": "2025-02-15T11:00:00Z",
   "location": "Google Meet",
   "description": "Discussione requisiti",
-  "nextstep": "Preparare documentazione",
+  "categoria": "Follow-up tecnico",
+  "dataProssimoContatto": "2025-02-20T10:00:00Z",
+  "oggettoDelContatto": 100000005,
   "dryRun": false
 }
 ```
@@ -541,7 +543,9 @@ Body:
   "scheduledend": "2025-02-15T11:00:00Z",
   "location": "Google Meet",
   "description": "Discussione requisiti",
-  "nextstep": "Preparare documentazione",
+  "categoria": "Follow-up tecnico",
+  "dataProssimoContatto": "2025-02-20T10:00:00Z",
+  "oggettoDelContatto": 100000005,
   "dryRun": false
 }
 ```

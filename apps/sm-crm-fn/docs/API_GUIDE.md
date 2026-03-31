@@ -585,23 +585,25 @@ RESPONSABILE_PROTEZIONE_DATI | REFERENTE_BUSINESS_APICALE_ACCOUNT
 
 ---
 
-#### `nextstep` (string)
+#### `categoria` (string)
 
-**Description**: Next steps to be taken after this meeting. This field is sent to Dynamics 365 as a native appointment field.
+**Description**: Category of the appointment. This field is sent to Dynamics 365 as the standard `category` field.
 
-**Example**: `"Preparare documentazione tecnica entro 7 giorni"`
+**Example**: `"Follow-up tecnico"`
 
-**Dynamics Field**: Stored in the native `nextstep` field of the appointment entity
+**Dynamics Field**: Stored in the standard `category` field of the appointment entity
 
 ---
 
-#### `dataProssimoContatto` (string, ISO 8601 date)
+#### `dataProssimoContatto` (string, ISO 8601 date-time)
 
-**Description**: Date of the next planned contact.
+**Description**: Date and time of the next planned contact. This field is mapped to the Dynamics 365 standard `sortdate` field.
 
-**Example**: `"2025-02-20"`
+**Example**: `"2025-02-20T10:00:00Z"`
 
-**Format**: ISO 8601 date (YYYY-MM-DD)
+**Format**: ISO 8601 date-time (YYYY-MM-DDTHH:mm:ssZ)
+
+**Dynamics Field**: Mapped to the standard `sortdate` (DateTime) field of the appointment entity
 
 ---
 
@@ -864,8 +866,9 @@ Content-Type: application/json
   "scheduledend": "2025-02-25T15:30:00Z",
   "location": "Microsoft Teams",
   "description": "Discussione dettagliata dei requisiti tecnici per l'integrazione della piattaforma pagoPA. Verranno presentati i flussi di onboarding, certificazione e gestione delle transazioni.",
-  "nextstep": "Preparare ambiente di test entro 7 giorni. Configurare credenziali API. Pianificare sessione di training tecnico.",
-  "dataProssimoContatto": "2025-03-05",
+  "categoria": "Follow-up tecnico",
+  "dataProssimoContatto": "2025-03-05T10:00:00Z",
+  "oggettoDelContatto": 100000005,
   "enableCreateContact": true,
   "enableGrantAccess": true,
   "enableFallback": false,
@@ -1602,8 +1605,9 @@ If GrantAccess consistently fails:
 - `partecipanti[].tipologiaReferente`
 - `location`
 - `description`
-- `nextstep`
+- `categoria`
 - `dataProssimoContatto`
+- `oggettoDelContatto`
 
 **Control Flags** (all optional):
 
