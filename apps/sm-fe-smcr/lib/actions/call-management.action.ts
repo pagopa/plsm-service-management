@@ -274,9 +274,9 @@ export type CreateMeetingInput = {
   scheduledend: string;
   location?: string;
   description?: string;
-  nextstep?: string;
+  category?: string;
   dataProssimoContatto?: string;
-  oggettoDelContatto?: string;
+  oggettoDelContatto?: number;
   enableCreateContact?: boolean;
   enableGrantAccess?: boolean;
   dryRun?: boolean;
@@ -324,15 +324,14 @@ export async function createMeetingAction(
     ...(input.description !== undefined && input.description !== ""
       ? { description: input.description }
       : {}),
-    ...(input.nextstep !== undefined && input.nextstep !== ""
-      ? { nextstep: input.nextstep }
+    ...(input.category !== undefined && input.category !== ""
+      ? { categoria: input.category }
       : {}),
     ...(input.dataProssimoContatto !== undefined &&
     input.dataProssimoContatto !== ""
       ? { dataProssimoContatto: input.dataProssimoContatto }
       : {}),
-    ...(input.oggettoDelContatto !== undefined &&
-    input.oggettoDelContatto !== ""
+    ...(input.oggettoDelContatto !== undefined
       ? { oggettoDelContatto: input.oggettoDelContatto }
       : {}),
     ...(input.enableCreateContact !== undefined

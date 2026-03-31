@@ -29,6 +29,25 @@ export const partecipanteSchema = z.object({
 
 const dynamicsEnvironmentValues = ["UAT", "PROD"] as const;
 
+/** Valori picklist Dynamics `pgp_oggettodelcontatto` (POST /meetings) */
+export const oggettoDelContattoOptions = [
+  { value: 100000000, label: "Opportunità" },
+  { value: 100000001, label: "Post - Vendita" },
+  { value: 100000002, label: "Informativa" },
+  { value: 100000003, label: "Comunicazione" },
+  { value: 100000004, label: "Pre- Sales" },
+  { value: 100000005, label: "Integrazione Tecnica" },
+] as const;
+
+const oggettoDelContattoPicklistSchema = z.union([
+  z.literal(100000000),
+  z.literal(100000001),
+  z.literal(100000002),
+  z.literal(100000003),
+  z.literal(100000004),
+  z.literal(100000005),
+]);
+
 export const crmFormSchema = z
   .object({
     dynamicsEnvironment: z.enum(dynamicsEnvironmentValues),
@@ -49,9 +68,9 @@ export const crmFormSchema = z
     dryRun: z.boolean(),
     location: z.string().optional(),
     description: z.string().optional(),
-    nextstep: z.string().optional(),
+    category: z.string().optional(),
     dataProssimoContatto: z.string().optional(),
-    oggettoDelContatto: z.string().optional(),
+    oggettoDelContatto: oggettoDelContattoPicklistSchema.optional(),
   })
   .refine(
     (data) => {
@@ -99,8 +118,8 @@ export function getCrmFormDefaultValues(): CrmFormSchema {
     dryRun: false,
     location: "",
     description: "",
-    nextstep: "",
+    category: "",
     dataProssimoContatto: "",
-    oggettoDelContatto: "",
+    oggettoDelContatto: 100000005,
   };
 }

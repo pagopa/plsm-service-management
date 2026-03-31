@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import {
   getCrmFormDefaultValues,
   crmFormSchema,
+  oggettoDelContattoOptions,
   tipologiaReferenteValues,
   type CrmFormSchema,
 } from "./crm-form-schema";
@@ -131,9 +132,9 @@ export default function CRMForm() {
       scheduledend: toIsoDateTime(values.endDate, values.endTime),
       location: values.location?.trim() || undefined,
       description: values.description?.trim() || undefined,
-      nextstep: values.nextstep?.trim() || undefined,
+      category: values.category?.trim() || undefined,
       dataProssimoContatto: values.dataProssimoContatto || undefined,
-      oggettoDelContatto: values.oggettoDelContatto?.trim() || undefined,
+      oggettoDelContatto: values.oggettoDelContatto,
       enableCreateContact: values.enableCreateContact,
       enableGrantAccess: values.enableGrantAccess,
       dryRun: values.dryRun,
@@ -541,17 +542,12 @@ export default function CRMForm() {
 
             <FormField
               control={form.control}
-              name="nextstep"
+              name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel htmlFor="nextstep">Prossimi passi</FormLabel>
+                  <FormLabel htmlFor="category">Categoria</FormLabel>
                   <FormControl>
-                    <Textarea
-                      id="nextstep"
-                      placeholder="Azioni successive concordate"
-                      rows={3}
-                      {...field}
-                    />
+                    <Input id="category" placeholder="Categoria" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -582,13 +578,32 @@ export default function CRMForm() {
                     <FormLabel htmlFor="oggettoDelContatto">
                       Oggetto del contatto
                     </FormLabel>
-                    <FormControl>
-                      <Input
-                        id="oggettoDelContatto"
-                        placeholder="Es. supporto integrazione"
-                        {...field}
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={(v) =>
+                        field.onChange(Number.parseInt(v, 10))
+                      }
+                      value={
+                        field.value !== undefined
+                          ? String(field.value)
+                          : undefined
+                      }
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          id="oggettoDelContatto"
+                          className="w-full"
+                        >
+                          <SelectValue placeholder="Seleziona oggetto del contatto" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {oggettoDelContattoOptions.map(({ value, label }) => (
+                          <SelectItem key={value} value={String(value)}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
