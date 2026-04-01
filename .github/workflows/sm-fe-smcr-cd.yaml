@@ -212,7 +212,10 @@ jobs:
   deploy:
     name: Deploy App
     needs: [validate, migrate]
-    if: ${{ needs.validate.result == 'success' && (needs.migrate.result == 'success' || needs.migrate.result == 'skipped') }}
+    if: |
+      always() &&
+      needs.validate.result == 'success' &&
+      (needs.migrate.result == 'success' || needs.migrate.result == 'skipped')
     runs-on: ${{ inputs.environment == 'app-prod' && 'prod' || 'dev' }}
     environment: ${{ inputs.environment }}-cd
 
@@ -255,7 +258,10 @@ jobs:
   swap:
     name: Swap Staging → Production
     needs: [validate, deploy]
-    if: ${{ fromJSON(needs.validate.outputs.use_staging_slot) }}
+    if: |
+      always() &&
+      needs.deploy.result == 'success' &&
+      fromJSON(needs.validate.outputs.use_staging_slot)
     runs-on: ${{ inputs.environment == 'app-prod' && 'prod' || 'dev' }}
     environment: ${{ inputs.environment }}-cd
 
