@@ -146,11 +146,24 @@ jobs:
             echo "### ⚠️ Staging slot disabilitato via input" >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
-          USE_STAGING_SLOT=$(az webapp deployment slot list \
+
+          SLOT_COUNT=$(az webapp deployment slot list \
             --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
             --name "${{ env.WEB_APP_NAME }}" \
-            --query 'length([?name == `staging`]) > `0`')
+            --query 'length([?name == `staging`])' \
+            --output tsv)
+
+          echo "DEBUG: slot count = '$SLOT_COUNT'"
+
+          if [ "$SLOT_COUNT" -gt "0" ]; then
+            USE_STAGING_SLOT="true"
+          else
+            USE_STAGING_SLOT="false"
+          fi
+
+          echo "DEBUG: use_staging_slot = '$USE_STAGING_SLOT'"
           echo "use_staging_slot=$USE_STAGING_SLOT" >> "$GITHUB_OUTPUT"
+
           if [ "$USE_STAGING_SLOT" == "true" ]; then
             echo "### ✅ Staging slot trovato — deploy → staging → swap" >> $GITHUB_STEP_SUMMARY
           else
