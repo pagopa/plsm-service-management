@@ -123,13 +123,13 @@ jobs:
     needs: build
     runs-on: ${{ inputs.environment == 'app-prod' && 'prod' || 'dev' }}
     environment: ${{ inputs.environment }}-ci
-  
+
     permissions:
       id-token: write
-  
+
     outputs:
       use_staging_slot: ${{ steps.query-staging-slot.outputs.use_staging_slot }}
-  
+
     steps:
       - name: Azure Login
         uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
@@ -137,7 +137,7 @@ jobs:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-  
+
       - name: Check for existing staging slot
         id: query-staging-slot
         run: |
@@ -146,24 +146,24 @@ jobs:
             echo "### ⚠️ Staging slot disabilitato via input" >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
-  
+
           SLOT_COUNT=$(az webapp deployment slot list \
             --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
             --name "${{ env.WEB_APP_NAME }}" \
             --query 'length([?name == `staging`])' \
             --output tsv)
-  
+
           echo "DEBUG: slot count = '$SLOT_COUNT'"
-  
+
           if [ "$SLOT_COUNT" -gt "0" ]; then
             USE_STAGING_SLOT="true"
           else
             USE_STAGING_SLOT="false"
           fi
-  
+
           echo "DEBUG: use_staging_slot = '$USE_STAGING_SLOT'"
           echo "use_staging_slot=$USE_STAGING_SLOT" >> "$GITHUB_OUTPUT"
-  
+
           if [ "$USE_STAGING_SLOT" == "true" ]; then
             echo "### ✅ Staging slot trovato — deploy → staging → swap" >> $GITHUB_STEP_SUMMARY
           else
