@@ -545,9 +545,13 @@ export default function CRMForm() {
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel htmlFor="category">Categoria</FormLabel>
+                  <FormLabel htmlFor="category">Prossimi Passi</FormLabel>
                   <FormControl>
-                    <Input id="category" placeholder="Categoria" {...field} />
+                    <Input
+                      id="category"
+                      placeholder="Prossimi Passi"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
