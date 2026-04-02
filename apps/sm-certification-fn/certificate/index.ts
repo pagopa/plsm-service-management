@@ -19,7 +19,7 @@ app.http("listAll", {
 });
 
 app.timer("timerTrigger", {
-  schedule: "*/10 * * * * *",
+  schedule: "0 0 0 * * *",
   handler: async (_myTimer: Timer, context: InvocationContext) => {
     try {
       const config = getConfigOrThrow();

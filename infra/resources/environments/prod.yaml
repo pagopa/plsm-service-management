@@ -138,3 +138,9 @@ auth_func:
   JWT_EXPIRY_SECONDS: "3600"
   JWT_ISSUER: "plsm-auth-service"
   JWT_AUDIENCE: "plsm-fe-smcr"
+
+# ─── Certificates Function ───────────────────────────────────────────────────
+
+certificates:
+  __local: yaml_certificates_func
+  API_KEY: "kv:fe_cert_api_key"

@@ -1,8 +1,13 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-16 09:50
+# Generato il: 2026-04-02 09:47
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
+
+data "azurerm_key_vault_secret" "fe_cert_api_key" {
+  name         = "fe-cert-api-key"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
 
 data "azurerm_key_vault_secret" "fe_smcr_api_key_firma_con_io_signer_id" {
   name         = "fe-smcr-api-key-firma-con-io-signerid"
