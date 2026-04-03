@@ -48,7 +48,12 @@ export interface Appointment {
   description?: string;
   statecode?: number;
   statuscode?: number;
-  new_dataprossimocontatto?: string;
+  /** Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365 */
+  pgp_oggettodelcontatto?: number;
+  /** Categoria appuntamento (campo standard Dynamics) */
+  category?: string;
+  /** Data ordinamento - prossimo contatto previsto (campo standard Dynamics) */
+  sortdate?: string;
 }
 
 // -----------------------------------------------------------------------------
@@ -58,7 +63,7 @@ export interface Appointment {
 export interface CreateContactRequest {
   firstname: string;
   lastname: string;
-  emailaddress1: string;
+  emailaddress1?: string;
   pgp_tipologiareferente: number;
   // Navigation Properties for lookups (use @odata.bind)
   "parentcustomerid_account@odata.bind": string;
@@ -72,7 +77,12 @@ export interface CreateAppointmentRequest {
   location?: string;
   description?: string;
   statuscode?: number;
-  new_dataprossimocontatto?: string;
+  /** Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365 */
+  pgp_oggettodelcontatto?: number;
+  /** Categoria appuntamento (campo standard Dynamics) */
+  category?: string;
+  /** Data ordinamento - prossimo contatto previsto (campo standard Dynamics, DateTime) */
+  sortdate?: string;
   "ownerid@odata.bind"?: string;
   "regardingobjectid_account@odata.bind"?: string;
   appointment_activity_parties?: AppointmentParty[];
@@ -120,7 +130,7 @@ export interface DynamicsError {
 // -----------------------------------------------------------------------------
 
 export interface Partecipante {
-  email: string;
+  email?: string;
   nome?: string;
   cognome?: string;
   tipologiaReferente?: TipologiaReferente;
@@ -145,6 +155,11 @@ export interface CreateMeetingOrchestratorRequest {
   scheduledend: string;
   location?: string;
   description?: string;
+  /** Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365. Default suggerito: 100000005 (Integrazione Tecnica) */
+  oggettoDelContatto?: number;
+  /** Categoria appuntamento (campo standard Dynamics) */
+  categoria?: string;
+  /** Data prossimo contatto previsto (campo standard Dynamics, formato ISO 8601) */
   dataProssimoContatto?: string;
 
   // Opzioni
@@ -155,6 +170,13 @@ export interface CreateMeetingOrchestratorRequest {
    * @default false
    */
   enableGrantAccess?: boolean;
+
+  /**
+   * Base URL for Dynamics 365 environment.
+   * Used for all API calls to Dynamics (accounts, contacts, appointments, grantAccess).
+   * @example "https://org.crm4.dynamics.com"
+   */
+  baseUrl: string;
 }
 
 export interface OrchestratorStepResult {
@@ -204,4 +226,4 @@ export type ProductIdSelfcare =
   | "prod-io-sign"
   | "prod-rtp";
 
-export type Environment = "DEV" | "UAT" | "PROD";
+export type Environment = "UAT" | "PROD";
