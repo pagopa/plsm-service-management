@@ -46,7 +46,6 @@ sm-crm-fn/
 
 | Ambiente | URL                               |
 | -------- | --------------------------------- |
-| DEV      | `https://********.***.****.com`   |
 | UAT      | `https://********.***.****.com`   |
 | PROD     | `https://*********.****.****.com` |
 
@@ -87,6 +86,61 @@ Per lo sviluppo locale, configurare le variabili in `local.settings.json`:
 - I GUID dei prodotti e team CRM sono configurati nel codice (`_shared/utils/mappings.ts`)
 - Per informazioni sugli ambienti, consulta la documentazione interna PagoPA
 - In produzione, configura tutte le variabili sensibili nelle **Application Settings** di Azure
+
+## Supporto Multi-Ambiente (UAT/PROD)
+
+La Function supporta il routing dinamico verso ambienti Dynamics 365 multipli tramite l'header HTTP `x-dynamics-environment`.
+
+### Configurazione
+
+Configura le variabili di ambiente per entrambi gli ambienti Dynamics:
+
+```json
+{
+  "Values": {
+    "DYNAMICS_BASE_URL": "https://<your-prod-org>.crm4.dynamics.com",
+    "DYNAMICS_BASE_URL_UAT": "https://<your-uat-org>.crm4.dynamics.com",
+    "DYNAMICS_URL_CONTACTS": "https://<your-prod-org>.crm4.dynamics.com/api/data/v9.2/contacts",
+    "DYNAMICS_URL_CONTACTS_UAT": "https://<your-uat-org>.crm4.dynamics.com/api/data/v9.2/contacts"
+  }
+}
+```
+
+### Utilizzo
+
+Includi l'header `x-dynamics-environment` nelle richieste HTTP:
+
+```bash
+# Chiamata all'ambiente UAT
+curl -X POST https://<function-url>/api/v1/meetings \
+  -H "x-dynamics-environment: UAT" \
+  -H "Content-Type: application/json" \
+  -d '{ ... }'
+
+# Chiamata all'ambiente PROD (default)
+curl -X POST https://<function-url>/api/v1/meetings \
+  -H "x-dynamics-environment: PROD" \
+  -H "Content-Type: application/json" \
+  -d '{ ... }'
+
+# Senza header (default a PROD per retrocompatibilità)
+curl -X POST https://<function-url>/api/v1/meetings \
+  -H "Content-Type: application/json" \
+  -d '{ ... }'
+```
+
+### Comportamento
+
+- **Valore `UAT`**: Indirizza le chiamate verso `DYNAMICS_BASE_URL_UAT`
+- **Valore `PROD`**: Indirizza le chiamate verso `DYNAMICS_BASE_URL`
+- **Header assente**: Default a `PROD` (retrocompatibilità)
+- **Valore invalido**: Ritorna `400 Bad Request`
+
+**Note:**
+
+- L'header è case-insensitive (`uat`, `UAT`, `Uat` sono tutti validi)
+- L'header `x-dynamics-environment` è supportato su tutti gli endpoint TRANNE `/health`
+- Per testing UAT, assicurati che le credenziali Azure AD abbiano accesso all'ambiente UAT Dynamics
 
 ## API Documentation
 
@@ -252,7 +306,9 @@ Content-Type: application/json
   "scheduledend": "2025-02-15T11:00:00Z",
   "location": "Google Meet",
   "description": "Discussione requisiti",
-  "nextstep": "Preparare documentazione",
+  "categoria": "Follow-up tecnico",
+  "dataProssimoContatto": "2025-02-20T10:00:00Z",
+  "oggettoDelContatto": 100000005,
   "dryRun": false
 }
 ```
@@ -487,6 +543,9 @@ Body:
   "scheduledend": "2025-02-15T11:00:00Z",
   "location": "Google Meet",
   "description": "Discussione requisiti",
+  "categoria": "Follow-up tecnico",
+  "dataProssimoContatto": "2025-02-20T10:00:00Z",
+  "oggettoDelContatto": 100000005,
   "dryRun": false
 }
 ```

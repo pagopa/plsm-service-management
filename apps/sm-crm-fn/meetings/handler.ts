@@ -13,6 +13,11 @@ import {
 } from "../_shared/services/orchestrator";
 import { listAppointments } from "../_shared/services/appointments";
 import { createLogger } from "../_shared/utils/logger";
+import {
+  resolveDynamicsEnvironment,
+  getDynamicsBaseUrl,
+  isInvalidDynamicsEnvironmentError,
+} from "../_shared/utils/requestEnvironment";
 
 // -----------------------------------------------------------------------------
 // POST /meetings - Crea appuntamento (orchestrato)
@@ -25,18 +30,23 @@ export async function createMeetingHandler(
   context.log("=== Create Meeting Request ===");
 
   try {
+    // Resolve Dynamics environment from header
+    const environment = resolveDynamicsEnvironment(request);
+    const baseUrl = getDynamicsBaseUrl(environment);
+
     const body = await request.json();
 
     // Validazione
     const validation = validateOrchestratorRequest(body);
     if (!validation.valid) {
-      context.warn("Validation errors:", validation.errors);
+      const errors = validation.errors;
+      context.warn("Validation errors:", errors);
       return {
         status: 400,
         jsonBody: {
           success: false,
           message: "Errore di validazione",
-          errors: validation.errors,
+          errors,
           timestamp: new Date().toISOString(),
         },
       };
@@ -47,8 +57,11 @@ export async function createMeetingHandler(
       context.log("🧪 DRY-RUN MODE ENABLED");
     }
 
-    // Esegui orchestratore
-    const result = await createMeetingOrchestrator(validation.data);
+    // Esegui orchestratore con baseUrl
+    const result = await createMeetingOrchestrator({
+      ...validation.data,
+      baseUrl,
+    });
 
     // Status code basato sul risultato
     let status = 201;
@@ -70,9 +83,21 @@ export async function createMeetingHandler(
       },
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    context.error("Unexpected error:", errorMessage);
+    context.error("Unexpected error:", error);
 
+    // Check for environment resolution errors
+    if (isInvalidDynamicsEnvironmentError(error)) {
+      return {
+        status: 400,
+        jsonBody: {
+          success: false,
+          message: error.message,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 500,
       jsonBody: {
@@ -97,12 +122,16 @@ export async function listMeetingsHandler(
   logger.info("List Meetings request received");
 
   try {
+    // Resolve Dynamics environment from header
+    const environment = resolveDynamicsEnvironment(request);
+    const baseUrl = getDynamicsBaseUrl(environment);
+
     const top = request.query.get("top") ?? "50";
     const filter = request.query.get("filter") ?? undefined;
 
     logger.info("Listing appointments", { odataTop: top, odataFilter: filter });
 
-    const result = await listAppointments({ top, filter }, logger);
+    const result = await listAppointments(baseUrl, { top, filter }, logger);
     const count = result.value?.length ?? 0;
 
     logger.info("Appointments listed successfully", { resultCount: count });
@@ -117,9 +146,21 @@ export async function listMeetingsHandler(
       },
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error("Failed to list meetings", error);
 
+    // Check for environment resolution errors
+    if (isInvalidDynamicsEnvironmentError(error)) {
+      return {
+        status: 400,
+        jsonBody: {
+          success: false,
+          message: error.message,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 500,
       jsonBody: {
@@ -143,22 +184,28 @@ export async function dryRunMeetingHandler(
   context.log("=== Dry-Run Meeting Request ===");
 
   try {
+    // Resolve Dynamics environment from header
+    const environment = resolveDynamicsEnvironment(request);
+    const baseUrl = getDynamicsBaseUrl(environment);
+
     const body = await request.json();
 
     // Forza dry-run
     const requestWithDryRun = {
       ...(body as object),
       dryRun: true,
+      baseUrl,
     };
 
     const validation = validateOrchestratorRequest(requestWithDryRun);
     if (!validation.valid) {
+      const errors = validation.errors;
       return {
         status: 400,
         jsonBody: {
           success: false,
           message: "Errore di validazione",
-          errors: validation.errors,
+          errors,
           timestamp: new Date().toISOString(),
         },
       };
@@ -176,9 +223,21 @@ export async function dryRunMeetingHandler(
       },
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    context.error("Dry-run error:", errorMessage);
+    context.error("Dry-run error:", error);
 
+    // Check for environment resolution errors
+    if (isInvalidDynamicsEnvironmentError(error)) {
+      return {
+        status: 400,
+        jsonBody: {
+          success: false,
+          message: error.message,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 500,
       jsonBody: {

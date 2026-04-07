@@ -31,10 +31,23 @@ import { createLogger, Timer } from "../utils/logger";
  * 4. GrantAccess per visibilità team Sales
  *
  * @param request - Dati per la creazione dell'appuntamento
+ * @param request.baseUrl - Base URL for Dynamics 365 environment (e.g., "https://org.crm4.dynamics.com")
+ * @param request.institutionIdSelfcare - ID Selfcare dell'ente
+ * @param request.nomeEnte - Nome dell'ente (opzionale, usato come fallback)
+ * @param request.productIdSelfcare - ID del prodotto Selfcare
+ * @param request.partecipanti - Array di partecipanti all'appuntamento
+ * @param request.subject - Oggetto dell'appuntamento
+ * @param request.scheduledstart - Data/ora inizio (ISO 8601)
+ * @param request.scheduledend - Data/ora fine (ISO 8601)
+ * @param request.enableFallback - Abilita ricerca ente per nome se ID non trovato
+ * @param request.enableCreateContact - Abilita creazione automatica contatti
+ * @param request.enableGrantAccess - Abilita condivisione con team Sales
+ * @param request.dryRun - Modalità dry-run (no modifiche a Dynamics)
  * @returns Risultato dell'orchestrazione con dettaglio di ogni step
  *
  * @example
  * const result = await createMeetingOrchestrator({
+ *   baseUrl: "https://org.crm4.dynamics.com",
  *   institutionIdSelfcare: "uuid-ente",
  *   productIdSelfcare: "prod-pagopa",
  *   partecipanti: [{ email: "mario@ente.it", nome: "Mario", cognome: "Rossi" }],
@@ -101,6 +114,7 @@ export async function createMeetingOrchestrator(
         institutionIdSelfcare: request.institutionIdSelfcare,
         nomeEnte: request.nomeEnte,
         enableFallback: request.enableFallback ?? false,
+        baseUrl: request.baseUrl,
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -214,6 +228,7 @@ export async function createMeetingOrchestrator(
         );
 
         const contactResult = await verifyOrCreateContact({
+          baseUrl: request.baseUrl,
           email: partecipante.email,
           nome: partecipante.nome,
           cognome: partecipante.cognome,
@@ -239,29 +254,29 @@ export async function createMeetingOrchestrator(
         if (contactResult.contact) {
           contactIds.push(contactResult.contact.contactid);
           contactResults.push({
-            email: partecipante.email,
+            email: partecipante.email ?? "(no email)",
             contactId: contactResult.contact.contactid,
             created: contactResult.created,
           });
           logger.info(
             `✅ Contact ${contactResult.created ? "created" : "found"}`,
             {
-              email: partecipante.email,
+              email: partecipante.email ?? "(no email)",
               contactId: contactResult.contact.contactid,
               created: contactResult.created,
             },
           );
         } else {
           contactResults.push({
-            email: partecipante.email,
+            email: partecipante.email ?? "(no email)",
             created: false,
             error: contactResult.error,
           });
           warnings.push(
-            `Contatto ${partecipante.email}: ${contactResult.error}`,
+            `Contatto ${partecipante.email ?? "(senza email)"}: ${contactResult.error}`,
           );
           logger.warn(`⚠️ Contact processing failed`, {
-            email: partecipante.email,
+            email: partecipante.email ?? "(no email)",
             error: contactResult.error,
           });
         }
@@ -358,9 +373,12 @@ export async function createMeetingOrchestrator(
         scheduledend: request.scheduledend,
         location: request.location,
         description: request.description,
+        oggettoDelContatto: request.oggettoDelContatto,
+        categoria: request.categoria,
         dataProssimoContatto: request.dataProssimoContatto,
         accountId,
         contactIds,
+        baseUrl: request.baseUrl,
       });
 
       steps.push({
@@ -412,6 +430,7 @@ export async function createMeetingOrchestrator(
       const grantTimer = new Timer();
       const grantResult = await grantAccessToAppointment({
         activityId: appointment.activityid,
+        baseUrl: request.baseUrl,
       });
 
       steps.push({
@@ -569,8 +588,25 @@ export function validateOrchestratorRequest(
   } else {
     for (let i = 0; i < req.partecipanti.length; i++) {
       const p = req.partecipanti[i] as Record<string, unknown>;
-      if (!p.email) {
-        errors.push(`partecipanti[${i}].email è obbligatorio`);
+
+      // Valida sempre il tipo di email se presente
+      if (p.email !== undefined && typeof p.email !== "string") {
+        errors.push(`partecipanti[${i}].email deve essere una stringa`);
+        continue; // Skip ulteriori validazioni su questa email
+      }
+
+      // Validazione formato email opzionale (feature flag ENABLE_EMAIL_FORMAT_VALIDATION)
+      if (
+        p.email &&
+        typeof p.email === "string" &&
+        process.env.ENABLE_EMAIL_FORMAT_VALIDATION?.toLowerCase() === "true"
+      ) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(p.email)) {
+          errors.push(
+            `partecipanti[${i}].email non è un indirizzo email valido`,
+          );
+        }
       }
     }
   }

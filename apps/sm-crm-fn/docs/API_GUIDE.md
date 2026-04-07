@@ -264,7 +264,7 @@ Products use string identifiers in Selfcare that must be mapped to Dynamics GUID
 | `prod-interop`        | Interoperabilità | ✅ All environments    |
 | `prod-io-premium`     | IO Premium       | ✅ All environments    |
 | `prod-io-sign`        | Firma con IO     | ✅ All environments    |
-| `prod-rtp`            | Request To Pay   | ⚠️ DEV/UAT only        |
+| `prod-rtp`            | Request To Pay   | ⚠️ UAT only            |
 
 #### Example Mapping (UAT Environment)
 
@@ -585,21 +585,25 @@ RESPONSABILE_PROTEZIONE_DATI | REFERENTE_BUSINESS_APICALE_ACCOUNT
 
 ---
 
-#### `nextstep` (string)
+#### `categoria` (string)
 
-**Description**: Next steps to be taken after this meeting.
+**Description**: Category of the appointment. This field is sent to Dynamics 365 as the standard `category` field.
 
-**Example**: `"Preparare documentazione tecnica entro 7 giorni"`
+**Example**: `"Follow-up tecnico"`
+
+**Dynamics Field**: Stored in the standard `category` field of the appointment entity
 
 ---
 
-#### `dataProssimoContatto` (string, ISO 8601 date)
+#### `dataProssimoContatto` (string, ISO 8601 date-time)
 
-**Description**: Date of the next planned contact.
+**Description**: Date and time of the next planned contact. This field is mapped to the Dynamics 365 standard `sortdate` field.
 
-**Example**: `"2025-02-20"`
+**Example**: `"2025-02-20T10:00:00Z"`
 
-**Format**: ISO 8601 date (YYYY-MM-DD)
+**Format**: ISO 8601 date-time (YYYY-MM-DDTHH:mm:ssZ)
+
+**Dynamics Field**: Mapped to the standard `sortdate` (DateTime) field of the appointment entity
 
 ---
 
@@ -862,8 +866,9 @@ Content-Type: application/json
   "scheduledend": "2025-02-25T15:30:00Z",
   "location": "Microsoft Teams",
   "description": "Discussione dettagliata dei requisiti tecnici per l'integrazione della piattaforma pagoPA. Verranno presentati i flussi di onboarding, certificazione e gestione delle transazioni.",
-  "nextstep": "Preparare ambiente di test entro 7 giorni. Configurare credenziali API. Pianificare sessione di training tecnico.",
-  "dataProssimoContatto": "2025-03-05",
+  "categoria": "Follow-up tecnico",
+  "dataProssimoContatto": "2025-03-05T10:00:00Z",
+  "oggettoDelContatto": 100000005,
   "enableCreateContact": true,
   "enableGrantAccess": true,
   "enableFallback": false,
@@ -1338,14 +1343,14 @@ GET /api/data/v9.2/accounts?$filter=pgp_identificativoselfcare eq '{uuid}'
 1. GrantAccess Custom Action not deployed in environment
 2. Team ID not configured correctly
 3. Team doesn't exist in Dynamics
-4. DEV/UAT environment limitations
+4. UAT environment limitations
 
 **Solutions**:
 
 1. Verify with CRM admin that GrantAccess API is available
 2. Check team ID in `_shared/utils/mappings.ts`
 3. Set `enableGrantAccess: false` to skip this step
-4. In DEV/UAT, always use `enableGrantAccess: false` unless specifically testing
+4. In UAT, always use `enableGrantAccess: false` unless specifically testing
 
 **⚠️ Non-Blocking**: This error doesn't prevent appointment creation!
 
@@ -1476,21 +1481,21 @@ traces
 
 ### DEV vs UAT vs PROD Differences
 
-| Aspect               | DEV                                    | UAT                                    | PROD                               |
-| -------------------- | -------------------------------------- | -------------------------------------- | ---------------------------------- |
-| **Base URL**         | `https://dev-pagopa.crm4.dynamics.com` | `https://uat-pagopa.crm4.dynamics.com` | `https://pagopa.crm4.dynamics.com` |
-| **Product GUIDs**    | DEV-specific                           | UAT-specific                           | PROD-specific                      |
-| **Team ID**          | Same as UAT                            | `5f9c165c-...`                         | `5f9c165c-...`                     |
-| **GrantAccess API**  | ⚠️ May not be available                | ⚠️ May not be available                | ✅ Available                       |
-| **Data Quality**     | Test data                              | Pre-production data                    | Production data                    |
-| **prod-rtp Product** | ✅ Available                           | ✅ Available                           | ❌ Not available                   |
+| Aspect               | UAT                                    | PROD                               |
+| -------------------- | -------------------------------------- | ---------------------------------- |
+| **Base URL**         | `https://uat-pagopa.crm4.dynamics.com` | `https://pagopa.crm4.dynamics.com` |
+| **Product GUIDs**    | UAT-specific                           | PROD-specific                      |
+| **Team ID**          | `5f9c165c-...`                         | `5f9c165c-...`                     |
+| **GrantAccess API**  | ⚠️ May not be available                | ✅ Available                       |
+| **Data Quality**     | Pre-production data                    | Production data                    |
+| **prod-rtp Product** | ✅ Available                           | ❌ Not available                   |
 
 #### Important Notes
 
 1. **Product GUIDs are different**: Don't copy configuration from one environment to another
-2. **GrantAccess in DEV/UAT**: May not be deployed; always test with `enableGrantAccess: false` first
-3. **Data Sync**: DEV and UAT may have outdated or incomplete data
-4. **prod-rtp**: Only available in DEV and UAT, not in PROD
+2. **GrantAccess in UAT**: May not be deployed; always test with `enableGrantAccess: false` first
+3. **Data Sync**: UAT may have outdated or incomplete data
+4. **prod-rtp**: Only available in UAT, not in PROD
 
 ---
 
@@ -1500,7 +1505,7 @@ traces
 
 - ✅ Standard appointments
 - ✅ Internal meetings
-- ✅ Testing in DEV/UAT environments
+- ✅ Testing in UAT environment
 - ✅ When Sales team visibility is not required
 - ✅ When you're unsure if GrantAccess is available
 
@@ -1600,8 +1605,9 @@ If GrantAccess consistently fails:
 - `partecipanti[].tipologiaReferente`
 - `location`
 - `description`
-- `nextstep`
+- `categoria`
 - `dataProssimoContatto`
+- `oggettoDelContatto`
 
 **Control Flags** (all optional):
 
