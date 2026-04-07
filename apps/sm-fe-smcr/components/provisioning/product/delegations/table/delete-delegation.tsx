@@ -86,7 +86,7 @@ export default function DeleteDelegation({
         <AlertDialogHeader>
           <AlertDialogTitle>Elimina delega</AlertDialogTitle>
           <AlertDialogDescription>
-            {`Stai per eliminare definitivamente la delega per ${brokerName} (${brokerTaxCode}). Questa operazione non puo essere annullata.`}
+            {`Stai per eliminare definitivamente la delega per ${brokerName} (${brokerTaxCode}). Questa operazione non può essere annullata.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
