@@ -17,7 +17,11 @@ const configSchema = z.object({
     .min(1, "Il name del database non può essere una stringa vuota"),
   dbtable: z
     .string()
-    .min(1, "Il name della tabella non può essere una stringa vuota"),
+    .min(1, "Il name della tabella non può essere una stringa vuota")
+    .regex(
+      /^[a-zA-Z_][a-zA-Z0-9_]*$/,
+      "Il nome della tabella deve essere un identificatore SQL valido",
+    ),
   dbuser: z
     .string()
     .min(1, "Il name dell'utente non può essere una stringa vuota"),
@@ -33,10 +37,17 @@ const configSchema = z.object({
     (a) => parseInt(String(a), 10),
     z.number().positive({ message: "La porta SMTP deve essere positiva." }),
   ),
-  smtpSecure: z.preprocess((value) => JSON.parse(String(value)), z.boolean()),
-  smtpUsername: z.string(),
-  smtpPassword: z.string(),
-  fromEmail: z.string(),
+  smtpSecure: z.preprocess(
+    (value) => String(value).trim().toLowerCase(),
+    z.enum(["true", "false"]).transform((value) => value === "true"),
+  ),
+  smtpUsername: z
+    .string()
+    .min(1, "Lo username SMTP non può essere una stringa vuota"),
+  smtpPassword: z
+    .string()
+    .min(1, "La password SMTP non può essere una stringa vuota"),
+  fromEmail: z.string().email("L'email del mittente non è valida"),
   alertEmail: z.string().email().default("io-service-management@pagopa.it"),
 });
 

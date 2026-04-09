@@ -4,6 +4,15 @@ import { CertificateInfo } from "../certificate/models/certificate";
 
 const EXPIRY_THRESHOLD_DAYS = 30;
 
+function escapeHtml(value: string | number | null | undefined): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 /**
  * Crea un transporter nodemailer a partire dalla configurazione SMTP.
  * Singleton a livello di modulo: viene creato una sola volta al primo utilizzo.
@@ -34,10 +43,10 @@ function buildHtmlBody(certificates: CertificateInfo[]): string {
     .map(
       (cert) => `
       <tr>
-        <td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;font-size:12px;word-break:break-all;">${cert.idp}</td>
-        <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;">${cert.use}</td>
-        <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;">${cert.expirationDate}</td>
-        <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;color:${cert.daysRemaining <= 7 ? "#c0392b" : "#e67e22"};font-weight:bold;">${cert.daysRemaining}</td>
+        <td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;font-size:12px;word-break:break-all;">${escapeHtml(cert.idp)}</td>
+        <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;">${escapeHtml(cert.use)}</td>
+        <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;">${escapeHtml(cert.expirationDate)}</td>
+        <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;color:${cert.daysRemaining <= 7 ? "#c0392b" : "#e67e22"};font-weight:bold;">${escapeHtml(cert.daysRemaining)}</td>
       </tr>`,
     )
     .join("");
@@ -114,10 +123,10 @@ function buildDiagnosticHtmlBody(
       }
       return `
         <tr>
-          <td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;font-size:12px;word-break:break-all;">${cert.idp}</td>
-          <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;">${cert.use}</td>
-          <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;">${cert.expirationDate}</td>
-          <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;color:${color};font-weight:bold;">${cert.daysRemaining}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;font-size:12px;word-break:break-all;">${escapeHtml(cert.idp)}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;">${escapeHtml(cert.use)}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;">${escapeHtml(cert.expirationDate)}</td>
+          <td style="padding:8px 12px;border:1px solid #ddd;text-align:center;color:${color};font-weight:bold;">${escapeHtml(cert.daysRemaining)}</td>
         </tr>`;
     })
     .join("");

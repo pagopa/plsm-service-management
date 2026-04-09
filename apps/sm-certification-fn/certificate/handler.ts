@@ -20,37 +20,53 @@ export const timerTrigger =
     context.log("Timer function processed request.");
 
     context.log(`With config ${config}`);
+
     const clientDB = await getConnectedClient(config);
     context.log("Connected to the database successfully.");
-    console.log("Recupero dei certificati SPID in corso...");
-    const certificates = await getSpidCertificates();
 
-    if (certificates) {
-      insertCertificatesIntoDb(config)(certificates, clientDB);
-      console.log(
-        "✅ Certificati recuperati e raggruppati per data di scadenza:",
-      );
+    try {
+      console.log("Recupero dei certificati SPID in corso...");
+      const certificates = await getSpidCertificates();
 
-      // Filtra i certificati in scadenza entro EXPIRY_THRESHOLD_DAYS giorni
-      const expiring = Array.from(certificates.values())
-        .flat()
-        .filter((cert) => cert.daysRemaining <= EXPIRY_THRESHOLD_DAYS);
-
-      if (expiring.length > 0) {
-        context.log(
-          `⚠️ ${expiring.length} certificat${expiring.length === 1 ? "o" : "i"} in scadenza entro ${EXPIRY_THRESHOLD_DAYS} giorni. Invio email a ${config.alertEmail}...`,
+      if (certificates) {
+        await insertCertificatesIntoDb(config)(certificates, clientDB);
+        console.log(
+          "✅ Certificati recuperati e raggruppati per data di scadenza:",
         );
-        await sendExpiringCertificatesEmail(config, expiring);
-        context.log(`📧 Email inviata a ${config.alertEmail}.`);
+
+        // Filtra i certificati in scadenza entro EXPIRY_THRESHOLD_DAYS giorni (solo futuri)
+        const expiring = Array.from(certificates.values())
+          .flat()
+          .filter(
+            (cert) =>
+              cert.daysRemaining >= 0 &&
+              cert.daysRemaining <= EXPIRY_THRESHOLD_DAYS,
+          );
+
+        if (expiring.length > 0) {
+          context.log(
+            `⚠️ ${expiring.length} certificat${expiring.length === 1 ? "o" : "i"} in scadenza entro ${EXPIRY_THRESHOLD_DAYS} giorni. Invio email a ${config.alertEmail}...`,
+          );
+          await sendExpiringCertificatesEmail(config, expiring);
+          context.log(`📧 Email inviata a ${config.alertEmail}.`);
+        } else {
+          context.log(
+            `✅ Nessun certificato in scadenza entro ${EXPIRY_THRESHOLD_DAYS} giorni.`,
+          );
+        }
       } else {
-        context.log(
-          `✅ Nessun certificato in scadenza entro ${EXPIRY_THRESHOLD_DAYS} giorni.`,
+        console.log("❌ Impossibile recuperare i certificati.");
+      }
+    } finally {
+      try {
+        await clientDB.end();
+        context.log("Connessione DB chiusa.");
+      } catch (error) {
+        console.error(
+          `Errore durante la chiusura della connessione DB: ${error}`,
         );
       }
-    } else {
-      console.log("❌ Impossibile recuperare i certificati.");
     }
-    return;
   };
 
 /**
