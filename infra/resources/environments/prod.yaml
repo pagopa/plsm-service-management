@@ -144,3 +144,4 @@ auth_func:
 certificates:
   __local: yaml_certificates_func
   API_KEY: "kv:fe_cert_api_key"
+  SMTP_PASSWORD: "kv:askmebot_smtp_password"

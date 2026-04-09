@@ -27,6 +27,17 @@ const configSchema = z.object({
     z.boolean(),
   ),
   apiKey: z.string().min(6, "La API key non può essere una stringa vuota"),
+  // SMTP — notifiche email certificati in scadenza (stesso pattern di sm-ask-me-fn)
+  smtpHost: z.string().min(1, "L'host SMTP non può essere vuoto"),
+  smtpPort: z.preprocess(
+    (a) => parseInt(String(a), 10),
+    z.number().positive({ message: "La porta SMTP deve essere positiva." }),
+  ),
+  smtpSecure: z.preprocess((value) => JSON.parse(String(value)), z.boolean()),
+  smtpUsername: z.string(),
+  smtpPassword: z.string(),
+  fromEmail: z.string(),
+  alertEmail: z.string().email().default("io-service-management@pagopa.it"),
 });
 
 // Esporta il tipo TypeScript inferito automaticamente da Zod.
@@ -73,6 +84,13 @@ export function getConfigOrThrow() {
       dbpassword: process.env.DB_PASSWORD,
       dbssl: process.env.DB_SSL,
       apiKey: process.env.API_KEY,
+      smtpHost: process.env.SMTP_HOST,
+      smtpPort: process.env.SMTP_PORT,
+      smtpSecure: process.env.SMTP_SECURE,
+      smtpUsername: process.env.SMTP_USERNAME,
+      smtpPassword: process.env.SMTP_PASSWORD,
+      fromEmail: process.env.FROM_EMAIL,
+      alertEmail: process.env.ALERT_EMAIL,
     };
 
     // Valida la configurazione

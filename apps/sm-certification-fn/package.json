@@ -13,11 +13,13 @@
   "dependencies": {
     "@azure/functions": "^4.7.2-preview",
     "fast-xml-parser": "^5.2.5",
+    "nodemailer": "^6.9.16",
     "pg": "^8.16.3",
     "zod": "^4.0.14"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
+    "@types/nodemailer": "^6.4.16",
     "@types/pg": "^8.15.5",
     "typescript": "^5.9.2"
   }

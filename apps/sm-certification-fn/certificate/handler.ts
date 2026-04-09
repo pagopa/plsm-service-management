@@ -9,6 +9,10 @@ import {
   CertificatesByExpiration,
 } from "./models/certificate";
 import { insertCertificatesIntoDb } from "./db/controller";
+import {
+  sendExpiringCertificatesEmail,
+  EXPIRY_THRESHOLD_DAYS,
+} from "../utils/emailNotifier";
 
 export const timerTrigger =
   (config: AppConfig) =>
@@ -26,14 +30,23 @@ export const timerTrigger =
       console.log(
         "✅ Certificati recuperati e raggruppati per data di scadenza:",
       );
-      // for (const [date, certs] of certificates.entries()) {
-      //   console.log(`\nScadenza: ${date} (${certs.length} certificati)`);
-      //   certs.forEach((c) => {
-      //     console.log(
-      //       `  - IDP: ${c.idp}, Uso: ${c.use}, Giorni rimanenti: ${c.daysRemaining}`
-      //     );
-      //   });
-      // }
+
+      // Filtra i certificati in scadenza entro EXPIRY_THRESHOLD_DAYS giorni
+      const expiring = Array.from(certificates.values())
+        .flat()
+        .filter((cert) => cert.daysRemaining <= EXPIRY_THRESHOLD_DAYS);
+
+      if (expiring.length > 0) {
+        context.log(
+          `⚠️ ${expiring.length} certificat${expiring.length === 1 ? "o" : "i"} in scadenza entro ${EXPIRY_THRESHOLD_DAYS} giorni. Invio email a ${config.alertEmail}...`,
+        );
+        await sendExpiringCertificatesEmail(config, expiring);
+        context.log(`📧 Email inviata a ${config.alertEmail}.`);
+      } else {
+        context.log(
+          `✅ Nessun certificato in scadenza entro ${EXPIRY_THRESHOLD_DAYS} giorni.`,
+        );
+      }
     } else {
       console.log("❌ Impossibile recuperare i certificati.");
     }

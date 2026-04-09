@@ -3,6 +3,7 @@ import { timerTrigger } from "./handler";
 import { getConfigOrThrow } from "../utils/checkConfig";
 import { health } from "./health";
 import { listAll } from "./listAll";
+import { diagnostic } from "./diagnostic";
 
 app.http("health", {
   methods: ["GET"],
@@ -14,8 +15,15 @@ app.http("health", {
 app.http("listAll", {
   methods: ["GET"],
   authLevel: "anonymous", // autenticazione gestita via API key custom
-  route: "certificates",  // URL: /api/v1/certificates (in base al tuo prefix)
+  route: "certificates", // URL: /api/v1/certificates (in base al tuo prefix)
   handler: listAll,
+});
+
+app.http("diagnostic", {
+  methods: ["GET"],
+  authLevel: "anonymous",
+  route: "diagnostic",
+  handler: diagnostic,
 });
 
 app.timer("timerTrigger", {
