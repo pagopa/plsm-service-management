@@ -1,9 +1,54 @@
 import { z } from "zod";
 
-export const SignatureFormSchema = z.object({
-  signature_request: z.string().min(1, "Il campo è obbligatorio"),
-  fiscal_code: z.string().min(1, "Il campo è obbligatorio"),
-});
+export const signatureIdentifierModeSchema = z.enum([
+  "fiscal_code",
+  "vat_number",
+]);
+
+export type SignatureIdentifierMode = z.infer<
+  typeof signatureIdentifierModeSchema
+>;
+
+export const SignatureFormSchema = z
+  .object({
+    signature_request: z.string().min(1, "Il campo è obbligatorio"),
+    identifier_mode: signatureIdentifierModeSchema,
+    fiscal_code: z.string(),
+    vat_number: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.identifier_mode === "fiscal_code") {
+      const cf = data.fiscal_code.trim();
+      if (!cf) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Inserisci il codice fiscale del firmatario",
+          path: ["fiscal_code"],
+        });
+      } else if (cf.length !== 16) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Il codice fiscale deve essere lungo 16 caratteri",
+          path: ["fiscal_code"],
+        });
+      }
+    } else {
+      const vat = data.vat_number.trim();
+      if (!vat) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Inserisci la partita IVA dell'ente",
+          path: ["vat_number"],
+        });
+      } else if (!/^\d{11}$/.test(vat)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "La partita IVA deve essere composta da 11 cifre",
+          path: ["vat_number"],
+        });
+      }
+    }
+  });
 
 export const SignIDFormSchema = z.object({
   fiscal_code: z.string().min(1, "Il campo è obbligatorio"),

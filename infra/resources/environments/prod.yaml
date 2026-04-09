@@ -109,11 +109,16 @@ fe_smcr:
 
 # ─── CRM Function (Dynamics CRM Integration) ─────────────────────────────────
 # Production = Staging (stessi valori per entrambi gli slot)
+# Supporta multi-environment: PROD e UAT Dynamics instances
 
 crm_function:
   __local: yaml_crm_func
+  # PROD environment (default)
   DYNAMICS_BASE_URL: "kv:dynamics_base_url"
   DYNAMICS_URL_CONTACTS: "kv:dynamics_url_contacts"
+  # UAT environment (utilizzato con header x-dynamics-environment: UAT)
+  DYNAMICS_BASE_URL_UAT: "kv:dynamics_base_url_uat"
+  DYNAMICS_URL_CONTACTS_UAT: "kv:dynamics_url_contacts_uat"
   NODE_ENV: "production"
   WEBSITE_RUN_FROM_PACKAGE: "1"
   DEBUG: "true"

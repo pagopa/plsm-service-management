@@ -38,6 +38,8 @@ import { toast } from "sonner";
 import {
   getCrmFormDefaultValues,
   crmFormSchema,
+  oggettoDelContattoOptions,
+  tipologiaReferenteValues,
   type CrmFormSchema,
 } from "./crm-form-schema";
 import {
@@ -46,9 +48,11 @@ import {
   type TipologiaReferente,
 } from "@/lib/actions/call-management.action";
 
-const TIPOLOGIA_OPTIONS: { value: TipologiaReferente; label: string }[] = [
-  { value: "TECNICO", label: "TECNICO" },
-];
+const TIPOLOGIA_OPTIONS: { value: TipologiaReferente; label: string }[] =
+  tipologiaReferenteValues.map((value) => ({
+    value,
+    label: value,
+  }));
 
 function toIsoDateTime(dateStr: string, timeStr: string): string {
   const normalized = timeStr.length <= 5 ? `${timeStr}:00` : timeStr;
@@ -107,26 +111,33 @@ export default function CRMForm() {
 
   const onSubmit = async (values: CrmFormSchema) => {
     const partecipanti = values.partecipanti
-      .filter((p) => p.email.trim())
+      .filter((p) => p.nome.trim() && p.cognome.trim())
       .map((p) => ({
-        email: p.email.trim(),
-        nome: p.nome?.trim() || undefined,
-        cognome: p.cognome?.trim() || undefined,
+        email: p.email?.trim() || undefined,
+        nome: p.nome!.trim(),
+        cognome: p.cognome!.trim(),
         tipologiaReferente: p.tipologiaReferente,
       }));
     if (partecipanti.length === 0) {
-      toast.error("Aggiungi almeno un partecipante con email");
+      toast.error("Aggiungi almeno un partecipante con nome e cognome");
       return;
     }
     const payLoad: CreateMeetingInput = {
+      dynamicsEnvironment: values.dynamicsEnvironment,
       institutionIdSelfcare: values.institutionIdSelfcare,
       productIdSelfcare: values.productId,
       partecipanti,
       subject: values.subject,
       scheduledstart: toIsoDateTime(values.startDate, values.startTime),
       scheduledend: toIsoDateTime(values.endDate, values.endTime),
+      location: values.location?.trim() || undefined,
       description: values.description?.trim() || undefined,
+      category: values.category?.trim() || undefined,
+      dataProssimoContatto: values.dataProssimoContatto || undefined,
+      oggettoDelContatto: values.oggettoDelContatto,
       enableCreateContact: values.enableCreateContact,
+      enableGrantAccess: values.enableGrantAccess,
+      dryRun: values.dryRun,
     };
     console.log("payLoad", payLoad);
     const result = await createMeetingAction(payLoad);
@@ -146,6 +157,31 @@ export default function CRMForm() {
       >
         <FieldSet className="pt-4">
           <FieldGroup>
+            <FormField
+              control={form.control}
+              name="dynamicsEnvironment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="dynamics-environment">Ambiente</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger
+                        id="dynamics-environment"
+                        className="w-full"
+                      >
+                        <SelectValue placeholder="Seleziona ambiente" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="PROD">PROD</SelectItem>
+                      <SelectItem value="UAT">UAT</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="subject"
@@ -482,6 +518,143 @@ export default function CRMForm() {
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="location">Luogo</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="location"
+                      placeholder="Es. Meet / Teams / sede"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="category">Prossimi Passi</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="category"
+                      placeholder="Prossimi Passi"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="dataProssimoContatto"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor="dataProssimoContatto">
+                      Data prossimo contatto
+                    </FormLabel>
+                    <FormControl>
+                      <Input id="dataProssimoContatto" type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="oggettoDelContatto"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor="oggettoDelContatto">
+                      Oggetto del contatto
+                    </FormLabel>
+                    <Select
+                      onValueChange={(v) =>
+                        field.onChange(Number.parseInt(v, 10))
+                      }
+                      value={
+                        field.value !== undefined
+                          ? String(field.value)
+                          : undefined
+                      }
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          id="oggettoDelContatto"
+                          className="w-full"
+                        >
+                          <SelectValue placeholder="Seleziona oggetto del contatto" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {oggettoDelContattoOptions.map(({ value, label }) => (
+                          <SelectItem key={value} value={String(value)}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="enableGrantAccess"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Switch
+                      id="enableGrantAccess"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-0.5 leading-none">
+                    <FormLabel
+                      htmlFor="enableGrantAccess"
+                      className="cursor-pointer"
+                    >
+                      Abilita Grant Access
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dryRun"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Switch
+                      id="dryRun"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-0.5 leading-none">
+                    <FormLabel htmlFor="dryRun" className="cursor-pointer">
+                      Esegui in Dry Run
+                    </FormLabel>
+                  </div>
                 </FormItem>
               )}
             />

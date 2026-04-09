@@ -11,6 +11,11 @@ import {
   getAccountBySelfcareId,
   getAccountByName,
 } from "../_shared/services/accounts";
+import {
+  resolveDynamicsEnvironment,
+  getDynamicsBaseUrl,
+  isInvalidDynamicsEnvironmentError,
+} from "../_shared/utils/requestEnvironment";
 
 /**
  * Handler per GET /api/v1/accounts
@@ -30,6 +35,10 @@ export async function getAccountHandler(
   context.log("HTTP trigger function processed a request: GET /accounts");
 
   try {
+    // Resolve Dynamics environment from header
+    const environment = resolveDynamicsEnvironment(request);
+    const baseUrl = getDynamicsBaseUrl(environment);
+
     const selfcareId = request.query.get("selfcareId");
     const name = request.query.get("name");
 
@@ -49,7 +58,7 @@ export async function getAccountHandler(
     // Ricerca per Selfcare ID (priorità)
     if (selfcareId) {
       context.log(`Ricerca account per Selfcare ID: ${selfcareId}`);
-      const account = await getAccountBySelfcareId(selfcareId);
+      const account = await getAccountBySelfcareId(selfcareId, baseUrl);
 
       if (!account) {
         return {
@@ -75,7 +84,7 @@ export async function getAccountHandler(
     // Ricerca per nome (fallback)
     if (name) {
       context.log(`Ricerca account per nome: ${name}`);
-      const account = await getAccountByName(name);
+      const account = await getAccountByName(name, baseUrl);
 
       if (!account) {
         return {
@@ -108,8 +117,21 @@ export async function getAccountHandler(
       },
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     context.error("Errore durante la ricerca account:", error);
+
+    // Check for environment resolution errors
+    if (isInvalidDynamicsEnvironmentError(error)) {
+      return {
+        status: 400,
+        jsonBody: {
+          success: false,
+          message: error.message,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     // Se è un errore di ambiguità, ritorna 409
     if (errorMessage.includes("Ambiguità")) {
