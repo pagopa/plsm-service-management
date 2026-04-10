@@ -62,11 +62,6 @@ const CERTIFICATES_DAYS_LEGEND: Array<{
   className?: string;
 }> = [
   {
-    label: "Certificato scaduto (giorni < 0)",
-    example: "-12",
-    variant: "destructive",
-  },
-  {
     label: "Meno di 30 giorni",
     example: "15",
     variant: "outline-destructive",
@@ -139,10 +134,7 @@ export function CertificatesSection({
   }, [certificates, safePage]);
 
   const startIndex = certificates.length === 0 ? 0 : safePage * PAGE_SIZE + 1;
-  const endIndex = Math.min(
-    (safePage + 1) * PAGE_SIZE,
-    certificates.length,
-  );
+  const endIndex = Math.min((safePage + 1) * PAGE_SIZE, certificates.length);
 
   const canPrev = safePage > 0;
   const canNext = safePage < totalPages - 1;
@@ -238,9 +230,7 @@ export function CertificatesSection({
               size="icon"
               className="size-8"
               disabled={!canNext}
-              onClick={() =>
-                setPage(Math.min(totalPages - 1, safePage + 1))
-              }
+              onClick={() => setPage(Math.min(totalPages - 1, safePage + 1))}
               aria-label="Pagina successiva"
             >
               <ChevronRightIcon className="size-4" />

@@ -42,7 +42,11 @@ export default async function CertificatiPage() {
                 {error}
               </p>
             ) : (
-              <CertificatesSection certificates={certificates} />
+              <CertificatesSection
+                certificates={certificates.filter(
+                  (c) => c.expiration_date > new Date().toISOString(),
+                )}
+              />
             )}
           </CardContent>
         </Card>
