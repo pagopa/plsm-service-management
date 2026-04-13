@@ -2,7 +2,10 @@
 
 import { betterFetch } from "@better-fetch/fetch";
 import { serverEnv } from "@/config/env";
-import { CertificatesListSchema, type Certificate } from "./certificates.schema";
+import {
+  CertificatesListSchema,
+  type Certificate,
+} from "./certificates.schema";
 
 const CERTIFICATES_API_URL =
   "https://plsm-p-itn-cert-func-01.azurewebsites.net/api/v1/certificates";
@@ -16,7 +19,8 @@ export async function getCertificates(): Promise<GetCertificatesResult> {
   if (!apiKey) {
     return {
       certificates: [],
-      error: "Chiave API certificati non configurata (FE_SMCR_API_KEY_CERTIFICATI).",
+      error:
+        "Chiave API certificati non configurata (FE_SMCR_API_KEY_CERTIFICATI).",
     };
   }
 
@@ -30,6 +34,12 @@ export async function getCertificates(): Promise<GetCertificatesResult> {
 
   if (error || !data) {
     console.error("getCertificates:", error);
+    if (error.status === 403) {
+      return {
+        certificates: [],
+        error: "Accesso negato. Collegersi alla VPN per accedere al servizio.",
+      };
+    }
     return {
       certificates: [],
       error: "Impossibile recuperare l'elenco dei certificati.",
