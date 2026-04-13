@@ -1,6 +1,7 @@
 "use server";
 
 import { betterFetch } from "@better-fetch/fetch";
+import logger from "@/lib/logger/logger.server";
 import { serverEnv } from "@/config/env";
 import {
   CertificatesListSchema,
@@ -17,6 +18,17 @@ export type GetCertificatesResult =
 export async function getCertificates(): Promise<GetCertificatesResult> {
   const apiKey = serverEnv.FE_SMCR_API_KEY_CERTIFICATI;
   if (!apiKey) {
+    logger.warn(
+      {
+        info: {
+          event: "certificates.get.missing_api_key",
+          actor: "smcr-ui",
+          subject: "getCertificates",
+          metadata: {},
+        },
+      },
+      "Chiave API certificati non configurata (FE_SMCR_API_KEY_CERTIFICATI)",
+    );
     return {
       certificates: [],
       error:
@@ -33,8 +45,39 @@ export async function getCertificates(): Promise<GetCertificatesResult> {
   });
 
   if (error || !data) {
-    console.error("getCertificates:", error);
-    if (error.status === 403) {
+    const fetchErr = error as
+      | { status?: number; message?: string; statusText?: string }
+      | undefined;
+
+    logger.error(
+      {
+        request: {
+          method: "GET",
+          path: CERTIFICATES_API_URL,
+          ...(typeof fetchErr?.status === "number"
+            ? { statusCode: fetchErr.status }
+            : {}),
+        },
+        error: fetchErr
+          ? {
+              name: String(fetchErr.status ?? "FetchError"),
+              message: String(fetchErr.message ?? "Errore fetch certificati"),
+              stack: fetchErr.statusText,
+            }
+          : {
+              name: "EmptyResponse",
+              message: "Risposta certificati vuota o non valida",
+            },
+        info: {
+          event: "certificates.list.error",
+          actor: "smcr-ui",
+          subject: "getCertificates",
+          metadata: {},
+        },
+      },
+      "getCertificates: errore recupero elenco certificati",
+    );
+    if (error?.status === 403) {
       return {
         certificates: [],
         error: "Accesso negato. Collegersi alla VPN per accedere al servizio.",
