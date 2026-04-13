@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-16 09:50
+# Generato il: 2026-04-13 09:52
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -16,6 +16,11 @@ data "azurerm_key_vault_secret" "auth_msal_client_id_dev" {
 
 data "azurerm_key_vault_secret" "auth_msal_tenant_id_dev" {
   name         = "auth-msal-tenant-id-dev"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_api_key_certificati" {
+  name         = "fe-smcr-api-key-certificati"
   key_vault_id = data.azurerm_key_vault.common_kv.id
 }
 
