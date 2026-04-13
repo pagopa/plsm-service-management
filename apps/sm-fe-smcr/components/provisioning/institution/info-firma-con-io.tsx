@@ -18,10 +18,18 @@ export const InstitutionInfoFirmaConIo = ({
   historyParams,
 }: {
   data: FirmaConIO;
-  historyParams: { signature_request: string; fiscal_code: string };
+  historyParams: {
+    signature_request: string;
+    fiscal_code?: string;
+    vat_number?: string;
+  };
 }) => {
   const [history, saveHistory] = useLocalStorage<{
-    items: Array<{ signature_request: string; fiscal_code: string }>;
+    items: Array<{
+      signature_request: string;
+      fiscal_code?: string;
+      vat_number?: string;
+    }>;
   }>("institution-history-firma-con-io", {
     items: [],
   });
@@ -31,19 +39,31 @@ export const InstitutionInfoFirmaConIo = ({
       items: [
         {
           signature_request: historyParams.signature_request,
-          fiscal_code: historyParams.fiscal_code,
+          ...(historyParams.fiscal_code
+            ? { fiscal_code: historyParams.fiscal_code }
+            : {}),
+          ...(historyParams.vat_number
+            ? { vat_number: historyParams.vat_number }
+            : {}),
         },
         ...history.items.filter(
           (item) =>
             !(
               item.signature_request === historyParams.signature_request &&
-              item.fiscal_code === historyParams.fiscal_code
+              (item.fiscal_code ?? "") ===
+                (historyParams.fiscal_code ?? "") &&
+              (item.vat_number ?? "") === (historyParams.vat_number ?? "")
             ),
         ),
       ],
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [historyParams.fiscal_code, historyParams.signature_request, saveHistory]);
+  }, [
+    historyParams.fiscal_code,
+    historyParams.signature_request,
+    historyParams.vat_number,
+    saveHistory,
+  ]);
 
   return (
     <div className="flex flex-col gap-6">

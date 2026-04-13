@@ -10,9 +10,9 @@ export default async function Page() {
           <div className="text-center">
             <p className="font-semibold">Ricerca Firma con io</p>
             <p className="text-sm">
-              Inserisci una signature request e un codice fiscale per
-              <br />
-              visualizzare le informazioni e gestire i servizi.
+              Inserisci l&apos;ID della signature request, poi scegli se cercare
+              con il codice fiscale del firmatario o con la partita IVA
+              dell&apos;ente.
             </p>
           </div>
 

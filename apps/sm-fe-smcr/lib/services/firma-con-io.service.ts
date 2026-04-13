@@ -16,8 +16,13 @@ type GetFirmaConIOResponse =
 
 export async function getFirmaConIoInstitution(
   signature_request: string,
-  fiscal_code: string,
+  identifier: { fiscal_code: string } | { vat_number: string },
 ): Promise<GetFirmaConIOResponse> {
+  const body =
+    "fiscal_code" in identifier
+      ? { fiscal_code: identifier.fiscal_code }
+      : { vat_number: identifier.vat_number };
+
   const { data, error } = await betterFetch(
     `https://api.io.italia.it/api/v1/sign/support/signature-requests/${signature_request}`,
     {
@@ -28,9 +33,7 @@ export async function getFirmaConIoInstitution(
           .FE_SMCR_API_KEY_FIRMA_CON_IO as string,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        fiscal_code,
-      }),
+      body: JSON.stringify(body),
     },
   );
 

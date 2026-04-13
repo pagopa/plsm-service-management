@@ -48,9 +48,15 @@ export const columns: ColumnDef<Delegation>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      const id = row.original.id;
+      const { id, brokerName, brokerTaxCode } = row.original;
 
-      return <DeleteDelegation id={id} />;
+      return (
+        <DeleteDelegation
+          id={id}
+          brokerName={brokerName}
+          brokerTaxCode={brokerTaxCode}
+        />
+      );
     },
   },
 ];

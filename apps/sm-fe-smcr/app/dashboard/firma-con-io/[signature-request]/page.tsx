@@ -8,15 +8,33 @@ export default async function Page({
   searchParams,
   params,
 }: {
-  searchParams: Promise<{ institution: string; product: string }>;
-  params: Promise<{ "signature-request": string; "fiscal-code": string }>;
+  searchParams: Promise<{ fiscal_code?: string; vat_number?: string }>;
+  params: Promise<{ "signature-request": string }>;
 }) {
   const signature_request = (await params)["signature-request"];
-  const fiscal_code = (await params)["fiscal-code"];
+  const { fiscal_code: fiscalCodeParam, vat_number: vatNumberParam } =
+    await searchParams;
+  const fiscal_code = fiscalCodeParam?.trim() ?? "";
+  const vat_number = vatNumberParam?.trim() ?? "";
+
+  if (!fiscal_code && !vat_number) {
+    return (
+      <ErrorBase
+        title="Parametri di ricerca mancanti"
+        text1="Specifica il codice fiscale o la partita IVA "
+        text2="Effettua una nuova ricerca dalla dashboard."
+        route="firma-con-io"
+      />
+    );
+  }
+
+  const identifier = fiscal_code
+    ? { fiscal_code }
+    : { vat_number: vat_number! };
 
   const { data, error } = await getFirmaConIoInstitution(
     signature_request,
-    fiscal_code,
+    identifier,
   );
 
   if (error || !data) {
@@ -25,7 +43,7 @@ export default async function Page({
         title={error ?? "Errore nel recupero dati"}
         text1={
           error === "Nessun ente trovato"
-            ? "Nessun ente è presente su Area Riservata per il Codice fiscale inserito."
+            ? "Nessun dato corrisponde al codice fiscale o alla partita IVA inseriti."
             : "Si è verificato un errore, riprova"
         }
         text2={
@@ -44,7 +62,11 @@ export default async function Page({
 
       <InstitutionInfoFirmaConIo
         data={data as FirmaConIO}
-        historyParams={{ signature_request, fiscal_code }}
+        historyParams={
+          fiscal_code
+            ? { signature_request, fiscal_code }
+            : { signature_request, vat_number: vat_number! }
+        }
       />
     </div>
   );
