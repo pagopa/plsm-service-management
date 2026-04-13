@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-18 13:42
+# Generato il: 2026-04-13 09:52
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -179,6 +179,7 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONNECTION_STRING               = data.azurerm_key_vault_secret.fe_smcr_azure_storage_connection_string.value
     FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID                = data.azurerm_key_vault_secret.fe_smcr_api_key_firma_con_io_signer_id.value
     FE_SMCR_API_KEY_INSTITUTION_UAT                       = data.azurerm_key_vault_secret.fe_smcr_api_key_institution_uat.value
+    FE_SMCR_API_KEY_CERTIFICATI                           = data.azurerm_key_vault_secret.fe_smcr_api_key_certificati.value
     WEBHOOK_MANUAL_STORAGE                                = data.azurerm_key_vault_secret.fe_smcr_webhook_manual_storage.value
     STORAGE_TOKEN                                         = data.azurerm_key_vault_secret.fe_smcr_storage_token.value
     DB_HOST                                               = data.azurerm_key_vault_secret.db_host.value
@@ -227,6 +228,7 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONNECTION_STRING               = data.azurerm_key_vault_secret.fe_smcr_azure_storage_connection_string.value
     FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID                = data.azurerm_key_vault_secret.fe_smcr_api_key_firma_con_io_signer_id.value
     FE_SMCR_API_KEY_INSTITUTION_UAT                       = data.azurerm_key_vault_secret.fe_smcr_api_key_institution_uat.value
+    FE_SMCR_API_KEY_CERTIFICATI                           = data.azurerm_key_vault_secret.fe_smcr_api_key_certificati.value
     WEBHOOK_MANUAL_STORAGE                                = data.azurerm_key_vault_secret.fe_smcr_webhook_manual_storage.value
     STORAGE_TOKEN                                         = data.azurerm_key_vault_secret.fe_smcr_storage_token.value
     DB_HOST                                               = data.azurerm_key_vault_secret.db_host.value

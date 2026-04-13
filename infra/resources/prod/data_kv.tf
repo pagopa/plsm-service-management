@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-18 13:42
+# Generato il: 2026-04-13 09:52
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -11,6 +11,11 @@ data "azurerm_key_vault_secret" "dynamics_base_url_uat" {
 
 data "azurerm_key_vault_secret" "dynamics_url_contacts_uat" {
   name         = "dynamics-url-contacts-uat"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_api_key_certificati" {
+  name         = "fe-smcr-api-key-certificati"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
