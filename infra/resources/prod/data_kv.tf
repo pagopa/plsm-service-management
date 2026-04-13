@@ -4,6 +4,11 @@
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
+data "azurerm_key_vault_secret" "fe_cert_api_key" {
+  name         = "fe-cert-api-key"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
 data "azurerm_key_vault_secret" "dynamics_base_url_uat" {
   name         = "dynamics-base-url-uat"
   key_vault_id = module.azure_core_infra.common_key_vault.id

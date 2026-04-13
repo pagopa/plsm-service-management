@@ -27,13 +27,21 @@ locals {
   # ────────────────────────────────────────────────────────────
 
   yaml_certificates_func_app_settings = {
-    DB_NAME     = "certificates"
-    DB_TABLE    = "certificates"
-    DB_PORT     = "5432"
-    DB_SSL      = "true"
-    DB_HOST     = data.azurerm_key_vault_secret.db_host.value
-    DB_USER     = data.azurerm_key_vault_secret.db_user.value
-    DB_PASSWORD = data.azurerm_key_vault_secret.db_password.value
+    DB_NAME       = "certificates"
+    DB_TABLE      = "certificates"
+    DB_PORT       = "5432"
+    DB_SSL        = "true"
+    DB_HOST       = data.azurerm_key_vault_secret.db_host.value
+    DB_USER       = data.azurerm_key_vault_secret.db_user.value
+    DB_PASSWORD   = data.azurerm_key_vault_secret.db_password.value
+    SMTP_HOST     = "smtp.gmail.com"
+    SMTP_PORT     = "587"
+    SMTP_SECURE   = "false"
+    SMTP_USERNAME = "noreply@pagopa.it"
+    FROM_EMAIL    = "noreply@pagopa.it"
+    ALERT_EMAIL   = "io-service-management@pagopa.it"
+    API_KEY       = data.azurerm_key_vault_secret.fe_cert_api_key.value
+    SMTP_PASSWORD = data.azurerm_key_vault_secret.askmebot_smtp_password.value
   }
 
   yaml_certificates_func_slot_app_settings = local.yaml_certificates_func_app_settings

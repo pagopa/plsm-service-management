@@ -3,6 +3,21 @@
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AzureWebJobsStorage": "{AzureWebJobsStorage}",
-    "FUNCTIONS_V2_COMPATIBILITY_MODE": false
+    "FUNCTIONS_V2_COMPATIBILITY_MODE": false,
+    "DB_HOST": "localhost",
+    "DB_PORT": "5432",
+    "DB_NAME": "certificates",
+    "DB_TABLE": "certificates",
+    "DB_USER": "user",
+    "DB_PASSWORD": "password",
+    "DB_SSL": "false",
+    "API_KEY": "123456",
+    "SMTP_HOST": "smtp.gmail.com",
+    "SMTP_PORT": "587",
+    "SMTP_SECURE": "false",
+    "SMTP_USERNAME": "noreply@pagopa.it",
+    "SMTP_PASSWORD": "change_me",
+    "FROM_EMAIL": "noreply@pagopa.it",
+    "ALERT_EMAIL": "io-service-management@pagopa.it"
   }
 }
