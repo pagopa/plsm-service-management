@@ -409,3 +409,80 @@ export async function getUserGroups(input: { institution: string }) {
 
   return { data, error: null };
 }
+
+const InstitutionOnboardingSupportSchema = z
+  .object({
+    id: z.string(),
+    productId: z.string(),
+    status: z.string(),
+    billing: z
+      .object({
+        recipientCode: z.string().optional(),
+        vatNumber: z.string().optional(),
+        publicServices: z.boolean().optional(),
+        taxCodeInvoicing: z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+export type InstitutionOnboardingSupport = z.infer<
+  typeof InstitutionOnboardingSupportSchema
+>;
+
+export async function getInstitutionOnboardingsFromSupport(
+  taxCode: string,
+  options?: { subunitCode?: string; isPNPG?: boolean },
+): Promise<
+  | { data: InstitutionOnboardingSupport[]; error: null }
+  | { data: []; error: string }
+> {
+  const safeTaxCode = taxCode.replace(/[\r\n]/g, "");
+  const subunitCode = options?.subunitCode ?? "";
+
+  const url = `https://api.selfcare.pagopa.it/external/support/v1/onboarding/institutionOnboardings?taxCode=${safeTaxCode}${
+    subunitCode && subunitCode !== "undefined"
+      ? "&subunitCode=" + subunitCode
+      : ""
+  }`;
+
+  const apiKey = options?.isPNPG
+    ? (serverEnv.FE_SMCR_API_KEY_PNPG as string)
+    : (serverEnv.FE_SMCR_API_KEY_INSTITUTION as string);
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Ocp-Apim-Subscription-Key": apiKey,
+    },
+  });
+
+  if (!response.ok) {
+    logger.error(
+      {
+        request: { method: "GET", path: url },
+        error: {
+          name: String(response.status),
+          message: response.statusText,
+        },
+      },
+      `getInstitutionOnboardingsFromSupport ${safeTaxCode}`,
+    );
+    return { data: [], error: "Errore nel recupero degli onboarding." };
+  }
+
+  const body: unknown = await response.json();
+  const parsed = z.array(InstitutionOnboardingSupportSchema).safeParse(body);
+
+  if (!parsed.success) {
+    logger.error(
+      { request: { method: "GET", path: url }, error: parsed.error.flatten() },
+      `getInstitutionOnboardingsFromSupport parse ${safeTaxCode}`,
+    );
+    return { data: [], error: "Errore nel recupero degli onboarding." };
+  }
+
+  return { data: parsed.data, error: null };
+}
