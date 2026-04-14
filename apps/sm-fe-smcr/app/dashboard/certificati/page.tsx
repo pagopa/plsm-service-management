@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { CertificatesSection } from "@/components/certificates/certificates-section";
 import {
   Breadcrumb,
