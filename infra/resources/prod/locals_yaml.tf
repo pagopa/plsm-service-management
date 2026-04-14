@@ -151,7 +151,7 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr"
     NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-p-itn-auth-func-01.azurewebsites.net/api/v1/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback"
   }
 
   yaml_auth_func_slot_app_settings = {
@@ -163,7 +163,7 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr-staging"
     NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net/api/v1/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback"
   }
 
   # ────────────────────────────────────────────────────────────
@@ -217,6 +217,9 @@ locals {
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL                                = "https://plsm-p-itn-auth-func-01.azurewebsites.net"
+    AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
+    AUTH_JWT_ISSUER                                       = "plsm-auth-service"
+    AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr"
   }
 
   yaml_fe_smcr_slot_app_settings = {
@@ -266,6 +269,9 @@ locals {
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL                                = "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net"
+    AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
+    AUTH_JWT_ISSUER                                       = "plsm-auth-service-staging"
+    AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr-staging"
   }
 
   # ────────────────────────────────────────────────────────────
