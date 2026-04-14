@@ -49,7 +49,7 @@ export const LoginPage = () => {
             <div className="flex flex-col items-center mt-52 text-center gap-5">
               <div>
                 <p className="text-2xl">Welcome back</p>
-                <p className="text-xs">MSAL Authentication</p>
+                <p className="text-xs">Server-side Microsoft authentication</p>
               </div>
               <LoginForm />
             </div>
@@ -73,7 +73,7 @@ export const LoginPage = () => {
                     </p>
                   </div>
                   <div className="flex flex-col items-center">
-                    <p>🔁 MSAL Redirect URI:</p>
+                    <p>🔁 Public app URL:</p>
                     <code>{redirectURL}</code>
                   </div>
                 </div>
