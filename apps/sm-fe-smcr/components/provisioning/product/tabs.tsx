@@ -39,7 +39,6 @@ export default function TabsSection({
   subunitCode,
   isPNPG = false,
 }: Props) {
-  console.log("subunitCode", subunitCode);
   return (
     <section className="flex h-[calc(100vh-64px)] flex-col min-h-0">
       <Tabs
