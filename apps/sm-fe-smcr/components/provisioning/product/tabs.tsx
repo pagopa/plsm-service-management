@@ -146,11 +146,7 @@ export default function TabsSection({
           value={TABS.ONBOARDING}
           className="flex flex-1 min-h-0 flex-col"
         >
-          <OnboardingTab
-            taxCode={taxCode}
-            subunitCode={subunitCode}
-            isPNPG={isPNPG}
-          />
+          <OnboardingTab taxCode={taxCode} subunitCode={subunitCode} />
         </TabsContent>
         {product === "prod-io" && (
           <TabsContent

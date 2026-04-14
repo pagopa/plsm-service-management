@@ -433,7 +433,7 @@ export type InstitutionOnboardingSupport = z.infer<
 
 export async function getInstitutionOnboardingsFromSupport(
   taxCode: string,
-  options?: { subunitCode?: string; isPNPG?: boolean },
+  options?: { subunitCode?: string },
 ): Promise<
   | { data: InstitutionOnboardingSupport[]; error: null }
   | { data: []; error: string }
@@ -447,9 +447,7 @@ export async function getInstitutionOnboardingsFromSupport(
       : ""
   }`;
 
-  const apiKey = options?.isPNPG
-    ? (serverEnv.FE_SMCR_API_KEY_PNPG as string)
-    : (serverEnv.FE_SMCR_API_KEY_INSTITUTION as string);
+  const apiKey = serverEnv.FE_SMCR_API_KEY_INSTITUTION as string;
 
   const response = await fetch(url, {
     method: "GET",

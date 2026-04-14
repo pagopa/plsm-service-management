@@ -8,7 +8,6 @@ import { ClipboardListIcon } from "lucide-react";
 type Props = {
   taxCode: string;
   subunitCode?: string;
-  isPNPG?: boolean;
 };
 
 function formatDate(value: string | undefined) {
@@ -45,16 +44,10 @@ function displayValue(value: string | boolean | undefined | null): string {
   return str === "" ? "—" : str;
 }
 
-export default async function OnboardingTab({
-  taxCode,
-  subunitCode,
-  isPNPG = false,
-}: Props) {
+export default async function OnboardingTab({ taxCode, subunitCode }: Props) {
   const result = await getInstitutionOnboardingsFromSupport(taxCode, {
     subunitCode,
-    isPNPG,
   });
-
   if (result.error) {
     return (
       <section className="flex h-full min-h-0 flex-1 flex-col gap-4">
