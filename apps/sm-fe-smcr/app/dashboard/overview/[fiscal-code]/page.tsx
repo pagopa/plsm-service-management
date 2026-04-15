@@ -41,8 +41,6 @@ export default async function Page({
   const selectedInstitution = institutionsResponse.data?.find(
     (item) => item.id === institution,
   );
-  const onboardings = selectedInstitution?.onboarding ?? [];
-
   if (institutionsResponse.error || !institutionsResponse.data) {
     return (
       <ErrorBase
@@ -78,7 +76,7 @@ export default async function Page({
           }
           product={product}
           onboarding={onboarding?.tokenId || ""}
-          onboardings={onboardings}
+          subunitCode={selectedInstitution?.subunitCode}
         />
       )}
     </div>
