@@ -7,7 +7,6 @@ import {
   ServerIcon,
   UsersIcon,
 } from "lucide-react";
-import type { Product } from "@/lib/services/institution.service";
 import ContractTab from "./contract/contract-tab";
 import GroupsTab from "./groups/groups-tab";
 import OnboardingTab from "./onboarding/onboarding-tab";
@@ -28,7 +27,7 @@ type Props = {
   institutionDescription: string;
   product: string;
   onboarding: string;
-  onboardings: Array<Product>;
+  subunitCode?: string;
   isPNPG?: boolean;
 };
 export default function TabsSection({
@@ -37,7 +36,7 @@ export default function TabsSection({
   institutionDescription,
   product,
   onboarding,
-  onboardings,
+  subunitCode,
   isPNPG = false,
 }: Props) {
   return (
@@ -147,7 +146,7 @@ export default function TabsSection({
           value={TABS.ONBOARDING}
           className="flex flex-1 min-h-0 flex-col"
         >
-          <OnboardingTab onboardings={onboardings} />
+          <OnboardingTab taxCode={taxCode} subunitCode={subunitCode} />
         </TabsContent>
         {product === "prod-io" && (
           <TabsContent
