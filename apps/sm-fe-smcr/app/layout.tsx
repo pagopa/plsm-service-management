@@ -1,4 +1,3 @@
-import { MSALProvider } from "@/context/MSALproviders";
 import { SessionProvider } from "@/context/sessionProvider";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
@@ -25,11 +24,9 @@ export default function RootLayout({
   return (
     <html lang="it" className={font.className}>
       <body className="h-screen">
-        <MSALProvider>
-          <SessionProvider>
-            <NuqsAdapter>{children}</NuqsAdapter>
-          </SessionProvider>
-        </MSALProvider>
+        <SessionProvider>
+          <NuqsAdapter>{children}</NuqsAdapter>
+        </SessionProvider>
 
         <Toaster />
       </body>

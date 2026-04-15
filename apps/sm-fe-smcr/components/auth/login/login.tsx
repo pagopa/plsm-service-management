@@ -1,6 +1,4 @@
 "use client";
-import { useMsal } from "@azure/msal-react";
-import { loginRequest } from "@/lib/msalConfig";
 
 export const LoginForm = () => {
   return (
@@ -11,18 +9,8 @@ export const LoginForm = () => {
 };
 
 export const MicrosoftLoginButton = () => {
-  const { instance } = useMsal();
-
   const handleLogin = () => {
-    // const redirectUri = process.env.NEXT_PUBLIC_MSAL_REDIRECT_URI;
-    // const loginRequestWithRedirect = {
-    //   ...loginRequest,
-    //   redirectUri,
-    // };
-
-    instance.loginRedirect(loginRequest).catch((error) => {
-      console.error("Login error:", error);
-    });
+    window.location.assign("/api/auth/login?returnUrl=/dashboard");
   };
 
   return (
@@ -31,7 +19,7 @@ export const MicrosoftLoginButton = () => {
       className="flex items-center justify-center gap-2 bg-white text-[#5E5E5E] border border-[#8C8C8C] rounded-md px-4 py-2 hover:bg-[#F5F5F5] transition-colors"
     >
       <MicrosoftLogoIcon className="w-5 h-5" />
-      <span>Sign in with Microsoft</span>
+      <span>Continue with Microsoft</span>
     </button>
   );
 };

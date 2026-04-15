@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import pg from "@/lib/knex";
+import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
+
+export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.nextUrl.searchParams.get("userId");
+    const currentUser = await getOrCreateCurrentAppUser();
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: "userId is required" },
-        { status: 400 },
-      );
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const requestedUserId = request.nextUrl.searchParams.get("userId");
+    const userId = currentUser.user.id;
+
+    if (requestedUserId && requestedUserId !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const getUserWithTeamsByEmail = await pg("user as u")
@@ -36,7 +43,7 @@ export async function GET(request: NextRequest) {
           teams: rows.map((row: any) => ({
             id: row.teamId,
             name: row.teamName,
-            role: row.role
+            role: row.role,
           })),
         };
       });
