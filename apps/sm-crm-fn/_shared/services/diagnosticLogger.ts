@@ -4,7 +4,7 @@
 // Feature flag: DIAGNOSTIC_LOGGING_ENABLED=true
 //
 // Ogni chiamata POST /meetings genera un file JSON su Blob Storage con:
-// - Il payload ricevuto dal frontend
+// - Il payload ricevuto dal frontend (persistito con mascheratura parziale)
 // - Tutte le chiamate HTTP effettuate verso Dynamics 365 (step, url, body, status, durata)
 // - Il risultato finale dell'orchestrazione
 //
@@ -52,7 +52,7 @@ export interface DiagnosticSession {
   timestamp: string;
   /** Ambiente Dynamics target ("UAT" | "PROD") */
   environment: string;
-  /** Payload ricevuto dal frontend, così com'è */
+  /** Payload ricevuto dal frontend, mascherato parzialmente in fase di persistenza */
   frontendPayload: unknown;
   /** Lista ordinata di tutte le chiamate HTTP verso Dynamics */
   dynamicsCalls: DiagnosticCall[];
@@ -81,6 +81,103 @@ export function createDiagnosticSession(
     environment,
     frontendPayload,
     dynamicsCalls: [],
+  };
+}
+
+const PARTIALLY_MASKED_FIELDS = new Set([
+  "email",
+  "emailaddress1",
+  "firstname",
+  "lastname",
+  "nome",
+  "cognome",
+  "subject",
+  "description",
+  "location",
+]);
+
+const EMAIL_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+
+function maskText(value: string, visibleChars = 3): string {
+  if (value.length <= visibleChars) {
+    return `${value}***`;
+  }
+
+  return `${value.slice(0, visibleChars)}***`;
+}
+
+function maskEmail(value: string): string {
+  const [localPart, domainPart] = value.split("@");
+
+  if (!localPart || !domainPart) {
+    return maskText(value);
+  }
+
+  const domainSegments = domainPart.split(".");
+  const maskedDomain = domainSegments
+    .map((segment, index) => {
+      const isTopLevelDomain = index === domainSegments.length - 1;
+      return isTopLevelDomain ? segment : maskText(segment);
+    })
+    .join(".");
+
+  return `${maskText(localPart)}@${maskedDomain}`;
+}
+
+function sanitizeDiagnosticString(value: string, fieldName?: string): string {
+  const normalizedFieldName = fieldName?.toLowerCase();
+
+  if (normalizedFieldName && PARTIALLY_MASKED_FIELDS.has(normalizedFieldName)) {
+    return normalizedFieldName.includes("email")
+      ? maskEmail(value)
+      : maskText(value);
+  }
+
+  return value.replace(EMAIL_PATTERN, (match) => maskEmail(match));
+}
+
+function sanitizeDiagnosticValue(value: unknown, fieldName?: string): unknown {
+  if (typeof value === "string") {
+    return sanitizeDiagnosticString(value, fieldName);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeDiagnosticValue(item));
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(
+        ([key, nestedValue]) => [
+          key,
+          sanitizeDiagnosticValue(nestedValue, key),
+        ],
+      ),
+    );
+  }
+
+  return value;
+}
+
+function buildPersistedDiagnosticSession(
+  session: DiagnosticSession,
+): DiagnosticSession {
+  return {
+    ...session,
+    frontendPayload: sanitizeDiagnosticValue(
+      session.frontendPayload,
+      "frontendPayload",
+    ),
+    dynamicsCalls: session.dynamicsCalls.map((call) => ({
+      ...call,
+      url: sanitizeDiagnosticString(call.url),
+      requestBody: sanitizeDiagnosticValue(call.requestBody, "requestBody"),
+      error: call.error ? sanitizeDiagnosticString(call.error) : undefined,
+    })),
+    orchestratorResult: sanitizeDiagnosticValue(
+      session.orchestratorResult,
+      "orchestratorResult",
+    ),
   };
 }
 
@@ -128,6 +225,9 @@ export function isDiagnosticEnabled(): boolean {
  *
  * Il blob viene creato nel path: {container}/{YYYY}/{MM}/{DD}/{sessionId}.json
  *
+ * Prima della persistenza, i principali campi stringa sensibili vengono
+ * mascherati lasciando visibili solo i primi caratteri utili al troubleshooting.
+ *
  * Se la scrittura fallisce (connection string assente, errore di rete, ecc.),
  * l'errore viene loggato su console ma NON viene propagato: la risposta al
  * frontend non viene mai bloccata da questo step.
@@ -164,7 +264,8 @@ export async function writeDiagnosticBlob(
     const blobName = `${yyyy}/${mm}/${dd}/${session.sessionId}.json`;
 
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    const content = JSON.stringify(session, null, 2);
+    const persistedSession = buildPersistedDiagnosticSession(session);
+    const content = JSON.stringify(persistedSession, null, 2);
 
     await blockBlobClient.upload(content, Buffer.byteLength(content), {
       blobHTTPHeaders: { blobContentType: "application/json" },
