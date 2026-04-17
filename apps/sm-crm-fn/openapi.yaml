@@ -1030,6 +1030,9 @@ components:
       properties:
         success:
           type: boolean
+          description: |
+            Esito complessivo allineato all'HTTP status finale.
+            `true` per risposte < 400, `false` per errori come `409` o `500`.
         accountId:
           type: string
           format: uuid
@@ -1037,6 +1040,12 @@ components:
         created:
           type: integer
           description: Numero di contatti creati con successo
+        alreadyExists:
+          type: integer
+          description: Numero di contatti già presenti in Dynamics CRM
+        errors:
+          type: integer
+          description: Numero di contatti falliti in creazione o ricerca
         total:
           type: integer
           description: Numero totale di partecipanti elaborati
@@ -1048,15 +1057,25 @@ components:
               email:
                 type: string
                 format: email
-              success:
-                type: boolean
+              status:
+                type: string
+                enum: [created, alreadyExists, error]
+                description: Esito per singolo partecipante
               contactId:
                 type: string
                 format: uuid
-                description: Presente solo se success è true
+                description: Presente se il contatto è stato creato o trovato
+              contact:
+                type: object
+                description: Dati del contatto restituiti da Dynamics, se disponibili
+              foundByStep:
+                type: integer
+                description: |
+                  Step della cascata di ricerca che ha trovato il contatto esistente.
+                  Valori attesi: 1, 2 o 3. Presente solo per `alreadyExists`.
               error:
                 type: string
-                description: Presente solo se success è false
+                description: Presente solo se `status` è `error`
         timestamp:
           type: string
           format: date-time
