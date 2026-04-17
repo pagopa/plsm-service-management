@@ -330,15 +330,19 @@ export async function createContactsHandler(
     });
 
     if (diagnosticSession && !accountResult.found) {
-      // verifyAccount già logga internamente; aggiungiamo un marker esplicito
+      // verifyAccount già logga internamente la chiamata OData reale; qui
+      // aggiungiamo solo un marker applicativo esplicito per il caso "non
+      // trovato" senza falsare lo status HTTP della query.
       addDiagnosticCall(diagnosticSession, {
         step: "POST/contacts — verifyAccount",
         method: "GET",
         url: `${baseUrl}/api/data/v9.2/accounts?$filter=pgp_identificativoselfcarecliente eq '${body.institutionIdSelfcare}'`,
         requestBody: null,
-        responseStatus: 404,
+        responseStatus: 200,
         durationMs: Date.now() - t0Account,
-        error: accountResult.error,
+        error: accountResult.error
+          ? `${accountResult.error} | found:false`
+          : "found:false",
       });
     }
 
