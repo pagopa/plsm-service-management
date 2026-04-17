@@ -508,7 +508,7 @@ export async function createContactsHandler(
     }
 
     const responseBody = {
-      success: errors === 0,
+      success: httpStatus < 400,
       accountId,
       results,
       created,
