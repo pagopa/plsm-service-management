@@ -83,6 +83,7 @@ interface ContactSearchResult {
   found: boolean;
   contact: import("../_shared/types/dynamics").Contact | null;
   foundByStep?: 1 | 2 | 3;
+  error?: string;
 }
 
 async function searchContactCascade(
@@ -144,7 +145,11 @@ async function searchContactCascade(
           error: msg,
         });
       }
-      // non blocchiamo: proviamo step successivo
+      return {
+        found: false,
+        contact: null,
+        error: `Ricerca contatto fallita allo step 1: ${msg}`,
+      };
     }
   }
 
@@ -196,6 +201,11 @@ async function searchContactCascade(
           error: msg,
         });
       }
+      return {
+        found: false,
+        contact: null,
+        error: `Ricerca contatto fallita allo step 2: ${msg}`,
+      };
     }
   }
 
@@ -243,6 +253,11 @@ async function searchContactCascade(
           error: msg,
         });
       }
+      return {
+        found: false,
+        contact: null,
+        error: `Ricerca contatto fallita allo step 3: ${msg}`,
+      };
     }
   }
 
@@ -393,6 +408,21 @@ export async function createContactsHandler(
         body.productIdSelfcare,
         diagnosticSession,
       );
+
+      if (searchResult.error) {
+        logger.warn("Contact search failed", {
+          email: partecipante.email,
+          error: searchResult.error,
+        });
+
+        results.push({
+          email: partecipante.email,
+          status: "error",
+          error: searchResult.error,
+        });
+
+        continue;
+      }
 
       if (searchResult.found && searchResult.contact) {
         // Contatto già esistente → restituisci 409
