@@ -17,6 +17,13 @@
 import { randomUUID } from "node:crypto";
 import { BlobServiceClient } from "@azure/storage-blob";
 
+let cachedBlobServiceClient: BlobServiceClient | null = null;
+let cachedContainerClient: ReturnType<
+  BlobServiceClient["getContainerClient"]
+> | null = null;
+let cachedConnectionString: string | null = null;
+let cachedContainerName: string | null = null;
+
 // -----------------------------------------------------------------------------
 // Tipi
 // -----------------------------------------------------------------------------
@@ -216,6 +223,28 @@ export function isDiagnosticEnabled(): boolean {
   return process.env.DIAGNOSTIC_LOGGING_ENABLED?.toLowerCase() === "true";
 }
 
+function getDiagnosticContainerClient(
+  connectionString: string,
+  container: string,
+) {
+  if (
+    cachedContainerClient &&
+    cachedBlobServiceClient &&
+    cachedConnectionString === connectionString &&
+    cachedContainerName === container
+  ) {
+    return cachedContainerClient;
+  }
+
+  cachedBlobServiceClient =
+    BlobServiceClient.fromConnectionString(connectionString);
+  cachedContainerClient = cachedBlobServiceClient.getContainerClient(container);
+  cachedConnectionString = connectionString;
+  cachedContainerName = container;
+
+  return cachedContainerClient;
+}
+
 // -----------------------------------------------------------------------------
 // Scrittura Blob
 // -----------------------------------------------------------------------------
@@ -224,6 +253,7 @@ export function isDiagnosticEnabled(): boolean {
  * Scrive la sessione diagnostica su Azure Blob Storage in modalità fire-and-forget.
  *
  * Il blob viene creato nel path: {container}/{YYYY}/{MM}/{DD}/{sessionId}.json
+ * Il container deve esistere già ed essere provisionato dall'infrastruttura.
  *
  * Prima della persistenza, i principali campi stringa sensibili vengono
  * mascherati lasciando visibili solo i primi caratteri utili al troubleshooting.
@@ -249,12 +279,10 @@ export async function writeDiagnosticBlob(
   }
 
   try {
-    const blobServiceClient =
-      BlobServiceClient.fromConnectionString(connectionString);
-    const containerClient = blobServiceClient.getContainerClient(container);
-
-    // Crea il container se non esiste (idempotente)
-    await containerClient.createIfNotExists();
+    const containerClient = getDiagnosticContainerClient(
+      connectionString,
+      container,
+    );
 
     // Path blob: YYYY/MM/DD/sessionId.json
     const date = new Date(session.timestamp);
