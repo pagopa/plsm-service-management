@@ -352,7 +352,6 @@ paths:
         1. **Verifica Ente** - Cerca l'ente per `institutionIdSelfcare` o `nomeEnte`
         2. **Verifica/Crea Contatti** - Per ogni partecipante, verifica esistenza o crea (opzionale con `enableCreateContact`)
         3. **Crea Appuntamento** - Con tutti i partecipanti come activity_parties
-        4. **GrantAccess** - Condivide l'appuntamento con il team Sales (opzionale con `enableGrantAccess`)
 
         ### Dry-Run Mode
         Impostare `dryRun: true` per testare il flusso senza modifiche a Dynamics.
@@ -401,7 +400,6 @@ paths:
                   categoria: "Follow-up tecnico"
                   dataProssimoContatto: "2025-03-01T10:00:00Z"
                   enableCreateContact: true
-                  enableGrantAccess: true
                   dryRun: false
               dryRun:
                 summary: Test dry-run
@@ -648,21 +646,6 @@ components:
             - `false` (default): Per appuntamenti con contatti esistenti
             - `true`: Per nuovi enti o nuovi referenti non ancora in CRM
           example: false
-        enableGrantAccess:
-          type: boolean
-          default: false
-          description: |
-            **Grant Access to Sales Team**: Se `true`, esegue lo step 4 (GrantAccess) 
-            per rendere l'appuntamento visibile al team Sales in Dynamics CRM.
-            Se `false` o omesso, lo step viene saltato completamente.
-
-            **Nota**: GrantAccess richiede che l'API Custom Action sia disponibile 
-            nell'ambiente Dynamics. Potrebbe non essere disponibile in UAT.
-
-            **Utilizzo consigliato**:
-            - `false` (default): Per la maggior parte degli appuntamenti
-            - `true`: Per appuntamenti critici che richiedono visibilità del team Sales
-          example: false
         dryRun:
           type: boolean
           default: false
@@ -842,7 +825,6 @@ components:
             - verifyAccount
             - verifyOrCreateContacts
             - createAppointment
-            - grantAccess
           description: Nome dello step
         success:
           type: boolean
