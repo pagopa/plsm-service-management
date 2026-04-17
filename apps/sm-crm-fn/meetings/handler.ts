@@ -57,10 +57,11 @@ export async function createMeetingHandler(
       context.log("🧪 DRY-RUN MODE ENABLED");
     }
 
-    // Esegui orchestratore con baseUrl
+    // Esegui orchestratore con baseUrl e frontendPayload per diagnostic logging
     const result = await createMeetingOrchestrator({
       ...validation.data,
       baseUrl,
+      frontendPayload: body,
     });
 
     // Status code basato sul risultato

@@ -29,6 +29,33 @@ const configSchema = z.object({
     .string()
     .optional()
     .transform((val) => val?.toLowerCase() === "true"),
+  // -----------------------------------------------------------------------------
+  // Diagnostic Logging (Feature Flag)
+  // Abilita il logging delle sessioni CRM su Azure Blob Storage.
+  // Per attivare: DIAGNOSTIC_LOGGING_ENABLED=true
+  // Per disattivare: DIAGNOSTIC_LOGGING_ENABLED=false (o rimuovere la variabile)
+  // -----------------------------------------------------------------------------
+  /**
+   * Feature flag per il diagnostic logging su Blob Storage.
+   * @default false
+   */
+  DIAGNOSTIC_LOGGING_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => val?.toLowerCase() === "true"),
+  /**
+   * Connection string per Azure Blob Storage dove vengono scritti i log diagnostici.
+   * Obbligatoria se DIAGNOSTIC_LOGGING_ENABLED=true, ignorata altrimenti.
+   */
+  DIAGNOSTIC_STORAGE_CONNECTION_STRING: z.string().optional(),
+  /**
+   * Nome del container Blob Storage per i log diagnostici.
+   * @default "crm-diagnostics"
+   */
+  DIAGNOSTIC_STORAGE_CONTAINER: z
+    .string()
+    .optional()
+    .default("crm-diagnostics"),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
@@ -58,6 +85,10 @@ export function getConfigOrThrow(): AppConfig {
     DYNAMICS_SCOPE: process.env.DYNAMICS_SCOPE,
     NODE_ENV: process.env.NODE_ENV,
     ENABLE_EMAIL_FORMAT_VALIDATION: process.env.ENABLE_EMAIL_FORMAT_VALIDATION,
+    DIAGNOSTIC_LOGGING_ENABLED: process.env.DIAGNOSTIC_LOGGING_ENABLED,
+    DIAGNOSTIC_STORAGE_CONNECTION_STRING:
+      process.env.DIAGNOSTIC_STORAGE_CONNECTION_STRING,
+    DIAGNOSTIC_STORAGE_CONTAINER: process.env.DIAGNOSTIC_STORAGE_CONTAINER,
   };
   try {
     return validateConfig(raw);

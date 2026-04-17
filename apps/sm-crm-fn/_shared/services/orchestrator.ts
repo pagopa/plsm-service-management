@@ -8,14 +8,19 @@ import type {
   OrchestratorStepResult,
   ProductIdSelfcare,
   TipologiaReferente,
-  Contact,
 } from "../types/dynamics";
 import { verifyAccount } from "./accounts";
 import { verifyOrCreateContact } from "./contacts";
 import { createAppointment } from "./appointments";
-import { grantAccessToAppointment } from "./grantAccess";
-import { enableDryRun, disableDryRun, isDryRunEnabled } from "./httpClient";
+import { enableDryRun, disableDryRun } from "./httpClient";
 import { createLogger, Timer } from "../utils/logger";
+import {
+  createDiagnosticSession,
+  writeDiagnosticBlob,
+  isDiagnosticEnabled,
+  type DiagnosticSession,
+} from "./diagnosticLogger";
+import { resolveEnvironment } from "../utils/mappings";
 
 // =============================================================================
 // ORCHESTRATOR
@@ -24,11 +29,10 @@ import { createLogger, Timer } from "../utils/logger";
 /**
  * Orchestratore principale per la creazione di appuntamenti CRM.
  *
- * Esegue il flusso completo in 4 step:
+ * Esegue il flusso completo in 3 step:
  * 1. Verifica esistenza Ente (Account)
  * 2. Verifica/Crea Contatti per ogni partecipante
  * 3. Crea Appuntamento con activity_parties
- * 4. GrantAccess per visibilità team Sales
  *
  * @param request - Dati per la creazione dell'appuntamento
  * @param request.baseUrl - Base URL for Dynamics 365 environment (e.g., "https://org.crm4.dynamics.com")
@@ -41,8 +45,8 @@ import { createLogger, Timer } from "../utils/logger";
  * @param request.scheduledend - Data/ora fine (ISO 8601)
  * @param request.enableFallback - Abilita ricerca ente per nome se ID non trovato
  * @param request.enableCreateContact - Abilita creazione automatica contatti
- * @param request.enableGrantAccess - Abilita condivisione con team Sales
  * @param request.dryRun - Modalità dry-run (no modifiche a Dynamics)
+ * @param request.frontendPayload - Payload originale del frontend (per diagnostic logging)
  * @returns Risultato dell'orchestrazione con dettaglio di ogni step
  *
  * @example
@@ -50,7 +54,7 @@ import { createLogger, Timer } from "../utils/logger";
  *   baseUrl: "https://org.crm4.dynamics.com",
  *   institutionIdSelfcare: "uuid-ente",
  *   productIdSelfcare: "prod-pagopa",
- *   partecipanti: [{ email: "mario@ente.it", nome: "Mario", cognome: "Rossi" }],
+ *   partecipanti: [{ nome: "Mario", cognome: "Rossi" }],
  *   subject: "Riunione",
  *   scheduledstart: "2025-02-15T10:00:00Z",
  *   scheduledend: "2025-02-15T11:00:00Z",
@@ -74,14 +78,23 @@ export async function createMeetingOrchestrator(
 
   const overallTimer = new Timer();
 
+  // -------------------------------------------------------------------------
+  // Diagnostic session (feature flag)
+  // -------------------------------------------------------------------------
+  const diagnosticEnabled = isDiagnosticEnabled();
+  const environment = resolveEnvironment(request.baseUrl);
+  const diagnosticSession: DiagnosticSession | undefined = diagnosticEnabled
+    ? createDiagnosticSession(request.frontendPayload ?? request, environment)
+    : undefined;
+
   logger.info("🚀 Starting meeting orchestrator", {
     institutionId: request.institutionIdSelfcare,
     productId: request.productIdSelfcare,
     partecipantiCount: request.partecipanti.length,
     enableCreateContact: request.enableCreateContact,
     enableFallback: request.enableFallback,
-    enableGrantAccess: request.enableGrantAccess,
     dryRun,
+    diagnosticLogging: diagnosticEnabled,
   });
 
   // Abilita dry-run se richiesto
@@ -92,7 +105,6 @@ export async function createMeetingOrchestrator(
       {
         enableCreateContact: request.enableCreateContact,
         enableFallback: request.enableFallback,
-        enableGrantAccess: request.enableGrantAccess,
       },
     );
   }
@@ -101,7 +113,7 @@ export async function createMeetingOrchestrator(
     // =========================================================================
     // STEP 1: Verifica Ente
     // =========================================================================
-    logger.info("📋 STEP 1/4: Account verification", {
+    logger.info("📋 STEP 1/3: Account verification", {
       institutionId: request.institutionIdSelfcare,
       nomeEnte: request.nomeEnte,
     });
@@ -115,6 +127,7 @@ export async function createMeetingOrchestrator(
         nomeEnte: request.nomeEnte,
         enableFallback: request.enableFallback ?? false,
         baseUrl: request.baseUrl,
+        diagnosticSession,
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -139,6 +152,7 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         `Errore durante verifica ente: ${msg}`,
+        diagnosticSession,
       );
     }
 
@@ -160,6 +174,7 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         accountResult.error ?? "Ente non trovato",
+        diagnosticSession,
       );
     }
 
@@ -187,7 +202,7 @@ export async function createMeetingOrchestrator(
     // =========================================================================
     // STEP 2: Verifica/Crea Contatti
     // =========================================================================
-    logger.info("📋 STEP 2/4: Contact verification/creation", {
+    logger.info("📋 STEP 2/3: Contact verification/creation", {
       partecipantiCount: request.partecipanti.length,
       enableCreateContact: request.enableCreateContact ?? false,
     });
@@ -238,6 +253,7 @@ export async function createMeetingOrchestrator(
             "TECNICO") as TipologiaReferente,
           accountId,
           enableCreateContact: request.enableCreateContact ?? false,
+          diagnosticSession,
         });
 
         console.log(
@@ -315,6 +331,7 @@ export async function createMeetingOrchestrator(
           warnings,
           dryRun,
           "Nessun contatto valido trovato o creato",
+          diagnosticSession,
         );
       }
 
@@ -350,13 +367,14 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         `Errore durante verifica/creazione contatti: ${msg}`,
+        diagnosticSession,
       );
     }
 
     // =========================================================================
     // STEP 3: Crea Appuntamento
     // =========================================================================
-    logger.info("📋 STEP 3/4: Appointment creation", {
+    logger.info("📋 STEP 3/3: Appointment creation", {
       subject: request.subject,
       scheduledstart: request.scheduledstart,
       scheduledend: request.scheduledend,
@@ -376,9 +394,11 @@ export async function createMeetingOrchestrator(
         oggettoDelContatto: request.oggettoDelContatto,
         categoria: request.categoria,
         dataProssimoContatto: request.dataProssimoContatto,
+        productIdSelfcare: request.productIdSelfcare as ProductIdSelfcare,
         accountId,
         contactIds,
         baseUrl: request.baseUrl,
+        diagnosticSession,
       });
 
       steps.push({
@@ -416,58 +436,8 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         `Errore creazione appuntamento: ${msg}`,
+        diagnosticSession,
       );
-    }
-
-    // =========================================================================
-    // STEP 4: GrantAccess
-    // =========================================================================
-    if (request.enableGrantAccess ?? false) {
-      logger.info("📋 STEP 4/4: Grant access to Sales team", {
-        activityId: appointment.activityid,
-      });
-
-      const grantTimer = new Timer();
-      const grantResult = await grantAccessToAppointment({
-        activityId: appointment.activityid,
-        baseUrl: request.baseUrl,
-      });
-
-      steps.push({
-        step: "grantAccess",
-        success: grantResult.success,
-        data: {
-          activityId: grantResult.activityId,
-          teamId: grantResult.teamId,
-        },
-        error: grantResult.error,
-        dryRun,
-      });
-
-      if (!grantResult.success) {
-        warnings.push(
-          `GrantAccess fallito: ${grantResult.error}. L'appuntamento è stato creato ma potrebbe non essere visibile al team Sales.`,
-        );
-        logger.warn(`⚠️ STEP 4 WARNING: GrantAccess failed`, {
-          error: grantResult.error,
-          duration: grantTimer.elapsed(),
-        });
-      } else {
-        logger.info("✅ STEP 4 COMPLETED: Access granted to Sales team", {
-          teamId: grantResult.teamId,
-          duration: grantTimer.elapsed(),
-        });
-      }
-    } else {
-      logger.info(
-        "ℹ️ STEP 4 SKIPPED: GrantAccess disabled via request parameter",
-      );
-      steps.push({
-        step: "grantAccess",
-        success: true,
-        skipped: true,
-        dryRun,
-      });
     }
 
     // =========================================================================
@@ -487,7 +457,7 @@ export async function createMeetingOrchestrator(
       },
     );
 
-    return {
+    const finalResponse: CreateMeetingOrchestratorResponse = {
       success: true,
       dryRun,
       activityId: appointment.activityid,
@@ -497,6 +467,14 @@ export async function createMeetingOrchestrator(
       warnings,
       timestamp: new Date().toISOString(),
     };
+
+    // Scrivi il blob diagnostico in fire-and-forget
+    if (diagnosticSession) {
+      diagnosticSession.orchestratorResult = finalResponse;
+      void writeDiagnosticBlob(diagnosticSession);
+    }
+
+    return finalResponse;
   } catch (error) {
     // Catch globale per errori non gestiti
     const msg = error instanceof Error ? error.message : String(error);
@@ -508,7 +486,6 @@ export async function createMeetingOrchestrator(
       errorType: error instanceof Error ? error.constructor.name : typeof error,
     });
 
-    // Aggiungi step di errore se non ce ne sono già
     if (steps.length === 0 || steps[steps.length - 1].success) {
       steps.push({
         step: "unhandledException",
@@ -518,15 +495,21 @@ export async function createMeetingOrchestrator(
       });
     }
 
-    return {
+    const errorResponse: CreateMeetingOrchestratorResponse = {
       success: false,
       dryRun,
       steps,
       warnings: [...warnings, `Errore non gestito: ${msg}`],
       timestamp: new Date().toISOString(),
     };
+
+    if (diagnosticSession) {
+      diagnosticSession.orchestratorResult = errorResponse;
+      void writeDiagnosticBlob(diagnosticSession);
+    }
+
+    return errorResponse;
   } finally {
-    // Disabilita sempre dry-run alla fine
     if (dryRun) {
       disableDryRun();
     }
@@ -542,6 +525,7 @@ function buildErrorResponse(
   warnings: string[],
   dryRun: boolean,
   errorMessage: string,
+  diagnosticSession?: DiagnosticSession,
 ): CreateMeetingOrchestratorResponse {
   const logger = createLogger(undefined, { dryRun });
   logger.error(`❌ ORCHESTRATOR FAILED: ${errorMessage}`, undefined, {
@@ -549,13 +533,20 @@ function buildErrorResponse(
     warningsCount: warnings.length,
   });
 
-  return {
+  const response: CreateMeetingOrchestratorResponse = {
     success: false,
     dryRun,
     steps,
     warnings,
     timestamp: new Date().toISOString(),
   };
+
+  if (diagnosticSession) {
+    diagnosticSession.orchestratorResult = response;
+    void writeDiagnosticBlob(diagnosticSession);
+  }
+
+  return response;
 }
 
 // -----------------------------------------------------------------------------
@@ -570,7 +561,6 @@ export function validateOrchestratorRequest(
   const errors: string[] = [];
   const req = request as Record<string, unknown>;
 
-  // Verifica campi obbligatori
   if (!req.institutionIdSelfcare && !req.nomeEnte) {
     errors.push("Specificare almeno uno tra institutionIdSelfcare e nomeEnte");
   }
@@ -589,13 +579,11 @@ export function validateOrchestratorRequest(
     for (let i = 0; i < req.partecipanti.length; i++) {
       const p = req.partecipanti[i] as Record<string, unknown>;
 
-      // Valida sempre il tipo di email se presente
       if (p.email !== undefined && typeof p.email !== "string") {
         errors.push(`partecipanti[${i}].email deve essere una stringa`);
-        continue; // Skip ulteriori validazioni su questa email
+        continue;
       }
 
-      // Validazione formato email opzionale (feature flag ENABLE_EMAIL_FORMAT_VALIDATION)
       if (
         p.email &&
         typeof p.email === "string" &&
@@ -621,6 +609,30 @@ export function validateOrchestratorRequest(
 
   if (!req.scheduledend) {
     errors.push("scheduledend è obbligatorio");
+  }
+
+  /**
+   * Validazione oggettoDelContatto: se presente, deve essere uno dei valori
+   * picklist validi di pgp_oggettodelcontatto in Dynamics 365.
+   * Valori validi:
+   *   100000000 = Opportunità
+   *   100000001 = Post-Vendita
+   *   100000002 = Informativa
+   *   100000003 = Comunicazione
+   *   100000004 = Pre-Sales
+   *   100000005 = Integrazione Tecnica
+   */
+  const VALID_OGGETTO_DEL_CONTATTO = [
+    100000000, 100000001, 100000002, 100000003, 100000004, 100000005,
+  ];
+  if (req.oggettoDelContatto !== undefined) {
+    const val = Number(req.oggettoDelContatto);
+    if (!Number.isInteger(val) || !VALID_OGGETTO_DEL_CONTATTO.includes(val)) {
+      errors.push(
+        `oggettoDelContatto non è valido: ricevuto ${req.oggettoDelContatto}. ` +
+          `Valori ammessi: ${VALID_OGGETTO_DEL_CONTATTO.join(", ")}`,
+      );
+    }
   }
 
   if (errors.length > 0) {

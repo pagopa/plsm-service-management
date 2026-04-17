@@ -85,6 +85,8 @@ export interface CreateAppointmentRequest {
   sortdate?: string;
   "ownerid@odata.bind"?: string;
   "regardingobjectid_account@odata.bind"?: string;
+  /** Prodotto Selfcare collegato all'appuntamento (OData navigation property) */
+  "pgp_Prodottoid@odata.bind"?: string;
   appointment_activity_parties?: AppointmentParty[];
 }
 
@@ -164,16 +166,17 @@ export interface CreateMeetingOrchestratorRequest {
 
   // Opzioni
   dryRun?: boolean;
+
   /**
-   * Abilita lo step di GrantAccess per garantire la visibilità dell'appuntamento al team Sales.
-   * Se impostato a `false` o omesso, lo step 4 (GrantAccess) verrà saltato completamente.
-   * @default false
+   * Payload originale ricevuto dal frontend.
+   * Usato internamente per il diagnostic logging su Blob Storage.
+   * Non deve essere inviato esplicitamente: viene popolato dall'handler.
    */
-  enableGrantAccess?: boolean;
+  frontendPayload?: unknown;
 
   /**
    * Base URL for Dynamics 365 environment.
-   * Used for all API calls to Dynamics (accounts, contacts, appointments, grantAccess).
+   * Used for all API calls to Dynamics (accounts, contacts, appointments).
    * @example "https://org.crm4.dynamics.com"
    */
   baseUrl: string;

@@ -229,9 +229,17 @@ paths:
         Crea uno o più contatti in Dynamics CRM associati a un ente, senza dover
         creare un appuntamento.
 
-        Il flusso è:
+        Il flusso per ogni partecipante è:
         1. Verifica l'ente tramite `institutionIdSelfcare`
-        2. Per ogni partecipante, crea il contatto collegandolo all'account e al prodotto
+        2. Ricerca contatto esistente con cascata a 3 step:
+           - **Step 1**: ricerca per istituzione + email + prodotto
+           - **Step 2**: ricerca per email + GUID prodotto
+           - **Step 3**: ricerca per sola email
+        3. Se il contatto esiste → risponde con `status: "alreadyExists"` (**409**)
+        4. Se non esiste → crea il contatto collegandolo all'account e al prodotto (**201**)
+
+        In caso di batch misto (alcuni esistenti, altri creati, altri falliti) viene
+        restituito **207 Multi-Status**.
       operationId: createContacts
       parameters:
         - $ref: "#/components/parameters/DynamicsEnvironment"
@@ -257,7 +265,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreateContactsResponse"
         "207":
-          description: Alcuni contatti creati, altri falliti
+          description: Alcuni contatti creati/trovati, altri falliti (batch misto)
           content:
             application/json:
               schema:
@@ -274,6 +282,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: |
+            Uno o più contatti esistono già in Dynamics CRM (tutti già esistenti).
+            Restituisce i dati dei contatti trovati con `status: "alreadyExists"`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateContactsResponse"
         "500":
           description: Tutti i contatti falliti o errore interno
           content:

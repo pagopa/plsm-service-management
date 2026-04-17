@@ -16,6 +16,8 @@ import {
   resolveEnvironment,
 } from "../utils/mappings";
 import { createLogger, logODataQuery, Timer } from "../utils/logger";
+import type { DiagnosticSession } from "./diagnosticLogger";
+import { addDiagnosticCall } from "./diagnosticLogger";
 
 // -----------------------------------------------------------------------------
 // Lista Contatti (usato da ping e altre utility)
@@ -244,6 +246,68 @@ export async function getContactByEmailAndInstitution(
 }
 
 /**
+ * Cerca un Contatto in Dynamics per sola email (fallback finale prima della creazione).
+ *
+ * @param baseUrl - Base URL per le chiamate Dynamics 365
+ * @param email - Email del contatto
+ * @returns Contatto trovato o null
+ */
+export async function getContactByEmailOnly(
+  baseUrl: string,
+  email: string,
+): Promise<Contact | null> {
+  const logger = createLogger(undefined, { email });
+  const timer = new Timer();
+
+  logger.info("🔍 Searching contact by email only (step 3 fallback)", {
+    email,
+  });
+
+  const escapedEmail = email.replace(/'/g, "''");
+  const filter = `emailaddress1 eq '${escapedEmail}'`;
+  const select =
+    "contactid,fullname,emailaddress1,firstname,lastname,telephone1,_pgp_prodottoid_value,_parentcustomerid_value,pgp_tipologiareferente";
+
+  const url = buildUrl({
+    baseUrl,
+    endpoint: "/api/data/v9.2/contacts",
+    filter,
+    select,
+  });
+
+  logODataQuery(logger, "/api/data/v9.2/contacts", filter, select);
+
+  try {
+    const result = await get<Contact>(url, baseUrl);
+    const duration = timer.elapsed();
+
+    if (!result.value || result.value.length === 0) {
+      logger.warn("⚠️ Contact not found by email only (step 3)", {
+        email,
+        duration,
+      });
+      return null;
+    }
+
+    const contact = result.value[0];
+    logger.info("✅ Contact found by email only (step 3)", {
+      contactId: contact.contactid,
+      fullName: contact.fullname,
+      email: contact.emailaddress1,
+      duration,
+    });
+
+    return contact;
+  } catch (error) {
+    logger.error("❌ Failed to search contact by email only", error, {
+      email,
+      duration: timer.elapsed(),
+    });
+    throw error;
+  }
+}
+
+/**
  * Cerca un Contatto in Dynamics per email e GUID prodotto (fallback).
  *
  * @param baseUrl - Base URL per le chiamate Dynamics 365
@@ -379,6 +443,8 @@ export interface VerifyOrCreateContactParams {
   tipologiaReferente: TipologiaReferente;
   accountId: string;
   enableCreateContact: boolean;
+  /** Sessione diagnostica opzionale per il logging su Blob Storage */
+  diagnosticSession?: DiagnosticSession;
 }
 
 export interface VerifyOrCreateContactResult {
@@ -413,12 +479,31 @@ export async function verifyOrCreateContact(
       institutionId: params.institutionIdSelfcare,
     });
 
+    const step1Url = buildUrl({
+      baseUrl: params.baseUrl,
+      endpoint: "/api/data/v9.2/contacts",
+      filter: `pgp_identificativoselfcarecliente eq '${params.institutionIdSelfcare}' and emailaddress1 eq '${params.email.replace(/'/g, "''")}' and contains(pgp_identificativoidpagopa, '${params.productIdSelfcare}')`,
+      select: "contactid,fullname,emailaddress1,firstname,lastname",
+    });
+    const step1Start = Date.now();
+
     const contact = await getContactByEmailAndInstitution(
       params.baseUrl,
       params.email,
       params.institutionIdSelfcare,
       params.productIdSelfcare,
     );
+
+    if (params.diagnosticSession) {
+      addDiagnosticCall(params.diagnosticSession, {
+        step: "searchContactByInstitution",
+        method: "GET",
+        url: step1Url,
+        requestBody: null,
+        responseStatus: 200,
+        durationMs: Date.now() - step1Start,
+      });
+    }
 
     if (contact) {
       logger.info("✅ Contact found by institution ID", {
@@ -435,11 +520,30 @@ export async function verifyOrCreateContact(
   if (params.email && productGuid) {
     logger.debug("Step 2: Fallback search by product GUID", { productGuid });
 
+    const step2Url = buildUrl({
+      baseUrl: params.baseUrl,
+      endpoint: "/api/data/v9.2/contacts",
+      filter: `emailaddress1 eq '${params.email.replace(/'/g, "''")}' and _pgp_prodottoid_value eq '${productGuid}'`,
+      select: "contactid,fullname,emailaddress1,firstname,lastname",
+    });
+    const step2Start = Date.now();
+
     const contact = await getContactByEmailAndProduct(
       params.baseUrl,
       params.email,
       productGuid,
     );
+
+    if (params.diagnosticSession) {
+      addDiagnosticCall(params.diagnosticSession, {
+        step: "searchContactByProduct",
+        method: "GET",
+        url: step2Url,
+        requestBody: null,
+        responseStatus: 200,
+        durationMs: Date.now() - step2Start,
+      });
+    }
 
     if (contact) {
       logger.info("✅ Contact found by product GUID (fallback)", {
@@ -452,7 +556,45 @@ export async function verifyOrCreateContact(
     logger.debug("Step 2 complete: Contact not found by product GUID");
   }
 
-  // Step 3: Create contact if enabled
+  // Step 3: Fallback search by email only
+  if (params.email) {
+    logger.debug("Step 3: Fallback search by email only", {
+      email: params.email,
+    });
+
+    const step3Url = buildUrl({
+      baseUrl: params.baseUrl,
+      endpoint: "/api/data/v9.2/contacts",
+      filter: `emailaddress1 eq '${params.email.replace(/'/g, "''")}'`,
+      select: "contactid,fullname,emailaddress1,firstname,lastname",
+    });
+    const step3Start = Date.now();
+
+    const contact = await getContactByEmailOnly(params.baseUrl, params.email);
+
+    if (params.diagnosticSession) {
+      addDiagnosticCall(params.diagnosticSession, {
+        step: "searchContactByEmailOnly",
+        method: "GET",
+        url: step3Url,
+        requestBody: null,
+        responseStatus: contact !== null ? 200 : 200,
+        durationMs: Date.now() - step3Start,
+      });
+    }
+
+    if (contact) {
+      logger.info("✅ Contact found by email only (step 3 fallback)", {
+        contactId: contact.contactid,
+        duration: overallTimer.elapsed(),
+      });
+      return { found: true, created: false, contact };
+    }
+
+    logger.debug("Step 3 complete: Contact not found by email only");
+  }
+
+  // Step 4: Create contact if enabled
   if (params.enableCreateContact) {
     // Loggare warning se email è assente
     if (!params.email) {
@@ -462,7 +604,7 @@ export async function verifyOrCreateContact(
       });
     }
 
-    logger.info("Step 3: Contact creation enabled, attempting to create", {
+    logger.info("Step 4: Contact creation enabled, attempting to create", {
       hasNome: !!params.nome,
       hasCognome: !!params.cognome,
       hasEmail: !!params.email,
@@ -488,6 +630,7 @@ export async function verifyOrCreateContact(
         email: params.email ?? "(no email)",
       });
 
+      const createStart = Date.now();
       const newContact = await createContact(params.baseUrl, {
         firstname: params.nome,
         lastname: params.cognome,
@@ -497,6 +640,30 @@ export async function verifyOrCreateContact(
         accountId: params.accountId,
       });
 
+      if (params.diagnosticSession) {
+        const environment = resolveEnvironment(params.baseUrl);
+        const prodGuid = getProductGuid(params.productIdSelfcare, environment);
+        const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente);
+        const contactBody: CreateContactRequest = {
+          firstname: params.nome,
+          lastname: params.cognome,
+          pgp_tipologiareferente: tipologiaId,
+          "parentcustomerid_account@odata.bind": `/accounts(${params.accountId})`,
+          ...(prodGuid
+            ? { "pgp_Prodottoid@odata.bind": `/products(${prodGuid})` }
+            : {}),
+          ...(params.email ? { emailaddress1: params.email } : {}),
+        };
+        addDiagnosticCall(params.diagnosticSession, {
+          step: "createContact",
+          method: "POST",
+          url: `${params.baseUrl}/api/data/v9.2/contacts`,
+          requestBody: contactBody,
+          responseStatus: 201,
+          durationMs: Date.now() - createStart,
+        });
+      }
+
       logger.info("✅ Contact created successfully", {
         contactId: newContact.contactid,
         duration: overallTimer.elapsed(),
@@ -505,6 +672,17 @@ export async function verifyOrCreateContact(
       return { found: false, created: true, contact: newContact };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
+      if (params.diagnosticSession) {
+        addDiagnosticCall(params.diagnosticSession, {
+          step: "createContact",
+          method: "POST",
+          url: `${params.baseUrl}/api/data/v9.2/contacts`,
+          requestBody: null,
+          responseStatus: null,
+          durationMs: 0,
+          error: msg,
+        });
+      }
       logger.error("❌ Failed to create contact", error, {
         duration: overallTimer.elapsed(),
       });
@@ -518,7 +696,7 @@ export async function verifyOrCreateContact(
   }
 
   // Contact not found and creation disabled
-  const error = `Contatto ${params.email ?? "(senza email)"} non trovato e abilitazione alla creazione disattivata`;
+  const error = `Contatto ${params.email ?? "(senza email)"} non trovato in nessuno dei 3 step di ricerca e abilitazione alla creazione disattivata`;
   logger.warn("⚠️ Contact not found and creation is disabled", {
     duration: overallTimer.elapsed(),
   });

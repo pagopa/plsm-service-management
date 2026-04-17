@@ -7,9 +7,13 @@ import type {
   DynamicsList,
   CreateAppointmentRequest,
   AppointmentParty,
+  ProductIdSelfcare,
 } from "../types/dynamics";
 import { get, post, buildUrl } from "./httpClient";
 import { type Logger } from "../utils/logger";
+import { getProductGuid, resolveEnvironment } from "../utils/mappings";
+import type { DiagnosticSession } from "./diagnosticLogger";
+import { addDiagnosticCall } from "./diagnosticLogger";
 
 // -----------------------------------------------------------------------------
 // Lista Appuntamenti
@@ -71,11 +75,20 @@ export interface CreateFullAppointmentParams {
   description?: string;
   oggettoDelContatto?: number;
   categoria?: string;
+  /**
+   * Data prossimo contatto previsto (campo standard Dynamics, formato ISO 8601 datetime).
+   * Accetta anche formato solo data (es. "2026-04-20") che viene auto-normalizzato
+   * aggiungendo "T00:00:00Z" per soddisfare il formato Edm.DateTimeOffset di Dynamics.
+   */
   dataProssimoContatto?: string;
+  /** ID Selfcare del prodotto, usato per collegare l'appuntamento al prodotto in Dynamics */
+  productIdSelfcare?: ProductIdSelfcare;
   accountId: string;
   contactIds: string[];
   ownerId?: string;
   baseUrl: string;
+  /** Sessione diagnostica opzionale per il logging su Blob Storage */
+  diagnosticSession?: DiagnosticSession;
 }
 
 /**
@@ -98,8 +111,10 @@ export interface CreateFullAppointmentParams {
  * @param params.description - Descrizione
  * @param params.oggettoDelContatto - Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365. Default suggerito: 100000005 (Integrazione Tecnica)
  * @param params.categoria - Categoria appuntamento (campo standard Dynamics)
- * @param params.dataProssimoContatto - Data prossimo contatto previsto (campo standard Dynamics, formato ISO 8601)
+ * @param params.dataProssimoContatto - Data prossimo contatto previsto. Accetta ISO 8601 datetime o solo data (auto-normalizzata a T00:00:00Z)
+ * @param params.productIdSelfcare - ID Selfcare del prodotto da collegare all'appuntamento
  * @param params.baseUrl - Base URL di Dynamics 365
+ * @param params.diagnosticSession - Sessione diagnostica opzionale
  * @returns Appuntamento creato con activityid
  */
 export async function createAppointment(
@@ -153,9 +168,26 @@ export async function createAppointment(
     body.category = params.categoria;
   }
 
-  // Aggiungi data prossimo contatto se specificata
+  // Aggiungi data prossimo contatto se specificata.
+  // Auto-normalizza il formato solo-data (es. "2026-04-20") aggiungendo "T00:00:00Z"
+  // per soddisfare il formato Edm.DateTimeOffset richiesto da Dynamics 365.
   if (params.dataProssimoContatto !== undefined) {
-    body.sortdate = params.dataProssimoContatto;
+    body.sortdate = params.dataProssimoContatto.includes("T")
+      ? params.dataProssimoContatto
+      : `${params.dataProssimoContatto}T00:00:00Z`;
+  }
+
+  // Collega il prodotto Selfcare all'appuntamento se specificato
+  if (params.productIdSelfcare) {
+    const environment = resolveEnvironment(params.baseUrl);
+    const productGuid = getProductGuid(params.productIdSelfcare, environment);
+    if (productGuid) {
+      body["pgp_Prodottoid@odata.bind"] = `/products(${productGuid})`;
+    } else {
+      console.warn(
+        `[Appointments] Prodotto ${params.productIdSelfcare} non trovato per ambiente ${environment} — campo omesso`,
+      );
+    }
   }
 
   console.log(`[Appointments] Creazione appuntamento: ${params.subject}`);
@@ -163,14 +195,49 @@ export async function createAppointment(
     `[Appointments] Partecipanti: ${params.contactIds.length} contatti + 1 account`,
   );
 
-  const result = await post<CreateAppointmentRequest, Appointment>(
-    url,
-    body,
-    params.baseUrl,
-  );
+  const timer = Date.now();
+  let responseStatus: number | null = null;
+  let thrownError: string | undefined;
 
-  console.log(`[Appointments] Appuntamento creato: ${result.activityid}`);
-  return result;
+  try {
+    const result = await post<CreateAppointmentRequest, Appointment>(
+      url,
+      body,
+      params.baseUrl,
+    );
+    responseStatus = 201;
+    console.log(`[Appointments] Appuntamento creato: ${result.activityid}`);
+
+    if (params.diagnosticSession) {
+      addDiagnosticCall(params.diagnosticSession, {
+        step: "createAppointment",
+        method: "POST",
+        url,
+        requestBody: body,
+        responseStatus,
+        durationMs: Date.now() - timer,
+      });
+    }
+
+    return result;
+  } catch (error) {
+    thrownError = error instanceof Error ? error.message : String(error);
+    responseStatus = null;
+
+    if (params.diagnosticSession) {
+      addDiagnosticCall(params.diagnosticSession, {
+        step: "createAppointment",
+        method: "POST",
+        url,
+        requestBody: body,
+        responseStatus,
+        durationMs: Date.now() - timer,
+        error: thrownError,
+      });
+    }
+
+    throw error;
+  }
 }
 
 // -----------------------------------------------------------------------------
