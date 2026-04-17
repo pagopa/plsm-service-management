@@ -85,8 +85,8 @@ export interface CreateAppointmentRequest {
   sortdate?: string;
   "ownerid@odata.bind"?: string;
   "regardingobjectid_account@odata.bind"?: string;
-  /** Prodotto Selfcare collegato all'appuntamento (OData navigation property) */
-  "pgp_Prodottoid@odata.bind"?: string;
+  /** Prodotto Selfcare collegato all'appuntamento (OData navigation property confermata da metadata CRM) */
+  "pgp_prodottooggettodelcontattoid_Appointment@odata.bind"?: string;
   appointment_activity_parties?: AppointmentParty[];
 }
 

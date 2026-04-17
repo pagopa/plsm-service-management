@@ -266,7 +266,9 @@ async function probeFieldValidation(baseUrl: string): Promise<{
   // Navigation property di contact: sono lookup/relation e non compaiono tra gli Attributes
   const contactNavigationProperties = ["pgp_Prodottoid"];
 
-  const appointmentNavigationProperties = ["pgp_Prodottoid"];
+  const appointmentNavigationProperties = [
+    "pgp_prodottooggettodelcontattoid_Appointment",
+  ];
 
   const [appointmentResult, contactResult] = await Promise.all([
     probeEntityFields(

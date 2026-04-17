@@ -353,6 +353,10 @@ paths:
         2. **Verifica/Crea Contatti** - Per ogni partecipante, verifica esistenza o crea (opzionale con `enableCreateContact`)
         3. **Crea Appuntamento** - Con tutti i partecipanti come activity_parties
 
+        `productIdSelfcare` viene usato anche per valorizzare il collegamento
+        prodotto dell'appuntamento tramite la navigation property CRM rilevata
+        dai metadata dell'entità `appointment`.
+
         ### Dry-Run Mode
         Impostare `dryRun: true` per testare il flusso senza modifiche a Dynamics.
       operationId: createMeeting
@@ -1141,11 +1145,11 @@ components:
                 properties:
                   schemaName:
                     type: string
-                    example: "pgp_appointment_Prodottoid_product"
+                    example: "pgp_appointment_prodottooggettodelcontattoid_product"
                   referencingNavigationPropertyName:
                     type: string
                     description: Nome da usare nell'@odata.bind sull'appointment
-                    example: "pgp_Prodottoid"
+                    example: "pgp_prodottooggettodelcontattoid_Appointment"
                   referencedEntity:
                     type: string
                     example: "product"

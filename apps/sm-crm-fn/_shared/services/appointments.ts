@@ -112,7 +112,7 @@ export interface CreateFullAppointmentParams {
  * @param params.oggettoDelContatto - Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365. Default suggerito: 100000005 (Integrazione Tecnica)
  * @param params.categoria - Categoria appuntamento (campo standard Dynamics)
  * @param params.dataProssimoContatto - Data prossimo contatto previsto. Accetta ISO 8601 datetime o solo data (auto-normalizzata a T00:00:00Z)
- * @param params.productIdSelfcare - ID Selfcare del prodotto da collegare all'appuntamento
+ * @param params.productIdSelfcare - ID Selfcare del prodotto da collegare all'appuntamento tramite la navigation property appointment -> product confermata dai metadata CRM
  * @param params.baseUrl - Base URL di Dynamics 365
  * @param params.diagnosticSession - Sessione diagnostica opzionale
  * @returns Appuntamento creato con activityid
@@ -182,7 +182,8 @@ export async function createAppointment(
     const environment = resolveEnvironment(params.baseUrl);
     const productGuid = getProductGuid(params.productIdSelfcare, environment);
     if (productGuid) {
-      body["pgp_Prodottoid@odata.bind"] = `/products(${productGuid})`;
+      body["pgp_prodottooggettodelcontattoid_Appointment@odata.bind"] =
+        `/products(${productGuid})`;
     } else {
       console.warn(
         `[Appointments] Prodotto ${params.productIdSelfcare} non trovato per ambiente ${environment} — campo omesso`,
