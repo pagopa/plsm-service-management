@@ -1130,6 +1130,28 @@ components:
             error:
               type: string
               nullable: true
+        appointmentProductRelationships:
+          type: object
+          properties:
+            relationships:
+              type: array
+              description: Relazioni ManyToOne dell'appointment verso entità product
+              items:
+                type: object
+                properties:
+                  schemaName:
+                    type: string
+                    example: "pgp_appointment_Prodottoid_product"
+                  referencingNavigationPropertyName:
+                    type: string
+                    description: Nome da usare nell'@odata.bind sull'appointment
+                    example: "pgp_Prodottoid"
+                  referencedEntity:
+                    type: string
+                    example: "product"
+            error:
+              type: string
+              nullable: true
         metadata:
           type: object
           properties:

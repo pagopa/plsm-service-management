@@ -471,7 +471,7 @@ export async function createMeetingOrchestrator(
     // Scrivi il blob diagnostico in fire-and-forget
     if (diagnosticSession) {
       diagnosticSession.orchestratorResult = finalResponse;
-      void writeDiagnosticBlob(diagnosticSession);
+      await writeDiagnosticBlob(diagnosticSession);
     }
 
     return finalResponse;
@@ -505,7 +505,7 @@ export async function createMeetingOrchestrator(
 
     if (diagnosticSession) {
       diagnosticSession.orchestratorResult = errorResponse;
-      void writeDiagnosticBlob(diagnosticSession);
+      await writeDiagnosticBlob(diagnosticSession);
     }
 
     return errorResponse;
@@ -520,13 +520,13 @@ export async function createMeetingOrchestrator(
 // Helper per costruire response di errore
 // -----------------------------------------------------------------------------
 
-function buildErrorResponse(
+async function buildErrorResponse(
   steps: OrchestratorStepResult[],
   warnings: string[],
   dryRun: boolean,
   errorMessage: string,
   diagnosticSession?: DiagnosticSession,
-): CreateMeetingOrchestratorResponse {
+): Promise<CreateMeetingOrchestratorResponse> {
   const logger = createLogger(undefined, { dryRun });
   logger.error(`❌ ORCHESTRATOR FAILED: ${errorMessage}`, undefined, {
     stepsCompleted: steps.length,
@@ -543,7 +543,7 @@ function buildErrorResponse(
 
   if (diagnosticSession) {
     diagnosticSession.orchestratorResult = response;
-    void writeDiagnosticBlob(diagnosticSession);
+    await writeDiagnosticBlob(diagnosticSession);
   }
 
   return response;

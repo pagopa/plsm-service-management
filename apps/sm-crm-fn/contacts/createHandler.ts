@@ -367,7 +367,7 @@ export async function createContactsHandler(
           success: false,
           error: accountResult.error ?? "Ente non trovato",
         };
-        void writeDiagnosticBlob(diagnosticSession);
+        await writeDiagnosticBlob(diagnosticSession);
       }
       return {
         status: 404,
@@ -550,7 +550,7 @@ export async function createContactsHandler(
 
     if (diagnosticSession) {
       diagnosticSession.orchestratorResult = responseBody;
-      void writeDiagnosticBlob(diagnosticSession);
+      await writeDiagnosticBlob(diagnosticSession);
     }
 
     return {
