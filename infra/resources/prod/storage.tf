@@ -9,9 +9,7 @@ resource "azurerm_storage_account" "storage_marco_ext_001" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
 
-  tags = {
-    environment = "production"
-  }
+  tags = local.tags
 }
 
 resource "azurerm_storage_account" "diagnostics_storage" {
