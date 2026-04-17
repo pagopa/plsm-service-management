@@ -67,6 +67,6 @@ jobs:
       function_app_name: ${{ inputs.function_app_name }}
       use_staging_slot: ${{ inputs.use_staging_slot }}
       use_private_agent: ${{ inputs.use_private_agent }}
-      use_labels: ${{ inputs.use_labels }}
+      use_labels: true
       override_labels: ${{ inputs.override_labels || needs.resolve-env.outputs.runner_label }}
     secrets: inherit
