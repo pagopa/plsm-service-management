@@ -623,6 +623,8 @@ export async function verifyOrCreateContact(
       };
     }
 
+    const createStart = Date.now();
+
     try {
       logger.info("Creating new contact in Dynamics", {
         nome: params.nome,
@@ -630,7 +632,6 @@ export async function verifyOrCreateContact(
         email: params.email ?? "(no email)",
       });
 
-      const createStart = Date.now();
       const newContact = await createContact(params.baseUrl, {
         firstname: params.nome,
         lastname: params.cognome,
@@ -679,7 +680,7 @@ export async function verifyOrCreateContact(
           url: `${params.baseUrl}/api/data/v9.2/contacts`,
           requestBody: null,
           responseStatus: null,
-          durationMs: 0,
+          durationMs: Date.now() - createStart,
           error: msg,
         });
       }
