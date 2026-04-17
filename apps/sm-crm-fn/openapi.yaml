@@ -629,10 +629,12 @@ components:
           example: "Follow-up tecnico"
         dataProssimoContatto:
           type: string
-          format: date-time
           description: |
             Data prossimo contatto previsto (campo standard Dynamics `sortdate`).
-            Formato ISO 8601.
+            Accetta sia un valore ISO 8601 completo (`2025-03-01T10:00:00Z`) sia
+            una data semplice (`2025-03-01`). Se viene passato solo il giorno,
+            la Function lo normalizza automaticamente a `T00:00:00Z` prima
+            dell'invio a Dynamics 365.
           example: "2025-03-01T10:00:00Z"
         enableCreateContact:
           type: boolean
