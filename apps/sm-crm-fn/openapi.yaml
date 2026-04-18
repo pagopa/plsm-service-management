@@ -353,9 +353,10 @@ paths:
         2. **Verifica/Crea Contatti** - Per ogni partecipante, verifica esistenza o crea (opzionale con `enableCreateContact`)
         3. **Crea Appuntamento** - Con tutti i partecipanti come activity_parties
 
-        `productIdSelfcare` viene usato anche per valorizzare il collegamento
-        prodotto dell'appuntamento tramite la navigation property CRM rilevata
-        dai metadata dell'entità `appointment`.
+        `productIdSelfcare` resta obbligatorio per il flusso applicativo e per la
+        ricerca dei contatti. Al momento non viene bindato direttamente
+        sull'entità `appointment`, perché in UAT il collegamento al prodotto
+        attiva logica CRM server-side che fallisce e deve essere confermata col team CRM.
 
         ### Dry-Run Mode
         Impostare `dryRun: true` per testare il flusso senza modifiche a Dynamics.

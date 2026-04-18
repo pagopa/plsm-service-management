@@ -11,7 +11,7 @@ import type {
 } from "../types/dynamics";
 import { get, post, buildUrl } from "./httpClient";
 import { type Logger } from "../utils/logger";
-import { getProductGuid, resolveEnvironment } from "../utils/mappings";
+import { resolveEnvironment } from "../utils/mappings";
 import type { DiagnosticSession } from "./diagnosticLogger";
 import { addDiagnosticCall } from "./diagnosticLogger";
 
@@ -81,7 +81,12 @@ export interface CreateFullAppointmentParams {
    * aggiungendo "T00:00:00Z" per soddisfare il formato Edm.DateTimeOffset di Dynamics.
    */
   dataProssimoContatto?: string;
-  /** ID Selfcare del prodotto, usato per collegare l'appuntamento al prodotto in Dynamics */
+  /**
+   * ID Selfcare del prodotto.
+   * Viene usato a livello applicativo/orchestrativo, ma al momento non viene
+   * inviato sull'entità `appointment` perché in UAT il binding del prodotto
+   * attiva logica CRM server-side che fallisce con `0x80040265`.
+   */
   productIdSelfcare?: ProductIdSelfcare;
   accountId: string;
   contactIds: string[];
@@ -112,7 +117,7 @@ export interface CreateFullAppointmentParams {
  * @param params.oggettoDelContatto - Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365. Default suggerito: 100000005 (Integrazione Tecnica)
  * @param params.categoria - Categoria appuntamento (campo standard Dynamics)
  * @param params.dataProssimoContatto - Data prossimo contatto previsto. Accetta ISO 8601 datetime o solo data (auto-normalizzata a T00:00:00Z)
- * @param params.productIdSelfcare - ID Selfcare del prodotto da collegare all'appuntamento tramite la navigation property appointment -> product confermata dai metadata CRM
+ * @param params.productIdSelfcare - ID Selfcare del prodotto. Al momento non viene bindato sull'appuntamento: resta usato per il flusso applicativo e la ricerca contatti.
  * @param params.baseUrl - Base URL di Dynamics 365
  * @param params.diagnosticSession - Sessione diagnostica opzionale
  * @returns Appuntamento creato con activityid
@@ -177,18 +182,17 @@ export async function createAppointment(
       : `${params.dataProssimoContatto}T00:00:00Z`;
   }
 
-  // Collega il prodotto Selfcare all'appuntamento se specificato
+  // NOTE:
+  // I metadata CRM espongono una relazione appointment -> product, ma in UAT il
+  // binding del prodotto sull'appuntamento causa un errore server-side
+  // `0x80040265` ("Errore nella gestione automatica dell'appointment").
+  // Fino a conferma del team CRM, il prodotto non viene inviato in POST
+  // /appointments.
   if (params.productIdSelfcare) {
     const environment = resolveEnvironment(params.baseUrl);
-    const productGuid = getProductGuid(params.productIdSelfcare, environment);
-    if (productGuid) {
-      body["pgp_prodottooggettodelcontattoid_Appointment@odata.bind"] =
-        `/products(${productGuid})`;
-    } else {
-      console.warn(
-        `[Appointments] Prodotto ${params.productIdSelfcare} non trovato per ambiente ${environment} — campo omesso`,
-      );
-    }
+    console.warn(
+      `[Appointments] Binding prodotto su appointment disabilitato temporaneamente per ambiente ${environment} e prodotto ${params.productIdSelfcare}`,
+    );
   }
 
   console.log(`[Appointments] Creazione appuntamento: ${params.subject}`);
