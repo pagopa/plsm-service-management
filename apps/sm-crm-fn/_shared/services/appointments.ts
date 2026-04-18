@@ -201,47 +201,92 @@ export async function createAppointment(
   );
 
   const timer = Date.now();
-  let responseStatus: number | null = null;
-  let thrownError: string | undefined;
+  const executeCreateAppointment = async (
+    requestBody: CreateAppointmentRequest,
+    step: string,
+  ): Promise<Appointment> => {
+    const attemptStart = Date.now();
+
+    try {
+      const result = await post<CreateAppointmentRequest, Appointment>(
+        url,
+        requestBody,
+        params.baseUrl,
+      );
+
+      if (params.diagnosticSession) {
+        addDiagnosticCall(params.diagnosticSession, {
+          step,
+          method: "POST",
+          url,
+          requestBody,
+          responseStatus: 201,
+          durationMs: Date.now() - attemptStart,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      if (params.diagnosticSession) {
+        addDiagnosticCall(params.diagnosticSession, {
+          step,
+          method: "POST",
+          url,
+          requestBody,
+          responseStatus: null,
+          durationMs: Date.now() - attemptStart,
+          error: errorMessage,
+        });
+      }
+
+      throw error;
+    }
+  };
 
   try {
-    const result = await post<CreateAppointmentRequest, Appointment>(
-      url,
-      body,
-      params.baseUrl,
-    );
-    responseStatus = 201;
+    const result = await executeCreateAppointment(body, "createAppointment");
     console.log(`[Appointments] Appuntamento creato: ${result.activityid}`);
-
-    if (params.diagnosticSession) {
-      addDiagnosticCall(params.diagnosticSession, {
-        step: "createAppointment",
-        method: "POST",
-        url,
-        requestBody: body,
-        responseStatus,
-        durationMs: Date.now() - timer,
-      });
-    }
-
     return result;
   } catch (error) {
-    thrownError = error instanceof Error ? error.message : String(error);
-    responseStatus = null;
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
-    if (params.diagnosticSession) {
-      addDiagnosticCall(params.diagnosticSession, {
-        step: "createAppointment",
-        method: "POST",
-        url,
-        requestBody: body,
-        responseStatus,
-        durationMs: Date.now() - timer,
-        error: thrownError,
-      });
+    if (!errorMessage.includes("0x80040265")) {
+      throw error;
     }
 
-    throw error;
+    console.warn(
+      "[Appointments] CRM automatic appointment handling failed, retrying with reduced payload",
+      {
+        durationMs: Date.now() - timer,
+      },
+    );
+
+    const fallbackBody: CreateAppointmentRequest = {
+      subject: body.subject,
+      scheduledstart: body.scheduledstart,
+      scheduledend: body.scheduledend,
+      location: body.location,
+      description: body.description,
+      "regardingobjectid_account@odata.bind":
+        body["regardingobjectid_account@odata.bind"],
+      appointment_activity_parties: body.appointment_activity_parties,
+    };
+
+    try {
+      const fallbackResult = await executeCreateAppointment(
+        fallbackBody,
+        "createAppointmentFallback",
+      );
+      console.log(
+        `[Appointments] Appuntamento creato con fallback: ${fallbackResult.activityid}`,
+      );
+      return fallbackResult;
+    } catch {
+      throw error;
+    }
   }
 }
 
