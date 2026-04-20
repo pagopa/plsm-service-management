@@ -92,7 +92,11 @@ export async function onSubmitFormData(state: any, formData: FormData) {
             event: "onboarding.upload.error",
             actor: "smcr-ui",
             subject: "onboarding",
-            metadata: { status: error.status, statusText: error.statusText, output },
+            metadata: {
+              status: error.status,
+              statusText: error.statusText,
+              output,
+            },
           },
         },
         "Onboarding upload failed",
