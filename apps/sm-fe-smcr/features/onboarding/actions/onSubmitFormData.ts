@@ -75,7 +75,11 @@ export async function onSubmitFormData(state: any, formData: FormData) {
           event: "onboarding.upload.response",
           actor: "smcr-ui",
           subject: "onboarding",
-          metadata: { hasData: !!data, output },
+          metadata: {
+            hasData: !!data,
+            output,
+            payload: generatePayload(dataFromUIParsed),
+          },
         },
       },
       "Onboarding upload response",
