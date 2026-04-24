@@ -56,6 +56,58 @@ const configSchema = z.object({
     .string()
     .optional()
     .default("crm-diagnostics"),
+  /**
+   * Mappa prodotti CRM per ambiente UAT (JSON serializzato da Key Vault).
+   * Formato: Record<ProductIdSelfcare, string> dove il valore è il GUID Dynamics.
+   * Se assente, viene usato il fallback hardcoded in mappings.ts.
+   * @example '{"prod-pn":"617cbe1b-...","prod-io":"26a975ef-..."}'
+   */
+  CRM_PRODUCTS_MAP_UAT: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return undefined
+      try {
+        return JSON.parse(val) as Record<string, string>
+      } catch {
+        console.warn('[config] CRM_PRODUCTS_MAP_UAT: JSON non valido, uso fallback hardcoded')
+        return undefined
+      }
+    }),
+  /**
+   * Mappa prodotti CRM per ambiente PROD (JSON serializzato da Key Vault).
+   * Formato: Record<ProductIdSelfcare, string> dove il valore è il GUID Dynamics.
+   * Se assente, viene usato il fallback hardcoded in mappings.ts.
+   */
+  CRM_PRODUCTS_MAP_PROD: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return undefined
+      try {
+        return JSON.parse(val) as Record<string, string>
+      } catch {
+        console.warn('[config] CRM_PRODUCTS_MAP_PROD: JSON non valido, uso fallback hardcoded')
+        return undefined
+      }
+    }),
+  /**
+   * Mappa tipologie referente CRM (JSON serializzato da Key Vault).
+   * Formato: Record<TipologiaReferente, number>.
+   * Identica in UAT e PROD. Se assente, viene usato il fallback hardcoded in mappings.ts.
+   */
+  CRM_TIPOLOGIA_REFERENTE_MAP: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return undefined
+      try {
+        return JSON.parse(val) as Record<string, number>
+      } catch {
+        console.warn('[config] CRM_TIPOLOGIA_REFERENTE_MAP: JSON non valido, uso fallback hardcoded')
+        return undefined
+      }
+    }),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
@@ -89,6 +141,9 @@ export function getConfigOrThrow(): AppConfig {
     DIAGNOSTIC_STORAGE_CONNECTION_STRING:
       process.env.DIAGNOSTIC_STORAGE_CONNECTION_STRING,
     DIAGNOSTIC_STORAGE_CONTAINER: process.env.DIAGNOSTIC_STORAGE_CONTAINER,
+    CRM_PRODUCTS_MAP_UAT: process.env.CRM_PRODUCTS_MAP_UAT,
+    CRM_PRODUCTS_MAP_PROD: process.env.CRM_PRODUCTS_MAP_PROD,
+    CRM_TIPOLOGIA_REFERENTE_MAP: process.env.CRM_TIPOLOGIA_REFERENTE_MAP,
   };
   try {
     return validateConfig(raw);
@@ -102,4 +157,25 @@ export function getConfigOrThrow(): AppConfig {
 
 export function isDevelopment(): boolean {
   return process.env.NODE_ENV === "development";
+}
+
+// -----------------------------------------------------------------------------
+// Singleton config (letto una sola volta all'avvio della Function)
+// -----------------------------------------------------------------------------
+
+let _cachedConfig: AppConfig | undefined
+
+/**
+ * Restituisce la configurazione dell'app leggendola una sola volta da process.env.
+ * Le invocazioni successive restituiscono la stessa istanza (singleton).
+ * Usare questa funzione al posto di getConfigOrThrow() nei moduli che vengono
+ * importati ad ogni richiesta, per evitare parsing ripetuto.
+ *
+ * @returns AppConfig validata e cachata
+ */
+export function getConfig(): AppConfig {
+  if (!_cachedConfig) {
+    _cachedConfig = getConfigOrThrow()
+  }
+  return _cachedConfig
 }
