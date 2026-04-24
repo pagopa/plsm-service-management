@@ -3,7 +3,8 @@ import type {
   HttpResponseInit,
   InvocationContext,
 } from "@azure/functions";
-import { resolveEnvironment, PRODUCTS_MAP } from "../_shared/utils/mappings";
+import { resolveEnvironment } from "../_shared/utils/mappings";
+import { getConfig } from "../_shared/utils/config";
 import { get, buildUrl } from "../_shared/services/httpClient";
 import { createLogger } from "../_shared/utils/logger";
 import {
@@ -517,7 +518,9 @@ export async function probeDynamicsHandler(
         fieldValidation,
         oggettoDelContattoPicklist,
         recommendation,
-        products: PRODUCTS_MAP[environment],
+        products: environment === 'UAT'
+          ? getConfig().CRM_PRODUCTS_MAP_UAT
+          : getConfig().CRM_PRODUCTS_MAP_PROD,
         candidates: results,
       },
     };

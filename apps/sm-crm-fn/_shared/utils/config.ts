@@ -59,53 +59,58 @@ const configSchema = z.object({
   /**
    * Mappa prodotti CRM per ambiente UAT (JSON serializzato da Key Vault).
    * Formato: Record<ProductIdSelfcare, string> dove il valore è il GUID Dynamics.
-   * Se assente, viene usato il fallback hardcoded in mappings.ts.
    * @example '{"prod-pn":"617cbe1b-...","prod-io":"26a975ef-..."}'
    */
   CRM_PRODUCTS_MAP_UAT: z
     .string()
-    .optional()
+    .min(1, 'CRM_PRODUCTS_MAP_UAT è obbligatoria')
     .transform((val) => {
-      if (!val) return undefined
       try {
         return JSON.parse(val) as Record<string, string>
       } catch {
-        console.warn('[config] CRM_PRODUCTS_MAP_UAT: JSON non valido, uso fallback hardcoded')
-        return undefined
+        throw new Error('CRM_PRODUCTS_MAP_UAT: JSON non valido')
       }
     }),
   /**
    * Mappa prodotti CRM per ambiente PROD (JSON serializzato da Key Vault).
    * Formato: Record<ProductIdSelfcare, string> dove il valore è il GUID Dynamics.
-   * Se assente, viene usato il fallback hardcoded in mappings.ts.
    */
   CRM_PRODUCTS_MAP_PROD: z
     .string()
-    .optional()
+    .min(1, 'CRM_PRODUCTS_MAP_PROD è obbligatoria')
     .transform((val) => {
-      if (!val) return undefined
       try {
         return JSON.parse(val) as Record<string, string>
       } catch {
-        console.warn('[config] CRM_PRODUCTS_MAP_PROD: JSON non valido, uso fallback hardcoded')
-        return undefined
+        throw new Error('CRM_PRODUCTS_MAP_PROD: JSON non valido')
       }
     }),
   /**
-   * Mappa tipologie referente CRM (JSON serializzato da Key Vault).
+   * Mappa tipologie referente CRM per ambiente UAT (JSON serializzato da Key Vault).
    * Formato: Record<TipologiaReferente, number>.
-   * Identica in UAT e PROD. Se assente, viene usato il fallback hardcoded in mappings.ts.
    */
-  CRM_TIPOLOGIA_REFERENTE_MAP: z
+  CRM_TIPOLOGIA_REFERENTE_MAP_UAT: z
     .string()
-    .optional()
+    .min(1, 'CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria')
     .transform((val) => {
-      if (!val) return undefined
       try {
         return JSON.parse(val) as Record<string, number>
       } catch {
-        console.warn('[config] CRM_TIPOLOGIA_REFERENTE_MAP: JSON non valido, uso fallback hardcoded')
-        return undefined
+        throw new Error('CRM_TIPOLOGIA_REFERENTE_MAP_UAT: JSON non valido')
+      }
+    }),
+  /**
+   * Mappa tipologie referente CRM per ambiente PROD (JSON serializzato da Key Vault).
+   * Formato: Record<TipologiaReferente, number>.
+   */
+  CRM_TIPOLOGIA_REFERENTE_MAP_PROD: z
+    .string()
+    .min(1, 'CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria')
+    .transform((val) => {
+      try {
+        return JSON.parse(val) as Record<string, number>
+      } catch {
+        throw new Error('CRM_TIPOLOGIA_REFERENTE_MAP_PROD: JSON non valido')
       }
     }),
 });
@@ -143,7 +148,8 @@ export function getConfigOrThrow(): AppConfig {
     DIAGNOSTIC_STORAGE_CONTAINER: process.env.DIAGNOSTIC_STORAGE_CONTAINER,
     CRM_PRODUCTS_MAP_UAT: process.env.CRM_PRODUCTS_MAP_UAT,
     CRM_PRODUCTS_MAP_PROD: process.env.CRM_PRODUCTS_MAP_PROD,
-    CRM_TIPOLOGIA_REFERENTE_MAP: process.env.CRM_TIPOLOGIA_REFERENTE_MAP,
+    CRM_TIPOLOGIA_REFERENTE_MAP_UAT: process.env.CRM_TIPOLOGIA_REFERENTE_MAP_UAT,
+    CRM_TIPOLOGIA_REFERENTE_MAP_PROD: process.env.CRM_TIPOLOGIA_REFERENTE_MAP_PROD,
   };
   try {
     return validateConfig(raw);

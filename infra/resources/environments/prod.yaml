@@ -126,7 +126,8 @@ crm_function:
   # CRM Mappings (da Key Vault, JSON serializzato)
   CRM_PRODUCTS_MAP_UAT: "kv:crm_products_map_uat"
   CRM_PRODUCTS_MAP_PROD: "kv:crm_products_map_prod"
-  CRM_TIPOLOGIA_REFERENTE_MAP: "kv:crm_tipologia_referente_map"
+  CRM_TIPOLOGIA_REFERENTE_MAP_UAT: "kv:crm_tipologia_referente_map_uat"
+  CRM_TIPOLOGIA_REFERENTE_MAP_PROD: "kv:crm_tipologia_referente_map_prod"
   NODE_ENV: "production"
   WEBSITE_RUN_FROM_PACKAGE: "1"
   DEBUG: "true"

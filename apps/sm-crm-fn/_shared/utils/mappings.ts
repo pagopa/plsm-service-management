@@ -1,15 +1,14 @@
 // =============================================================================
-// CRM MAPPINGS - Mapping hardcoded per l'integrazione con Dynamics 365
+// CRM MAPPINGS - Mapping per l'integrazione con Dynamics 365
 // =============================================================================
 //
-// ⚠️ ATTENZIONE - DATI SENSIBILI:
-// Questo file contiene GUID reali di prodotti e team CRM per tutti gli ambienti.
+// PRODUCTS_MAP e TIPOLOGIA_REFERENTE_MAP sono gestiti via Azure Key Vault.
+// Le env var corrispondenti (CRM_PRODUCTS_MAP_UAT, CRM_PRODUCTS_MAP_PROD,
+// CRM_TIPOLOGIA_REFERENTE_MAP_UAT, CRM_TIPOLOGIA_REFERENTE_MAP_PROD) sono
+// obbligatorie a runtime e vengono iniettate a deploy-time da Terraform.
 //
-// SICUREZZA:
-// - NON esporre questi dati pubblicamente
-// - Considerare lo spostamento in Azure Key Vault per produzione
-// - I GUID sono specifici per ogni ambiente Dynamics (UAT/PROD)
-// - Accesso limitato solo a personale autorizzato
+// Per sviluppo locale: copiare local.settings.json.example in local.settings.json
+// e popolare le variabili con i valori dell'ambiente di test.
 //
 // =============================================================================
 
@@ -21,56 +20,9 @@ import type {
 import { getConfig } from "./config"
 
 // -----------------------------------------------------------------------------
-// Mapping Prodotti Selfcare → GUID CRM
+// Mapping Picklist pgp_oggettodelcontatto su appointment
+// (identico in UAT e PROD — non gestito via KV)
 // -----------------------------------------------------------------------------
-
-export const PRODUCTS_MAP: Record<
-  Environment,
-  Record<ProductIdSelfcare, string>
-> = {
-  // NOTA: UAT usa GUID specifici per l'ambiente di test
-  UAT: {
-    "prod-pn": "617cbe1b-bb58-f011-877b-000d3a662132",
-    "prod-idpay-merchant": "637cbe1b-bb58-f011-877b-000d3a662132",
-    "prod-checkiban": "22a975ef-a205-f011-bae4-000d3ab7023d",
-    "prod-interop": "24a975ef-a205-f011-bae4-000d3ab7023d",
-    "prod-io": "26a975ef-a205-f011-bae4-000d3ab7023d",
-    "prod-idpay": "04c4d12b-a205-f011-bae3-000d3adf9667",
-    "prod-pagopa": "c00c3e9a-a205-f011-bae3-000d3adf9667",
-    "prod-io-sign": "ca089f05-bd58-f011-877b-6045bdde7236",
-    "prod-io-premium": "46af0f1c-bb58-f011-877b-6045bdde77c4",
-    "prod-rtp": "dde9d520-5f11-f011-998b-000d3adf9667",
-  },
-  PROD: {
-    "prod-pn": "77d197d1-cf51-f011-877b-6045bdddeb37",
-    "prod-io": "fbe295d3-cf51-f011-877b-6045bde1138f",
-    "prod-pagopa": "63a165d1-cf51-f011-877b-7c1e52876621",
-    "prod-idpay": "65a165d1-cf51-f011-877b-7c1e52876621",
-    "prod-idpay-merchant": "66a165d1-cf51-f011-877b-7c1e52876621",
-    "prod-checkiban": "67a165d1-cf51-f011-877b-7c1e52876621",
-    "prod-interop": "7b0e7ad1-cf51-f011-877a-7c1e5287ed24",
-    "prod-io-premium": "7c0e7ad1-cf51-f011-877a-7c1e5287ed24",
-    "prod-io-sign": "4618d3d1-cf51-f011-877a-7ced8d4a21cf",
-    // NOTA: prod-rtp non presente in PROD secondo la documentazione
-    "prod-rtp": "",
-  },
-};
-
-// -----------------------------------------------------------------------------
-// Mapping Tipologia Referente → ID numerico CRM
-// -----------------------------------------------------------------------------
-
-export const TIPOLOGIA_REFERENTE_MAP: Record<TipologiaReferente, number> = {
-  APICALE: 100000000,
-  DIRETTO: 100000001,
-  TECNICO: 100000002,
-  BUSINESS: 100000003,
-  ACCOUNT: 100000004,
-  RESPONSABILE_DI_TRASFORMAZIONE_DIGITALE: 100000005,
-  REFERENTE_CONTRATTUALE: 100000006,
-  RESPONSABILE_PROTEZIONE_DATI: 100000007,
-  REFERENTE_BUSINESS_APICALE_ACCOUNT: 100000008,
-};
 
 /**
  * Mapping dei valori della Picklist pgp_oggettodelcontatto su appointment.
@@ -94,7 +46,7 @@ export const OGGETTO_DEL_CONTATTO_MAP: Record<string, number> = {
 export type OggettoDelContatto = keyof typeof OGGETTO_DEL_CONTATTO_MAP;
 
 // -----------------------------------------------------------------------------
-// Mapping Team per GrantAccess
+// Mapping Team per GrantAccess (non gestito via KV)
 // -----------------------------------------------------------------------------
 
 export const TEAMS_MAP: Record<Environment, string> = {
@@ -103,7 +55,7 @@ export const TEAMS_MAP: Record<Environment, string> = {
 };
 
 // -----------------------------------------------------------------------------
-// URL base per ambiente
+// URL base per ambiente (non gestito via KV)
 // -----------------------------------------------------------------------------
 
 export const BASE_URLS: Record<Environment, string> = {
@@ -115,54 +67,49 @@ export const BASE_URLS: Record<Environment, string> = {
 // Helper functions
 // -----------------------------------------------------------------------------
 
+/**
+ * Restituisce il GUID CRM del prodotto per l'ambiente specificato.
+ * Il valore viene letto dalla env var KV (CRM_PRODUCTS_MAP_UAT / CRM_PRODUCTS_MAP_PROD),
+ * obbligatoria a runtime — configurata via Key Vault a deploy-time.
+ *
+ * @param productId - ID Selfcare del prodotto
+ * @param environment - Ambiente Dynamics (UAT | PROD)
+ * @returns GUID del prodotto o null se non presente nella mappa
+ */
 export function getProductGuid(
   productId: ProductIdSelfcare,
   environment: Environment,
 ): string | null {
-  // Priorità 1: env var da Key Vault (parsata a singleton da config.ts)
-  try {
-    const config = getConfig()
-    const mapFromKv =
-      environment === 'UAT'
-        ? config.CRM_PRODUCTS_MAP_UAT
-        : config.CRM_PRODUCTS_MAP_PROD
-    if (mapFromKv) {
-      const guid = mapFromKv[productId]
-      if (guid) return guid
-      console.warn(
-        `[mappings] Prodotto ${productId} non trovato nella mappa KV per ${environment}`,
-      )
-    }
-  } catch {
-    // config non disponibile (es. test unitari) — usa fallback hardcoded
-  }
-
-  // Priorità 2: fallback hardcoded (sviluppo locale)
-  const guid = PRODUCTS_MAP[environment]?.[productId];
+  const config = getConfig()
+  const map = environment === 'UAT'
+    ? config.CRM_PRODUCTS_MAP_UAT
+    : config.CRM_PRODUCTS_MAP_PROD
+  const guid = map[productId]
   if (!guid) {
-    console.warn(
-      `Prodotto ${productId} non trovato per ambiente ${environment}`,
-    );
-    return null;
+    console.warn(`[mappings] Prodotto ${productId} non trovato nella mappa KV per ${environment}`)
+    return null
   }
-  return guid;
+  return guid
 }
 
-export function getTipologiaReferenteId(tipologia: TipologiaReferente): number {
-  // Priorità 1: env var da Key Vault (parsata a singleton da config.ts)
-  try {
-    const config = getConfig()
-    const mapFromKv = config.CRM_TIPOLOGIA_REFERENTE_MAP
-    if (mapFromKv) {
-      const id = mapFromKv[tipologia]
-      if (id !== undefined) return id
-    }
-  } catch {
-    // config non disponibile (es. test unitari) — usa fallback hardcoded
-  }
-
-  // Priorità 2: fallback hardcoded (sviluppo locale)
-  return TIPOLOGIA_REFERENTE_MAP[tipologia];
+/**
+ * Restituisce l'ID numerico CRM della tipologia referente per l'ambiente specificato.
+ * Il valore viene letto dalla env var KV (CRM_TIPOLOGIA_REFERENTE_MAP_UAT / _PROD),
+ * obbligatoria a runtime — configurata via Key Vault a deploy-time.
+ *
+ * @param tipologia - Tipologia referente
+ * @param environment - Ambiente Dynamics (UAT | PROD)
+ * @returns ID numerico Dynamics
+ */
+export function getTipologiaReferenteId(
+  tipologia: TipologiaReferente,
+  environment: Environment,
+): number {
+  const config = getConfig()
+  const map = environment === 'UAT'
+    ? config.CRM_TIPOLOGIA_REFERENTE_MAP_UAT
+    : config.CRM_TIPOLOGIA_REFERENTE_MAP_PROD
+  return map[tipologia]
 }
 
 export function getTeamId(environment: Environment): string {
@@ -175,5 +122,5 @@ export function getBaseUrl(environment: Environment): string {
 
 export function resolveEnvironment(baseUrl: string): Environment {
   if (baseUrl.includes("uat-pagopa")) return "UAT";
-  return "PROD"; // Default a PROD
+  return "PROD";
 }

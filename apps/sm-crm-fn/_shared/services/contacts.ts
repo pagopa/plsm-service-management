@@ -403,7 +403,7 @@ export async function createContact(
     );
   }
 
-  const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente);
+        const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente, environment);
   const url = `${baseUrl}/api/data/v9.2/contacts`;
 
   const body: CreateContactRequest = {
@@ -644,7 +644,7 @@ export async function verifyOrCreateContact(
       if (params.diagnosticSession) {
         const environment = resolveEnvironment(params.baseUrl);
         const prodGuid = getProductGuid(params.productIdSelfcare, environment);
-        const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente);
+  const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente, environment);
         const contactBody: CreateContactRequest = {
           firstname: params.nome,
           lastname: params.cognome,

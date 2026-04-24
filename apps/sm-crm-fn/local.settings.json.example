@@ -1,0 +1,20 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "DYNAMICS_BASE_URL": "https://pagopa.crm4.dynamics.com",
+    "DYNAMICS_URL_CONTACTS": "https://pagopa.crm4.dynamics.com/api/data/v9.2/contacts",
+    "NODE_ENV": "development",
+    "CRM_PRODUCTS_MAP_UAT": "{\"prod-pn\":\"617cbe1b-bb58-f011-877b-000d3a662132\",\"prod-idpay-merchant\":\"637cbe1b-bb58-f011-877b-000d3a662132\",\"prod-checkiban\":\"22a975ef-a205-f011-bae4-000d3ab7023d\",\"prod-interop\":\"24a975ef-a205-f011-bae4-000d3ab7023d\",\"prod-io\":\"26a975ef-a205-f011-bae4-000d3ab7023d\",\"prod-idpay\":\"04c4d12b-a205-f011-bae3-000d3adf9667\",\"prod-pagopa\":\"c00c3e9a-a205-f011-bae3-000d3adf9667\",\"prod-io-sign\":\"ca089f05-bd58-f011-877b-6045bdde7236\",\"prod-io-premium\":\"46af0f1c-bb58-f011-877b-6045bdde77c4\",\"prod-rtp\":\"dde9d520-5f11-f011-998b-000d3adf9667\"}",
+    "CRM_PRODUCTS_MAP_PROD": "{\"prod-pn\":\"77d197d1-cf51-f011-877b-6045bdddeb37\",\"prod-io\":\"fbe295d3-cf51-f011-877b-6045bde1138f\",\"prod-pagopa\":\"63a165d1-cf51-f011-877b-7c1e52876621\",\"prod-idpay\":\"65a165d1-cf51-f011-877b-7c1e52876621\",\"prod-idpay-merchant\":\"66a165d1-cf51-f011-877b-7c1e52876621\",\"prod-checkiban\":\"67a165d1-cf51-f011-877b-7c1e52876621\",\"prod-interop\":\"7b0e7ad1-cf51-f011-877a-7c1e5287ed24\",\"prod-io-premium\":\"7c0e7ad1-cf51-f011-877a-7c1e5287ed24\",\"prod-io-sign\":\"4618d3d1-cf51-f011-877a-7ced8d4a21cf\",\"prod-rtp\":\"\"}",
+    "CRM_TIPOLOGIA_REFERENTE_MAP_UAT": "{\"APICALE\":100000000,\"DIRETTO\":100000001,\"TECNICO\":100000002,\"BUSINESS\":100000003,\"ACCOUNT\":100000004,\"RESPONSABILE_DI_TRASFORMAZIONE_DIGITALE\":100000005,\"REFERENTE_CONTRATTUALE\":100000006,\"RESPONSABILE_PROTEZIONE_DATI\":100000007,\"REFERENTE_BUSINESS_APICALE_ACCOUNT\":100000008}",
+    "CRM_TIPOLOGIA_REFERENTE_MAP_PROD": "{\"APICALE\":100000000,\"DIRETTO\":100000001,\"TECNICO\":100000002,\"BUSINESS\":100000003,\"ACCOUNT\":100000004,\"RESPONSABILE_DI_TRASFORMAZIONE_DIGITALE\":100000005,\"REFERENTE_CONTRATTUALE\":100000006,\"RESPONSABILE_PROTEZIONE_DATI\":100000007,\"REFERENTE_BUSINESS_APICALE_ACCOUNT\":100000008}"
+  },
+  "Host": {
+    "LocalHttpPort": 7071,
+    "CORS": "*",
+    "CORSCredentials": false
+  }
+}
+

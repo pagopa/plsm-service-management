@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-04-24 11:11
+# Generato il: 2026-04-24 16:03
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -14,8 +14,13 @@ data "azurerm_key_vault_secret" "crm_products_map_uat" {
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
-data "azurerm_key_vault_secret" "crm_tipologia_referente_map" {
-  name         = "crm-tipologia-referente-map"
+data "azurerm_key_vault_secret" "crm_tipologia_referente_map_prod" {
+  name         = "crm-tipologia-referente-map-prod"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "crm_tipologia_referente_map_uat" {
+  name         = "crm-tipologia-referente-map-uat"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 
