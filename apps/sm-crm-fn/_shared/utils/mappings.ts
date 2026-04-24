@@ -17,7 +17,7 @@ import type {
   ProductIdSelfcare,
   Environment,
 } from "../types/dynamics";
-import { getConfig } from "./config"
+import { getConfig } from "./config";
 
 // -----------------------------------------------------------------------------
 // Mapping Picklist pgp_oggettodelcontatto su appointment
@@ -80,36 +80,33 @@ export function getProductGuid(
   productId: ProductIdSelfcare,
   environment: Environment,
 ): string | null {
-  const config = getConfig()
-  const map = environment === 'UAT'
+  const config = getConfig();
+  const map = environment === "UAT"
     ? config.CRM_PRODUCTS_MAP_UAT
-    : config.CRM_PRODUCTS_MAP_PROD
-  const guid = map[productId]
+    : config.CRM_PRODUCTS_MAP_PROD;
+  const guid = map[productId];
   if (!guid) {
-    console.warn(`[mappings] Prodotto ${productId} non trovato nella mappa KV per ${environment}`)
-    return null
+    console.warn(`[mappings] Prodotto ${productId} non trovato nella mappa KV per ${environment}`);
+    return null;
   }
-  return guid
+  return guid;
 }
 
-/**
- * Restituisce l'ID numerico CRM della tipologia referente per l'ambiente specificato.
- * Il valore viene letto dalla env var KV (CRM_TIPOLOGIA_REFERENTE_MAP_UAT / _PROD),
- * obbligatoria a runtime — configurata via Key Vault a deploy-time.
- *
- * @param tipologia - Tipologia referente
- * @param environment - Ambiente Dynamics (UAT | PROD)
- * @returns ID numerico Dynamics
- */
 export function getTipologiaReferenteId(
   tipologia: TipologiaReferente,
   environment: Environment,
 ): number {
-  const config = getConfig()
-  const map = environment === 'UAT'
+  const config = getConfig();
+  const map = environment === "UAT"
     ? config.CRM_TIPOLOGIA_REFERENTE_MAP_UAT
-    : config.CRM_TIPOLOGIA_REFERENTE_MAP_PROD
-  return map[tipologia]
+    : config.CRM_TIPOLOGIA_REFERENTE_MAP_PROD;
+  const id = map[tipologia];
+  if (typeof id !== "number" || !Number.isFinite(id)) {
+    throw new Error(
+      `[mappings] Tipologia referente non valida o non configurata per ${environment}: ${tipologia}`,
+    );
+  }
+  return id;
 }
 
 export function getTeamId(environment: Environment): string {

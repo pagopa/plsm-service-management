@@ -62,57 +62,61 @@ const configSchema = z.object({
    * @example '{"prod-pn":"617cbe1b-...","prod-io":"26a975ef-..."}'
    */
   CRM_PRODUCTS_MAP_UAT: z
-    .string()
-    .min(1, 'CRM_PRODUCTS_MAP_UAT è obbligatoria')
-    .transform((val) => {
-      try {
-        return JSON.parse(val) as Record<string, string>
-      } catch {
-        throw new Error('CRM_PRODUCTS_MAP_UAT: JSON non valido')
+    .preprocess((val) => {
+      if (typeof val !== "string" || val.length === 0) {
+        throw new Error("CRM_PRODUCTS_MAP_UAT è obbligatoria");
       }
-    }),
+      try {
+        return JSON.parse(val);
+      } catch {
+        throw new Error("CRM_PRODUCTS_MAP_UAT: JSON non valido");
+      }
+    }, z.record(z.string(), z.string())),
   /**
    * Mappa prodotti CRM per ambiente PROD (JSON serializzato da Key Vault).
    * Formato: Record<ProductIdSelfcare, string> dove il valore è il GUID Dynamics.
    */
   CRM_PRODUCTS_MAP_PROD: z
-    .string()
-    .min(1, 'CRM_PRODUCTS_MAP_PROD è obbligatoria')
-    .transform((val) => {
-      try {
-        return JSON.parse(val) as Record<string, string>
-      } catch {
-        throw new Error('CRM_PRODUCTS_MAP_PROD: JSON non valido')
+    .preprocess((val) => {
+      if (typeof val !== "string" || val.length === 0) {
+        throw new Error("CRM_PRODUCTS_MAP_PROD è obbligatoria");
       }
-    }),
+      try {
+        return JSON.parse(val);
+      } catch {
+        throw new Error("CRM_PRODUCTS_MAP_PROD: JSON non valido");
+      }
+    }, z.record(z.string(), z.string())),
   /**
    * Mappa tipologie referente CRM per ambiente UAT (JSON serializzato da Key Vault).
    * Formato: Record<TipologiaReferente, number>.
    */
   CRM_TIPOLOGIA_REFERENTE_MAP_UAT: z
-    .string()
-    .min(1, 'CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria')
-    .transform((val) => {
-      try {
-        return JSON.parse(val) as Record<string, number>
-      } catch {
-        throw new Error('CRM_TIPOLOGIA_REFERENTE_MAP_UAT: JSON non valido')
+    .preprocess((val) => {
+      if (typeof val !== "string" || val.length === 0) {
+        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria");
       }
-    }),
+      try {
+        return JSON.parse(val);
+      } catch {
+        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_UAT: JSON non valido");
+      }
+    }, z.record(z.string(), z.number())),
   /**
    * Mappa tipologie referente CRM per ambiente PROD (JSON serializzato da Key Vault).
    * Formato: Record<TipologiaReferente, number>.
    */
   CRM_TIPOLOGIA_REFERENTE_MAP_PROD: z
-    .string()
-    .min(1, 'CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria')
-    .transform((val) => {
-      try {
-        return JSON.parse(val) as Record<string, number>
-      } catch {
-        throw new Error('CRM_TIPOLOGIA_REFERENTE_MAP_PROD: JSON non valido')
+    .preprocess((val) => {
+      if (typeof val !== "string" || val.length === 0) {
+        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria");
       }
-    }),
+      try {
+        return JSON.parse(val);
+      } catch {
+        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_PROD: JSON non valido");
+      }
+    }, z.record(z.string(), z.number())),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-04-24 16:03
+# Generato il: 2026-04-24 16:21
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 

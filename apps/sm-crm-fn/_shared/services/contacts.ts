@@ -644,7 +644,7 @@ export async function verifyOrCreateContact(
       if (params.diagnosticSession) {
         const environment = resolveEnvironment(params.baseUrl);
         const prodGuid = getProductGuid(params.productIdSelfcare, environment);
-  const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente, environment);
+        const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente, environment);
         const contactBody: CreateContactRequest = {
           firstname: params.nome,
           lastname: params.cognome,
