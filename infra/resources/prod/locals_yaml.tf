@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-04-17 21:43
+# Generato il: 2026-04-24 11:11
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -297,9 +297,12 @@ locals {
     DYNAMICS_URL_CONTACTS                = data.azurerm_key_vault_secret.dynamics_url_contacts.value
     DYNAMICS_BASE_URL_UAT                = data.azurerm_key_vault_secret.dynamics_base_url_uat.value
     DYNAMICS_URL_CONTACTS_UAT            = data.azurerm_key_vault_secret.dynamics_url_contacts_uat.value
-    DIAGNOSTIC_LOGGING_ENABLED           = "false"
+    DIAGNOSTIC_LOGGING_ENABLED           = "true"
     DIAGNOSTIC_STORAGE_CONNECTION_STRING = data.azurerm_key_vault_secret.diagnostics_storage_connection_string.value
     DIAGNOSTIC_STORAGE_CONTAINER         = "crm-diagnostics"
+    CRM_PRODUCTS_MAP_UAT                 = data.azurerm_key_vault_secret.crm_products_map_uat.value
+    CRM_PRODUCTS_MAP_PROD                = data.azurerm_key_vault_secret.crm_products_map_prod.value
+    CRM_TIPOLOGIA_REFERENTE_MAP          = data.azurerm_key_vault_secret.crm_tipologia_referente_map.value
     NODE_ENV                             = "production"
     WEBSITE_RUN_FROM_PACKAGE             = "1"
     DEBUG                                = "true"
