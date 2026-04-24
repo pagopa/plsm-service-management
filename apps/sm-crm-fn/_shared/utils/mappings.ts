@@ -18,6 +18,7 @@ import type {
   ProductIdSelfcare,
   Environment,
 } from "../types/dynamics";
+import { getConfig } from "./config"
 
 // -----------------------------------------------------------------------------
 // Mapping Prodotti Selfcare → GUID CRM
@@ -118,6 +119,25 @@ export function getProductGuid(
   productId: ProductIdSelfcare,
   environment: Environment,
 ): string | null {
+  // Priorità 1: env var da Key Vault (parsata a singleton da config.ts)
+  try {
+    const config = getConfig()
+    const mapFromKv =
+      environment === 'UAT'
+        ? config.CRM_PRODUCTS_MAP_UAT
+        : config.CRM_PRODUCTS_MAP_PROD
+    if (mapFromKv) {
+      const guid = mapFromKv[productId]
+      if (guid) return guid
+      console.warn(
+        `[mappings] Prodotto ${productId} non trovato nella mappa KV per ${environment}`,
+      )
+    }
+  } catch {
+    // config non disponibile (es. test unitari) — usa fallback hardcoded
+  }
+
+  // Priorità 2: fallback hardcoded (sviluppo locale)
   const guid = PRODUCTS_MAP[environment]?.[productId];
   if (!guid) {
     console.warn(
@@ -129,6 +149,19 @@ export function getProductGuid(
 }
 
 export function getTipologiaReferenteId(tipologia: TipologiaReferente): number {
+  // Priorità 1: env var da Key Vault (parsata a singleton da config.ts)
+  try {
+    const config = getConfig()
+    const mapFromKv = config.CRM_TIPOLOGIA_REFERENTE_MAP
+    if (mapFromKv) {
+      const id = mapFromKv[tipologia]
+      if (id !== undefined) return id
+    }
+  } catch {
+    // config non disponibile (es. test unitari) — usa fallback hardcoded
+  }
+
+  // Priorità 2: fallback hardcoded (sviluppo locale)
   return TIPOLOGIA_REFERENTE_MAP[tipologia];
 }
 
