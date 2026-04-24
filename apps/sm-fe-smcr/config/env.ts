@@ -14,11 +14,16 @@ const serverEnvSchema = z.object({
   FE_SMCR_API_KEY_PNPG: optionalString,
   FE_SMCR_API_KEY_FIRMA_CON_IO: optionalString,
   FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID: optionalString,
+  FE_SMCR_API_KEY_CERTIFICATI: optionalString,
 
   // Slack webhooks
   FE_SMCR_API_SLACK_REPORT_HOOK: optionalString,
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST: optionalString,
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD: optionalString,
+
+  // CRM API (Meetings)
+  FE_SMCR_CRM_API_URL: optionalString,
+  FE_SMCR_CRM_API_KEY: optionalString,
 
   // Database
   DB_HOST: optionalString,
@@ -81,11 +86,14 @@ const rawServerEnv = {
   FE_SMCR_API_KEY_FIRMA_CON_IO: process.env.FE_SMCR_API_KEY_FIRMA_CON_IO,
   FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID:
     process.env.FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID,
+  FE_SMCR_API_KEY_CERTIFICATI: process.env.FE_SMCR_API_KEY_CERTIFICATI,
   FE_SMCR_API_SLACK_REPORT_HOOK: process.env.FE_SMCR_API_SLACK_REPORT_HOOK,
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST:
     process.env.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST,
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD:
     process.env.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD,
+  FE_SMCR_CRM_API_URL: process.env.FE_SMCR_CRM_API_URL,
+  FE_SMCR_CRM_API_KEY: process.env.FE_SMCR_CRM_API_KEY,
   DB_HOST: process.env.DB_HOST,
   DB_NAME: process.env.DB_NAME,
   DB_USER: process.env.DB_USER,

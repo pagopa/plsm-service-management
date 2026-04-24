@@ -37,9 +37,10 @@ export default async function Page({
   const institutionsResponse = await getInstitutionWithSubunits(
     taxCode as string,
   );
-
   const onboarding = findOnboardingId(institutionsResponse.data, product);
-
+  const selectedInstitution = institutionsResponse.data?.find(
+    (item) => item.id === institution,
+  );
   if (institutionsResponse.error || !institutionsResponse.data) {
     return (
       <ErrorBase
@@ -75,6 +76,7 @@ export default async function Page({
           }
           product={product}
           onboarding={onboarding?.tokenId || ""}
+          subunitCode={selectedInstitution?.subunitCode}
         />
       )}
     </div>

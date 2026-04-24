@@ -102,14 +102,16 @@ export async function getInstitution(taxCode: string) {
 
 type GetInstitutionWithSubunitsResponse =
   | {
-    data: Array<Institution>;
-    error: null;
-  }
+      data: Array<Institution>;
+      error: null;
+    }
   | { data: []; error: "Errore nel recupero dati" | "Nessun ente trovato" };
 
 export async function getInstitutionWithSubunits(
   taxCode: string,
 ): Promise<GetInstitutionWithSubunitsResponse> {
+  const safeTaxCode = taxCode.replace(/[\r\n]/g, "");
+
   const { data, error } = await betterFetch(
     `https://api.selfcare.pagopa.it/external/support/v1/institutions?taxCode=${taxCode}&enableSubunits=true`,
     {
@@ -122,44 +124,53 @@ export async function getInstitutionWithSubunits(
   );
 
   if (error || !data) {
-    logger.error({
-      request: {
-        "method": "GET",
-        "path": `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${taxCode}&enableSubunits=true`
+    logger.error(
+      {
+        request: {
+          method: "GET",
+          path: `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${safeTaxCode}&enableSubunits=true`,
+        },
+        error: {
+          name: error.status,
+          message: error.message,
+          stack: error.statusText,
+        },
       },
-      error: {
-        name: error.status,
-        message: error.message,
-        stack: error.statusText,
-      },
-    }, `getInstitution ${taxCode} - empty`)
+      `getInstitution ${safeTaxCode} - empty`,
+    );
     return { data: [], error: "Errore nel recupero dati" };
   }
 
   if (data.institutions.length < 1) {
-    logger.warn({
+    logger.warn(
+      {
+        request: {
+          method: "GET",
+          path: `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${safeTaxCode}&enableSubunits=true`,
+        },
+        info: {
+          event: "getInstitution",
+          metadata: data,
+        },
+      },
+      `getInstitution ${safeTaxCode} - empty`,
+    );
+    return { data: [], error: "Nessun ente trovato" };
+  }
+
+  logger.info(
+    {
       request: {
-        "method": "GET",
-        "path": `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${taxCode}&enableSubunits=true`
+        method: "GET",
+        path: `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${safeTaxCode}&enableSubunits=true`,
       },
       info: {
         event: "getInstitution",
         metadata: data,
       },
-    }, `getInstitution ${taxCode} - empty`)
-    return { data: [], error: "Nessun ente trovato" };
-  }
-
-  logger.info({
-    request: {
-      "method": "GET",
-      "path": `https://api.selfcare.pagopa.it/external/v2/institutions?taxCode=${taxCode}&enableSubunits=true`
     },
-    info: {
-      event: "getInstitution",
-      metadata: data,
-    },
-  }, `getInstitution called with ${taxCode}`)
+    `getInstitution called with ${safeTaxCode}`,
+  );
 
   return { data: data.institutions, error: null };
 }
@@ -172,8 +183,7 @@ export async function getInstitutionPNPG(
     {
       output: z.object({ institutions: z.array(InstitutionSchema) }),
       headers: {
-        "Ocp-Apim-Subscription-Key":
-          serverEnv.FE_SMCR_API_KEY_PNPG as string,
+        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_PNPG as string,
       },
     },
   );
@@ -298,8 +308,7 @@ export async function updateInstitutionInfoPNPG(
         zipCode: input.zipCode,
       }),
       headers: {
-        "Ocp-Apim-Subscription-Key":
-          serverEnv.FE_SMCR_API_KEY_PNPG as string,
+        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_PNPG as string,
         "Content-Type": "application/json",
       },
     },
@@ -340,10 +349,14 @@ const UserGroupSchema = z.object({
   members: z.array(
     z.uuid({ message: "Ogni member deve essere un UUID valido." }),
   ),
-  createdAt: z.iso.datetime({
-    message: "createdAt deve essere una data ISO valida.",
-  }),
-  createdBy: z.uuid({ message: "createdBy deve essere un UUID valido." }),
+  createdAt: z.iso
+    .datetime({
+      message: "createdAt deve essere una data ISO valida.",
+    })
+    .optional(),
+  createdBy: z
+    .uuid({ message: "createdBy deve essere un UUID valido." })
+    .optional(),
 
   // Presenti solo in alcuni record
   modifiedAt: z.iso
@@ -395,4 +408,79 @@ export async function getUserGroups(input: { institution: string }) {
   }
 
   return { data, error: null };
+}
+
+const InstitutionOnboardingSupportSchema = z
+  .object({
+    id: z.string(),
+    productId: z.string(),
+    status: z.string(),
+    billing: z
+      .object({
+        recipientCode: z.string().optional(),
+        vatNumber: z.string().optional(),
+        publicServices: z.boolean().optional(),
+        taxCodeInvoicing: z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+export type InstitutionOnboardingSupport = z.infer<
+  typeof InstitutionOnboardingSupportSchema
+>;
+
+export async function getInstitutionOnboardingsFromSupport(
+  taxCode: string,
+  options?: { subunitCode?: string },
+): Promise<
+  | { data: InstitutionOnboardingSupport[]; error: null }
+  | { data: []; error: string }
+> {
+  const safeTaxCode = taxCode.replace(/[\r\n]/g, "");
+  const subunitCode = options?.subunitCode ?? "";
+
+  const url = `https://api.selfcare.pagopa.it/external/support/v1/onboarding/institutionOnboardings?taxCode=${safeTaxCode}${
+    subunitCode && subunitCode !== "undefined"
+      ? "&subunitCode=" + subunitCode
+      : ""
+  }`;
+
+  const apiKey = serverEnv.FE_SMCR_API_KEY_INSTITUTION as string;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Ocp-Apim-Subscription-Key": apiKey,
+    },
+  });
+
+  if (!response.ok) {
+    logger.error(
+      {
+        request: { method: "GET", path: url },
+        error: {
+          name: String(response.status),
+          message: response.statusText,
+        },
+      },
+      `getInstitutionOnboardingsFromSupport ${safeTaxCode}`,
+    );
+    return { data: [], error: "Errore nel recupero degli onboarding." };
+  }
+
+  const body: unknown = await response.json();
+  const parsed = z.array(InstitutionOnboardingSupportSchema).safeParse(body);
+
+  if (!parsed.success) {
+    logger.error(
+      { request: { method: "GET", path: url }, error: parsed.error.flatten() },
+      `getInstitutionOnboardingsFromSupport parse ${safeTaxCode}`,
+    );
+    return { data: [], error: "Errore nel recupero degli onboarding." };
+  }
+
+  return { data: parsed.data, error: null };
 }

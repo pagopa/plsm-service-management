@@ -19,6 +19,8 @@ const memberWithTeamsSchema = memberSchema.extend({
 });
 export type MemberWithTeams = z.infer<typeof memberWithTeamsSchema>;
 
+type MemberDeleteError = "not found" | "database error";
+
 export async function readMembers() {
   const rawMembers = await database.from("members").select("*");
   const members = z.array(memberSchema).safeParse(rawMembers);
@@ -89,6 +91,41 @@ export async function createMember(input: {
     return { data: member.data, error: null };
   } catch (error) {
     console.error("createMember - database error", error);
+    return { data: null, error: "database error" };
+  }
+}
+
+export async function deleteMemberById(input: {
+  memberId: number;
+}): Promise<
+  | { data: { id: number }; error: null }
+  | { data: null; error: MemberDeleteError }
+> {
+  try {
+    const deletedMemberId = await database.transaction(async (trx) => {
+      const existingMember = await trx
+        .from("members")
+        .select("id")
+        .where({ id: input.memberId })
+        .first();
+
+      if (!existingMember) {
+        return null;
+      }
+
+      await trx.from("member_teams").where({ memberId: input.memberId }).del();
+      await trx.from("members").where({ id: input.memberId }).del();
+
+      return input.memberId;
+    });
+
+    if (deletedMemberId === null) {
+      return { data: null, error: "not found" };
+    }
+
+    return { data: { id: deletedMemberId }, error: null };
+  } catch (error) {
+    console.error("deleteMemberById - database error", error);
     return { data: null, error: "database error" };
   }
 }

@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-03-16 09:50
+# Generato il: 2026-04-17 21:43
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -27,13 +27,21 @@ locals {
   # ────────────────────────────────────────────────────────────
 
   yaml_certificates_func_app_settings = {
-    DB_NAME     = "certificates"
-    DB_TABLE    = "certificates"
-    DB_PORT     = "5432"
-    DB_SSL      = "true"
-    DB_HOST     = data.azurerm_key_vault_secret.db_host.value
-    DB_USER     = data.azurerm_key_vault_secret.db_user.value
-    DB_PASSWORD = data.azurerm_key_vault_secret.db_password.value
+    DB_NAME       = "certificates"
+    DB_TABLE      = "certificates"
+    DB_PORT       = "5432"
+    DB_SSL        = "true"
+    DB_HOST       = data.azurerm_key_vault_secret.db_host.value
+    DB_USER       = data.azurerm_key_vault_secret.db_user.value
+    DB_PASSWORD   = data.azurerm_key_vault_secret.db_password.value
+    SMTP_HOST     = "smtp.gmail.com"
+    SMTP_PORT     = "587"
+    SMTP_SECURE   = "false"
+    SMTP_USERNAME = "noreply@pagopa.it"
+    FROM_EMAIL    = "noreply@pagopa.it"
+    ALERT_EMAIL   = "io-service-management@pagopa.it"
+    API_KEY       = data.azurerm_key_vault_secret.fe_cert_api_key.value
+    SMTP_PASSWORD = data.azurerm_key_vault_secret.askmebot_smtp_password.value
   }
 
   yaml_certificates_func_slot_app_settings = local.yaml_certificates_func_app_settings
@@ -179,6 +187,7 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONNECTION_STRING               = data.azurerm_key_vault_secret.fe_smcr_azure_storage_connection_string.value
     FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID                = data.azurerm_key_vault_secret.fe_smcr_api_key_firma_con_io_signer_id.value
     FE_SMCR_API_KEY_INSTITUTION_UAT                       = data.azurerm_key_vault_secret.fe_smcr_api_key_institution_uat.value
+    FE_SMCR_API_KEY_CERTIFICATI                           = data.azurerm_key_vault_secret.fe_smcr_api_key_certificati.value
     WEBHOOK_MANUAL_STORAGE                                = data.azurerm_key_vault_secret.fe_smcr_webhook_manual_storage.value
     STORAGE_TOKEN                                         = data.azurerm_key_vault_secret.fe_smcr_storage_token.value
     DB_HOST                                               = data.azurerm_key_vault_secret.db_host.value
@@ -227,6 +236,7 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONNECTION_STRING               = data.azurerm_key_vault_secret.fe_smcr_azure_storage_connection_string.value
     FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID                = data.azurerm_key_vault_secret.fe_smcr_api_key_firma_con_io_signer_id.value
     FE_SMCR_API_KEY_INSTITUTION_UAT                       = data.azurerm_key_vault_secret.fe_smcr_api_key_institution_uat.value
+    FE_SMCR_API_KEY_CERTIFICATI                           = data.azurerm_key_vault_secret.fe_smcr_api_key_certificati.value
     WEBHOOK_MANUAL_STORAGE                                = data.azurerm_key_vault_secret.fe_smcr_webhook_manual_storage.value
     STORAGE_TOKEN                                         = data.azurerm_key_vault_secret.fe_smcr_storage_token.value
     DB_HOST                                               = data.azurerm_key_vault_secret.db_host.value
@@ -283,11 +293,16 @@ locals {
   # ────────────────────────────────────────────────────────────
 
   yaml_crm_func_app_settings = {
-    DYNAMICS_BASE_URL        = data.azurerm_key_vault_secret.dynamics_base_url.value
-    DYNAMICS_URL_CONTACTS    = data.azurerm_key_vault_secret.dynamics_url_contacts.value
-    NODE_ENV                 = "production"
-    WEBSITE_RUN_FROM_PACKAGE = "1"
-    DEBUG                    = "true"
+    DYNAMICS_BASE_URL                    = data.azurerm_key_vault_secret.dynamics_base_url.value
+    DYNAMICS_URL_CONTACTS                = data.azurerm_key_vault_secret.dynamics_url_contacts.value
+    DYNAMICS_BASE_URL_UAT                = data.azurerm_key_vault_secret.dynamics_base_url_uat.value
+    DYNAMICS_URL_CONTACTS_UAT            = data.azurerm_key_vault_secret.dynamics_url_contacts_uat.value
+    DIAGNOSTIC_LOGGING_ENABLED           = "false"
+    DIAGNOSTIC_STORAGE_CONNECTION_STRING = data.azurerm_key_vault_secret.diagnostics_storage_connection_string.value
+    DIAGNOSTIC_STORAGE_CONTAINER         = "crm-diagnostics"
+    NODE_ENV                             = "production"
+    WEBSITE_RUN_FROM_PACKAGE             = "1"
+    DEBUG                                = "true"
   }
 
   yaml_crm_func_slot_app_settings = local.yaml_crm_func_app_settings

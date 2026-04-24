@@ -65,6 +65,7 @@ fe_smcr:
   FE_SMCR_AZURE_STORAGE_CONNECTION_STRING: "kv:fe_smcr_azure_storage_connection_string"
   FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID: "kv:fe_smcr_api_key_firma_con_io_signer_id:fe-smcr-api-key-firma-con-io-signerid"
   FE_SMCR_API_KEY_INSTITUTION_UAT: "kv:fe_smcr_api_key_institution_uat"
+  FE_SMCR_API_KEY_CERTIFICATI: "kv:fe_smcr_api_key_certificati"
   WEBHOOK_MANUAL_STORAGE: "kv:fe_smcr_webhook_manual_storage"
   STORAGE_TOKEN: "kv:fe_smcr_storage_token"
   DB_HOST: "kv:db_host"
@@ -109,11 +110,19 @@ fe_smcr:
 
 # ─── CRM Function (Dynamics CRM Integration) ─────────────────────────────────
 # Production = Staging (stessi valori per entrambi gli slot)
+# Supporta multi-environment: PROD e UAT Dynamics instances
 
 crm_function:
   __local: yaml_crm_func
+  # PROD environment (default)
   DYNAMICS_BASE_URL: "kv:dynamics_base_url"
   DYNAMICS_URL_CONTACTS: "kv:dynamics_url_contacts"
+  # UAT environment (utilizzato con header x-dynamics-environment: UAT)
+  DYNAMICS_BASE_URL_UAT: "kv:dynamics_base_url_uat"
+  DYNAMICS_URL_CONTACTS_UAT: "kv:dynamics_url_contacts_uat"
+  DIAGNOSTIC_LOGGING_ENABLED: "true"
+  DIAGNOSTIC_STORAGE_CONNECTION_STRING: "kv:diagnostics_storage_connection_string"
+  DIAGNOSTIC_STORAGE_CONTAINER: "crm-diagnostics"
   NODE_ENV: "production"
   WEBSITE_RUN_FROM_PACKAGE: "1"
   DEBUG: "true"
@@ -138,3 +147,10 @@ auth_func:
   JWT_EXPIRY_SECONDS: "3600"
   JWT_ISSUER: "plsm-auth-service"
   JWT_AUDIENCE: "plsm-fe-smcr"
+
+# ─── Certificates Function ───────────────────────────────────────────────────
+
+certificates:
+  __local: yaml_certificates_func
+  API_KEY: "kv:fe_cert_api_key"
+  SMTP_PASSWORD: "kv:askmebot_smtp_password"

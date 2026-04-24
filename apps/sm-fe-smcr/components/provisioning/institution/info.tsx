@@ -188,6 +188,25 @@ export default function InstitutionInfo({
         )}
       </div>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <InfoItem
+          name="selectedInstitutionId"
+          label="ID ente"
+          value={currentInstitution?.id || "-"}
+          valueClassName="font-mono text-sm break-all"
+          isCopyable={Boolean(currentInstitution?.id)}
+          className="rounded-xl border border-neutral-100 bg-neutral-50 px-4 py-3"
+        />
+        <InfoItem
+          name="selectedProductTokenId"
+          label="ID prodotto"
+          value={currentProduct?.tokenId || "-"}
+          valueClassName="font-mono text-sm break-all"
+          isCopyable={Boolean(currentProduct?.tokenId)}
+          className="rounded-xl border border-neutral-100 bg-neutral-50 px-4 py-3"
+        />
+      </div>
+
       <form
         onSubmit={onSubmit}
         className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 grid grid-cols-5 gap-4"

@@ -36,7 +36,9 @@ export function UploadFileSection() {
     setUploading(false);
     if (res.error) toast.error(res.error);
     else {
-      toast.success(res.data ?? "File caricato con successo");
+      toast.success(
+        (res as { data: string }).data ?? "File caricato con successo",
+      );
       const LOCAL_STORAGE_KEY = "uploaded-files";
       const prev = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "[]");
       const newFile = {

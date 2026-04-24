@@ -6,6 +6,7 @@ import z from "zod";
 import { PRODUCT_MAP } from "../types/product";
 import logger from "@/lib/logger/logger.server";
 import { serverEnv } from "@/config/env";
+import { tipologiaReferenteValues } from "@/components/call-management/crm-form-schema";
 
 const formatItalianDateTime = (value: string) => {
   const isoMatch =
@@ -249,4 +250,154 @@ export async function sendToSlackAction(
     target: validation.data.target,
     submittedAt: Date.now(),
   };
+}
+
+// --- CRM Meeting (OpenAPI sm-crm-fn POST /meetings) ---
+
+export type TipologiaReferente = (typeof tipologiaReferenteValues)[number];
+
+export type CreateMeetingPartecipante = {
+  email?: string;
+  nome?: string;
+  cognome?: string;
+  tipologiaReferente?: TipologiaReferente;
+};
+
+export type DynamicsCrmEnvironment = "UAT" | "PROD";
+
+export type CreateMeetingInput = {
+  institutionIdSelfcare: string;
+  productIdSelfcare: string;
+  partecipanti: CreateMeetingPartecipante[];
+  subject: string;
+  scheduledstart: string;
+  scheduledend: string;
+  location?: string;
+  description?: string;
+  category?: string;
+  dataProssimoContatto?: string;
+  oggettoDelContatto?: number;
+  enableCreateContact?: boolean;
+  enableGrantAccess?: boolean;
+  dryRun?: boolean;
+  dynamicsEnvironment?: DynamicsCrmEnvironment;
+};
+
+export type CreateMeetingResult =
+  | { success: true; activityId?: string; message?: string }
+  | { success: false; error: string };
+
+export async function createMeetingAction(
+  input: CreateMeetingInput,
+): Promise<CreateMeetingResult> {
+  console.log("input", input);
+  const baseUrl = serverEnv.FE_SMCR_CRM_API_URL?.replace(/\/$/, "");
+  if (!baseUrl) {
+    logger.warn(
+      { info: { event: "call-management.create-meeting.missing-env" } },
+      "FE_SMCR_CRM_API_URL not set",
+    );
+    return { success: false, error: "API CRM non configurata." };
+  }
+
+  const url = `${baseUrl}/meetings`;
+  const dynamicsEnv: DynamicsCrmEnvironment =
+    input.dynamicsEnvironment ?? "PROD";
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "x-dynamics-environment": dynamicsEnv,
+  };
+  if (serverEnv.FE_SMCR_CRM_API_KEY) {
+    headers["x-functions-key"] = serverEnv.FE_SMCR_CRM_API_KEY;
+  }
+
+  const body = {
+    institutionIdSelfcare: input.institutionIdSelfcare,
+    productIdSelfcare: input.productIdSelfcare,
+    partecipanti: input.partecipanti,
+    subject: input.subject,
+    scheduledstart: input.scheduledstart,
+    scheduledend: input.scheduledend,
+    ...(input.location !== undefined && input.location !== ""
+      ? { location: input.location }
+      : {}),
+    ...(input.description !== undefined && input.description !== ""
+      ? { description: input.description }
+      : {}),
+    ...(input.category !== undefined && input.category !== ""
+      ? { categoria: input.category }
+      : {}),
+    ...(input.dataProssimoContatto !== undefined &&
+    input.dataProssimoContatto !== ""
+      ? { dataProssimoContatto: input.dataProssimoContatto }
+      : {}),
+    ...(input.oggettoDelContatto !== undefined
+      ? { oggettoDelContatto: input.oggettoDelContatto }
+      : {}),
+    ...(input.enableCreateContact !== undefined
+      ? { enableCreateContact: input.enableCreateContact }
+      : {}),
+    ...(input.enableGrantAccess !== undefined
+      ? { enableGrantAccess: input.enableGrantAccess }
+      : {}),
+    ...(input.dryRun !== undefined ? { dryRun: input.dryRun } : {}),
+  };
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      const message =
+        typeof data?.message === "string"
+          ? data.message
+          : (data?.error ?? `HTTP ${res.status}`);
+      logger.error(
+        {
+          request: { method: "POST", path: url, statusCode: res.status },
+          error: { message },
+          info: {
+            event: "call-management.create-meeting.failed",
+            metadata: { dynamicsEnvironment: dynamicsEnv },
+          },
+        },
+        "createMeetingAction failed",
+      );
+      return { success: false, error: message };
+    }
+
+    logger.info(
+      {
+        info: {
+          event: "call-management.create-meeting.success",
+          metadata: {
+            activityId: data?.activityId,
+            dynamicsEnvironment: dynamicsEnv,
+          },
+        },
+      },
+      "createMeetingAction success",
+    );
+    return {
+      success: true,
+      activityId: data?.activityId,
+      message: data?.message ?? "Appuntamento creato con successo",
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Errore di connessione al CRM.";
+    logger.error(
+      {
+        error: { name: "CreateMeetingError", message },
+        info: { event: "call-management.create-meeting.error" },
+      },
+      "createMeetingAction error",
+    );
+    return { success: false, error: message };
+  }
 }

@@ -57,6 +57,13 @@ certificates:
   DB_HOST: "kv:db_host"
   DB_USER: "kv:db_user"
   DB_PASSWORD: "kv:db_password"
+  # SMTP — notifiche email certificati in scadenza
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_SECURE: "false"
+  SMTP_USERNAME: "noreply@pagopa.it"
+  FROM_EMAIL: "noreply@pagopa.it"
+  ALERT_EMAIL: "io-service-management@pagopa.it"
   # Production = Staging (nessun override per slot)
 
 # ─── Onboarding Function ─────────────────────────────────────────────────────
