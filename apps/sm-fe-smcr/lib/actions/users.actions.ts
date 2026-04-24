@@ -108,6 +108,62 @@ export async function createUserAction(
   };
 }
 
+const updateUserEmailSchema = z.object({
+  email: z
+    .string()
+    .email({ message: "Invalid email address" })
+    .nonempty({ message: "Email is required" }),
+  userId: z.string().nonempty(),
+  institutionId: z.string().nonempty(),
+  product: z.string().nonempty(),
+});
+
+type UpdateUserEmailInput = z.infer<typeof updateUserEmailSchema>;
+
+export type UpdateUserEmailFormState = {
+  fields: Partial<UpdateUserEmailInput>;
+  errors?: Partial<Record<keyof UpdateUserEmailInput, string>> & {
+    root?: string;
+  };
+  success?: boolean;
+};
+
+export async function updateUserEmailAction(
+  prevState: UpdateUserEmailFormState,
+  formData: FormData,
+): Promise<UpdateUserEmailFormState> {
+  const input = Object.fromEntries(formData.entries());
+  const validation = updateUserEmailSchema.safeParse(input);
+
+  if (!validation.success) {
+    const errors: Record<string, string> = {};
+
+    for (const issue of validation.error.issues) {
+      if (issue.path.length > 0) {
+        const field = issue.path[0] as string;
+        errors[field] = issue.message;
+      }
+    }
+
+    return { fields: input, errors, success: false };
+  }
+
+  // eslint-disable-next-line no-console -- temporary mock until backend endpoint is available
+  console.info("[updateUserEmailAction] Mock email update request", {
+    institutionId: validation.data.institutionId,
+    product: validation.data.product,
+    userId: validation.data.userId,
+    email: validation.data.email,
+  });
+
+  await new Promise((resolve) => setTimeout(resolve, 800));
+
+  return {
+    fields: { ...validation.data },
+    success: true,
+  };
+}
+
 const updateUserSchema = z.object({
   status: z.string().nonempty(),
   userId: z.string().nonempty(),

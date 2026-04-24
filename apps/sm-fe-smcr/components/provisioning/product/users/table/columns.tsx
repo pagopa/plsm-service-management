@@ -1,6 +1,9 @@
 "use client";
 
-import { updateUserAction } from "@/lib/actions/users.actions";
+import {
+  updateUserAction,
+  updateUserEmailAction,
+} from "@/lib/actions/users.actions";
 import {
   Dialog,
   DialogClose,
@@ -114,6 +117,13 @@ export const getProvisioningUsersColumns: (
 
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuEmailForm
+              email={user.email}
+              userId={user.id}
+              institutionId={institutionId}
+              product={product}
+            />
+
             <DropdownMenuItemForm
               status="SUSPENDED"
               userId={user.id}
@@ -137,6 +147,187 @@ export const getProvisioningUsersColumns: (
     },
   },
 ];
+
+function DropdownMenuEmailForm({
+  email,
+  userId,
+  institutionId,
+  product,
+}: {
+  email: string;
+  userId: string;
+  institutionId: string;
+  product: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild className="flex flex-col">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full items-start justify-start text-start"
+        >
+          Modifica email
+        </Button>
+      </DialogTrigger>
+
+      {open ? (
+        <EditEmailDialogContent
+          email={email}
+          userId={userId}
+          institutionId={institutionId}
+          product={product}
+          onSuccess={() => setOpen(false)}
+        />
+      ) : null}
+    </Dialog>
+  );
+}
+
+function EditEmailDialogContent({
+  email,
+  userId,
+  institutionId,
+  product,
+  onSuccess,
+}: {
+  email: string;
+  userId: string;
+  institutionId: string;
+  product: string;
+  onSuccess: () => void;
+}) {
+  const id = useId();
+  const [nextEmail, setNextEmail] = useState(email);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [state, action, isPending] = useActionState(updateUserEmailAction, {
+    fields: {
+      email,
+      institutionId,
+      product,
+      userId,
+    },
+    success: false,
+  });
+
+  const normalizedCurrentEmail = email.trim().toLowerCase();
+  const normalizedNextEmail = nextEmail.trim().toLowerCase();
+  const canSubmit =
+    !isPending &&
+    nextEmail.trim().length > 0 &&
+    normalizedCurrentEmail !== normalizedNextEmail;
+
+  useEffect(() => {
+    if (!hasSubmitted || isPending) {
+      return;
+    }
+
+    if (state.errors?.root) {
+      toast.error("Aggiornamento email non riuscito", {
+        description: state.errors.root,
+      });
+      return;
+    }
+
+    if (state.success) {
+      toast.success("Cambio email simulato", {
+        description:
+          "La modifica non e' stata persistita: l'endpoint backend non e' ancora disponibile.",
+      });
+      onSuccess();
+    }
+  }, [hasSubmitted, isPending, onSuccess, state.errors?.root, state.success]);
+
+  return (
+    <DialogContent
+      className="w-sm"
+      onEscapeKeyDown={(event) => {
+        if (isPending) {
+          event.preventDefault();
+        }
+      }}
+      onInteractOutside={(event) => {
+        if (isPending) {
+          event.preventDefault();
+        }
+      }}
+    >
+      <DialogHeader>
+        <DialogTitle>Modifica email</DialogTitle>
+        <DialogDescription>
+          Aggiorna la mail dell&apos;utente. In questa fase la richiesta viene
+          solo simulata e non viene ancora persistita.
+        </DialogDescription>
+      </DialogHeader>
+
+      <form action={action} onSubmit={() => setHasSubmitted(true)} className="space-y-5">
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground">Email attuale</span>
+            <p className="break-all text-sm">{email}</p>
+          </div>
+
+          <div className="*:not-first:mt-2">
+            <Label htmlFor={id}>Nuova email</Label>
+            <Input
+              id={id}
+              name="email"
+              type="email"
+              value={nextEmail}
+              autoFocus
+              placeholder="mario@pagopa.it"
+              onChange={(event) => {
+                if (hasSubmitted) {
+                  setHasSubmitted(false);
+                }
+
+                setNextEmail(event.target.value);
+              }}
+              disabled={isPending}
+            />
+
+            {hasSubmitted && state.errors?.email ? (
+              <p className="text-xs text-destructive">{state.errors.email}</p>
+            ) : null}
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Modalita&apos; temporanea: il submit esegue solo un log lato server e
+            simula la risposta del backend.
+          </p>
+        </div>
+
+        <input type="hidden" name="userId" value={userId} />
+        <input type="hidden" name="institutionId" value={institutionId} />
+        <input type="hidden" name="product" value={product} />
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+          </DialogClose>
+
+          <Button type="submit" className="flex-1" disabled={!canSubmit}>
+            {isPending ? (
+              <LoaderCircleIcon className="size-3.5 animate-spin" />
+            ) : (
+              "Salva"
+            )}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
+  );
+}
 
 function DropdownMenuItemForm({
   status,
