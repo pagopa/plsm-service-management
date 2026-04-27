@@ -32,6 +32,7 @@ import {
   LoaderCircleIcon,
   MoreHorizontal,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 import UserDialog from "../user-dialog";
@@ -40,8 +41,8 @@ export type User = {
   id: string;
   role: "SUB_DELEGATE" | "DELEGATE" | "OPERATOR" | "MANAGER";
   email: string;
-  name: string;
-  surname: string;
+  name?: string;
+  surname?: string;
   roles: ("admin" | "operator")[];
 };
 
@@ -120,8 +121,8 @@ export const getProvisioningUsersColumns: (
             <DropdownMenuEmailForm
               email={user.email}
               userId={user.id}
-              institutionId={institutionId}
-              product={product}
+              name={user.name}
+              surname={user.surname}
             />
 
             <DropdownMenuItemForm
@@ -151,13 +152,13 @@ export const getProvisioningUsersColumns: (
 function DropdownMenuEmailForm({
   email,
   userId,
-  institutionId,
-  product,
+  name,
+  surname,
 }: {
   email: string;
   userId: string;
-  institutionId: string;
-  product: string;
+  name?: string;
+  surname?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -178,8 +179,8 @@ function DropdownMenuEmailForm({
         <EditEmailDialogContent
           email={email}
           userId={userId}
-          institutionId={institutionId}
-          product={product}
+          name={name}
+          surname={surname}
           onSuccess={() => setOpen(false)}
         />
       ) : null}
@@ -190,32 +191,35 @@ function DropdownMenuEmailForm({
 function EditEmailDialogContent({
   email,
   userId,
-  institutionId,
-  product,
+  name,
+  surname,
   onSuccess,
 }: {
   email: string;
   userId: string;
-  institutionId: string;
-  product: string;
+  name?: string;
+  surname?: string;
   onSuccess: () => void;
 }) {
+  const router = useRouter();
   const id = useId();
   const [nextEmail, setNextEmail] = useState(email);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [state, action, isPending] = useActionState(updateUserEmailAction, {
     fields: {
       email,
-      institutionId,
-      product,
+      name: name ?? "",
+      surname: surname ?? "",
       userId,
     },
     success: false,
   });
 
+  const missingRegistryData = !name?.trim() || !surname?.trim();
   const normalizedCurrentEmail = email.trim().toLowerCase();
   const normalizedNextEmail = nextEmail.trim().toLowerCase();
   const canSubmit =
+    !missingRegistryData &&
     !isPending &&
     nextEmail.trim().length > 0 &&
     normalizedCurrentEmail !== normalizedNextEmail;
@@ -233,13 +237,20 @@ function EditEmailDialogContent({
     }
 
     if (state.success) {
-      toast.success("Cambio email simulato", {
-        description:
-          "La modifica non e' stata persistita: l'endpoint backend non e' ancora disponibile.",
+      toast.success("Email aggiornata", {
+        description: "La mail dell'utente e' stata aggiornata con successo.",
       });
       onSuccess();
+      router.refresh();
     }
-  }, [hasSubmitted, isPending, onSuccess, state.errors?.root, state.success]);
+  }, [
+    hasSubmitted,
+    isPending,
+    onSuccess,
+    router,
+    state.errors?.root,
+    state.success,
+  ]);
 
   return (
     <DialogContent
@@ -258,8 +269,7 @@ function EditEmailDialogContent({
       <DialogHeader>
         <DialogTitle>Modifica email</DialogTitle>
         <DialogDescription>
-          Aggiorna la mail dell&apos;utente. In questa fase la richiesta viene
-          solo simulata e non viene ancora persistita.
+          Aggiorna la mail dell&apos;utente nel registro anagrafico.
         </DialogDescription>
       </DialogHeader>
 
@@ -269,6 +279,13 @@ function EditEmailDialogContent({
             <span className="text-xs text-muted-foreground">Email attuale</span>
             <p className="break-all text-sm">{email}</p>
           </div>
+
+          {missingRegistryData ? (
+            <p className="text-xs text-destructive">
+              Impossibile aggiornare l&apos;email: nome o cognome dell&apos;utente
+              mancanti nella riga selezionata.
+            </p>
+          ) : null}
 
           <div className="*:not-first:mt-2">
             <Label htmlFor={id}>Nuova email</Label>
@@ -286,7 +303,7 @@ function EditEmailDialogContent({
 
                 setNextEmail(event.target.value);
               }}
-              disabled={isPending}
+              disabled={isPending || missingRegistryData}
             />
 
             {hasSubmitted && state.errors?.email ? (
@@ -294,15 +311,14 @@ function EditEmailDialogContent({
             ) : null}
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            Modalita&apos; temporanea: il submit esegue solo un log lato server e
-            simula la risposta del backend.
-          </p>
+          {hasSubmitted && state.errors?.root ? (
+            <p className="text-xs text-destructive">{state.errors.root}</p>
+          ) : null}
         </div>
 
+        <input type="hidden" name="name" value={name ?? ""} />
+        <input type="hidden" name="surname" value={surname ?? ""} />
         <input type="hidden" name="userId" value={userId} />
-        <input type="hidden" name="institutionId" value={institutionId} />
-        <input type="hidden" name="product" value={product} />
 
         <DialogFooter>
           <DialogClose asChild>

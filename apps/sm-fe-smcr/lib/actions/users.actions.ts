@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   createUser,
   createUserPNPG,
+  updateUserEmail,
   updateUser,
 } from "../services/users.service";
 import { revalidateTag } from "next/cache";
@@ -109,13 +110,13 @@ export async function createUserAction(
 }
 
 const updateUserEmailSchema = z.object({
+  name: z.string().trim().nonempty({ message: "First name is required" }),
+  surname: z.string().trim().nonempty({ message: "Last name is required" }),
   email: z
     .string()
     .email({ message: "Invalid email address" })
     .nonempty({ message: "Email is required" }),
   userId: z.string().nonempty(),
-  institutionId: z.string().nonempty(),
-  product: z.string().nonempty(),
 });
 
 type UpdateUserEmailInput = z.infer<typeof updateUserEmailSchema>;
@@ -145,18 +146,35 @@ export async function updateUserEmailAction(
       }
     }
 
+    if (errors.name || errors.surname) {
+      errors.root =
+        "Impossibile aggiornare l'email: nome o cognome dell'utente mancanti.";
+    }
+
     return { fields: input, errors, success: false };
   }
 
-  // eslint-disable-next-line no-console -- temporary mock until backend endpoint is available
-  console.info("[updateUserEmailAction] Mock email update request", {
-    institutionId: validation.data.institutionId,
-    product: validation.data.product,
+  const { error } = await updateUserEmail({
     userId: validation.data.userId,
+    name: validation.data.name,
+    familyName: validation.data.surname,
     email: validation.data.email,
+    certification: true,
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  if (error) {
+    return {
+      fields: { ...validation.data },
+      errors: {
+        root:
+          (error as any).detail ||
+          "An error occurred while updating the email. Please try again later.",
+      },
+      success: false,
+    };
+  }
+
+  revalidateTag("users");
 
   return {
     fields: { ...validation.data },
