@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   createUser,
   createUserPNPG,
+  updateUserEmail,
   updateUser,
 } from "../services/users.service";
 import { revalidateTag } from "next/cache";
@@ -105,6 +106,79 @@ export async function createUserAction(
 
   return {
     fields: { ...validation.data },
+  };
+}
+
+const updateUserEmailSchema = z.object({
+  name: z.string().trim().nonempty({ message: "First name is required" }),
+  surname: z.string().trim().nonempty({ message: "Last name is required" }),
+  email: z
+    .string()
+    .email({ message: "Invalid email address" })
+    .nonempty({ message: "Email is required" }),
+  userId: z.string().nonempty(),
+});
+
+type UpdateUserEmailInput = z.infer<typeof updateUserEmailSchema>;
+
+export type UpdateUserEmailFormState = {
+  fields: Partial<UpdateUserEmailInput>;
+  errors?: Partial<Record<keyof UpdateUserEmailInput, string>> & {
+    root?: string;
+  };
+  success?: boolean;
+};
+
+export async function updateUserEmailAction(
+  prevState: UpdateUserEmailFormState,
+  formData: FormData,
+): Promise<UpdateUserEmailFormState> {
+  const input = Object.fromEntries(formData.entries());
+  const validation = updateUserEmailSchema.safeParse(input);
+
+  if (!validation.success) {
+    const errors: Record<string, string> = {};
+
+    for (const issue of validation.error.issues) {
+      if (issue.path.length > 0) {
+        const field = issue.path[0] as string;
+        errors[field] = issue.message;
+      }
+    }
+
+    if (errors.name || errors.surname) {
+      errors.root =
+        "Impossibile aggiornare l'email: nome o cognome dell'utente mancanti.";
+    }
+
+    return { fields: input, errors, success: false };
+  }
+
+  const { error } = await updateUserEmail({
+    userId: validation.data.userId,
+    name: validation.data.name,
+    familyName: validation.data.surname,
+    email: validation.data.email,
+    certification: true,
+  });
+
+  if (error) {
+    return {
+      fields: { ...validation.data },
+      errors: {
+        root:
+          (error as any).detail ||
+          "An error occurred while updating the email. Please try again later.",
+      },
+      success: false,
+    };
+  }
+
+  revalidateTag("users");
+
+  return {
+    fields: { ...validation.data },
+    success: true,
   };
 }
 
