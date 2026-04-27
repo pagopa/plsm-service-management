@@ -117,7 +117,7 @@ export const getProvisioningUsersColumns: (
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>Azioni</DropdownMenuLabel>
             <DropdownMenuEmailForm
               email={user.email}
               userId={user.id}
@@ -131,7 +131,7 @@ export const getProvisioningUsersColumns: (
               institutionId={institutionId}
               product={product}
             >
-              Suspend
+              Sospendi
             </DropdownMenuItemForm>
 
             <DropdownMenuItemForm
@@ -140,7 +140,7 @@ export const getProvisioningUsersColumns: (
               institutionId={institutionId}
               product={product}
             >
-              Delete
+              Elimina
             </DropdownMenuItemForm>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -403,14 +403,14 @@ function DropdownMenuItemForm({
           </div>
           <DialogHeader>
             <DialogTitle className="sm:text-center">
-              Final confirmation
+              Conferma finale
             </DialogTitle>
             <DialogDescription className="sm:text-center">
-              This action cannot be undone. To confirm, please type{" "}
-              <span className="text-foreground">CONFIRM</span> in the field
-              below and click{" "}
+              Questa azione non puo&apos; essere annullata. Per confermare,
+              digita <span className="text-foreground">CONFIRM</span> nel
+              campo sottostante e fai clic su{" "}
               <span className="text-foreground">
-                {status === "SUSPENDED" ? "Suspend" : "Delete"}
+                {status === "SUSPENDED" ? "Sospendi" : "Elimina"}
               </span>
               .
             </DialogDescription>
@@ -419,11 +419,11 @@ function DropdownMenuItemForm({
 
         <form action={action} className="space-y-5">
           <div className="*:not-first:mt-2">
-            <Label htmlFor={id}>Verification</Label>
+            <Label htmlFor={id}>Verifica</Label>
             <Input
               id={id}
               type="text"
-              placeholder="Type CONFIRM to continue"
+              placeholder="Digita CONFIRM per continuare"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
             />
@@ -437,7 +437,7 @@ function DropdownMenuItemForm({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline" className="flex-1">
-                Cancel
+                Annulla
               </Button>
             </DialogClose>
 
@@ -449,9 +449,9 @@ function DropdownMenuItemForm({
               {isPending ? (
                 <LoaderCircleIcon className="size-3.5 animate-spin" />
               ) : status === "SUSPENDED" ? (
-                "Suspend"
+                "Sospendi"
               ) : (
-                "Delete"
+                "Elimina"
               )}
             </Button>
           </DialogFooter>
