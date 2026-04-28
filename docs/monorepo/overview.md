@@ -263,19 +263,19 @@ graph TD
 
 Sei nuovo nel monorepo? Parti da qui:
 
-1. **[Guida introduttiva](./getting-started.md)** — Istruzioni di setup e prerequisiti
+1. **Guida introduttiva** *(documentazione in preparazione)* — Istruzioni di setup e prerequisiti
 2. **[Guide delle singole applicazioni](#guide-delle-singole-applicazioni)** — Documentazione dettagliata per ogni app
 
 ### Guide delle Singole Applicazioni
 
-- [sm-fe-smcr — Applicazione Frontend](./apps/sm-fe-smcr.md)
-- [sm-auth-fn — Servizio di Autenticazione](./apps/sm-auth-fn.md)
-- [sm-ask-me-fn — Bot di Supporto](./apps/sm-ask-me-fn.md)
-- [sm-certification-fn — Servizio di Certificazione](./apps/sm-certification-fn.md)
-- [sm-crm-fn — Integrazione CRM](./apps/sm-crm-fn.md)
-- [sm-onboarding-fn — Servizio di Onboarding](./apps/sm-onboarding-fn.md)
-- [sm-pf-fn — Servizio Persone Fisiche](./apps/sm-pf-fn.md)
-- [Pacchetti condivisi](./packages/shared-packages.md)
+- **sm-fe-smcr — Applicazione Frontend** *(documentazione in preparazione)*
+- **sm-auth-fn — Servizio di Autenticazione** *(documentazione in preparazione)*
+- **sm-ask-me-fn — Bot di Supporto** *(documentazione in preparazione)*
+- **sm-certification-fn — Servizio di Certificazione** *(documentazione in preparazione)*
+- **sm-crm-fn — Integrazione CRM** *(documentazione in preparazione)*
+- **sm-onboarding-fn — Servizio di Onboarding** *(documentazione in preparazione)*
+- **sm-pf-fn — Servizio Persone Fisiche** *(documentazione in preparazione)*
+- **Pacchetti condivisi** *(documentazione in preparazione)*
 
 ---
 
