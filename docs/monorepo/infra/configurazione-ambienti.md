@@ -548,8 +548,8 @@ az keyvault secret show \
 
 ## 📚 Riferimenti
 
-- [Script generate_locals.py](../../infra/scripts/generate_locals.py)
-- [File YAML comuni](../../infra/resources/environments/common.yaml)
-- [File YAML produzione](../../infra/resources/environments/prod.yaml)
-- [File YAML sviluppo](../../infra/resources/environments/dev.yaml)
-- [Esempio UAT](../../infra/resources/environments/uat.yaml.example)
+- [Script generate_locals.py](../../../infra/scripts/generate_locals.py)
+- [File YAML comuni](../../../infra/resources/environments/common.yaml)
+- [File YAML produzione](../../../infra/resources/environments/prod.yaml)
+- [File YAML sviluppo](../../../infra/resources/environments/dev.yaml)
+- [Esempio UAT](../../../infra/resources/environments/uat.yaml.example)
