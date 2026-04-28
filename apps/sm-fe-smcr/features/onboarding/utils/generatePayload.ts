@@ -30,6 +30,7 @@ export function generatePayload(formData: OnboardingSchema): Payload {
     },
     taxCode: formData.taxcode,
     productId: formData.productId,
+    ...(formData.productId === "prod-io-premium" ? { pricingPlan: "C0" } : {}),
     geographicTaxonomies,
     institutionLocationData: {
       city: formData.city,

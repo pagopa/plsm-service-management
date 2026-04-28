@@ -22,11 +22,22 @@ type ProdIoSign = {
   value: string;
 };
 
+type ProdIoPremium = {
+  tag: "prod-io-premium";
+  value: string;
+};
+
 type ProdFdGarantito = {
   tag: "prod-fd-garantito";
   value: string;
 };
 
 export type ProductOptions = Array<
-  ProdPagoPa | ProdInterop | ProdPn | ProdIo | ProdIoSign | ProdFdGarantito
+  | ProdPagoPa
+  | ProdInterop
+  | ProdPn
+  | ProdIo
+  | ProdIoSign
+  | ProdIoPremium
+  | ProdFdGarantito
 >;

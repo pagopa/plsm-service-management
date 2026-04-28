@@ -20,10 +20,6 @@ export const askMeAnythingColumns = ({
   onDeleteClick,
 }: AskMeAnythingColumnsOptions = {}): ColumnDef<AskMeAnythingMember>[] => [
   {
-    accessorKey: "id",
-    header: "ID",
-  },
-  {
     accessorKey: "firstname",
     header: "Nome",
   },
