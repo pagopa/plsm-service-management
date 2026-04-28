@@ -403,7 +403,7 @@ export async function createContact(
     );
   }
 
-        const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente, environment);
+  const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente, environment);
   const url = `${baseUrl}/api/data/v9.2/contacts`;
 
   const body: CreateContactRequest = {
