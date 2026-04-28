@@ -180,11 +180,13 @@ Il pacchetto conterrà:
 
 ## 🏷️ Convenzione di Naming
 
-Tutte le applicazioni seguono un pattern di naming consistente:
+Tutte le applicazioni su Azure Function seguono un pattern di naming consistente:
 
 ```
 sm-{dominio}-{tipo}
 ```
+
+mentre la Web App **SMCR** segue un pattern diverso.
 
 **Componenti del pattern:**
 
