@@ -103,6 +103,7 @@ All infrastructure is managed as code using **Terraform** and deployed on **Micr
 - **State Management**: Azure Blob Storage with Azure AD authentication
 
 For detailed infrastructure documentation, see [docs/monorepo/infra/overview.md](docs/monorepo/infra/overview.md).
+For infrastructure workflow and branch strategy rules, see [docs/INFRASTRUCTURE_WORKFLOW.md](docs/INFRASTRUCTURE_WORKFLOW.md). In particular, use `infra/*` branches for infrastructure changes, and run/apply only from the allowed branches (`main` / `infra`) as described in that guide.
 
 ---
 
