@@ -28,10 +28,6 @@ export const columns: ColumnDef<MemberWithTeams>[] = [
     size: 40,
   },
   {
-    accessorKey: "id",
-    header: "ID",
-  },
-  {
     accessorKey: "firstname",
     header: "Nome",
   },
