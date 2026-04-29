@@ -32,7 +32,7 @@ on:
         description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
         type: boolean
         required: false
-        default: false
+        default: true
       override_labels:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
@@ -42,7 +42,22 @@ permissions:
   contents: read
   id-token: write
 jobs:
+  resolve-env:
+    runs-on: ubuntu-latest
+    outputs:
+      runner_label: ${{ steps.set-vars.outputs.runner_label }}
+    steps:
+      - name: Set environment-specific runner label
+        id: set-vars
+        run: |
+          if [ "${{ inputs.environment }}" = "app-prod" ]; then
+            echo "runner_label=prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "runner_label=dev" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
+    needs: resolve-env
     if: github.event_name == 'workflow_dispatch'
     uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@main
     with:
@@ -52,6 +67,6 @@ jobs:
       function_app_name: ${{ inputs.function_app_name }}
       use_staging_slot: ${{ inputs.use_staging_slot }}
       use_private_agent: ${{ inputs.use_private_agent }}
-      use_labels: ${{ inputs.use_labels }}
-      override_labels: ${{ inputs.override_labels }}
+      use_labels: true
+      override_labels: ${{ inputs.override_labels || needs.resolve-env.outputs.runner_label }}
     secrets: inherit

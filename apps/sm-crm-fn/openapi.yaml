@@ -229,9 +229,17 @@ paths:
         Crea uno o più contatti in Dynamics CRM associati a un ente, senza dover
         creare un appuntamento.
 
-        Il flusso è:
+        Il flusso per ogni partecipante è:
         1. Verifica l'ente tramite `institutionIdSelfcare`
-        2. Per ogni partecipante, crea il contatto collegandolo all'account e al prodotto
+        2. Ricerca contatto esistente con cascata a 3 step:
+           - **Step 1**: ricerca per istituzione + email + prodotto
+           - **Step 2**: ricerca per email + GUID prodotto
+           - **Step 3**: ricerca per sola email
+        3. Se il contatto esiste → risponde con `status: "alreadyExists"` (**409**)
+        4. Se non esiste → crea il contatto collegandolo all'account e al prodotto (**201**)
+
+        In caso di batch misto (alcuni esistenti, altri creati, altri falliti) viene
+        restituito **207 Multi-Status**.
       operationId: createContacts
       parameters:
         - $ref: "#/components/parameters/DynamicsEnvironment"
@@ -257,7 +265,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreateContactsResponse"
         "207":
-          description: Alcuni contatti creati, altri falliti
+          description: Alcuni contatti creati/trovati, altri falliti (batch misto)
           content:
             application/json:
               schema:
@@ -274,6 +282,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: |
+            Uno o più contatti esistono già in Dynamics CRM (tutti già esistenti).
+            Restituisce i dati dei contatti trovati con `status: "alreadyExists"`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateContactsResponse"
         "500":
           description: Tutti i contatti falliti o errore interno
           content:
@@ -336,7 +352,11 @@ paths:
         1. **Verifica Ente** - Cerca l'ente per `institutionIdSelfcare` o `nomeEnte`
         2. **Verifica/Crea Contatti** - Per ogni partecipante, verifica esistenza o crea (opzionale con `enableCreateContact`)
         3. **Crea Appuntamento** - Con tutti i partecipanti come activity_parties
-        4. **GrantAccess** - Condivide l'appuntamento con il team Sales (opzionale con `enableGrantAccess`)
+
+        `productIdSelfcare` resta obbligatorio per il flusso applicativo e per la
+        ricerca dei contatti. Al momento non viene bindato direttamente
+        sull'entità `appointment`, perché in UAT il collegamento al prodotto
+        attiva logica CRM server-side che fallisce e deve essere confermata col team CRM.
 
         ### Dry-Run Mode
         Impostare `dryRun: true` per testare il flusso senza modifiche a Dynamics.
@@ -385,7 +405,6 @@ paths:
                   categoria: "Follow-up tecnico"
                   dataProssimoContatto: "2025-03-01T10:00:00Z"
                   enableCreateContact: true
-                  enableGrantAccess: true
                   dryRun: false
               dryRun:
                 summary: Test dry-run
@@ -615,10 +634,12 @@ components:
           example: "Follow-up tecnico"
         dataProssimoContatto:
           type: string
-          format: date-time
           description: |
             Data prossimo contatto previsto (campo standard Dynamics `sortdate`).
-            Formato ISO 8601.
+            Accetta sia un valore ISO 8601 completo (`2025-03-01T10:00:00Z`) sia
+            una data semplice (`2025-03-01`). Se viene passato solo il giorno,
+            la Function lo normalizza automaticamente a `T00:00:00Z` prima
+            dell'invio a Dynamics 365.
           example: "2025-03-01T10:00:00Z"
         enableCreateContact:
           type: boolean
@@ -631,21 +652,6 @@ components:
             **Utilizzo consigliato**:
             - `false` (default): Per appuntamenti con contatti esistenti
             - `true`: Per nuovi enti o nuovi referenti non ancora in CRM
-          example: false
-        enableGrantAccess:
-          type: boolean
-          default: false
-          description: |
-            **Grant Access to Sales Team**: Se `true`, esegue lo step 4 (GrantAccess) 
-            per rendere l'appuntamento visibile al team Sales in Dynamics CRM.
-            Se `false` o omesso, lo step viene saltato completamente.
-
-            **Nota**: GrantAccess richiede che l'API Custom Action sia disponibile 
-            nell'ambiente Dynamics. Potrebbe non essere disponibile in UAT.
-
-            **Utilizzo consigliato**:
-            - `false` (default): Per la maggior parte degli appuntamenti
-            - `true`: Per appuntamenti critici che richiedono visibilità del team Sales
           example: false
         dryRun:
           type: boolean
@@ -826,7 +832,6 @@ components:
             - verifyAccount
             - verifyOrCreateContacts
             - createAppointment
-            - grantAccess
           description: Nome dello step
         success:
           type: boolean
@@ -1032,6 +1037,9 @@ components:
       properties:
         success:
           type: boolean
+          description: |
+            Esito complessivo allineato all'HTTP status finale.
+            `true` per risposte < 400, `false` per errori come `409` o `500`.
         accountId:
           type: string
           format: uuid
@@ -1039,6 +1047,12 @@ components:
         created:
           type: integer
           description: Numero di contatti creati con successo
+        alreadyExists:
+          type: integer
+          description: Numero di contatti già presenti in Dynamics CRM
+        errors:
+          type: integer
+          description: Numero di contatti falliti in creazione o ricerca
         total:
           type: integer
           description: Numero totale di partecipanti elaborati
@@ -1050,15 +1064,25 @@ components:
               email:
                 type: string
                 format: email
-              success:
-                type: boolean
+              status:
+                type: string
+                enum: [created, alreadyExists, error]
+                description: Esito per singolo partecipante
               contactId:
                 type: string
                 format: uuid
-                description: Presente solo se success è true
+                description: Presente se il contatto è stato creato o trovato
+              contact:
+                type: object
+                description: Dati del contatto restituiti da Dynamics, se disponibili
+              foundByStep:
+                type: integer
+                description: |
+                  Step della cascata di ricerca che ha trovato il contatto esistente.
+                  Valori attesi: 1, 2 o 3. Presente solo per `alreadyExists`.
               error:
                 type: string
-                description: Presente solo se success è false
+                description: Presente solo se `status` è `error`
         timestamp:
           type: string
           format: date-time
@@ -1105,6 +1129,28 @@ components:
                     type: string
                     description: Nome da usare nell'@odata.bind sul contact
                     example: "pgp_Prodottoid"
+                  referencedEntity:
+                    type: string
+                    example: "product"
+            error:
+              type: string
+              nullable: true
+        appointmentProductRelationships:
+          type: object
+          properties:
+            relationships:
+              type: array
+              description: Relazioni ManyToOne dell'appointment verso entità product
+              items:
+                type: object
+                properties:
+                  schemaName:
+                    type: string
+                    example: "pgp_appointment_prodottooggettodelcontattoid_product"
+                  referencingNavigationPropertyName:
+                    type: string
+                    description: Nome da usare nell'@odata.bind sull'appointment
+                    example: "pgp_prodottooggettodelcontattoid_Appointment"
                   referencedEntity:
                     type: string
                     example: "product"

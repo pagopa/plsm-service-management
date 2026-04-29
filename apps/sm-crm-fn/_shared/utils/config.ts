@@ -29,6 +29,94 @@ const configSchema = z.object({
     .string()
     .optional()
     .transform((val) => val?.toLowerCase() === "true"),
+  // -----------------------------------------------------------------------------
+  // Diagnostic Logging (Feature Flag)
+  // Abilita il logging delle sessioni CRM su Azure Blob Storage.
+  // Per attivare: DIAGNOSTIC_LOGGING_ENABLED=true
+  // Per disattivare: DIAGNOSTIC_LOGGING_ENABLED=false (o rimuovere la variabile)
+  // -----------------------------------------------------------------------------
+  /**
+   * Feature flag per il diagnostic logging su Blob Storage.
+   * @default false
+   */
+  DIAGNOSTIC_LOGGING_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => val?.toLowerCase() === "true"),
+  /**
+   * Connection string per Azure Blob Storage dove vengono scritti i log diagnostici.
+   * Obbligatoria se DIAGNOSTIC_LOGGING_ENABLED=true, ignorata altrimenti.
+   */
+  DIAGNOSTIC_STORAGE_CONNECTION_STRING: z.string().optional(),
+  /**
+   * Nome del container Blob Storage per i log diagnostici.
+   * @default "crm-diagnostics"
+   */
+  DIAGNOSTIC_STORAGE_CONTAINER: z
+    .string()
+    .optional()
+    .default("crm-diagnostics"),
+  /**
+   * Mappa prodotti CRM per ambiente UAT (JSON serializzato da Key Vault).
+   * Formato: Record<ProductIdSelfcare, string> dove il valore è il GUID Dynamics.
+   * @example '{"prod-pn":"617cbe1b-...","prod-io":"26a975ef-..."}'
+   */
+  CRM_PRODUCTS_MAP_UAT: z
+    .preprocess((val) => {
+      if (typeof val !== "string" || val.length === 0) {
+        throw new Error("CRM_PRODUCTS_MAP_UAT è obbligatoria");
+      }
+      try {
+        return JSON.parse(val);
+      } catch {
+        throw new Error("CRM_PRODUCTS_MAP_UAT: JSON non valido");
+      }
+    }, z.record(z.string(), z.string())),
+  /**
+   * Mappa prodotti CRM per ambiente PROD (JSON serializzato da Key Vault).
+   * Formato: Record<ProductIdSelfcare, string> dove il valore è il GUID Dynamics.
+   */
+  CRM_PRODUCTS_MAP_PROD: z
+    .preprocess((val) => {
+      if (typeof val !== "string" || val.length === 0) {
+        throw new Error("CRM_PRODUCTS_MAP_PROD è obbligatoria");
+      }
+      try {
+        return JSON.parse(val);
+      } catch {
+        throw new Error("CRM_PRODUCTS_MAP_PROD: JSON non valido");
+      }
+    }, z.record(z.string(), z.string())),
+  /**
+   * Mappa tipologie referente CRM per ambiente UAT (JSON serializzato da Key Vault).
+   * Formato: Record<TipologiaReferente, number>.
+   */
+  CRM_TIPOLOGIA_REFERENTE_MAP_UAT: z
+    .preprocess((val) => {
+      if (typeof val !== "string" || val.length === 0) {
+        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria");
+      }
+      try {
+        return JSON.parse(val);
+      } catch {
+        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_UAT: JSON non valido");
+      }
+    }, z.record(z.string(), z.number())),
+  /**
+   * Mappa tipologie referente CRM per ambiente PROD (JSON serializzato da Key Vault).
+   * Formato: Record<TipologiaReferente, number>.
+   */
+  CRM_TIPOLOGIA_REFERENTE_MAP_PROD: z
+    .preprocess((val) => {
+      if (typeof val !== "string" || val.length === 0) {
+        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria");
+      }
+      try {
+        return JSON.parse(val);
+      } catch {
+        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_PROD: JSON non valido");
+      }
+    }, z.record(z.string(), z.number())),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
@@ -58,6 +146,14 @@ export function getConfigOrThrow(): AppConfig {
     DYNAMICS_SCOPE: process.env.DYNAMICS_SCOPE,
     NODE_ENV: process.env.NODE_ENV,
     ENABLE_EMAIL_FORMAT_VALIDATION: process.env.ENABLE_EMAIL_FORMAT_VALIDATION,
+    DIAGNOSTIC_LOGGING_ENABLED: process.env.DIAGNOSTIC_LOGGING_ENABLED,
+    DIAGNOSTIC_STORAGE_CONNECTION_STRING:
+      process.env.DIAGNOSTIC_STORAGE_CONNECTION_STRING,
+    DIAGNOSTIC_STORAGE_CONTAINER: process.env.DIAGNOSTIC_STORAGE_CONTAINER,
+    CRM_PRODUCTS_MAP_UAT: process.env.CRM_PRODUCTS_MAP_UAT,
+    CRM_PRODUCTS_MAP_PROD: process.env.CRM_PRODUCTS_MAP_PROD,
+    CRM_TIPOLOGIA_REFERENTE_MAP_UAT: process.env.CRM_TIPOLOGIA_REFERENTE_MAP_UAT,
+    CRM_TIPOLOGIA_REFERENTE_MAP_PROD: process.env.CRM_TIPOLOGIA_REFERENTE_MAP_PROD,
   };
   try {
     return validateConfig(raw);
@@ -71,4 +167,25 @@ export function getConfigOrThrow(): AppConfig {
 
 export function isDevelopment(): boolean {
   return process.env.NODE_ENV === "development";
+}
+
+// -----------------------------------------------------------------------------
+// Singleton config (letto una sola volta all'avvio della Function)
+// -----------------------------------------------------------------------------
+
+let _cachedConfig: AppConfig | undefined
+
+/**
+ * Restituisce la configurazione dell'app leggendola una sola volta da process.env.
+ * Le invocazioni successive restituiscono la stessa istanza (singleton).
+ * Usare questa funzione al posto di getConfigOrThrow() nei moduli che vengono
+ * importati ad ogni richiesta, per evitare parsing ripetuto.
+ *
+ * @returns AppConfig validata e cachata
+ */
+export function getConfig(): AppConfig {
+  if (!_cachedConfig) {
+    _cachedConfig = getConfigOrThrow()
+  }
+  return _cachedConfig
 }
