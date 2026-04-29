@@ -77,6 +77,12 @@ export async function GET(request: NextRequest) {
     });
 
     if (authResponse.status !== 302) {
+      const responseBody = await authResponse.text().catch(() => "");
+      console.error("[auth/callback] Auth function callback failed", {
+        body: responseBody,
+        status: authResponse.status,
+      });
+
       throw new Error(
         `Unexpected auth callback response: ${authResponse.status}`,
       );

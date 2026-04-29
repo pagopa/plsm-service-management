@@ -145,8 +145,8 @@ export async function handler(
       `auth-token=${internalJwt}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${config.jwtExpirySeconds}`, // Set JWT
     ];
 
-    // Redirect to frontend dashboard (or read from query param)
-    const redirectUrl = request.query.get("redirect_uri") || "/dashboard";
+    // Redirect back to the frontend app after the auth cookie is set.
+    const redirectUrl = `${process.env.FRONTEND_URL || ""}/dashboard`;
 
     return {
       status: 302,

@@ -176,10 +176,13 @@ export function applyProxyCookies(
     raw?: () => Record<string, string[]>;
   };
 
-  const rawCookies =
+  const rawCookieHeaders =
     headersWithCookies.getSetCookie?.() ||
     headersWithCookies.raw?.()["set-cookie"] ||
-    splitSetCookieHeader(headers.get("set-cookie") || "");
+    [headers.get("set-cookie") || ""];
+  const rawCookies = rawCookieHeaders.flatMap((rawCookieHeader) =>
+    splitSetCookieHeader(rawCookieHeader),
+  );
 
   for (const rawCookie of rawCookies) {
     const parsedCookie = parseProxyCookie(rawCookie);
