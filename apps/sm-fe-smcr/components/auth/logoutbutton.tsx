@@ -1,15 +1,8 @@
 "use client";
 
-import { useMsal } from "@azure/msal-react";
-
 export const LogoutButton = () => {
-  const { instance } = useMsal();
-
   const handleLogout = () => {
-
-    instance.logoutRedirect({
-      postLogoutRedirectUri: "/",
-    });
+    window.location.assign("/api/auth/logout");
   };
 
   return (

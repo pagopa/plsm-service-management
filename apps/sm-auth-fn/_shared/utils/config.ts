@@ -35,6 +35,8 @@ export function loadConfig(): AuthConfig {
     throw new Error("JWT_SECRET must be at least 32 characters long");
   }
 
+  console.log({ config })
+
   return config;
 }
 
@@ -45,7 +47,9 @@ export function loadConfig(): AuthConfig {
  */
 export function isConfigValid(): boolean {
   try {
-    loadConfig();
+    const c = loadConfig();
+
+    console.log({ ENV: c })
     return true;
   } catch {
     return false;

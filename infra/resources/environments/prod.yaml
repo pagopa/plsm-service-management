@@ -102,11 +102,17 @@ fe_smcr:
     # NEXT_PUBLIC_MSAL_REDIRECT_URI: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL: "https://plsm-p-itn-auth-func-01.azurewebsites.net"
+    AUTH_JWT_SECRET: "kv:auth_jwt_secret"
+    AUTH_JWT_ISSUER: "plsm-auth-service"
+    AUTH_JWT_AUDIENCE: "plsm-fe-smcr"
   staging:
     NEXT_PUBLIC_APP_URL: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     # NEXT_PUBLIC_MSAL_REDIRECT_URI: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL: "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net"
+    AUTH_JWT_SECRET: "kv:auth_jwt_secret"
+    AUTH_JWT_ISSUER: "plsm-auth-service-staging"
+    AUTH_JWT_AUDIENCE: "plsm-fe-smcr-staging"
 
 # ─── CRM Function (Dynamics CRM Integration) ─────────────────────────────────
 # Production = Staging (stessi valori per entrambi gli slot)
