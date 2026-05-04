@@ -5,6 +5,8 @@
 import type { Account, DynamicsList } from "../types/dynamics";
 import { get, buildUrl } from "./httpClient";
 import { createLogger, logODataQuery, Timer } from "../utils/logger";
+import type { DiagnosticSession } from "./diagnosticLogger";
+import { addDiagnosticCall } from "./diagnosticLogger";
 
 // =============================================================================
 // ACCOUNTS
@@ -23,6 +25,7 @@ import { createLogger, logODataQuery, Timer } from "../utils/logger";
 export async function getAccountBySelfcareId(
   institutionIdSelfcare: string,
   baseUrl: string,
+  diagnosticSession?: DiagnosticSession,
 ): Promise<Account | null> {
   const logger = createLogger(undefined, { institutionIdSelfcare });
   const timer = new Timer();
@@ -42,9 +45,21 @@ export async function getAccountBySelfcareId(
 
   logODataQuery(logger, "/api/data/v9.2/accounts", filter, select);
 
+  const startMs = Date.now();
   try {
     const result = await get<Account>(url, baseUrl);
     const duration = timer.elapsed();
+
+    if (diagnosticSession) {
+      addDiagnosticCall(diagnosticSession, {
+        step: "verifyAccount",
+        method: "GET",
+        url,
+        requestBody: null,
+        responseStatus: 200,
+        durationMs: Date.now() - startMs,
+      });
+    }
 
     // Simple console log for Azure Log Stream visibility
     console.log(
@@ -83,6 +98,17 @@ export async function getAccountBySelfcareId(
 
     return result.value[0];
   } catch (error) {
+    if (diagnosticSession) {
+      addDiagnosticCall(diagnosticSession, {
+        step: "verifyAccount",
+        method: "GET",
+        url,
+        requestBody: null,
+        responseStatus: null,
+        durationMs: Date.now() - startMs,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
     logger.error("❌ Failed to fetch account by Selfcare ID", error, {
       institutionIdSelfcare,
       duration: timer.elapsed(),
@@ -104,6 +130,7 @@ export async function getAccountBySelfcareId(
 export async function getAccountByName(
   nomeEnte: string,
   baseUrl: string,
+  diagnosticSession?: DiagnosticSession,
 ): Promise<Account | null> {
   const logger = createLogger(undefined, { nomeEnte });
   const timer = new Timer();
@@ -126,9 +153,21 @@ export async function getAccountByName(
 
   logODataQuery(logger, "/api/data/v9.2/accounts", filter, select);
 
+  const startMs = Date.now();
   try {
     const result = await get<Account>(url, baseUrl);
     const duration = timer.elapsed();
+
+    if (diagnosticSession) {
+      addDiagnosticCall(diagnosticSession, {
+        step: "verifyAccountByName",
+        method: "GET",
+        url,
+        requestBody: null,
+        responseStatus: 200,
+        durationMs: Date.now() - startMs,
+      });
+    }
 
     if (!result.value || result.value.length === 0) {
       logger.warn("⚠️ No account found by name", {
@@ -158,6 +197,17 @@ export async function getAccountByName(
 
     return result.value[0];
   } catch (error) {
+    if (diagnosticSession) {
+      addDiagnosticCall(diagnosticSession, {
+        step: "verifyAccountByName",
+        method: "GET",
+        url,
+        requestBody: null,
+        responseStatus: null,
+        durationMs: Date.now() - startMs,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
     logger.error("❌ Failed to fetch account by name", error, {
       nomeEnte,
       duration: timer.elapsed(),
@@ -175,6 +225,8 @@ export interface VerifyAccountParams {
   nomeEnte?: string;
   enableFallback: boolean;
   baseUrl: string;
+  /** Sessione diagnostica opzionale per il logging su Blob Storage */
+  diagnosticSession?: DiagnosticSession;
 }
 
 export interface VerifyAccountResult {
@@ -193,6 +245,7 @@ export async function verifyAccount(
       const account = await getAccountBySelfcareId(
         params.institutionIdSelfcare,
         params.baseUrl,
+        params.diagnosticSession,
       );
       if (account) {
         return { found: true, account, method: "selfcareId" };
@@ -214,7 +267,11 @@ export async function verifyAccount(
   // Fallback su nome ente se ho passato nomeEnte ed enableFallback è true (default false!)
   if (params.nomeEnte && params.enableFallback) {
     try {
-      const account = await getAccountByName(params.nomeEnte, params.baseUrl);
+      const account = await getAccountByName(
+        params.nomeEnte,
+        params.baseUrl,
+        params.diagnosticSession,
+      );
       if (account) {
         return { found: true, account, method: "name" };
       }

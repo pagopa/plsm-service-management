@@ -120,9 +120,14 @@ crm_function:
   # UAT environment (utilizzato con header x-dynamics-environment: UAT)
   DYNAMICS_BASE_URL_UAT: "kv:dynamics_base_url_uat"
   DYNAMICS_URL_CONTACTS_UAT: "kv:dynamics_url_contacts_uat"
-  DIAGNOSTIC_LOGGING_ENABLED: "true"
+  DIAGNOSTIC_LOGGING_ENABLED: "false"
   DIAGNOSTIC_STORAGE_CONNECTION_STRING: "kv:diagnostics_storage_connection_string"
   DIAGNOSTIC_STORAGE_CONTAINER: "crm-diagnostics"
+  # CRM Mappings (da Key Vault, JSON serializzato)
+  CRM_PRODUCTS_MAP_UAT: "kv:crm_products_map_uat"
+  CRM_PRODUCTS_MAP_PROD: "kv:crm_products_map_prod"
+  CRM_TIPOLOGIA_REFERENTE_MAP_UAT: "kv:crm_tipologia_referente_map_uat"
+  CRM_TIPOLOGIA_REFERENTE_MAP_PROD: "kv:crm_tipologia_referente_map_prod"
   NODE_ENV: "production"
   WEBSITE_RUN_FROM_PACKAGE: "1"
   DEBUG: "true"

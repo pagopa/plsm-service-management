@@ -40,6 +40,8 @@ export default async function Page({
   const selectedInstitution = institutionsResponse.data?.find(
     (item) => item.id === institution,
   );
+
+
   if (institutionsResponse.error || !institutionsResponse.data) {
     return (
       <ErrorBase
@@ -58,6 +60,7 @@ export default async function Page({
       />
     );
   }
+
 
   return (
     <div className="w-full h-full p-4 flex flex-col space-y-8 overflow-hidden">

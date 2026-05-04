@@ -7,9 +7,13 @@ import type {
   DynamicsList,
   CreateAppointmentRequest,
   AppointmentParty,
+  ProductIdSelfcare,
 } from "../types/dynamics";
 import { get, post, buildUrl } from "./httpClient";
 import { type Logger } from "../utils/logger";
+import { resolveEnvironment } from "../utils/mappings";
+import type { DiagnosticSession } from "./diagnosticLogger";
+import { addDiagnosticCall } from "./diagnosticLogger";
 
 // -----------------------------------------------------------------------------
 // Lista Appuntamenti
@@ -71,11 +75,25 @@ export interface CreateFullAppointmentParams {
   description?: string;
   oggettoDelContatto?: number;
   categoria?: string;
+  /**
+   * Data prossimo contatto previsto (campo standard Dynamics, formato ISO 8601 datetime).
+   * Accetta anche formato solo data (es. "2026-04-20") che viene auto-normalizzato
+   * aggiungendo "T00:00:00Z" per soddisfare il formato Edm.DateTimeOffset di Dynamics.
+   */
   dataProssimoContatto?: string;
+  /**
+   * ID Selfcare del prodotto.
+   * Viene usato a livello applicativo/orchestrativo, ma al momento non viene
+   * inviato sull'entità `appointment` perché in UAT il binding del prodotto
+   * attiva logica CRM server-side che fallisce con `0x80040265`.
+   */
+  productIdSelfcare?: ProductIdSelfcare;
   accountId: string;
   contactIds: string[];
   ownerId?: string;
   baseUrl: string;
+  /** Sessione diagnostica opzionale per il logging su Blob Storage */
+  diagnosticSession?: DiagnosticSession;
 }
 
 /**
@@ -98,8 +116,10 @@ export interface CreateFullAppointmentParams {
  * @param params.description - Descrizione
  * @param params.oggettoDelContatto - Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365. Default suggerito: 100000005 (Integrazione Tecnica)
  * @param params.categoria - Categoria appuntamento (campo standard Dynamics)
- * @param params.dataProssimoContatto - Data prossimo contatto previsto (campo standard Dynamics, formato ISO 8601)
+ * @param params.dataProssimoContatto - Data prossimo contatto previsto. Accetta ISO 8601 datetime o solo data (auto-normalizzata a T00:00:00Z)
+ * @param params.productIdSelfcare - ID Selfcare del prodotto. Al momento non viene bindato sull'appuntamento: resta usato per il flusso applicativo e la ricerca contatti.
  * @param params.baseUrl - Base URL di Dynamics 365
+ * @param params.diagnosticSession - Sessione diagnostica opzionale
  * @returns Appuntamento creato con activityid
  */
 export async function createAppointment(
@@ -153,9 +173,26 @@ export async function createAppointment(
     body.category = params.categoria;
   }
 
-  // Aggiungi data prossimo contatto se specificata
+  // Aggiungi data prossimo contatto se specificata.
+  // Auto-normalizza il formato solo-data (es. "2026-04-20") aggiungendo "T00:00:00Z"
+  // per soddisfare il formato Edm.DateTimeOffset richiesto da Dynamics 365.
   if (params.dataProssimoContatto !== undefined) {
-    body.sortdate = params.dataProssimoContatto;
+    body.sortdate = params.dataProssimoContatto.includes("T")
+      ? params.dataProssimoContatto
+      : `${params.dataProssimoContatto}T00:00:00Z`;
+  }
+
+  // NOTE:
+  // I metadata CRM espongono una relazione appointment -> product, ma in UAT il
+  // binding del prodotto sull'appuntamento causa un errore server-side
+  // `0x80040265` ("Errore nella gestione automatica dell'appointment").
+  // Fino a conferma del team CRM, il prodotto non viene inviato in POST
+  // /appointments.
+  if (params.productIdSelfcare) {
+    const environment = resolveEnvironment(params.baseUrl);
+    console.warn(
+      `[Appointments] Binding prodotto su appointment disabilitato temporaneamente per ambiente ${environment} e prodotto ${params.productIdSelfcare}`,
+    );
   }
 
   console.log(`[Appointments] Creazione appuntamento: ${params.subject}`);
@@ -163,14 +200,94 @@ export async function createAppointment(
     `[Appointments] Partecipanti: ${params.contactIds.length} contatti + 1 account`,
   );
 
-  const result = await post<CreateAppointmentRequest, Appointment>(
-    url,
-    body,
-    params.baseUrl,
-  );
+  const timer = Date.now();
+  const executeCreateAppointment = async (
+    requestBody: CreateAppointmentRequest,
+    step: string,
+  ): Promise<Appointment> => {
+    const attemptStart = Date.now();
 
-  console.log(`[Appointments] Appuntamento creato: ${result.activityid}`);
-  return result;
+    try {
+      const result = await post<CreateAppointmentRequest, Appointment>(
+        url,
+        requestBody,
+        params.baseUrl,
+      );
+
+      if (params.diagnosticSession) {
+        addDiagnosticCall(params.diagnosticSession, {
+          step,
+          method: "POST",
+          url,
+          requestBody,
+          responseStatus: 201,
+          durationMs: Date.now() - attemptStart,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      if (params.diagnosticSession) {
+        addDiagnosticCall(params.diagnosticSession, {
+          step,
+          method: "POST",
+          url,
+          requestBody,
+          responseStatus: null,
+          durationMs: Date.now() - attemptStart,
+          error: errorMessage,
+        });
+      }
+
+      throw error;
+    }
+  };
+
+  try {
+    const result = await executeCreateAppointment(body, "createAppointment");
+    console.log(`[Appointments] Appuntamento creato: ${result.activityid}`);
+    return result;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    if (!errorMessage.includes("0x80040265")) {
+      throw error;
+    }
+
+    console.warn(
+      "[Appointments] CRM automatic appointment handling failed, retrying with reduced payload",
+      {
+        durationMs: Date.now() - timer,
+      },
+    );
+
+    const fallbackBody: CreateAppointmentRequest = {
+      subject: body.subject,
+      scheduledstart: body.scheduledstart,
+      scheduledend: body.scheduledend,
+      location: body.location,
+      description: body.description,
+      "regardingobjectid_account@odata.bind":
+        body["regardingobjectid_account@odata.bind"],
+      appointment_activity_parties: body.appointment_activity_parties,
+    };
+
+    try {
+      const fallbackResult = await executeCreateAppointment(
+        fallbackBody,
+        "createAppointmentFallback",
+      );
+      console.log(
+        `[Appointments] Appuntamento creato con fallback: ${fallbackResult.activityid}`,
+      );
+      return fallbackResult;
+    } catch {
+      throw error;
+    }
+  }
 }
 
 // -----------------------------------------------------------------------------

@@ -1,6 +1,9 @@
 "use client";
 
-import { updateUserAction } from "@/lib/actions/users.actions";
+import {
+  updateUserAction,
+  updateUserEmailAction,
+} from "@/lib/actions/users.actions";
 import {
   Dialog,
   DialogClose,
@@ -29,6 +32,7 @@ import {
   LoaderCircleIcon,
   MoreHorizontal,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 import UserDialog from "../user-dialog";
@@ -37,8 +41,8 @@ export type User = {
   id: string;
   role: "SUB_DELEGATE" | "DELEGATE" | "OPERATOR" | "MANAGER";
   email: string;
-  name: string;
-  surname: string;
+  name?: string;
+  surname?: string;
   roles: ("admin" | "operator")[];
 };
 
@@ -113,14 +117,21 @@ export const getProvisioningUsersColumns: (
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>Azioni</DropdownMenuLabel>
+            <DropdownMenuEmailForm
+              email={user.email}
+              userId={user.id}
+              name={user.name}
+              surname={user.surname}
+            />
+
             <DropdownMenuItemForm
               status="SUSPENDED"
               userId={user.id}
               institutionId={institutionId}
               product={product}
             >
-              Suspend
+              Sospendi
             </DropdownMenuItemForm>
 
             <DropdownMenuItemForm
@@ -129,7 +140,7 @@ export const getProvisioningUsersColumns: (
               institutionId={institutionId}
               product={product}
             >
-              Delete
+              Elimina
             </DropdownMenuItemForm>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -137,6 +148,202 @@ export const getProvisioningUsersColumns: (
     },
   },
 ];
+
+function DropdownMenuEmailForm({
+  email,
+  userId,
+  name,
+  surname,
+}: {
+  email: string;
+  userId: string;
+  name?: string;
+  surname?: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild className="flex flex-col">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full items-start justify-start text-start"
+        >
+          Modifica email
+        </Button>
+      </DialogTrigger>
+
+      {open ? (
+        <EditEmailDialogContent
+          email={email}
+          userId={userId}
+          name={name}
+          surname={surname}
+          onSuccess={() => setOpen(false)}
+        />
+      ) : null}
+    </Dialog>
+  );
+}
+
+function EditEmailDialogContent({
+  email,
+  userId,
+  name,
+  surname,
+  onSuccess,
+}: {
+  email: string;
+  userId: string;
+  name?: string;
+  surname?: string;
+  onSuccess: () => void;
+}) {
+  const router = useRouter();
+  const id = useId();
+  const [nextEmail, setNextEmail] = useState(email);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [state, action, isPending] = useActionState(updateUserEmailAction, {
+    fields: {
+      email,
+      name: name ?? "",
+      surname: surname ?? "",
+      userId,
+    },
+    success: false,
+  });
+
+  const missingRegistryData = !name?.trim() || !surname?.trim();
+  const normalizedCurrentEmail = email.trim().toLowerCase();
+  const normalizedNextEmail = nextEmail.trim().toLowerCase();
+  const canSubmit =
+    !missingRegistryData &&
+    !isPending &&
+    nextEmail.trim().length > 0 &&
+    normalizedCurrentEmail !== normalizedNextEmail;
+
+  useEffect(() => {
+    if (!hasSubmitted || isPending) {
+      return;
+    }
+
+    if (state.errors?.root) {
+      toast.error("Aggiornamento email non riuscito", {
+        description: state.errors.root,
+      });
+      return;
+    }
+
+    if (state.success) {
+      toast.success("Email aggiornata", {
+        description: "La mail dell'utente e' stata aggiornata con successo.",
+      });
+      onSuccess();
+      router.refresh();
+    }
+  }, [
+    hasSubmitted,
+    isPending,
+    onSuccess,
+    router,
+    state.errors?.root,
+    state.success,
+  ]);
+
+  return (
+    <DialogContent
+      className="w-sm"
+      onEscapeKeyDown={(event) => {
+        if (isPending) {
+          event.preventDefault();
+        }
+      }}
+      onInteractOutside={(event) => {
+        if (isPending) {
+          event.preventDefault();
+        }
+      }}
+    >
+      <DialogHeader>
+        <DialogTitle>Modifica email</DialogTitle>
+        <DialogDescription>
+          Aggiorna la mail dell&apos;utente nel registro anagrafico.
+        </DialogDescription>
+      </DialogHeader>
+
+      <form action={action} onSubmit={() => setHasSubmitted(true)} className="space-y-5">
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground">Email attuale</span>
+            <p className="break-all text-sm">{email}</p>
+          </div>
+
+          {missingRegistryData ? (
+            <p className="text-xs text-destructive">
+              Impossibile aggiornare l&apos;email: nome o cognome dell&apos;utente
+              mancanti nella riga selezionata.
+            </p>
+          ) : null}
+
+          <div className="*:not-first:mt-2">
+            <Label htmlFor={id}>Nuova email</Label>
+            <Input
+              id={id}
+              name="email"
+              type="email"
+              value={nextEmail}
+              autoFocus
+              placeholder="mario@pagopa.it"
+              onChange={(event) => {
+                if (hasSubmitted) {
+                  setHasSubmitted(false);
+                }
+
+                setNextEmail(event.target.value);
+              }}
+              disabled={isPending || missingRegistryData}
+            />
+
+            {hasSubmitted && state.errors?.email ? (
+              <p className="text-xs text-destructive">{state.errors.email}</p>
+            ) : null}
+          </div>
+
+          {hasSubmitted && state.errors?.root ? (
+            <p className="text-xs text-destructive">{state.errors.root}</p>
+          ) : null}
+        </div>
+
+        <input type="hidden" name="name" value={name ?? ""} />
+        <input type="hidden" name="surname" value={surname ?? ""} />
+        <input type="hidden" name="userId" value={userId} />
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+          </DialogClose>
+
+          <Button type="submit" className="flex-1" disabled={!canSubmit}>
+            {isPending ? (
+              <LoaderCircleIcon className="size-3.5 animate-spin" />
+            ) : (
+              "Salva"
+            )}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
+  );
+}
 
 function DropdownMenuItemForm({
   status,
@@ -196,14 +403,14 @@ function DropdownMenuItemForm({
           </div>
           <DialogHeader>
             <DialogTitle className="sm:text-center">
-              Final confirmation
+              Conferma finale
             </DialogTitle>
             <DialogDescription className="sm:text-center">
-              This action cannot be undone. To confirm, please type{" "}
-              <span className="text-foreground">CONFIRM</span> in the field
-              below and click{" "}
+              Questa azione non puo&apos; essere annullata. Per confermare,
+              digita <span className="text-foreground">CONFIRM</span> nel
+              campo sottostante e fai clic su{" "}
               <span className="text-foreground">
-                {status === "SUSPENDED" ? "Suspend" : "Delete"}
+                {status === "SUSPENDED" ? "Sospendi" : "Elimina"}
               </span>
               .
             </DialogDescription>
@@ -212,11 +419,11 @@ function DropdownMenuItemForm({
 
         <form action={action} className="space-y-5">
           <div className="*:not-first:mt-2">
-            <Label htmlFor={id}>Verification</Label>
+            <Label htmlFor={id}>Verifica</Label>
             <Input
               id={id}
               type="text"
-              placeholder="Type CONFIRM to continue"
+              placeholder="Digita CONFIRM per continuare"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
             />
@@ -230,7 +437,7 @@ function DropdownMenuItemForm({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline" className="flex-1">
-                Cancel
+                Annulla
               </Button>
             </DialogClose>
 
@@ -242,9 +449,9 @@ function DropdownMenuItemForm({
               {isPending ? (
                 <LoaderCircleIcon className="size-3.5 animate-spin" />
               ) : status === "SUSPENDED" ? (
-                "Suspend"
+                "Sospendi"
               ) : (
-                "Delete"
+                "Elimina"
               )}
             </Button>
           </DialogFooter>

@@ -3,7 +3,8 @@ import type {
   HttpResponseInit,
   InvocationContext,
 } from "@azure/functions";
-import { resolveEnvironment, PRODUCTS_MAP } from "../_shared/utils/mappings";
+import { resolveEnvironment } from "../_shared/utils/mappings";
+import { getConfig } from "../_shared/utils/config";
 import { get, buildUrl } from "../_shared/services/httpClient";
 import { createLogger } from "../_shared/utils/logger";
 import {
@@ -58,6 +59,40 @@ async function probeContactProductRelationship(baseUrl: string): Promise<{
     baseUrl,
     endpoint:
       "/api/data/v9.2/EntityDefinitions(LogicalName='contact')/ManyToOneRelationships",
+    select:
+      "SchemaName,ReferencingEntityNavigationPropertyName,ReferencedEntity",
+  });
+
+  try {
+    const data = await get<Record<string, unknown>>(url, baseUrl);
+    const relationships = (data.value ?? [])
+      .filter((r) => (r["ReferencedEntity"] as string)?.includes("product"))
+      .map((r) => ({
+        schemaName: r["SchemaName"] as string,
+        referencingNavigationPropertyName: r[
+          "ReferencingEntityNavigationPropertyName"
+        ] as string,
+        referencedEntity: r["ReferencedEntity"] as string,
+      }));
+    return { relationships, error: null };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { relationships: [], error: errorMessage };
+  }
+}
+
+async function probeAppointmentProductRelationship(baseUrl: string): Promise<{
+  relationships: Array<{
+    schemaName: string;
+    referencingNavigationPropertyName: string;
+    referencedEntity: string;
+  }>;
+  error: string | null;
+}> {
+  const url = buildUrl({
+    baseUrl,
+    endpoint:
+      "/api/data/v9.2/EntityDefinitions(LogicalName='appointment')/ManyToOneRelationships",
     select:
       "SchemaName,ReferencingEntityNavigationPropertyName,ReferencedEntity",
   });
@@ -232,8 +267,17 @@ async function probeFieldValidation(baseUrl: string): Promise<{
   // Navigation property di contact: sono lookup/relation e non compaiono tra gli Attributes
   const contactNavigationProperties = ["pgp_Prodottoid"];
 
+  const appointmentNavigationProperties = [
+    "pgp_prodottooggettodelcontattoid_Appointment",
+  ];
+
   const [appointmentResult, contactResult] = await Promise.all([
-    probeEntityFields(baseUrl, "appointment", appointmentExpectedFields),
+    probeEntityFields(
+      baseUrl,
+      "appointment",
+      appointmentExpectedFields,
+      appointmentNavigationProperties,
+    ),
     probeEntityFields(
       baseUrl,
       "contact",
@@ -372,10 +416,17 @@ export async function probeDynamicsHandler(
     }
 
     // Step 1: relazioni ManyToOne del contact verso entità "product"
-    const contactProductRel = await probeContactProductRelationship(baseUrl);
+    const [contactProductRel, appointmentProductRel] = await Promise.all([
+      probeContactProductRelationship(baseUrl),
+      probeAppointmentProductRelationship(baseUrl),
+    ]);
     logger.info("Contact→Product relationships found", {
       count: contactProductRel.relationships.length,
       error: contactProductRel.error,
+    });
+    logger.info("Appointment→Product relationships found", {
+      count: appointmentProductRel.relationships.length,
+      error: appointmentProductRel.error,
     });
 
     // Step 2: lista tutte le entità pgp_ dai metadati di Dynamics
@@ -462,11 +513,14 @@ export async function probeDynamicsHandler(
         dynamicsBaseUrl: baseUrl,
         ...(accountLookup !== undefined && { accountLookup }),
         contactProductRelationships: contactProductRel,
+        appointmentProductRelationships: appointmentProductRel,
         metadata,
         fieldValidation,
         oggettoDelContattoPicklist,
         recommendation,
-        products: PRODUCTS_MAP[environment],
+        products: environment === 'UAT'
+          ? getConfig().CRM_PRODUCTS_MAP_UAT
+          : getConfig().CRM_PRODUCTS_MAP_PROD,
         candidates: results,
       },
     };

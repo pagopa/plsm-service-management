@@ -196,6 +196,34 @@ export async function readUser(input: {
   return { data, error };
 }
 
+export async function updateUserEmail(input: {
+  userId: string;
+  name: string;
+  familyName: string;
+  email: string;
+  certification: boolean;
+}) {
+  const { data, error } = await betterFetch(
+    `https://api.selfcare.pagopa.it/external/support/v1/users/${input.userId}/user-registry`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key":
+          serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
+      },
+      body: JSON.stringify({
+        name: input.name,
+        familyName: input.familyName,
+        email: input.email,
+        certification: input.certification,
+      }),
+    },
+  );
+
+  return { data, error };
+}
+
 export async function updateUser(input: {
   status: string;
   product: string;

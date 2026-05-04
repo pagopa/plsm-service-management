@@ -10,6 +10,8 @@ export const PRODUCT_MAP: Record<string, string> = {
   "prod-interop": "Interoperabilità",
   "prod-interop-atst": "Interoperabilità Attestazione",
   "prod-interop-coll": "Interoperabilità Collaudo",
+  "prod-fims": "FIMS",
+  "prod-wallet": "Wallet",
   "prod-io": "IO",
   "prod-io-premium": "IO Premium",
   "prod-io-sign": "Firma con IO",
