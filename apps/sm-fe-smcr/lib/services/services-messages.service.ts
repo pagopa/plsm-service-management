@@ -3,6 +3,7 @@
 import { betterFetch } from "@better-fetch/fetch";
 import z from "zod";
 import { serverEnv } from "@/config/env";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const LIMIT = 20;
 
@@ -89,7 +90,7 @@ export async function getServices(query: string) {
   );
 
   if (error) {
-    console.error(error);
+    logServerError(error, "getServices - fetch error");
     return { data: null, error };
   }
 
@@ -153,7 +154,7 @@ export async function getMessagesCount(
   );
 
   if (error) {
-    console.error(error);
+    logServerError(error, "getMessagesCount - fetch error");
     return { data: null, error: "Error" };
   }
 

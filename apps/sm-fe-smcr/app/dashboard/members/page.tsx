@@ -5,18 +5,19 @@ import { columns, MembersTable } from "@/components/members/table";
 import TeamsStoreDispatcher from "@/components/teams/teams-store-dispatcher";
 import { readMembers } from "@/lib/services/members.service";
 import { readTeams } from "@/lib/services/teams.service";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 import { UsersIcon } from "lucide-react";
 
 export default async function Page() {
   const members = await readMembers();
   if (members.error || members.data === null) {
-    console.error(members.error);
+    logServerError(members.error, "Members page - read members error");
     throw new Error(members.error);
   }
 
   const teams = await readTeams();
   if (teams.error || teams.data === null) {
-    console.error(teams.error);
+    logServerError(teams.error, "Members page - read teams error");
     throw new Error(teams.error);
   }
 

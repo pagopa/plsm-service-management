@@ -17,9 +17,8 @@ export async function POST(request: Request) {
   const result = logInputSchema.safeParse(body);
 
   if (!result.success) {
-    console.warn(
-      "log validation error",
-      z.flattenError(result.error).fieldErrors,
+    process.stderr.write(
+      `log validation error: ${JSON.stringify(z.flattenError(result.error).fieldErrors)}\n`,
     );
     return Response.json(
       { message: z.flattenError(result.error).fieldErrors },

@@ -8,6 +8,10 @@ import {
   GET_USERS_PATH,
   ONBOARDING_BASE_PATH,
 } from "./config/env";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
 
 export async function getUserTaxCode(state: any, formData: FormData) {
   const taxCodeFormData = formData.get("taxCode") as string;
@@ -47,14 +51,14 @@ export async function getUserTaxCode(state: any, formData: FormData) {
           message: "Utente non trovato",
         };
       } else {
-        console.log(error);
+        logServerError(error, "getUserTaxCode - fetch error");
         throw new Error();
       }
     }
-    console.log(data);
+    logServerInfo("getUserTaxCode - user retrieved", { taxCode });
     return { success: true, taxCode, data: data.user };
   } catch (error) {
-    console.log(error);
+    logServerError(error, "getUserTaxCode - unexpected error");
     return {
       success: false,
       taxCode,

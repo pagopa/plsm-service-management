@@ -11,13 +11,15 @@ import {
   GET_STATUS,
   ONBOARDING_BASE_PATH,
 } from "./config/env";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
 
 export async function onboardingStatus(
   state: StatusActionState,
   formData: FormData,
 ): Promise<StatusActionState> {
-  console.log("Server Action - FormData entries:");
-  formData.forEach((value, key) => console.log(key, value));
   const subunit = formData.get("subunit") as SubunitOption;
 
   const isSubunit = subunit === "AOO" || subunit === "UO";
@@ -32,10 +34,9 @@ export async function onboardingStatus(
 
   try {
     const { error: parseError } = statusSchema.safeParse(values);
-    console.log(
-      parseError,
-      `${GET_STATUS}?taxcode=${values.taxcode}${isSubunit ? `&subunitCode=${values.subunitCode}` : ""}`,
-    );
+    if (parseError) {
+      logServerError(parseError, "onboardingStatus - validation error");
+    }
     if (parseError) {
       const errors: StatusActionState["validationErrors"] = {};
       for (const { path, message } of parseError?.issues ?? []) {
@@ -48,7 +49,7 @@ export async function onboardingStatus(
       };
     }
   } catch (parseError) {
-    console.log(parseError);
+    logServerError(parseError, "onboardingStatus - parse error");
     if (parseError instanceof z.ZodError) {
       const errors: StatusActionState["validationErrors"] = {};
       for (const { path, message } of parseError?.issues ?? []) {
@@ -88,7 +89,7 @@ export async function onboardingStatus(
           },
         };
       } else {
-        console.log(error);
+        logServerError(error, "onboardingStatus - fetch error");
         return {
           formValues: values,
           validationErrors: {},
@@ -114,7 +115,7 @@ export async function onboardingStatus(
         },
       };
     }
-    console.log("DATA: ", data);
+    logServerInfo("onboardingStatus - data retrieved", { count: data.length });
 
     const product = data.find(
       (product) => product.productId === values.productId,
@@ -148,7 +149,7 @@ export async function onboardingStatus(
       },
     };
   } catch (error) {
-    console.log(error);
+    logServerError(error, "onboardingStatus - unexpected error");
     return {
       formValues: values,
       validationErrors: {},

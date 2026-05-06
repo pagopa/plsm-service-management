@@ -3,6 +3,7 @@
 import database from "@/lib/knex";
 import z from "zod";
 import { readMemberTeams, teamSchema } from "./teams.service";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const memberSchema = z.object({
   id: z.number(),
@@ -25,7 +26,7 @@ export async function readMembers() {
   const rawMembers = await database.from("members").select("*");
   const members = z.array(memberSchema).safeParse(rawMembers);
   if (!members.success) {
-    console.error("readMembers - validation error", members.error);
+    logServerError(members.error, "readMembers - validation error");
     return { data: null, error: "validation error" };
   }
 
@@ -55,7 +56,7 @@ export async function readMemberByEmail(
 
   const member = memberSchema.safeParse(rawMember);
   if (!member.success) {
-    console.error("readMemberByEmail - validation error", member.error);
+    logServerError(member.error, "readMemberByEmail - validation error");
     return { data: null, error: "validation error" };
   }
 
@@ -84,13 +85,13 @@ export async function createMember(input: {
 
     const member = memberSchema.safeParse(rawMember);
     if (!member.success) {
-      console.error("createMember - validation error", member.error);
+      logServerError(member.error, "createMember - validation error");
       return { data: null, error: "validation error" };
     }
 
     return { data: member.data, error: null };
   } catch (error) {
-    console.error("createMember - database error", error);
+    logServerError(error, "createMember - database error");
     return { data: null, error: "database error" };
   }
 }
@@ -125,7 +126,7 @@ export async function deleteMemberById(input: {
 
     return { data: { id: deletedMemberId }, error: null };
   } catch (error) {
-    console.error("deleteMemberById - database error", error);
+    logServerError(error, "deleteMemberById - database error");
     return { data: null, error: "database error" };
   }
 }

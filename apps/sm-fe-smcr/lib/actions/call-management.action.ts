@@ -290,7 +290,10 @@ export type CreateMeetingResult =
 export async function createMeetingAction(
   input: CreateMeetingInput,
 ): Promise<CreateMeetingResult> {
-  console.log("input", input);
+  logger.info(
+    { info: { event: "call-management.create-meeting", metadata: input } },
+    "Create meeting input received",
+  );
   const baseUrl = serverEnv.FE_SMCR_CRM_API_URL?.replace(/\/$/, "");
   if (!baseUrl) {
     logger.warn(

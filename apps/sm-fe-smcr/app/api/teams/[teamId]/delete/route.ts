@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import knex from "@/lib/knex";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
 
 export async function GET(
   req: NextRequest,
@@ -8,7 +12,7 @@ export async function GET(
 ) {
   try {
     const { teamId } = await params;
-    console.log("CANCELLOOOO", teamId);
+    logServerInfo("Delete team requested", { teamId });
 
     if (!teamId) {
       return NextResponse.json({ error: "Missing teamId" }, { status: 400 });
@@ -32,11 +36,11 @@ export async function GET(
     // Se il team non è "Admin", procedi con la cancellazione
     const result = await knex("team").where({ id: teamId }).del();
 
-    console.log("Delete team result:", result);
+    logServerInfo("Delete team result", { result });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Errore API delete -team:", error);
+    logServerError(error, "Errore API delete team");
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import logger from "@/lib/logger/logger.server";
 import { serverEnv } from "@/config/env";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 async function streamToBuffer(stream: Readable): Promise<Buffer> {
   const chunks: Buffer[] = [];
@@ -31,7 +32,7 @@ export async function verifyContract(product: string) {
   );
 
   if (error) {
-    console.error(error);
+    logServerError(error, "verifyContract - fetch error");
     return false;
   }
 
@@ -62,7 +63,7 @@ export async function getOnboardingByProduct(
   );
 
   if (result.error) {
-    console.error(result.error);
+    logServerError(result.error, "getOnboardingByProduct - fetch error");
     return {
       data: null,
       error: "Si è verificato un errore, riprova più tardi.",
@@ -280,7 +281,7 @@ export async function sendQueueMessage(onboarding: string) {
   );
 
   if (error) {
-    console.error(error);
+    logServerError(error, "sendQueueMessage - fetch error");
     return {
       data: null,
       error: "Si è verificato un errore, riprova più tardi.",
