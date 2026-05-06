@@ -15,6 +15,7 @@ import {
   readMemberByEmail,
   createMember,
 } from "@/lib/services/members.service";
+import clientLogger from "@/lib/logger/logger.client";
 
 interface SessionContextType {
   user: UserProfile | null;
@@ -88,10 +89,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // Check if member exists in the new members table, create if not
       const memberResult = await readMemberByEmail(msalAccount.username);
       if (memberResult.error || !memberResult.data) {
-        // Member doesn't exist - create one
-        console.log(
-          "Member not found, creating new member for:",
-          msalAccount.username,
+        void clientLogger.info(
+          {
+            info: {
+              event: "session.member.create_missing",
+              metadata: { email: msalAccount.username },
+            },
+          },
+          "Member not found, creating new member",
         );
 
         // Extract firstname and lastname from MSAL claims or parse from name
@@ -111,9 +116,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         });
 
         if (createResult.error) {
-          console.error("Failed to create member:", createResult.error);
+          void clientLogger.error(
+            { error: createResult.error },
+            "Failed to create member",
+          );
         } else {
-          console.log("Member created successfully:", createResult.data);
+          void clientLogger.info("Member created successfully");
         }
       }
 
@@ -132,7 +140,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         },
       });
     } catch (err: any) {
-      console.error("Errore caricamento profilo:", err);
+      void clientLogger.error({ error: err }, "Errore caricamento profilo");
       setError(err.message || "Errore sconosciuto");
       setUser(null);
     } finally {
@@ -146,7 +154,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setUser(null);
       await instance.logoutRedirect();
     } catch (err: any) {
-      console.error("Errore durante il logout:", err);
+      void clientLogger.error({ error: err }, "Errore durante il logout");
       setError(err.message);
     }
   }, [instance]);
@@ -164,7 +172,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key?.includes("msal")) {
-        console.log("MSAL storage changed, refreshing user data");
         refreshUserData();
       }
     };

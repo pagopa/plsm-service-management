@@ -1,16 +1,11 @@
 import { LogLevel, PublicClientApplication } from "@azure/msal-browser";
 import { clientEnv } from "@/config/env";
+import clientLogger from "@/lib/logger/logger.client";
 
 const CLIENT_ID = clientEnv.NEXT_PUBLIC_MSAL_CLIENT_ID;
 const TENANT_ID = clientEnv.NEXT_PUBLIC_MSAL_TENANT_ID;
 const REDIRECT_URI = clientEnv.NEXT_PUBLIC_MSAL_REDIRECT_URI;
 // const BASE_PATH = clientEnv.NEXT_PUBLIC_APP_URL ?? "/";
-// console.log("🔍 MSAL Config Debug:");
-// console.log("- CLIENT_ID:", CLIENT_ID ? "✅ Set" : "❌ Missing");
-// console.log("- TENANT_ID:", TENANT_ID ? "✅ Set" : "❌ Missing");
-// console.log("- REDIRECT_URI:", REDIRECT_URI ? "✅ Set" : "❌ Missing");
-// console.log("- BASE_PATH:", BASE_PATH ? "✅ Set" : "❌ Missing");
-// console.log("- Full REDIRECT_URI:", REDIRECT_URI);
 export const msalConfig = {
   auth: {
     clientId: CLIENT_ID,
@@ -30,16 +25,16 @@ export const msalConfig = {
         }
         switch (level) {
           case LogLevel.Error:
-            console.error(message);
+            void clientLogger.error(message);
             return;
           case LogLevel.Info:
-            console.info(message);
+            void clientLogger.info(message);
             return;
           case LogLevel.Verbose:
-            console.debug(message);
+            void clientLogger.debug(message);
             return;
           case LogLevel.Warning:
-            console.warn(message);
+            void clientLogger.warn(message);
             return;
           default:
             return;
@@ -62,8 +57,15 @@ export function getMsalInstance(): PublicClientApplication {
 export async function ensureInitialized() {
   const instance = getMsalInstance();
   if (!instance.getActiveAccount()) {
-    console.log("🧠 MSAL INSTANCE CREATED");
-    console.log("With config:", msalConfig);
+    void clientLogger.info(
+      {
+        info: {
+          event: "msal.instance.created",
+          metadata: { redirectUri: REDIRECT_URI },
+        },
+      },
+      "MSAL instance created",
+    );
     await instance.initialize();
   }
 
