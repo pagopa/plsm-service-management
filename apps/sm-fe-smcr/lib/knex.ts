@@ -20,14 +20,6 @@ const rawPassword = Buffer.from(
 // Connection string
 const connectionString = `postgresql://${encodedUser}:${rawPassword}@${serverEnv.DB_HOST}:${port}/${serverEnv.DB_NAME}${sslEnabled ? "?sslmode=require" : ""}`;
 
-// Solo in sviluppo, stampa dettagli (evita in prod per sicurezza)
-// if (process.env.NODE_ENV !== "production") {
-//   console.log("[🔌 DB CONNECTION INFO]");
-//   console.log(`→ Host: ${process.env.DB_HOST}`);
-//   console.log(`→ SSL: ${sslEnabled ? "ENABLED" : "DISABLED"}`);
-//   console.log("-------------------------------------------------");
-// }
-
 // Singleton pattern per evitare troppi pool
 const knexConfig: Knex.Config = {
   client: "pg",
@@ -43,7 +35,7 @@ const knexConfig: Knex.Config = {
     createRetryIntervalMillis: 1000,
     afterCreate: (conn: any, done: any) => {
       if (process.env.NODE_ENV !== "production") {
-        console.log("✅ Nuova connessione al DB stabilita");
+        process.stdout.write("Nuova connessione al DB stabilita\n");
       }
       done(null, conn);
     },
