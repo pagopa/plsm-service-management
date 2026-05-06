@@ -79,7 +79,7 @@ export default function InstitutionInfo({
   const [currentInstitution, setCurrentInstitution] = useState(
     institutions.at(0) || null,
   );
-  const [currentProduct, setCurentProduct] = useState(
+  const [currentProduct, setCurrentProduct] = useState(
     institutions.at(0)?.onboarding.at(0) || null,
   );
   const [confirmChangesDialogOpen, setConfigChangesDialogOpen] =
@@ -171,12 +171,13 @@ export default function InstitutionInfo({
           institutions={institutions}
           currentInstitution={currentInstitution}
           setCurrentInstitution={setCurrentInstitution}
+          onUpdateProduct={(product) => setCurrentProduct(product)}
         />
 
         <ProductSelect
           products={currentInstitution?.onboarding}
           currentProduct={currentProduct}
-          setCurrentProduct={setCurentProduct}
+          setCurrentProduct={setCurrentProduct}
         />
         {currentProduct?.status === "DELETED" && (
           <Badge
@@ -393,18 +394,23 @@ function InstitutionSelect({
   institutions,
   currentInstitution,
   setCurrentInstitution,
+  onUpdateProduct = () => {},
 }: {
   institutions: Array<Institution>;
   currentInstitution: Institution | null;
   setCurrentInstitution: Dispatch<SetStateAction<Institution | null>>;
+  onUpdateProduct: (product: Product) => void;
 }) {
   return (
     <Select
-      onValueChange={(value) =>
-        setCurrentInstitution(
-          institutions.find((institution) => institution.id === value) || null,
-        )
-      }
+      onValueChange={(value) => {
+        const institution =
+          institutions.find((institution) => institution.id === value) || null;
+        if (institution) {
+          setCurrentInstitution(institution);
+          onUpdateProduct(institution.onboarding.at(0) as Product);
+        }
+      }}
     >
       <SelectTrigger className="shadow-none p-0 focus-visible:ring-0 bg-neutral-100 px-3 border border-neutral-200!">
         <p className="text-lg max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis">
