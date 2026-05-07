@@ -82,7 +82,7 @@ export default function SlackForm() {
   ]);
 
   return (
-    <form action={action} className="flex flex-col gap-4 w-80">
+    <form action={action} className="flex flex-col gap-4 w-full">
       <div className="space-y-2">
         <Label htmlFor="name">Nome</Label>
         <Input
