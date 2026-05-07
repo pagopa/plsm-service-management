@@ -106,6 +106,7 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
       scheduledend: toIsoDateTime(values.endDate, values.endTime),
       location: values.location?.trim() || undefined,
       description: values.description?.trim() || undefined,
+      link: values.link,
       category: values.category?.trim() || undefined,
       dataProssimoContatto: values.dataProssimoContatto || undefined,
       oggettoDelContatto: values.oggettoDelContatto,
