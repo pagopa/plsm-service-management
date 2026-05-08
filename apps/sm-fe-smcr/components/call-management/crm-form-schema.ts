@@ -71,6 +71,7 @@ export const crmFormSchema = z
     category: z.string().optional(),
     dataProssimoContatto: z.string().optional(),
     oggettoDelContatto: oggettoDelContattoPicklistSchema.optional(),
+    link: z.url("Inserire un link valido"),
   })
   .refine(
     (data) => {
@@ -121,5 +122,6 @@ export function getCrmFormDefaultValues(): CrmFormSchema {
     category: "",
     dataProssimoContatto: "",
     oggettoDelContatto: 100000005,
+    link: "",
   };
 }

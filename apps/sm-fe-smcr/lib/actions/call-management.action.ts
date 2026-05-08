@@ -274,6 +274,7 @@ export type CreateMeetingInput = {
   scheduledend: string;
   location?: string;
   description?: string;
+  link?: string;
   category?: string;
   dataProssimoContatto?: string;
   oggettoDelContatto?: number;
@@ -314,6 +315,13 @@ export async function createMeetingAction(
     headers["x-functions-key"] = serverEnv.FE_SMCR_CRM_API_KEY;
   }
 
+  const description = [
+    input.description,
+    input.link && `Link al diario: ${input.link}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
   const body = {
     institutionIdSelfcare: input.institutionIdSelfcare,
     productIdSelfcare: input.productIdSelfcare,
@@ -324,9 +332,7 @@ export async function createMeetingAction(
     ...(input.location !== undefined && input.location !== ""
       ? { location: input.location }
       : {}),
-    ...(input.description !== undefined && input.description !== ""
-      ? { description: input.description }
-      : {}),
+    ...(description !== "" ? { description } : {}),
     ...(input.category !== undefined && input.category !== ""
       ? { categoria: input.category }
       : {}),
