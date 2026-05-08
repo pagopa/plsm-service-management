@@ -6,6 +6,7 @@ import { LoginForm } from "../auth/login";
 import { Switch } from "../ui/switch";
 import { useEffect, useState } from "react";
 import { clientEnv } from "@/config/env";
+import clientLogger from "@/lib/logger/logger.client";
 
 export const LoginPage = () => {
   const redirectURL = clientEnv.NEXT_PUBLIC_APP_URL;
@@ -24,7 +25,7 @@ export const LoginPage = () => {
         setDbStatus(json.status === "online" ? "online" : "error");
       } catch (err) {
         setDbStatus("error");
-        console.error(err);
+        void clientLogger.error({ error: err }, "DB status check failed");
       }
     }
 

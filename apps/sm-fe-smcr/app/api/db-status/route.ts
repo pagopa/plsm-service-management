@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import pg from "@/lib/knex";
 import { serverEnv } from "@/config/env";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 export async function GET() {
   try {
@@ -16,7 +17,7 @@ export async function GET() {
       { status: 200 },
     );
   } catch (error: any) {
-    console.error("❌ DB CONNECTION ERROR:", error.message);
+    logServerError(error, "DB connection error");
 
     return NextResponse.json(
       {

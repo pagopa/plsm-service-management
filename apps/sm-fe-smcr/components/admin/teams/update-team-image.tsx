@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import ImageTeam from "@/components/admin/teams/image-teams";
 import { useRouter } from "next/navigation";
 import { clientEnv } from "@/config/env";
+import clientLogger from "@/lib/logger/logger.client";
 
 const baseUrl = clientEnv.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -45,9 +46,9 @@ export default function UpdateTeamImage({ teamId }: { teamId: string }) {
 
       router.refresh();
     } catch (error) {
-      console.error(
-        "Errore durante l'aggiornamento dell'immagine del team:",
-        error,
+      void clientLogger.error(
+        { error },
+        "Errore durante l'aggiornamento dell'immagine del team",
       );
     } finally {
       setIsLoading(false);
@@ -73,7 +74,7 @@ export default function UpdateTeamImage({ teamId }: { teamId: string }) {
           }
         }}
         onError={(error) => {
-          console.error(error);
+          void clientLogger.error({ error }, "Errore selezione immagine team");
           setIsWorkingPreview(false);
         }}
       />

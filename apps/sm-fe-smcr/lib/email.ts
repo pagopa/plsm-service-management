@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { serverEnv } from "@/config/env";
+import { logServerInfo } from "@/lib/logger/logger.server.helpers";
 
 type SendEmailParams = {
   to: string;
@@ -25,5 +26,5 @@ export async function sendEmail({ to, subject, text }: SendEmailParams) {
     text,
   });
 
-  console.log(response);
+  logServerInfo("Email sent", { messageId: response.messageId, accepted: response.accepted });
 }

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import knex from "@/lib/knex";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
 
 export async function POST(
   req: NextRequest,
@@ -16,11 +20,11 @@ export async function POST(
 
     const result = await knex("member").where({ id: memberId }).del();
 
-    console.log("Delete result:", result);
+    logServerInfo("Delete member result", { result });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Errore API remove-user:", error);
+    logServerError(error, "Errore API remove-user");
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

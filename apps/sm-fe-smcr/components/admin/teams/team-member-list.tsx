@@ -10,6 +10,7 @@ import { TEAM_ROLES } from "@/lib/costants";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import clientLogger from "@/lib/logger/logger.client";
 
 type Member = {
   id: string;
@@ -57,7 +58,7 @@ export default function TeamMemberList({ teamId, members, onUpdate }: Props) {
           description: "Si è verificato un problema. Riprova più tardi.",
           duration: 4000,
         });
-        console.error("Errore rimozione utente:", error);
+        void clientLogger.error({ error }, "Errore rimozione utente");
       } finally {
         setLoading(null);
       }
@@ -92,7 +93,7 @@ export default function TeamMemberList({ teamId, members, onUpdate }: Props) {
           description: "Si è verificato un problema. Riprova più tardi.",
           duration: 4000,
         });
-        console.error("Errore aggiornamento ruolo:", error);
+        void clientLogger.error({ error }, "Errore aggiornamento ruolo");
       } finally {
         setLoading(null);
       }

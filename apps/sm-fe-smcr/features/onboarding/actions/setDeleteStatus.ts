@@ -2,6 +2,10 @@
 
 import { $fetch } from "@/lib/fetch";
 import { FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY, UPLOAD } from "./config/env";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
 
 export async function setDeleteStatus(state: any, formData: FormData) {
   const id = formData.get("id") as string;
@@ -36,13 +40,13 @@ export async function setDeleteStatus(state: any, formData: FormData) {
         message: error.message,
       };
     }
-    console.log(data);
+    logServerInfo("setDeleteStatus - onboarding deleted", { id, data });
 
     return {
       success: true,
     };
   } catch (error) {
-    console.error(error);
+    logServerError(error, "setDeleteStatus - unexpected error");
     return {
       success: false,
       message: "Qualcosa è andato storto",

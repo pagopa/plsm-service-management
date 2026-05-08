@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { BadgeCheckIcon } from "lucide-react";
 import DownloadConctract from "./download-contract";
 import SendToQueue from "./send-to-queue";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 type Props = {
   institution: string;
@@ -23,7 +24,7 @@ export default async function ContractTab({
   const hasContract = await verifyContract(onboarding);
 
   if (groups.error || !groups.data) {
-    console.error(groups);
+    logServerError(groups.error, "ContractTab - read groups error", groups);
     throw new Error(groups.error || "Errore imprevisto");
   }
 

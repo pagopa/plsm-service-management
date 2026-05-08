@@ -3,6 +3,7 @@ import { Team } from "../types/team";
 import { User } from "../types/user";
 import { Preferences } from "../types/userProfile";
 import { clientEnv } from "@/config/env";
+import clientLogger from "@/lib/logger/logger.client";
 
 const baseUrl = clientEnv.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -18,7 +19,10 @@ export const getUser = async () =>
       });
 
       const data = await response.json();
-      console.log("Users retrieved:", data);
+      void clientLogger.info(
+        { info: { event: "user.list.retrieved", metadata: { count: data.length } } },
+        "Users retrieved",
+      );
 
       // Aggiungi la proprietà `teams` vuota per ogni utente
       const user = data.map((user: User) => ({
@@ -30,7 +34,7 @@ export const getUser = async () =>
       //setUsers(usersWithTeams);
       return user;
     } catch (error) {
-      console.error("Error retrieving users:", error);
+      void clientLogger.error({ error }, "Error retrieving users");
     }
   };
 
@@ -48,12 +52,15 @@ export const getUserTeams = async (
       },
     });
 
-    const data = await response.json();
-    console.log("Teams for user retrieved from database:", data);
+      const data = await response.json();
+      void clientLogger.info(
+        { info: { event: "user.teams.retrieved", metadata: { userId } } },
+        "Teams for user retrieved from database",
+      );
     if (data) return data.teams; // Restituisci i team per l'utente
     return [];
   } catch (error) {
-    console.error("Error retrieving teams for user:", error);
+    void clientLogger.error({ error }, "Error retrieving teams for user");
     return []; // Se c'è un errore, restituisci un array vuoto
   }
 };
@@ -67,12 +74,15 @@ export const getUserMember = async (userId: string): Promise<Member[]> => {
       },
     });
 
-    const data = await response.json();
-    console.log("Members for user retrieved from database:", data);
+      const data = await response.json();
+      void clientLogger.info(
+        { info: { event: "user.members.retrieved", metadata: { userId } } },
+        "Members for user retrieved from database",
+      );
     if (data) return data; // Restituisci i team per l'utente
     return [];
   } catch (error) {
-    console.error("Error retrieving members for user:", error);
+    void clientLogger.error({ error }, "Error retrieving members for user");
     return []; // Se c'è un errore, restituisci un array vuoto
   }
 };
@@ -89,11 +99,10 @@ export const getUsers = async () =>
       });
 
       const data = await response.json();
-      // console.log("List of users retrieved from database:", data);
       // setUserList(data);
       return data;
     } catch (error) {
-      console.error("Error retrieving list of user:", error);
+      void clientLogger.error({ error }, "Error retrieving list of user");
       return []; // Se c'è un errore, restituisci un array vuoto
     }
   };
@@ -112,13 +121,16 @@ export const getUserPreferences = async (
       },
     });
 
-    const data = await response.json();
-    console.log("Preferences for user retrieved from database:", data);
+      const data = await response.json();
+      void clientLogger.info(
+        { info: { event: "user.preferences.retrieved", metadata: { userId } } },
+        "Preferences for user retrieved from database",
+      );
     return data;
   } catch (error) {
-    console.error(
-      "Error retrieving preferences for user, apply default:",
-      error,
+    void clientLogger.error(
+      { error },
+      "Error retrieving preferences for user, apply default",
     );
     return { teamId: null, theme: "light" };
   }
@@ -139,10 +151,18 @@ export const postUserPreferences = async (
     });
 
     const data = await response.json();
-    console.log("Preferences for user saved to database:", data);
+    void clientLogger.info(
+      {
+        info: {
+          event: "user.preferences.saved",
+          metadata: { userId, status: response.status, data },
+        },
+      },
+      "Preferences for user saved to database",
+    );
     return true;
   } catch (error) {
-    console.error("Error saving preferences for user:", error);
+    void clientLogger.error({ error }, "Error saving preferences for user");
     return false;
   }
 };

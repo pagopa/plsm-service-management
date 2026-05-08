@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import pg from "@/lib/knex";
 import { randomUUID } from "crypto";
 import sharp from "sharp";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 export const config = {
   api: {
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: team }, { status: 201 });
   } catch (error) {
-    console.error("Errore API team:", error);
+    logServerError(error, "Errore API team");
     return NextResponse.json(
       { error: "Errore interno del server" },
       { status: 500 },

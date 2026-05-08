@@ -2,6 +2,7 @@
 
 import z from "zod";
 import { sendQueueMessage } from "../services/product.service";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const sendToQueueSchema = z.object({
   onboarding: z.string(),
@@ -37,7 +38,7 @@ export async function sendToQueueAction(
   const { error } = await sendQueueMessage(validation.data.onboarding);
 
   if (error) {
-    console.error(error);
+    logServerError(error, "sendToQueueAction - send queue message error");
     return {
       fields: validation.data,
       errors: { root: "Si è verificato un errore, riprova più tardi." },

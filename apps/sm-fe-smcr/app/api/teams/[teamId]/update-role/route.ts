@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import knex from "@/lib/knex";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
 
 export async function POST(
   req: NextRequest,
@@ -9,7 +13,7 @@ export async function POST(
   try {
     const { memberId, role } = await req.json();
     // const { teamId } = await params;
-    console.log("Received params:", { memberId, role }); // Debug
+    logServerInfo("Received update role params", { memberId, role });
 
     if (!memberId || !role) {
       return NextResponse.json(
@@ -18,17 +22,17 @@ export async function POST(
       );
     }
 
-    console.log(`UPDATE ROLE: id=${memberId}, role=${role}`);
+    logServerInfo("Update role requested", { memberId, role });
 
     const result = await knex("member")
       .where({ id: memberId })
       .update({ role });
 
-    console.log("Update result:", result);
+    logServerInfo("Update role result", { result });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Errore API update-role:", error);
+    logServerError(error, "Errore API update-role");
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

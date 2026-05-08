@@ -12,6 +12,7 @@ import {
 import { validateFormData } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import z from "zod";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const createTeamSchema = teamSchema.pick({
   name: true,
@@ -36,7 +37,7 @@ export async function createTeamAction(
 
   const result = await createTeam({ ...input, icon: "" });
   if (result.error) {
-    console.error(result.error);
+    logServerError(result.error, "createTeamAction - create team error");
     return {
       data: input,
       error: {

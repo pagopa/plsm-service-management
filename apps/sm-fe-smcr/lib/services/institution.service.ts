@@ -4,6 +4,7 @@ import { betterFetch } from "@better-fetch/fetch";
 import { z } from "zod";
 import logger from "@/lib/logger/logger.server";
 import { serverEnv } from "@/config/env";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const OnboardingSchema = z.object({
   productId: z.string(),
@@ -189,7 +190,7 @@ export async function getInstitutionPNPG(
   );
 
   if (error || !data) {
-    console.error(error);
+    logServerError(error, "getInstitutionPNPG - fetch error");
     return { data: [], error: "Errore nel recupero dati" };
   }
 
@@ -276,7 +277,7 @@ export async function updateInstitutionInfo(input: UpdateInsitutionInfoInput) {
   );
 
   if (error || !data) {
-    console.error(error);
+    logServerError(error, "updateInstitutionInfo - fetch error");
     return { error: "Si è verificato un errore, riprova più tardi." };
   }
 
@@ -315,7 +316,7 @@ export async function updateInstitutionInfoPNPG(
   );
 
   if (error || !data) {
-    console.error(error);
+    logServerError(error, "updateInstitutionInfoPNPG - fetch error");
     return { error: "Si è verificato un errore, riprova più tardi." };
   }
 
@@ -403,7 +404,7 @@ export async function getUserGroups(input: { institution: string }) {
   );
 
   if (error || !data) {
-    console.error(error);
+    logServerError(error, "getUserGroups - fetch error");
     return { error: "Si è verificato un errore, riprova più tardi." };
   }
 

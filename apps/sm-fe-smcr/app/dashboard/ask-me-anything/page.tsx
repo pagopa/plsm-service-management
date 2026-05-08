@@ -5,13 +5,14 @@ import {
   AskMeAnythingTableSection,
 } from "@/components/ask-me-anything";
 import { readAskMeAnythingMembers } from "@/lib/services/ask-me-anything.service";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 import { UsersIcon } from "lucide-react";
 
 export default async function AskMeAnythingPage() {
   const { data, error } = await readAskMeAnythingMembers();
 
   if (error) {
-    console.error("AskMeAnythingPage - read error", error);
+    logServerError(error, "AskMeAnythingPage - read error");
   }
 
   return (

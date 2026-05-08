@@ -3,6 +3,7 @@
 import { betterFetch } from "@better-fetch/fetch";
 import { z } from "zod";
 import { serverEnv } from "@/config/env";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const UserSchema = z.object({
   id: z.string().uuid(),
@@ -50,7 +51,7 @@ export async function getUsersByInstitutionId(
   );
 
   if (error) {
-    console.error(error);
+    logServerError(error, "getUsersByInstitutionId - fetch error");
     return [];
   }
 
@@ -73,7 +74,7 @@ export async function getUsersPNPGByInstitutionId(institutionId: string) {
   );
 
   if (error) {
-    console.error(error);
+    logServerError(error, "getUsersPNPGByInstitutionId - fetch error");
     return [];
   }
 
@@ -161,7 +162,9 @@ export async function createUserPNPG(input: {
       }),
     },
   );
-  console.log({ error });
+  if (error) {
+    logServerError(error, "createUserPNPG - fetch error");
+  }
 
   return { data, error };
 }
