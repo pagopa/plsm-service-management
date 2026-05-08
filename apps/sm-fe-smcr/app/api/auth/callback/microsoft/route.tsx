@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { getMsalInstance } from "@/lib/msalConfig";
 import { clientEnv } from "@/config/env";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 export async function GET(request: Request) {
   try {
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
       ),
     );
   } catch (error) {
-    console.error("Errore durante l'autenticazione:", error);
+    logServerError(error, "Errore durante l'autenticazione");
     return NextResponse.redirect(
       new URL(
         `${clientEnv.NEXT_PUBLIC_APP_URL}/auth/error?cause=callback`,
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
 
 //     return NextResponse.redirect(`${origin}/dashboard`);
 //   } catch (error) {
-//     console.error("Errore durante l'autenticazione:", error);
+//     logServerError(error, "Errore durante l'autenticazione");
 //     const origin = new URL(request.url).origin;
 //     return NextResponse.redirect(`${origin}/auth/error?cause=callback`);
 //   }

@@ -36,7 +36,5 @@ export async function updateTeam(
   //   },
   // });
 
-  // console.log(response);
-
   return { data: team };
 }

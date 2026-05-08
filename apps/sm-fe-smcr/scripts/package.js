@@ -14,7 +14,7 @@ async function createPackage() {
   });
 
   output.on("close", () => {
-    console.log("Package created successfully");
+    process.stdout.write("Package created successfully\n");
   });
 
   archive.on("error", (err) => {

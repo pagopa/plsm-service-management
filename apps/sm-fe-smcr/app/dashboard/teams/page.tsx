@@ -8,6 +8,7 @@ import {
   readTeamMemberCounts,
   readTeams,
 } from "@/lib/services/teams.service";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 import { UsersIcon } from "lucide-react";
 
 export default async function Page() {
@@ -18,17 +19,17 @@ export default async function Page() {
   ]);
 
   if (teams.error || teams.data === null) {
-    console.error(teams.error);
+    logServerError(teams.error, "Teams page - read teams error");
     throw new Error(teams.error);
   }
 
   if (features.error || features.data === null) {
-    console.error(features.error);
+    logServerError(features.error, "Teams page - read features error");
     throw new Error(features.error);
   }
 
   if (teamMemberCounts.error || teamMemberCounts.data === null) {
-    console.error(teamMemberCounts.error);
+    logServerError(teamMemberCounts.error, "Teams page - read member counts error");
     throw new Error(teamMemberCounts.error);
   }
 

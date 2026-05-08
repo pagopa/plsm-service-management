@@ -1,4 +1,5 @@
 import { getUserGroups } from "@/lib/services/institution.service";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 import { DataTable } from "./table";
 import { columns } from "./table/columns";
 
@@ -11,7 +12,7 @@ export default async function GroupsTab({ institution, product }: Props) {
   const groups = await getUserGroups({ institution });
 
   if (groups.error || !groups.data) {
-    console.error(groups);
+    logServerError(groups.error, "GroupsTab - read groups error", groups);
     throw new Error(groups.error || "Errore imprevisto");
   }
 

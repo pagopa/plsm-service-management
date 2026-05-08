@@ -6,6 +6,7 @@ import {
   AddDelegationInput,
   DeleteDelegationInput,
 } from "../actions/delegation.action";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const delegationSchema = z
   .object({
@@ -64,7 +65,7 @@ export async function addDelegation(input: AddDelegationInput) {
       return { data: null, error: "Delegaa già presente." };
     }
 
-    console.error({ error });
+    logServerError(error, "addDelegation - fetch error");
     return { data: null, error: "Error adding delegation" };
   }
 
@@ -84,7 +85,7 @@ export async function deleteDelegation(input: DeleteDelegationInput) {
   );
 
   if (error) {
-    console.error({ error });
+    logServerError(error, "deleteDelegation - fetch error");
     return { data: null, error: "Error adding delegation" };
   }
 

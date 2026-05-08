@@ -30,10 +30,14 @@ import {
   GET_STATUS,
   ONBOARDING_BASE_PATH,
 } from "./config/env";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
 
 export async function verifyTaxCode(state: any, formData: FormData) {
   const subunit = formData.get("subunitOption") as SubunitOption;
-  console.log({ subunit });
+  logServerInfo("verifyTaxCode - subunit selected", { subunit });
   let codeToSearch = "";
 
   switch (subunit) {
@@ -132,7 +136,10 @@ export async function verifyTaxCode(state: any, formData: FormData) {
       },
       output: schema,
     });
-    console.log({ data, error });
+    logServerInfo("verifyTaxCode - institution fetch completed", {
+      hasData: Boolean(data),
+      hasError: Boolean(error),
+    });
 
     if (error) {
       if (error.status === 404) {
@@ -142,7 +149,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
           message: "Ente non trovato",
         };
       } else {
-        console.log(error);
+        logServerError(error, "verifyTaxCode - institution fetch error");
         return {
           success: false,
           code: codeToSearch,
@@ -158,7 +165,6 @@ export async function verifyTaxCode(state: any, formData: FormData) {
         message: "Dati non trovati",
       };
     }
-    console.log(data);
     if (isIpaAOOData(data, subunit) || isIpaUOData(data, subunit)) {
       const subunitCode = formData.get("subunitCode") as string;
       try {
@@ -181,7 +187,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
               message: `GetInstitution è andata a buon fine ma GetOnboardingStatus ha dato il seguente errore: ${errorStatus.statusText}`,
             };
           } else {
-            console.log(errorStatus);
+            logServerError(errorStatus, "verifyTaxCode - subunit status error");
             return {
               success: false,
               code: codeToSearch,
@@ -212,8 +218,9 @@ export async function verifyTaxCode(state: any, formData: FormData) {
           .filter((el) =>
             (productKeys as unknown as string).includes(el.product),
           );
-        console.log("verifyTaxCode");
-        console.log({ dataTable });
+        logServerInfo("verifyTaxCode - subunit status data mapped", {
+          count: dataTable?.length ?? 0,
+        });
 
         return {
           success: true,
@@ -224,7 +231,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
           dataStatus: dataTable,
         };
       } catch (error) {
-        console.log(error);
+        logServerError(error, "verifyTaxCode - subunit status unexpected error");
         return {
           success: false,
           code: codeToSearch,
@@ -252,7 +259,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
               message: `GetInstitution è andata a buon fine ma GetOnboardingStatus ha dato il seguente errore: ${errorStatus.statusText}`,
             };
           } else {
-            console.log(errorStatus);
+            logServerError(errorStatus, "verifyTaxCode - status error");
             return {
               success: false,
               code: codeToSearch,
@@ -283,8 +290,9 @@ export async function verifyTaxCode(state: any, formData: FormData) {
           .filter((el) =>
             (productKeys as unknown as string).includes(el.product),
           );
-        console.log("verifyTaxCode");
-        console.log({ dataTable });
+        logServerInfo("verifyTaxCode - status data mapped", {
+          count: dataTable?.length ?? 0,
+        });
         return {
           success: true,
           code: codeToSearch,
@@ -294,7 +302,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
           dataStatus: dataTable,
         };
       } catch (error) {
-        console.log(error);
+        logServerError(error, "verifyTaxCode - status unexpected error");
         return {
           success: false,
           code: codeToSearch,
@@ -303,7 +311,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
       }
     }
   } catch (error) {
-    console.log(error);
+    logServerError(error, "verifyTaxCode - unexpected error");
     return {
       success: false,
       code: codeToSearch,

@@ -17,6 +17,7 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import clientLogger from "@/lib/logger/logger.client";
 import {
   InputGroup,
   InputGroupAddon,
@@ -111,7 +112,7 @@ export default function AddDelegation({
           setInstitutionTo(data.at(0) || null);
         })
         .catch((error) => {
-          console.error(error);
+          void clientLogger.error({ error }, "addDelegation - institution lookup error");
           setTaxCodeToError("Si è verificato un errore, riprova più tardi.");
           setInstitutionTo(null);
           setInstitutionOptions([]);

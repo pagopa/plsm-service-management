@@ -87,7 +87,6 @@ export function TeamSwitcher({}: {}) {
                 <DropdownMenuItem
                   key={member.team.name}
                   onClick={() => {
-                    console.log("ACTIVE TEAM IN SETTING", member.team);
                     setActiveTeam(member.team);
 
                     if (user) {

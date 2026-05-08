@@ -134,18 +134,16 @@ const rawClientEnv = {
 
 const serverEnvParse = serverEnvSchema.safeParse(rawServerEnv);
 if (!serverEnvParse.success) {
-  console.error(
-    "Invalid server env configuration:",
-    serverEnvParse.error.issues,
+  process.stderr.write(
+    `Invalid server env configuration: ${JSON.stringify(serverEnvParse.error.issues)}\n`,
   );
   throw new Error("Invalid server env configuration");
 }
 
 const clientEnvParse = clientEnvSchema.safeParse(rawClientEnv);
 if (!clientEnvParse.success) {
-  console.error(
-    "Invalid client env configuration:",
-    clientEnvParse.error.issues,
+  process.stderr.write(
+    `Invalid client env configuration: ${JSON.stringify(clientEnvParse.error.issues)}\n`,
   );
   throw new Error("Invalid client env configuration");
 }

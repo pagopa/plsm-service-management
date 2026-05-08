@@ -2,6 +2,7 @@
 
 import { Log } from "@/lib/services/logs.service";
 import React, { useEffect } from "react";
+import clientLogger from "@/lib/logger/logger.client";
 
 function normalizeLog(
   input: Partial<Log> & { request?: string | null },
@@ -45,7 +46,7 @@ export function useLiveLogs(initialData: Array<Log>) {
 
         setData((prev) => [log, ...prev]);
       } catch (error) {
-        console.error(error);
+        void clientLogger.error({ error }, "Failed to parse live log event");
       }
     };
 

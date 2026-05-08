@@ -8,6 +8,7 @@ import {
   updateUser,
 } from "../services/users.service";
 import { revalidateTag } from "next/cache";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const createUserSchema = z.object({
   isPNPG: z
@@ -92,7 +93,7 @@ export async function createUserAction(
       });
 
   if (error) {
-    console.log(error);
+    logServerError(error, "createUserAction - create user error");
     return {
       fields: { ...validation.data },
       errors: {
