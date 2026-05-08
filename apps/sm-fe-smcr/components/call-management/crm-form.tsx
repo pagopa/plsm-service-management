@@ -202,7 +202,7 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
               name="subject"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel htmlFor="subject">Nome Call / Oggetto</FormLabel>
+                  <FormLabel htmlFor="subject">Nome Call</FormLabel>
                   <FormControl>
                     <Input
                       id="subject"
@@ -333,11 +333,7 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
                 <FormItem>
                   <FormLabel htmlFor="link">Link al Diario</FormLabel>
                   <FormControl>
-                    <Input
-                      id="link"
-                      placeholder="https://..."
-                      {...field}
-                    />
+                    <Input id="link" placeholder="https://..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
