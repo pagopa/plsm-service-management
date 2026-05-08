@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRightIcon, LoaderCircleIcon } from "lucide-react";
+import { ArrowRightIcon, InfoIcon, LoaderCircleIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ type SearchState =
   | { status: "found"; taxCode: string; institutions: Institution[] }
   | { status: "not-found"; taxCode: string };
 
+const TAX_CODE_REGEX = /^\d{11}$/;
+
 export default function Page() {
   const [taxCode, setTaxCode] = useState("");
   const [state, setState] = useState<SearchState>({ status: "idle" });
@@ -27,6 +29,10 @@ export default function Page() {
     const code = taxCode.trim();
     if (!code) {
       toast.error("Inserire un codice fiscale");
+      return;
+    }
+    if (!TAX_CODE_REGEX.test(code)) {
+      toast.error("Il codice fiscale deve essere composto da 11 cifre");
       return;
     }
     setState({ status: "searching" });
@@ -53,7 +59,18 @@ export default function Page() {
           <div className="space-y-1">
             <h1 className="font-medium text-lg">Verifica Ente</h1>
             <p className="text-sm text-muted-foreground">
-              Inserisci il codice fiscale dell&apos;ente per iniziare.
+              Inserisci il codice fiscale dell&apos;ente (11 cifre) per
+              verificarne la presenza su SelfCare e procedere con la
+              registrazione della call.
+            </p>
+          </div>
+          <div className="flex gap-2 items-start rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+            <InfoIcon className="size-4 mt-0.5 shrink-0" />
+            <p>
+              Se l&apos;ente è presente su SelfCare potrai registrare
+              l&apos;appuntamento sul CRM e inviare il messaggio su Slack. In
+              caso contrario, si tratterà di una call di Integrazione e il
+              messaggio potrà essere inviato solo su Slack.
             </p>
           </div>
           <div className="flex gap-2 items-end">
@@ -120,8 +137,16 @@ export default function Page() {
             <div className="space-y-1">
               <h1 className="font-medium text-lg">Invia messaggio su Slack</h1>
               <p className="text-sm text-muted-foreground">
-                Ente non trovato su SelfCare. Puoi comunque inviare il
-                messaggio su Slack.
+                Ente non trovato su SelfCare. Puoi comunque inviare il messaggio
+                su Slack.
+              </p>
+            </div>
+            <div className="flex gap-2 items-start rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              <InfoIcon className="size-4 mt-0.5 shrink-0" />
+              <p>
+                L&apos;ente non è presente sui nostri sistemi: si tratta di una
+                call di Integrazione. In questo caso il messaggio verrà inviato
+                solo su Slack.
               </p>
             </div>
             <SlackForm />
