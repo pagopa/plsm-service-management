@@ -11,7 +11,8 @@
     "package": "node scripts/package.js",
     "start": "./node_modules/next/dist/bin/next start",
     "lint": "next lint",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "../../node_modules/.bin/jest --config jest.config.ts"
   },
   "dependencies": {
     "@azure/msal-browser": "^4.13.2",
