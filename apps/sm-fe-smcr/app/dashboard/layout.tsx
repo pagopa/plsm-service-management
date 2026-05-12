@@ -4,7 +4,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <SidebarProvider>
+    <SidebarProvider className="min-h-0 flex-1">
       <AppSidebar variant="inset" />
 
       <SidebarInset className="!m-0">
