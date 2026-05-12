@@ -52,6 +52,6 @@ describe("DashboardLayout", () => {
     expect(html).toContain("min-h-0");
     expect(html).toContain("flex-1");
     expect(html).toContain("app-sidebar");
-    expect(html).toContain("pb-24");
+    expect(html).toContain("pb-[var(--app-footer-clearance)]");
   });
 });

@@ -25,9 +25,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it" className={font.className}>
-      <body className="min-h-screen bg-background">
+      <body
+        className="min-h-screen bg-background"
+        style={
+          {
+            "--app-footer-clearance":
+              "calc(6.5rem + env(safe-area-inset-bottom, 0px))",
+          } as React.CSSProperties
+        }
+      >
         <div className="flex min-h-screen flex-col">
-          <div className="flex-1">
+          <div className="flex-1 pb-[var(--app-footer-clearance)]">
             <MSALProvider>
               <SessionProvider>
                 <NuqsAdapter>{children}</NuqsAdapter>

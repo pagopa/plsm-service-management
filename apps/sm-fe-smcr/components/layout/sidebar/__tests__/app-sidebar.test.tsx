@@ -92,8 +92,8 @@ describe("AppSidebar", () => {
   it("lifts documentation and sidebar footer content above the fixed footer", () => {
     const html = renderToStaticMarkup(<AppSidebar />);
 
-    expect(html).toContain("bottom-24");
-    expect(html).toContain("pb-24");
+    expect(html).toContain("bottom-[var(--app-footer-clearance)]");
+    expect(html).toContain("pb-[var(--app-footer-clearance)]");
     expect(html).toContain("Documentation");
   });
 });
