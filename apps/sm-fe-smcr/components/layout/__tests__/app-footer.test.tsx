@@ -2,23 +2,22 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { AppFooter } from "@/components/layout/app-footer";
 
 describe("AppFooter", () => {
-  it("renders the SMCR legal copy and responsive line break", () => {
+  it("renders a fixed full-width legal footer bar", () => {
     const html = renderToStaticMarkup(<AppFooter />);
 
-    expect(html).toContain("PagoPA S.p.A.");
-    expect(html).toContain("Società per azioni con socio unico");
-    expect(html).toContain("Registro Imprese di Roma");
-    expect(html).toContain("P.IVA 15376371009");
-    expect(html).toContain("<br");
+    expect(html).toContain("fixed");
+    expect(html).toContain("inset-x-0");
+    expect(html).toContain("bottom-0");
+    expect(html).toContain("w-full");
+    expect(html).toContain("z-50");
   });
 
-  it("renders a semantic footer with centered container classes", () => {
+  it("keeps the legal text centered with stronger visual rhythm", () => {
     const html = renderToStaticMarkup(<AppFooter />);
 
-    expect(html).toContain("<footer");
-    expect(html).toContain("border-t");
-    expect(html).toContain("mx-auto");
-    expect(html).toContain("text-center");
-    expect(html).toContain("md:block");
+    expect(html).toContain("max-w-6xl");
+    expect(html).toContain("font-medium");
+    expect(html).toContain("text-[15px]");
+    expect(html).toContain("PagoPA S.p.A.");
   });
 });
