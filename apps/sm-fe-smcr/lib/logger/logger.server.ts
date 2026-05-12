@@ -14,7 +14,7 @@ const remoteStream = {
         body: JSON.stringify(log),
       });
     } catch (error) {
-      console.error("error sending log:", error);
+      process.stderr.write(`error sending log: ${String(error)}\n`);
     }
   },
 };

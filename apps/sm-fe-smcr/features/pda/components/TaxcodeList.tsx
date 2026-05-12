@@ -29,7 +29,6 @@ export function TaxcodeList({ data }: Props) {
   const [taxcode, setTaxcode] = useState<string>("");
 
   function createDb(data: Array<Ente>) {
-    console.log("🚀 ~ createDb ~");
     const trie = new Trie();
     for (const el of data) {
       trie.insert(el.codiceFiscale, {

@@ -1,6 +1,7 @@
 "use client";
 import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "@/lib/msalConfig";
+import clientLogger from "@/lib/logger/logger.client";
 
 export const LoginForm = () => {
   return (
@@ -21,7 +22,7 @@ export const MicrosoftLoginButton = () => {
     // };
 
     instance.loginRedirect(loginRequest).catch((error) => {
-      console.error("Login error:", error);
+      void clientLogger.error({ error }, "Login error");
     });
   };
 

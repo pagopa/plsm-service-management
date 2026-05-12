@@ -3,9 +3,7 @@
 // import { randomUUID } from "crypto";
 // export async function POST(request: NextRequest) {
 //   try {
-//     console.log('GET TEAMS')
 //     const body = await request.json();
-//     console.log(body);
 //     const { name, email } = body;
 
 //     // Query database
@@ -28,7 +26,6 @@
 
 //     return NextResponse.json({ data: result[0] });
 //   } catch (error) {
-//     console.error("Errore API profile:", error);
 //     return NextResponse.json(
 //       { error: "Errore interno del server" },
 //       { status: 500 },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import pg from "@/lib/knex";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(getUserWithTeamsByEmail, { status: 200 });
   } catch (error) {
-    console.error("Errore API user team:", error);
+    logServerError(error, "Errore API user team");
     return NextResponse.json(
       { error: "Errore interno del server" },
       { status: 500 },

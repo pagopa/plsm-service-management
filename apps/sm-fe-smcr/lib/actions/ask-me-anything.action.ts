@@ -8,6 +8,7 @@ import {
 import { validateFormData } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import z from "zod";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const booleanField = z.preprocess(
   (value) => value === "on" || value === "true" || value === true,
@@ -59,7 +60,7 @@ export async function createAskMeAnythingMemberAction(
 
   const result = await createAskMeAnythingMember(input);
   if (result.error) {
-    console.error("createAskMeAnythingMemberAction - error", result.error);
+    logServerError(result.error, "createAskMeAnythingMemberAction - error");
     return {
       data: input,
       error: {
@@ -89,7 +90,7 @@ export async function updateAskMeAnythingMemberAction(
 
   const result = await updateAskMeAnythingMember(input);
   if (result.error) {
-    console.error("updateAskMeAnythingMemberAction - error", result.error);
+    logServerError(result.error, "updateAskMeAnythingMemberAction - error");
     return {
       data: input,
       error: {
@@ -119,7 +120,7 @@ export async function deleteAskMeAnythingMemberAction(
 
   const result = await deleteAskMeAnythingMember(input);
   if (result.error) {
-    console.error("deleteAskMeAnythingMemberAction - error", result.error);
+    logServerError(result.error, "deleteAskMeAnythingMemberAction - error");
     return {
       data: input,
       error: {

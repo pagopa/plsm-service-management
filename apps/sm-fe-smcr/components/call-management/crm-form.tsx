@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import {
@@ -25,15 +24,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { PRODUCT_CARDS } from "@/lib/constants/dashboard-products";
-import { getInstitutionWithSubunits } from "@/lib/services/institution.service";
 import type { Institution } from "@/lib/services/institution.service";
-// import { createMeetingAction } from "@/lib/actions/call-management.action";
-import {
-  ArrowRightIcon,
-  LoaderCircleIcon,
-  PlusIcon,
-  Trash2Icon,
-} from "lucide-react";
+import { LoaderCircleIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 import {
   getCrmFormDefaultValues,
@@ -45,6 +37,7 @@ import {
 import {
   createMeetingAction,
   CreateMeetingInput,
+  sendToSlackAction,
   type TipologiaReferente,
 } from "@/lib/actions/call-management.action";
 
@@ -60,45 +53,26 @@ function toIsoDateTime(dateStr: string, timeStr: string): string {
   return new Date(local).toISOString();
 }
 
-export default function CRMForm() {
-  const [fiscalCode, setFiscalCode] = useState("");
-  const [institutions, setInstitutions] = useState<Institution[]>([]);
-  const [searching, setSearching] = useState(false);
+type CRMFormProps = {
+  taxCode: string;
+  institutions: Institution[];
+};
 
+export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
   const form = useForm<CrmFormSchema>({
     resolver: zodResolver(crmFormSchema),
     mode: "all",
-    defaultValues: getCrmFormDefaultValues(),
+    defaultValues: {
+      ...getCrmFormDefaultValues(),
+      institutionIdSelfcare:
+        institutions.length === 1 ? institutions[0]!.id : "",
+    },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "partecipanti",
   });
-
-  const handleSearch = async () => {
-    const code = fiscalCode.trim();
-    if (!code) {
-      toast.error("Inserire un codice fiscale");
-      return;
-    }
-    setSearching(true);
-    setInstitutions([]);
-    form.setValue("institutionIdSelfcare", "");
-    try {
-      const result = await getInstitutionWithSubunits(code);
-      if (result.error) {
-        toast.error(result.error);
-        return;
-      }
-      setInstitutions(result.data);
-      if (result.data.length === 1 && result.data[0]) {
-        form.setValue("institutionIdSelfcare", result.data[0].id);
-      }
-    } finally {
-      setSearching(false);
-    }
-  };
 
   const addParticipant = () => {
     append({
@@ -132,6 +106,7 @@ export default function CRMForm() {
       scheduledend: toIsoDateTime(values.endDate, values.endTime),
       location: values.location?.trim() || undefined,
       description: values.description?.trim() || undefined,
+      link: values.link,
       category: values.category?.trim() || undefined,
       dataProssimoContatto: values.dataProssimoContatto || undefined,
       oggettoDelContatto: values.oggettoDelContatto,
@@ -139,13 +114,48 @@ export default function CRMForm() {
       enableGrantAccess: values.enableGrantAccess,
       dryRun: values.dryRun,
     };
-    console.log("payLoad", payLoad);
-    const result = await createMeetingAction(payLoad);
 
-    if (result.success) {
-      toast.success(result.message ?? "Appuntamento creato con successo");
+    const crmResult = await createMeetingAction(payLoad);
+
+    if (!crmResult.success) {
+      toast.error(crmResult.error);
+      return;
+    }
+
+    toast.success(crmResult.message ?? "Appuntamento creato con successo");
+
+    const slackTarget = values.dynamicsEnvironment === "PROD" ? "prod" : "test";
+    const membersText = partecipanti
+      .map((p) => `${p.nome} ${p.cognome}`)
+      .join(", ");
+
+    const slackFormData = new FormData();
+    slackFormData.append("name", values.subject);
+    slackFormData.append("product", values.productId);
+    slackFormData.append(
+      "date",
+      toIsoDateTime(values.startDate, values.startTime),
+    );
+    slackFormData.append("members", membersText);
+    slackFormData.append("link", values.link);
+    slackFormData.append("target", slackTarget);
+
+    const slackResult = await sendToSlackAction(
+      { fields: {}, target: undefined, submittedAt: undefined },
+      slackFormData,
+    );
+
+    const envLabel = slackTarget === "prod" ? "Produzione" : "Test";
+    if (slackResult.errors?.root) {
+      toast.error(`CRM ok, ma invio Slack in ${envLabel} non riuscito.`, {
+        description: slackResult.errors.root,
+      });
+    } else if (slackResult.errors && Object.keys(slackResult.errors).length) {
+      toast.error(
+        `CRM ok, ma invio Slack in ${envLabel} non riuscito: dati non validi.`,
+      );
     } else {
-      toast.error(result.error);
+      toast.success(`Messaggio Slack inviato in ${envLabel}.`);
     }
   };
 
@@ -153,10 +163,15 @@ export default function CRMForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-6 w-full max-w-2xl"
+        className="flex flex-col gap-6 w-full"
       >
         <FieldSet className="pt-4">
           <FieldGroup>
+            <div className="space-y-2">
+              <Label>Codice Fiscale Ente</Label>
+              <Input value={taxCode} readOnly disabled />
+            </div>
+
             <FormField
               control={form.control}
               name="dynamicsEnvironment"
@@ -187,7 +202,7 @@ export default function CRMForm() {
               name="subject"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel htmlFor="subject">Oggetto</FormLabel>
+                  <FormLabel htmlFor="subject">Nome Call</FormLabel>
                   <FormControl>
                     <Input
                       id="subject"
@@ -280,35 +295,6 @@ export default function CRMForm() {
               )}
             />
 
-            <div className="flex gap-2 items-end">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="fiscalCode">Cerca Istituzione</Label>
-                <Input
-                  id="fiscalCode"
-                  value={fiscalCode}
-                  onChange={(e) => setFiscalCode(e.target.value)}
-                  placeholder="Inserisci Codice Fiscale..."
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && (e.preventDefault(), handleSearch())
-                  }
-                />
-              </div>
-              <Button
-                type="button"
-                variant="default"
-                onClick={handleSearch}
-                disabled={searching}
-                className="shrink-0"
-              >
-                {searching ? (
-                  <LoaderCircleIcon className="size-4 animate-spin" />
-                ) : (
-                  <ArrowRightIcon className="size-4" />
-                )}
-                Cerca
-              </Button>
-            </div>
-
             <FormField
               control={form.control}
               name="institutionIdSelfcare"
@@ -335,6 +321,20 @@ export default function CRMForm() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="link"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="link">Link al Diario</FormLabel>
+                  <FormControl>
+                    <Input id="link" placeholder="https://..." {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -665,7 +665,7 @@ export default function CRMForm() {
           {form.formState.isSubmitting ? (
             <LoaderCircleIcon className="size-4 animate-spin" />
           ) : null}
-          Crea appuntamento CRM
+          Crea appuntamento CRM e invia su Slack
         </Button>
       </form>
     </Form>

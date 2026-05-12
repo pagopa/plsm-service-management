@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pg from "@/lib/knex";
 import { randomUUID } from "crypto";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: result[0] });
   } catch (error) {
-    console.error("Errore API profile:", error);
+    logServerError(error, "Errore API profile");
     return NextResponse.json(
       { error: "Errore interno del server" },
       { status: 500 },
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
 
 //     res.json(user);
 //   } catch (error) {
-//     console.error("Errore API profile:", error);
+//     logServerError(error, "Errore API profile");
 //     res.status(500).json({ error: "Errore interno del server" });
 //   }
 // }

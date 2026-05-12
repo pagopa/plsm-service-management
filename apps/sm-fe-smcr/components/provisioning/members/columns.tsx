@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useTransition } from "react";
+import { useActionState, useRef, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -69,10 +69,6 @@ export const getColumns: (
           });
         }
       }
-
-      useEffect(() => {
-        console.log({ state, isPending });
-      }, [state, isPending]);
 
       return (
         <form action={action} ref={ref}>

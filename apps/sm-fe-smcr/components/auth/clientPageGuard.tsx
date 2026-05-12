@@ -7,6 +7,7 @@ import { Loader } from "../loader";
 import { useRouteAccess } from "@/hooks/useRouteAccess";
 import useAuthStore from "@/lib/store/auth.store";
 import { readMemberByEmail } from "@/lib/services/members.service";
+import clientLogger from "@/lib/logger/logger.client";
 
 export default function ClientPageGuard({
   children,
@@ -51,13 +52,21 @@ export default function ClientPageGuard({
       hasRedirected.current = true;
 
       if (reason === "not_authenticated") {
-        console.warn("Accesso negato: utente non autenticato", { pathname });
+        void clientLogger.warn(
+          { info: { event: "access.denied", metadata: { pathname, reason } } },
+          "Accesso negato: utente non autenticato",
+        );
         router.replace("/unauthorized");
       } else {
-        console.warn("Accesso negato: permessi insufficienti", {
-          user: user?.email,
-          pathname,
-        });
+        void clientLogger.warn(
+          {
+            info: {
+              event: "access.denied",
+              metadata: { user: user?.email, pathname, reason },
+            },
+          },
+          "Accesso negato: permessi insufficienti",
+        );
         router.replace("/dashboard");
       }
     }

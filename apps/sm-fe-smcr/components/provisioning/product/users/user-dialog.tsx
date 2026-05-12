@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { EyeIcon, EyeOffIcon, UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import clientLogger from "@/lib/logger/logger.client";
 
 type Props = {
   children: React.ReactNode;
@@ -26,7 +27,7 @@ export default function UserDialog({ children, institutionId, userId }: Props) {
   const fetchUser = async () => {
     const { data, error } = await readUser({ institutionId, userId });
     if (error) {
-      console.error(error);
+      void clientLogger.error({ error }, "UserDialog - read user error");
       return;
     }
 

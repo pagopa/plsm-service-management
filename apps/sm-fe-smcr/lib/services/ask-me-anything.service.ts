@@ -1,6 +1,10 @@
 import database from "@/lib/knex";
 import { ServiceResult } from "@/lib/types";
 import z from "zod";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
 
 const tableName = "ama_access";
 
@@ -38,7 +42,7 @@ export async function readAskMeAnythingMember(
   const parsed = askMeAnythingMemberSchema.safeParse(rawMember);
 
   if (!parsed.success) {
-    console.error("readAskMeAnythingMember - member not found", parsed.error);
+    logServerError(parsed.error, "readAskMeAnythingMember - member not found");
     return { data: null, error: "member not found" };
   }
 
@@ -66,16 +70,16 @@ export async function readAskMeAnythingMembers(): Promise<
     const parsed = z.array(askMeAnythingMemberSchema).safeParse(rawAccess);
 
     if (!parsed.success) {
-      console.error(
-        "readAskMeAnythingMembers - validation error",
+      logServerError(
         parsed.error,
+        "readAskMeAnythingMembers - validation error",
       );
       return { data: null, error: "validation error" };
     }
 
     return { data: parsed.data, error: null };
   } catch (error) {
-    console.error("readAskMeAnythingMembers - database error", error);
+    logServerError(error, "readAskMeAnythingMembers - database error");
     return { data: null, error: "database error" };
   }
 }
@@ -103,7 +107,9 @@ export async function createAskMeAnythingMember(input: {
       .first();
 
     if (alreadyExists) {
-      console.error(alreadyExists);
+      logServerInfo("createAskMeAnythingMember - member already exists", {
+        email: input.email,
+      });
       return {
         data: null,
         error: {
@@ -125,9 +131,9 @@ export async function createAskMeAnythingMember(input: {
 
     const parsed = askMeAnythingMemberSchema.safeParse(rawMember);
     if (!parsed.success) {
-      console.error(
-        "createAskMeAnythingMember - validation error",
+      logServerError(
         parsed.error,
+        "createAskMeAnythingMember - validation error",
       );
 
       return {
@@ -143,7 +149,7 @@ export async function createAskMeAnythingMember(input: {
 
     return { data: parsed.data, error: null };
   } catch (error) {
-    console.error("createAskMeAnythingMember - database error", error);
+    logServerError(error, "createAskMeAnythingMember - database error");
     return { data: null, error: { message: "database error" } };
   }
 }
@@ -181,9 +187,9 @@ export async function updateAskMeAnythingMember(input: {
 
     const parsed = askMeAnythingMemberSchema.safeParse(rawMember);
     if (!parsed.success) {
-      console.error(
-        "updateAskMeAnythingMember - validation error",
+      logServerError(
         parsed.error,
+        "updateAskMeAnythingMember - validation error",
       );
       return {
         data: null,
@@ -198,7 +204,7 @@ export async function updateAskMeAnythingMember(input: {
 
     return { data: parsed.data, error: null };
   } catch (error) {
-    console.error("updateAskMeAnythingMember - database error", error);
+    logServerError(error, "updateAskMeAnythingMember - database error");
     return { data: null, error: { message: "database error" } };
   }
 }
@@ -223,7 +229,7 @@ export async function deleteAskMeAnythingMember(input: {
 
     return { data: { id: input.id }, error: null };
   } catch (error) {
-    console.error("deleteAskMeAnythingMember - database error", error);
+    logServerError(error, "deleteAskMeAnythingMember - database error");
     return { data: null, error: { message: "database error" } };
   }
 }
