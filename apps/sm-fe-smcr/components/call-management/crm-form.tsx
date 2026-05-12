@@ -104,15 +104,13 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
       subject: values.subject,
       scheduledstart: toIsoDateTime(values.startDate, values.startTime),
       scheduledend: toIsoDateTime(values.endDate, values.endTime),
-      location: values.location?.trim() || undefined,
+      location: values.location,
       description: values.description?.trim() || undefined,
       link: values.link,
       category: values.category?.trim() || undefined,
       dataProssimoContatto: values.dataProssimoContatto || undefined,
       oggettoDelContatto: values.oggettoDelContatto,
       enableCreateContact: values.enableCreateContact,
-      enableGrantAccess: values.enableGrantAccess,
-      dryRun: values.dryRun,
     };
 
     const crmResult = await createMeetingAction(payLoad);
@@ -528,13 +526,17 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel htmlFor="location">Luogo</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="location"
-                      placeholder="Es. Meet / Teams / sede"
-                      {...field}
-                    />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger id="location" className="w-full">
+                        <SelectValue placeholder="Seleziona luogo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="call">Call</SelectItem>
+                      <SelectItem value="presenza">Presenza</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -614,50 +616,6 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="enableGrantAccess"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Switch
-                      id="enableGrantAccess"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-0.5 leading-none">
-                    <FormLabel
-                      htmlFor="enableGrantAccess"
-                      className="cursor-pointer"
-                    >
-                      Abilita Grant Access
-                    </FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="dryRun"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Switch
-                      id="dryRun"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-0.5 leading-none">
-                    <FormLabel htmlFor="dryRun" className="cursor-pointer">
-                      Esegui in Dry Run
-                    </FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
           </FieldGroup>
         </FieldSet>
 
