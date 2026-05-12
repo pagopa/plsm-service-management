@@ -61,10 +61,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarContent className="relative">
+      <SidebarContent className="relative pb-24">
         <NavMain groups={sortedGroups} />
 
-        <SidebarMenuItem className="absolute bottom-0">
+        <SidebarMenuItem className="absolute bottom-24">
           <Link
             href="https://plsmpitnsa.blob.core.windows.net/documentazione/smcr/Manuale%20SMCR.pdf"
             target="_blank"
@@ -77,7 +77,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenuItem>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="pb-24">
         <SidebarUser />
       </SidebarFooter>
     </Sidebar>
