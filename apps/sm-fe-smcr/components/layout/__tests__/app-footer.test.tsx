@@ -9,7 +9,7 @@ describe("AppFooter", () => {
     expect(html).toContain("inset-x-0");
     expect(html).toContain("bottom-0");
     expect(html).toContain("w-full");
-    expect(html).toContain("z-50");
+    expect(html).toContain("z-0");
   });
 
   it("keeps the legal text centered with stronger visual rhythm", () => {

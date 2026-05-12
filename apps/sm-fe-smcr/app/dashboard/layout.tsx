@@ -9,7 +9,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       <SidebarInset className="!m-0">
         <ClientPageGuard>
-          <main className="h-full px-1 md:px-0 bg-bg-dashboard">
+          <main className="h-full bg-bg-dashboard px-1 pb-24 md:px-0">
             {children}
           </main>
         </ClientPageGuard>
