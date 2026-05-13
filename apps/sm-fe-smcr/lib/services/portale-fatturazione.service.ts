@@ -49,7 +49,8 @@ export async function updateManual(file: File, fileName: string) {
   }
 }
 
-export async function slackMessageManual() {
+export async function slackMessageManual(changelog?: string) {
+  const normalizedChangelog = changelog?.trim();
   const payload = {
     blocks: [
       {
@@ -66,6 +67,17 @@ export async function slackMessageManual() {
           text: "Ciao a tutti,\nabbiamo appena aggiornato il manuale di fatturazione alla nuova versione.\nVi invitiamo a prenderne visione per rimanere aggiornati su tutte le novità.\n:book:",
         },
       },
+      ...(normalizedChangelog
+        ? [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*Changelog:*\n${normalizedChangelog}`,
+              },
+            },
+          ]
+        : []),
       {
         type: "actions",
         elements: [
@@ -84,7 +96,7 @@ export async function slackMessageManual() {
         elements: [
           {
             type: "mrkdwn",
-            text: "Grazie per l'\''attenzione!",
+            text: "Grazie per l'attenzione!",
           },
         ],
       },
