@@ -1,0 +1,51 @@
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+
+jest.mock("../globals.css", () => ({}), { virtual: true });
+
+jest.mock("next/font/google", () => ({
+  Space_Grotesk: () => ({ className: "space-grotesk" }),
+}));
+
+jest.mock("sonner", () => ({
+  Toaster: () => null,
+}));
+
+jest.mock("nuqs/adapters/next/app", () => ({
+  NuqsAdapter: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+jest.mock("@/context/MSALproviders", () => ({
+  MSALProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+jest.mock("@/context/sessionProvider", () => ({
+  SessionProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+}));
+
+let RootLayout: typeof import("@/app/layout").default;
+
+beforeAll(async () => {
+  ({ default: RootLayout } = await import("@/app/layout"));
+});
+
+describe("RootLayout", () => {
+  it("wraps the app in a flex column shell and includes the global footer", () => {
+    const html = renderToStaticMarkup(
+      <RootLayout>
+        <div>page content</div>
+      </RootLayout>,
+    );
+
+    expect(html).toContain("min-h-screen");
+    expect(html).toContain("flex-col");
+    expect(html).toContain("fixed");
+    expect(html).toContain("inset-x-0");
+    expect(html).toContain("bottom-0");
+    expect(html).toContain("pb-[var(--app-footer-clearance)]");
+    expect(html).toContain("--app-footer-clearance");
+    expect(html).toContain("PagoPA S.p.A.");
+  });
+});

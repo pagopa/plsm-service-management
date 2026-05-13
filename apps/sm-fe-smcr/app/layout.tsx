@@ -3,6 +3,7 @@ import { SessionProvider } from "@/context/sessionProvider";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { AppFooter } from "@/components/layout/app-footer";
 import "./globals.css";
 
 import { Space_Grotesk } from "next/font/google";
@@ -24,12 +25,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it" className={font.className}>
-      <body className="h-screen">
-        <MSALProvider>
-          <SessionProvider>
-            <NuqsAdapter>{children}</NuqsAdapter>
-          </SessionProvider>
-        </MSALProvider>
+      <body
+        className="min-h-screen bg-background"
+        style={
+          {
+            "--app-footer-clearance":
+              "calc(6.5rem + env(safe-area-inset-bottom, 0px))",
+          } as React.CSSProperties
+        }
+      >
+        <div className="flex min-h-screen flex-col">
+          <div className="flex-1 pb-[var(--app-footer-clearance)]">
+            <MSALProvider>
+              <SessionProvider>
+                <NuqsAdapter>{children}</NuqsAdapter>
+              </SessionProvider>
+            </MSALProvider>
+          </div>
+
+          <AppFooter />
+        </div>
 
         <Toaster />
       </body>
