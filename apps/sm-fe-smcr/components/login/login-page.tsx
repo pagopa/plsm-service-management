@@ -33,7 +33,7 @@ export const LoginPage = () => {
   }, []);
 
   return (
-    <main className="min-w-screen h-full flex flex-row sm:items-center sm:justify-center">
+    <main className="min-w-screen h-screen flex flex-row sm:items-center sm:justify-center">
       <div className="w-full sm:w-[50%] h-full p-10">
         <div className="flex flex-col h-full">
           <div className="flex flex-row items-center text-lg gap-2">

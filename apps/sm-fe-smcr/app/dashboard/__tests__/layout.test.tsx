@@ -42,7 +42,7 @@ beforeAll(async () => {
 });
 
 describe("DashboardLayout", () => {
-  it("keeps the shared sidebar shell and reserves bottom clearance for the fixed footer", () => {
+  it("keeps the shared sidebar shell and renders the fixed footer only in dashboard routes", () => {
     const html = renderToStaticMarkup(
       <DashboardLayout>
         <section>dashboard content</section>
@@ -53,5 +53,7 @@ describe("DashboardLayout", () => {
     expect(html).toContain("flex-1");
     expect(html).toContain("app-sidebar");
     expect(html).toContain("pb-[var(--app-footer-clearance)]");
+    expect(html).toContain("fixed");
+    expect(html).toContain("PagoPA S.p.A.");
   });
 });
