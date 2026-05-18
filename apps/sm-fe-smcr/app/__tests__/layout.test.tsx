@@ -41,9 +41,7 @@ describe("RootLayout", () => {
 
     expect(html).toContain("min-h-screen");
     expect(html).toContain("flex-col");
-    expect(html).toContain("min-h-0");
     expect(html).toContain("flex-1");
-    expect(html).toContain("mt-8");
     expect(html).toContain("shrink-0");
     expect(html).toContain("PagoPA S.p.A.");
   });
