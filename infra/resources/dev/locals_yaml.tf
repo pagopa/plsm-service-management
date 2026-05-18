@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-04-13 09:52
+# Generato il: 2026-05-18 10:24
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -69,6 +69,8 @@ locals {
     DB_PASSWORD_B64                                       = azurerm_key_vault_secret.db_password_b64.value
     FE_SMCR_AZURE_STORAGE_CONTAINER                       = "selfcare"
     FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX = "Selfcare_onboarding_mensili_"
+    FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO          = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_firma_con_io.value
+    FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX        = data.azurerm_key_vault_secret.fe_smcr_azure_storage_firma_con_io_blob_prefix.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"
@@ -119,6 +121,8 @@ locals {
     DB_PASSWORD_B64                                       = azurerm_key_vault_secret.db_password_b64.value
     FE_SMCR_AZURE_STORAGE_CONTAINER                       = "selfcare"
     FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX = "Selfcare_onboarding_mensili_"
+    FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO          = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_firma_con_io.value
+    FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX        = data.azurerm_key_vault_secret.fe_smcr_azure_storage_firma_con_io_blob_prefix.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"
