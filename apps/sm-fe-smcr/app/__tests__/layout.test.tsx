@@ -41,11 +41,10 @@ describe("RootLayout", () => {
 
     expect(html).toContain("min-h-screen");
     expect(html).toContain("flex-col");
-    expect(html).toContain("fixed");
-    expect(html).toContain("inset-x-0");
-    expect(html).toContain("bottom-0");
-    expect(html).toContain("pb-[var(--app-footer-clearance)]");
-    expect(html).toContain("--app-footer-clearance");
+    expect(html).toContain("min-h-0");
+    expect(html).toContain("flex-1");
+    expect(html).toContain("mt-8");
+    expect(html).toContain("shrink-0");
     expect(html).toContain("PagoPA S.p.A.");
   });
 });
