@@ -1,5 +1,6 @@
 import { serverEnv } from "@/config/env";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
+import { jsonResponse, handleExternalApiError } from "@/lib/be/http";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_CONTRACT_SIZE_BYTES = 10 * 1024 * 1024; //10MB 
@@ -68,7 +69,7 @@ export async function PUT(request: Request) {
     });
 
     if (!apiRes.ok) {
-      return await errorHanler(apiRes);
+      return await handleExternalApiError(apiRes);
     }
 
     return new Response(
@@ -90,38 +91,6 @@ export async function PUT(request: Request) {
         status: 500,
       },
     );
-  }
+  };
 
-
-  async function errorHanler(apiRes: Response) {
-    let details: unknown;
-
-    const contentType = apiRes.headers.get("content-type");
-
-    try {
-      if (contentType?.includes("application/json")) {
-        details = await apiRes.json();
-      } else {
-        details = await apiRes.text();
-      }
-    } catch {
-      details = "Impossibile leggere il body della risposta";
-    }
-
-    return jsonResponse(
-      {
-        error: "Errore dal server esterno",
-        status: apiRes.status,
-        details,
-      },
-      apiRes.status
-    );
-  }
-}
-
-function jsonResponse(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
 }
