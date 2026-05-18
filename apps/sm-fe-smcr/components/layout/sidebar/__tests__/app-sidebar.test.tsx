@@ -89,11 +89,10 @@ jest.mock("../sidebar-header", () => ({
 import { AppSidebar } from "../app-sidebar";
 
 describe("AppSidebar", () => {
-  it("lifts documentation and sidebar footer content above the fixed footer", () => {
+  it("pins documentation to the bottom of the scrollable sidebar content with mt-auto", () => {
     const html = renderToStaticMarkup(<AppSidebar />);
 
-    expect(html).toContain("bottom-[var(--app-footer-clearance)]");
-    expect(html).toContain("pb-[var(--app-footer-clearance)]");
+    expect(html).toContain("mt-auto");
     expect(html).toContain("Documentation");
   });
 });

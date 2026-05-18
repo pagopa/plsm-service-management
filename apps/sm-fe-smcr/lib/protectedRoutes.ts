@@ -3,6 +3,7 @@
 import {
   ActivityIcon,
   BotIcon,
+  FileSignature,
   FolderIcon,
   LucideIcon,
   PhoneIcon,
@@ -53,6 +54,14 @@ export const protectedRoutes: ProtectedRoute[] = [
     path: "/dashboard/firma-con-io",
     requiredTeams: ["service-management"],
     icon: UsersIcon,
+    sidebar: true,
+    teamId: "service-management",
+  },
+  {
+    label: "Firme per ente",
+    path: "/dashboard/firme-per-ente",
+    requiredTeams: ["service-management"],
+    icon: FileSignature,
     sidebar: true,
     teamId: "service-management",
   },
