@@ -86,8 +86,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
 function hasAccess(
   user: MemberWithTeams,
-  route: { requiredTeams?: Array<string> },
+  route: {
+    requiredTeams?: Array<string>;
+    children?: Array<{ requiredTeams?: Array<string> }>;
+  },
 ): boolean {
+  if (route.children?.length) {
+    return route.children.some((child) => hasAccess(user, child));
+  }
+
   if (!route.requiredTeams || route.requiredTeams.length === 0) return true;
   if (!user.teams || user.teams.length === 0) return false;
 
