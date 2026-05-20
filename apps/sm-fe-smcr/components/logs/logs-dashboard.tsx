@@ -24,7 +24,7 @@ export function LogsDashboard({ initialData }: Props) {
     <>
       <VolumeChart logs={data} />
 
-      <Card className="p-0 gap-0 flex flex-col flex-1 min-h-0">
+      <Card className="p-0 gap-0 flex flex-col flex-1 min-h-0 min-w-0 w-full max-w-full overflow-hidden">
         <CardHeader className="px-3 py-3 border-b border-neutral-200 pb-3!">
           <CardTitle>Logs</CardTitle>
           <CardDescription>

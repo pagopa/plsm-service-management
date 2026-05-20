@@ -11,7 +11,7 @@ export default async function Page() {
   }
 
   return (
-    <div className="flex flex-col gap-3 h-full min-h-0 flex-1">
+    <div className="flex flex-col gap-3 h-full min-h-0 min-w-0 w-full max-w-full overflow-hidden flex-1">
       <LogsDashboard initialData={data} />
     </div>
   );

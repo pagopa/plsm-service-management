@@ -104,11 +104,11 @@ export default function VolumeChart({ logs }: Props) {
   const chartData = buildChartData(logs);
 
   return (
-    <Card className="p-3 gap-3 px-0">
+    <Card className="p-3 gap-3 px-0 w-full max-w-full min-w-0 overflow-hidden">
       <CardHeader className="px-3">
-        <div className="inline-flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Volume dei log</CardTitle>
-          <div className="inline-flex items-center gap-3 text-sm">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             <span className="font-mono text-neutral-500">[DEBUG]</span>
             <span className="font-mono text-blue-500">[INFO]</span>
             <span className="font-mono text-amber-500">[WARNING]</span>
@@ -117,12 +117,12 @@ export default function VolumeChart({ logs }: Props) {
         </div>
       </CardHeader>
 
-      <CardContent className="px-3">
+      <CardContent className="px-3 min-w-0 max-w-full overflow-hidden">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[180px] w-full"
+          className="aspect-auto h-[180px] w-full max-w-full min-w-0"
         >
-          <BarChart accessibilityLayer data={chartData}>
+          <BarChart accessibilityLayer data={chartData} barCategoryGap="20%">
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
