@@ -10,72 +10,16 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import type { Log, LogLevel } from "@/lib/services/logs.service";
+import type { LogVolume } from "@/lib/services/logs.service";
 
 export const description = "A stacked bar chart with a legend";
 
-type ChartData = {
-  date: string;
-  debug: number;
-  info: number;
-  warn: number;
-  error: number;
-};
-
-const LEVEL_KEYS: Record<LogLevel, keyof Omit<ChartData, "date">> = {
-  DEBUG: "debug",
-  INFO: "info",
-  WARN: "warn",
-  ERROR: "error",
-};
-
-const LEVEL_LABELS: Record<keyof Omit<ChartData, "date">, string> = {
+const LEVEL_LABELS: Record<keyof Omit<LogVolume, "date">, string> = {
   debug: "DEBUG",
   info: "INFO",
   warn: "WARNING",
   error: "ERROR",
 };
-
-function buildChartData(logs: Array<Log>): Array<ChartData> {
-  const startDate = dayjs().startOf("day").subtract(29, "day");
-  const endDate = dayjs().endOf("day");
-  const days = Array.from({ length: 30 }, (_, index) => {
-    const date = startDate.add(index, "day").format("YYYY-MM-DD");
-
-    return [
-      date,
-      {
-        date,
-        debug: 0,
-        info: 0,
-        warn: 0,
-        error: 0,
-      },
-    ] as const;
-  });
-  const dataByDate = new Map<string, ChartData>(days);
-
-  for (const log of logs) {
-    const timestamp = dayjs(log.timestamp);
-    if (!timestamp.isValid()) {
-      continue;
-    }
-
-    if (timestamp.isBefore(startDate) || timestamp.isAfter(endDate)) {
-      continue;
-    }
-
-    const day = timestamp.format("YYYY-MM-DD");
-    const item = dataByDate.get(day);
-    if (!item) {
-      continue;
-    }
-
-    item[LEVEL_KEYS[log.level]] += 1;
-  }
-
-  return Array.from(dataByDate.values());
-}
 
 const chartConfig = {
   debug: {
@@ -97,12 +41,10 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 type Props = {
-  logs: Array<Log>;
+  data: Array<LogVolume>;
 };
 
-export default function VolumeChart({ logs }: Props) {
-  const chartData = buildChartData(logs);
-
+export default function VolumeChart({ data }: Props) {
   return (
     <Card className="p-3 gap-3 px-0 w-full max-w-full min-w-0 overflow-hidden">
       <CardHeader className="px-3">
@@ -122,7 +64,7 @@ export default function VolumeChart({ logs }: Props) {
           config={chartConfig}
           className="aspect-auto h-[180px] w-full max-w-full min-w-0"
         >
-          <BarChart accessibilityLayer data={chartData} barCategoryGap="20%">
+          <BarChart accessibilityLayer data={data} barCategoryGap="20%">
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
@@ -141,7 +83,7 @@ export default function VolumeChart({ logs }: Props) {
                   formatter={(value, name) => {
                     const key = String(
                       name,
-                    ) as keyof Omit<ChartData, "date">;
+                    ) as keyof Omit<LogVolume, "date">;
 
                     return (
                       <div className="flex w-full items-center justify-between gap-4">

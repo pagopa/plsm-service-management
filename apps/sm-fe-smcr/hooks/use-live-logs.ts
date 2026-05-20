@@ -30,8 +30,25 @@ function normalizeLog(
   };
 }
 
-export function useLiveLogs(initialData: Array<Log>) {
+export function useLiveLogs(
+  initialData: Array<Log>,
+  onLog?: (log: Log) => void,
+) {
   const [data, setData] = React.useState<Array<Log>>(initialData);
+  const onLogRef = React.useRef(onLog);
+
+  const appendLogs = React.useCallback((logs: Array<Log>) => {
+    setData((prev) => {
+      const existingIds = new Set(prev.map((log) => log.id));
+      const nextLogs = logs.filter((log) => !existingIds.has(log.id));
+
+      return [...prev, ...nextLogs];
+    });
+  }, []);
+
+  useEffect(() => {
+    onLogRef.current = onLog;
+  }, [onLog]);
 
   useEffect(() => {
     const eventSource = new EventSource("/api/monitoring/logs/live");
@@ -45,6 +62,7 @@ export function useLiveLogs(initialData: Array<Log>) {
         }
 
         setData((prev) => [log, ...prev]);
+        onLogRef.current?.(log);
       } catch (error) {
         void clientLogger.error({ error }, "Failed to parse live log event");
       }
@@ -59,5 +77,5 @@ export function useLiveLogs(initialData: Array<Log>) {
     };
   }, []);
 
-  return data;
+  return { data, appendLogs };
 }

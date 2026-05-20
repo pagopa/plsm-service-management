@@ -10,7 +10,7 @@ type Props = {
 };
 
 export function RealTimeLogsTable({ initialData }: Props) {
-  const data = useLiveLogs(initialData);
+  const { data } = useLiveLogs(initialData);
 
   return <LogsTable data={data} columns={columns} />;
 }
