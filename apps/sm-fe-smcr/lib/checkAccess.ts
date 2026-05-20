@@ -1,11 +1,25 @@
 import { UserProfile } from "@/lib/types/userProfile";
 import { protectedRoutes } from "@/lib/protectedRoutes";
 
+function findRouteForPath(path: string) {
+  for (const route of protectedRoutes) {
+    if (route.path && (route.path === path || path.startsWith(route.path + "/"))) {
+      return route;
+    }
+
+    const child = route.children?.find(
+      (c) => c.path === path || path.startsWith(c.path + "/"),
+    );
+    if (child) {
+      return child;
+    }
+  }
+
+  return undefined;
+}
+
 export function hasAccess(user: UserProfile | null, path: string): boolean {
-  // Find matching route (handle both exact paths and dynamic routes)
-  const route = protectedRoutes.find(
-    (r) => r.path === path || path.startsWith(r.path + "/"),
-  );
+  const route = findRouteForPath(path);
 
   // No route definition = public access
   if (!route) return true;
