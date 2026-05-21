@@ -49,7 +49,8 @@ describe("LoginPage", () => {
   it("keeps the original full-height login split layout", () => {
     const html = renderToStaticMarkup(<LoginPage />);
 
-    expect(html).toContain("h-screen");
+    expect(html).toContain("flex-1");
+    expect(html).toContain("self-stretch");
     expect(html).toContain("mt-52");
     expect(html).toContain("absolute left-0 bottom-0");
     expect(html).toContain('data-alt="login image"');
