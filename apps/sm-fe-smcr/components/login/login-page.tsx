@@ -34,8 +34,8 @@ export const LoginPage = () => {
 
   return (
     <main className="min-w-screen flex-1 flex flex-row">
-      <div className="w-full sm:w-[50%] h-full p-10">
-        <div className="flex flex-col h-full">
+      <div className="w-full sm:w-[50%] p-10 self-stretch flex flex-col">
+        <div className="flex flex-1 flex-col">
           <div className="flex flex-row items-center text-lg gap-2">
             <Image
               src={logoPagoPa.src}
@@ -46,7 +46,7 @@ export const LoginPage = () => {
             <p>Service Management Control Room</p>
           </div>
 
-          <div className="w-full h-full flex flex-row justify-center">
+          <div className="w-full flex-1 flex flex-row justify-center">
             <div className="flex flex-col items-center mt-52 text-center gap-5">
               <div>
                 <p className="text-2xl">Welcome back</p>
