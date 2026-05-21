@@ -6,6 +6,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 
 import { Space_Grotesk } from "next/font/google";
+import { AppFooter } from "@/components/layout/app-footer";
 
 const font = Space_Grotesk({
   subsets: ["latin"],
@@ -24,20 +25,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it" className={font.className}>
-      <body
-        className="min-h-screen bg-background"
-        style={
-          {
-            "--app-footer-clearance":
-              "calc(6.5rem + env(safe-area-inset-bottom, 0px))",
-          } as React.CSSProperties
-        }
-      >
-        <MSALProvider>
-          <SessionProvider>
-            <NuqsAdapter>{children}</NuqsAdapter>
-          </SessionProvider>
-        </MSALProvider>
+      <body className="min-h-screen bg-background">
+        <div className="flex min-h-screen flex-col">
+          <div className="flex flex-1 flex-col">
+            <MSALProvider>
+              <SessionProvider>
+                <NuqsAdapter>{children}</NuqsAdapter>
+              </SessionProvider>
+            </MSALProvider>
+          </div>
+
+          <AppFooter />
+        </div>
 
         <Toaster />
       </body>

@@ -3,6 +3,7 @@
 import {
   ActivityIcon,
   BotIcon,
+  FileSignature,
   FolderIcon,
   LucideIcon,
   PhoneIcon,
@@ -14,9 +15,16 @@ import {
   UsersIcon,
 } from "lucide-react";
 
-export interface ProtectedRoute {
+export interface ProtectedRouteChild {
   label: string;
   path: string;
+  requiredTeams?: string[];
+}
+
+export interface ProtectedRoute {
+  label: string;
+  path?: string;
+  children?: ProtectedRouteChild[];
   requiredTeams?: string[];
   icon?: LucideIcon;
   sidebar?: boolean;
@@ -49,12 +57,23 @@ export const protectedRoutes: ProtectedRoute[] = [
     teamId: "service-management",
   },
   {
-    label: "Firma con io",
-    path: "/dashboard/firma-con-io",
+    label: "Firma",
     requiredTeams: ["service-management"],
-    icon: UsersIcon,
+    icon: FileSignature,
     sidebar: true,
     teamId: "service-management",
+    children: [
+      {
+        label: "Firma con io",
+        path: "/dashboard/firma-con-io",
+        requiredTeams: ["service-management"],
+      },
+      {
+        label: "Firme per ente",
+        path: "/dashboard/firme-per-ente",
+        requiredTeams: ["service-management"],
+      },
+    ],
   },
   {
     label: "Certificati",

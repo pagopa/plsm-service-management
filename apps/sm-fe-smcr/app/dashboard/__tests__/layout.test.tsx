@@ -42,18 +42,15 @@ beforeAll(async () => {
 });
 
 describe("DashboardLayout", () => {
-  it("keeps the shared sidebar shell and renders the fixed footer only in dashboard routes", () => {
+  it("keeps the shared sidebar shell without extra bottom padding now that the footer is in document flow", () => {
     const html = renderToStaticMarkup(
       <DashboardLayout>
         <section>dashboard content</section>
       </DashboardLayout>,
     );
 
-    expect(html).toContain("min-h-0");
     expect(html).toContain("flex-1");
     expect(html).toContain("app-sidebar");
-    expect(html).toContain("pb-[var(--app-footer-clearance)]");
-    expect(html).toContain("fixed");
-    expect(html).toContain("PagoPA S.p.A.");
+    expect(html).not.toContain("pb-[var(--app-footer-clearance)]");
   });
 });

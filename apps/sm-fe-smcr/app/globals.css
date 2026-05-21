@@ -48,6 +48,8 @@
 }
 
 :root {
+  /* Viewport bottom reserved for global footer (mt-8 + bar + safe area); keeps fixed sidebar from overlapping */
+  --app-footer-bar: calc(2rem + 5.75rem + env(safe-area-inset-bottom, 0px));
   --pagopa-primary: #00a1b0;
   --pagopa-secondary: #97d1d8;
   --bg-dashboard: #eef7f4;

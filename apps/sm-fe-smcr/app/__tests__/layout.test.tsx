@@ -16,7 +16,9 @@ jest.mock("nuqs/adapters/next/app", () => ({
 }));
 
 jest.mock("@/context/MSALproviders", () => ({
-  MSALProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  MSALProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 jest.mock("@/context/sessionProvider", () => ({
@@ -40,8 +42,9 @@ describe("RootLayout", () => {
     );
 
     expect(html).toContain("min-h-screen");
-    expect(html).toContain("--app-footer-clearance");
-    expect(html).toContain("page content");
-    expect(html).not.toContain("PagoPA S.p.A.");
+    expect(html).toContain("flex-col");
+    expect(html).toContain("flex-1");
+    expect(html).toContain("shrink-0");
+    expect(html).toContain("PagoPA S.p.A.");
   });
 });
