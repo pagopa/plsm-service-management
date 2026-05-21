@@ -33,7 +33,7 @@ export const LoginPage = () => {
   }, []);
 
   return (
-    <main className="min-w-screen flex-1 flex flex-row sm:items-center sm:justify-center">
+    <main className="min-w-screen flex-1 flex flex-row">
       <div className="w-full sm:w-[50%] h-full p-10">
         <div className="flex flex-col h-full">
           <div className="flex flex-row items-center text-lg gap-2">
@@ -89,7 +89,7 @@ export const LoginPage = () => {
           </div>
         </div>
       </div>
-      <div className="hidden sm:block w-[50%] h-full relative">
+      <div className="hidden sm:block w-[50%] relative self-stretch">
         <Image
           src={loginBg.src}
           alt="login image"

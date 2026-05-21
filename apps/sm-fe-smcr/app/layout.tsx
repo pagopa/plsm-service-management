@@ -26,8 +26,8 @@ export default function RootLayout({
   return (
     <html lang="it" className={font.className}>
       <body className="min-h-screen bg-background">
-        <div className="flex min-h-screen flex-col">
-          <div className="flex flex-1 flex-col">
+        <div className="flex h-dvh flex-col">
+          <div className="flex flex-1 flex-col min-h-0">
             <MSALProvider>
               <SessionProvider>
                 <NuqsAdapter>{children}</NuqsAdapter>
