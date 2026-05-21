@@ -4,12 +4,12 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <SidebarProvider className="min-h-0 flex-1">
+    <SidebarProvider className="flex-1">
       <AppSidebar variant="inset" />
 
       <SidebarInset className="!m-0">
         <ClientPageGuard>
-          <main className="h-full bg-bg-dashboard px-1 pb-[var(--app-footer-clearance)] md:px-0">
+          <main className="flex-1 bg-bg-dashboard px-1 pb-10 md:px-0 md:pb-12">
             {children}
           </main>
         </ClientPageGuard>
