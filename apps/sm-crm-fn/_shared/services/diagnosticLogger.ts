@@ -246,30 +246,28 @@ function sanitizeDiagnosticString(value: string, fieldName?: string): string {
 function sanitizeDiagnosticValue(
   value: unknown,
   fieldName?: string,
-  visited = new WeakSet<object>(),
+  ancestors: object[] = [],
 ): unknown {
   if (typeof value === "string") {
     return sanitizeDiagnosticString(value, fieldName);
   }
 
   if (Array.isArray(value)) {
-    if (visited.has(value)) {
+    if (ancestors.includes(value)) {
       return "[Circular]";
     }
-    visited.add(value);
-    return value.map((item) => sanitizeDiagnosticValue(item, undefined, visited));
+    return value.map((item) => sanitizeDiagnosticValue(item, undefined, [...ancestors, value]));
   }
 
   if (value && typeof value === "object") {
-    if (visited.has(value)) {
+    if (ancestors.includes(value)) {
       return "[Circular]";
     }
-    visited.add(value);
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>).map(
         ([key, nestedValue]) => [
           key,
-          sanitizeDiagnosticValue(nestedValue, key, visited),
+          sanitizeDiagnosticValue(nestedValue, key, [...ancestors, value]),
         ],
       ),
     );
