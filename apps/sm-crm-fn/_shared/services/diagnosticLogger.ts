@@ -243,21 +243,33 @@ function sanitizeDiagnosticString(value: string, fieldName?: string): string {
   return value.replace(EMAIL_PATTERN, (match) => maskEmail(match));
 }
 
-function sanitizeDiagnosticValue(value: unknown, fieldName?: string): unknown {
+function sanitizeDiagnosticValue(
+  value: unknown,
+  fieldName?: string,
+  visited = new WeakSet<object>(),
+): unknown {
   if (typeof value === "string") {
     return sanitizeDiagnosticString(value, fieldName);
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => sanitizeDiagnosticValue(item));
+    if (visited.has(value)) {
+      return "[Circular]";
+    }
+    visited.add(value);
+    return value.map((item) => sanitizeDiagnosticValue(item, undefined, visited));
   }
 
   if (value && typeof value === "object") {
+    if (visited.has(value)) {
+      return "[Circular]";
+    }
+    visited.add(value);
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>).map(
         ([key, nestedValue]) => [
           key,
-          sanitizeDiagnosticValue(nestedValue, key),
+          sanitizeDiagnosticValue(nestedValue, key, visited),
         ],
       ),
     );
