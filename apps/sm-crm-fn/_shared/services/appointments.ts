@@ -190,10 +190,6 @@ export async function createAppointment(
   if (productGuid) {
     body["pgp_prodottooggettodelcontattoid_Appointment@odata.bind"] =
       `/products(${productGuid})`;
-  } else if (params.productIdSelfcare) {
-    console.warn(
-      `[Appointments] Prodotto ${params.productIdSelfcare} non mappato per ambiente ${environment}: binding prodotto su appointment omesso`,
-    );
   }
 
   const appointmentDerivedFromFrontend = {
@@ -294,6 +290,8 @@ export async function createAppointment(
       description: body.description,
       "regardingobjectid_account@odata.bind":
         body["regardingobjectid_account@odata.bind"],
+      "pgp_clienteid_Appointment@odata.bind":
+        body["pgp_clienteid_Appointment@odata.bind"],
       appointment_activity_parties: body.appointment_activity_parties,
     };
 
