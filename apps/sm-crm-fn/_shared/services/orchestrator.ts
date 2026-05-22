@@ -406,6 +406,14 @@ export async function createMeetingOrchestrator(
         totalPartecipanti: request.partecipanti.length,
         duration: contactStepTimer.elapsed(),
       });
+
+      // Registra successo nel flow summary
+      diagnosticSession?.flowSummary.flowSteps.push({
+        sequence: diagnosticSession.nextSequence++,
+        step: "verifyOrCreateContacts",
+        status: "completed",
+        summary: `${contactIds.length} contatti elaborati con successo`,
+      });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       const stack = error instanceof Error ? error.stack : undefined;
