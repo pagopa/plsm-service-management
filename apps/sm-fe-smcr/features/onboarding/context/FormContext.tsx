@@ -11,14 +11,15 @@ import {
   StepTwoSchema,
   defaultValues as defaultValuesStepTwo,
 } from "../types/stepTwoSchema";
-import { Step, Steps, useStep } from "../hooks/useStep";
+import { Step, Steps, useStep, StepOneVerificationData, NextStepResult } from "../hooks/useStep";
 
 type FormContextType = {
   currentStep: Step;
   isFirstStep: boolean;
   isStepTwo: boolean;
   isStepThree: boolean;
-  nextStep: () => void;
+  nextStep: (verificationData?: StepOneVerificationData) => Promise<NextStepResult>;
+  isVerifying: boolean;
   prevStep: () => void;
   goToStepOne: () => void;
   handleStepChange: (step: number) => void;
@@ -54,6 +55,7 @@ export const FormProvider = ({ children }: Props) => {
     handleStepChange,
     steps,
     goToStepFour,
+    isVerifying,
   } = useStep();
 
   const [formData, setFormData] = useState<OnboardingSchema>({
@@ -128,6 +130,7 @@ export const FormProvider = ({ children }: Props) => {
         handleStepTwoSubmit,
         resetStepOneIsSubmitted,
         resetStepTwoIsSubmitted,
+        isVerifying,
       }}
     >
       {children}
