@@ -97,6 +97,14 @@ export async function createMeetingOrchestrator(
     diagnosticLogging: diagnosticEnabled,
   });
 
+  // Inizializza flow steps con request ricevuta
+  diagnosticSession?.flowSummary.flowSteps.push({
+    sequence: 0,
+    step: "frontendRequestReceived",
+    status: "completed",
+    summary: "Payload frontend ricevuto e sessione diagnostica inizializzata",
+  });
+
   // Abilita dry-run se richiesto
   if (dryRun) {
     enableDryRun();
@@ -147,6 +155,14 @@ export async function createMeetingOrchestrator(
         dryRun,
       });
 
+      // Registra fallimento esplicito nel flow summary
+      diagnosticSession?.flowSummary.flowSteps.push({
+        sequence: diagnosticSession.nextSequence++,
+        step: "verifyAccount",
+        status: "failed",
+        summary: `Errore verifica account: ${msg}`,
+      });
+
       return buildErrorResponse(
         steps,
         warnings,
@@ -169,6 +185,14 @@ export async function createMeetingOrchestrator(
         dryRun,
       });
 
+      // Registra fallimento esplicito nel flow summary
+      diagnosticSession?.flowSummary.flowSteps.push({
+        sequence: diagnosticSession.nextSequence++,
+        step: "verifyAccount",
+        status: "failed",
+        summary: accountResult.error ?? "Ente non trovato",
+      });
+
       return buildErrorResponse(
         steps,
         warnings,
@@ -180,6 +204,22 @@ export async function createMeetingOrchestrator(
 
     const accountId = accountResult.account.accountid;
     const accountName = accountResult.account.name ?? "N/A";
+
+    // Registra i dati derivati account nel flow summary
+    if (diagnosticSession) {
+      diagnosticSession.flowSummary.derivedData.account = {
+        accountId,
+        accountName,
+        resolutionMethod: accountResult.method,
+      };
+
+      diagnosticSession.flowSummary.flowSteps.push({
+        sequence: diagnosticSession.nextSequence++,
+        step: "verifyAccount",
+        status: "completed",
+        summary: `Account risolto: ${accountId} (${accountResult.method})`,
+      });
+    }
 
     steps.push({
       step: "verifyAccount",
@@ -344,6 +384,14 @@ export async function createMeetingOrchestrator(
           },
         );
 
+        // Registra fallimento esplicito nel flow summary
+        diagnosticSession?.flowSummary.flowSteps.push({
+          sequence: diagnosticSession.nextSequence++,
+          step: "verifyOrCreateContacts",
+          status: "failed",
+          summary: "Nessun contatto valido trovato o creato",
+        });
+
         return buildErrorResponse(
           steps,
           warnings,
@@ -378,6 +426,14 @@ export async function createMeetingOrchestrator(
         success: false,
         error: `Exception during contact processing: ${msg}`,
         dryRun,
+      });
+
+      // Registra fallimento esplicito nel flow summary
+      diagnosticSession?.flowSummary.flowSteps.push({
+        sequence: diagnosticSession.nextSequence++,
+        step: "verifyOrCreateContacts",
+        status: "failed",
+        summary: `Errore contatti: ${msg}`,
       });
 
       return buildErrorResponse(
@@ -486,6 +542,14 @@ export async function createMeetingOrchestrator(
         dryRun,
       });
 
+      // Registra fallimento esplicito nel flow summary
+      diagnosticSession?.flowSummary.flowSteps.push({
+        sequence: diagnosticSession.nextSequence++,
+        step: "createAppointment",
+        status: "failed",
+        summary: `Errore creazione appointment: ${msg}`,
+      });
+
       return buildErrorResponse(
         steps,
         warnings,
@@ -523,8 +587,16 @@ export async function createMeetingOrchestrator(
       timestamp: new Date().toISOString(),
     };
 
-    // Scrivi il blob diagnostico in fire-and-forget
+    // Allinea flowSummary.result con finalResponse
     if (diagnosticSession) {
+      diagnosticSession.flowSummary.result = {
+        success: finalResponse.success,
+        activityId: finalResponse.activityId,
+        accountId: finalResponse.accountId,
+        contactIds: finalResponse.contactIds,
+        warnings: finalResponse.warnings,
+        timestamp: finalResponse.timestamp,
+      };
       diagnosticSession.orchestratorResult = finalResponse;
       await writeDiagnosticBlob(diagnosticSession);
     }
@@ -558,7 +630,13 @@ export async function createMeetingOrchestrator(
       timestamp: new Date().toISOString(),
     };
 
+    // Allinea flowSummary.result con errorResponse
     if (diagnosticSession) {
+      diagnosticSession.flowSummary.result = {
+        success: errorResponse.success,
+        warnings: errorResponse.warnings,
+        timestamp: errorResponse.timestamp,
+      };
       diagnosticSession.orchestratorResult = errorResponse;
       await writeDiagnosticBlob(diagnosticSession);
     }
@@ -596,7 +674,13 @@ async function buildErrorResponse(
     timestamp: new Date().toISOString(),
   };
 
+  // Allinea flowSummary.result con response di errore
   if (diagnosticSession) {
+    diagnosticSession.flowSummary.result = {
+      success: response.success,
+      warnings: response.warnings,
+      timestamp: response.timestamp,
+    };
     diagnosticSession.orchestratorResult = response;
     await writeDiagnosticBlob(diagnosticSession);
   }
