@@ -20,7 +20,7 @@ import {
   isDiagnosticEnabled,
   type DiagnosticSession,
 } from "./diagnosticLogger";
-import { resolveEnvironment } from "../utils/mappings";
+import { resolveEnvironment, getProductGuid } from "../utils/mappings";
 
 // =============================================================================
 // ORCHESTRATOR
@@ -418,6 +418,43 @@ export async function createMeetingOrchestrator(
         baseUrl: request.baseUrl,
         diagnosticSession,
       });
+
+      // Aggiorna flowSummary con binding appointment e finalDynamicsRequest
+      if (diagnosticSession) {
+        const productGuid = request.productIdSelfcare
+          ? getProductGuid(request.productIdSelfcare as ProductIdSelfcare, environment)
+          : null;
+
+        diagnosticSession.flowSummary.derivedData.appointmentBindings = {
+          "regardingobjectid_account@odata.bind": `/accounts(${accountId})`,
+          "pgp_clienteid_Appointment@odata.bind": `/accounts(${accountId})`,
+          "pgp_prodottooggettodelcontattoid_Appointment@odata.bind": productGuid
+            ? `/products(${productGuid})`
+            : undefined,
+        };
+
+        const appointmentCalls = diagnosticSession.dynamicsCalls
+          .filter((call) => call.entity === "appointments");
+        
+        diagnosticSession.flowSummary.finalDynamicsRequest = {
+          method: "POST",
+          url: `${request.baseUrl}/api/data/v9.2/appointments`,
+          requestBody: appointmentCalls[appointmentCalls.length - 1]?.requestBody,
+          derivedFromFrontend: {
+            accountId,
+            productIdSelfcare: request.productIdSelfcare,
+            productGuid,
+          },
+        };
+
+        // Registra step sintetico completato per appointment creation
+        diagnosticSession.flowSummary.flowSteps.push({
+          sequence: diagnosticSession.nextSequence++,
+          step: "createAppointment",
+          status: "completed",
+          summary: `Appointment creato con activityId ${appointment.activityid}`,
+        });
+      }
 
       steps.push({
         step: "createAppointment",

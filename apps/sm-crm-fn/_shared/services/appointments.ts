@@ -182,19 +182,30 @@ export async function createAppointment(
       : `${params.dataProssimoContatto}T00:00:00Z`;
   }
 
-  if (params.productIdSelfcare) {
-    const environment = resolveEnvironment(params.baseUrl);
-    const productGuid = getProductGuid(params.productIdSelfcare, environment);
+  const environment = resolveEnvironment(params.baseUrl);
+  const productGuid = params.productIdSelfcare
+    ? getProductGuid(params.productIdSelfcare, environment)
+    : null;
 
-    if (productGuid) {
-      body["pgp_prodottooggettodelcontattoid_Appointment@odata.bind"] =
-        `/products(${productGuid})`;
-    } else {
-      console.warn(
-        `[Appointments] Prodotto ${params.productIdSelfcare} non mappato per ambiente ${environment}: binding prodotto su appointment omesso`,
-      );
-    }
+  if (productGuid) {
+    body["pgp_prodottooggettodelcontattoid_Appointment@odata.bind"] =
+      `/products(${productGuid})`;
+  } else if (params.productIdSelfcare) {
+    console.warn(
+      `[Appointments] Prodotto ${params.productIdSelfcare} non mappato per ambiente ${environment}: binding prodotto su appointment omesso`,
+    );
   }
+
+  const appointmentDerivedFromFrontend = {
+    accountId: params.accountId,
+    productIdSelfcare: params.productIdSelfcare,
+    productGuid,
+    notes: [
+      "accountId -> regardingobjectid_account@odata.bind",
+      "accountId -> pgp_clienteid_Appointment@odata.bind",
+      "productIdSelfcare -> productGuid -> pgp_prodottooggettodelcontattoid_Appointment@odata.bind",
+    ],
+  };
 
   console.log(`[Appointments] Creazione appuntamento: ${params.subject}`);
   console.log(
@@ -218,11 +229,16 @@ export async function createAppointment(
       if (params.diagnosticSession) {
         addDiagnosticCall(params.diagnosticSession, {
           step,
+          substep: step,
+          entity: "appointments",
+          attempt: step === "createAppointmentFallback" ? 2 : 1,
           method: "POST",
           url,
           requestBody,
+          derivedFromFrontend: appointmentDerivedFromFrontend,
           responseStatus: 201,
           durationMs: Date.now() - attemptStart,
+          success: true,
         });
       }
 
@@ -234,11 +250,16 @@ export async function createAppointment(
       if (params.diagnosticSession) {
         addDiagnosticCall(params.diagnosticSession, {
           step,
+          substep: step,
+          entity: "appointments",
+          attempt: step === "createAppointmentFallback" ? 2 : 1,
           method: "POST",
           url,
           requestBody,
+          derivedFromFrontend: appointmentDerivedFromFrontend,
           responseStatus: null,
           durationMs: Date.now() - attemptStart,
+          success: false,
           error: errorMessage,
         });
       }
