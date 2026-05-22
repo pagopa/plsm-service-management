@@ -242,6 +242,11 @@ export async function createMeetingOrchestrator(
           partecipante.email,
         );
 
+        const participantRef = {
+          index,
+          email: partecipante.email,
+        };
+
         const contactResult = await verifyOrCreateContact({
           baseUrl: request.baseUrl,
           email: partecipante.email,
@@ -254,6 +259,7 @@ export async function createMeetingOrchestrator(
           accountId,
           enableCreateContact: request.enableCreateContact ?? false,
           diagnosticSession,
+          participantRef,
         });
 
         console.log(
@@ -294,6 +300,18 @@ export async function createMeetingOrchestrator(
           logger.warn(`⚠️ Contact processing failed`, {
             email: partecipante.email ?? "(no email)",
             error: contactResult.error,
+          });
+        }
+
+        // Update diagnostic session flowSummary.derivedData.contacts
+        if (diagnosticSession) {
+          diagnosticSession.flowSummary.derivedData.contacts.push({
+            participantIndex: index,
+            email: partecipante.email,
+            contactId: contactResult.contact?.contactid,
+            status: contactResult.contact
+              ? (contactResult.created ? "created" : "found")
+              : "failed",
           });
         }
       }
