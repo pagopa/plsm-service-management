@@ -131,8 +131,9 @@ export function validateConfig(config: unknown): AppConfig {
         .join("; ");
       throw new Error(`Configurazione non valida: ${errorMessages}`);
     }
+    const raw = error instanceof Error ? error.message : String(error);
     throw new Error(
-      "Errore sconosciuto durante la validazione della configurazione.",
+      `Errore sconosciuto durante la validazione della configurazione: ${raw}`,
     );
   }
 }
