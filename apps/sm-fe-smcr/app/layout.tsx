@@ -3,10 +3,10 @@ import { SessionProvider } from "@/context/sessionProvider";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { AppFooter } from "@/components/layout/app-footer";
 import "./globals.css";
 
 import { Space_Grotesk } from "next/font/google";
+import { AppFooter } from "@/components/layout/app-footer";
 
 const font = Space_Grotesk({
   subsets: ["latin"],
@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="it" className={font.className}>
       <body className="min-h-screen bg-background">
-        <div className="flex min-h-screen flex-col">
+        <div className="flex min-h-dvh flex-col">
           <div className="flex flex-1 flex-col">
             <MSALProvider>
               <SessionProvider>
