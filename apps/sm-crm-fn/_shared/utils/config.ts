@@ -5,16 +5,18 @@ import { z, ZodError } from "zod";
  * that Azure Key Vault References produce when quotes are stripped.
  */
 function parseMapString(val: string): Record<string, string> {
+  // Strip whitespace (spaces, newlines) that Key Vault portal may inject mid-value
+  const sanitized = val.replace(/\s/g, "");
   try {
-    return JSON.parse(val) as Record<string, string>;
+    return JSON.parse(sanitized) as Record<string, string>;
   } catch {
     // Bare format: {key:value,key:value}
-    const inner = val.trim().replace(/^\{/, "").replace(/\}$/, "");
+    const inner = sanitized.replace(/^\{/, "").replace(/\}$/, "");
     const result: Record<string, string> = {};
     for (const entry of inner.split(",")) {
       const colon = entry.indexOf(":");
       if (colon === -1) throw new Error("coppia chiave:valore non valida");
-      result[entry.slice(0, colon).trim()] = entry.slice(colon + 1).trim();
+      result[entry.slice(0, colon)] = entry.slice(colon + 1);
     }
     return result;
   }
@@ -24,7 +26,7 @@ function parseMapStringToNumber(val: string): Record<string, number> {
   const raw = parseMapString(val);
   return Object.fromEntries(
     Object.entries(raw).map(([k, v]) => {
-      const n = Number(v);
+      const n = Number(v.replace(/\s/g, ""));
       if (isNaN(n)) throw new Error(`valore non numerico per chiave "${k}": ${v}`);
       return [k, n];
     })
