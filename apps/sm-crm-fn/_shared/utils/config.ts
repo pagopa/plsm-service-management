@@ -93,13 +93,13 @@ const configSchema = z.object({
    * @example '{"prod-pn":"617cbe1b-...","prod-io":"26a975ef-..."}'
    */
   CRM_PRODUCTS_MAP_UAT: z
-    .string({ required_error: "CRM_PRODUCTS_MAP_UAT è obbligatoria" })
+    .string("CRM_PRODUCTS_MAP_UAT è obbligatoria")
     .min(1, "CRM_PRODUCTS_MAP_UAT è obbligatoria")
     .transform((val, ctx) => {
       try {
         return parseMapString(val);
       } catch (e) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `CRM_PRODUCTS_MAP_UAT non valido: ${e instanceof Error ? e.message : e}` });
+        ctx.addIssue({ code: "custom", message: `CRM_PRODUCTS_MAP_UAT non valido: ${e instanceof Error ? e.message : e}` });
         return z.NEVER;
       }
     })
@@ -109,13 +109,13 @@ const configSchema = z.object({
    * Formato: Record<ProductIdSelfcare, string> dove il valore è il GUID Dynamics.
    */
   CRM_PRODUCTS_MAP_PROD: z
-    .string({ required_error: "CRM_PRODUCTS_MAP_PROD è obbligatoria" })
+    .string("CRM_PRODUCTS_MAP_PROD è obbligatoria")
     .min(1, "CRM_PRODUCTS_MAP_PROD è obbligatoria")
     .transform((val, ctx) => {
       try {
         return parseMapString(val);
       } catch (e) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `CRM_PRODUCTS_MAP_PROD non valido: ${e instanceof Error ? e.message : e}` });
+        ctx.addIssue({ code: "custom", message: `CRM_PRODUCTS_MAP_PROD non valido: ${e instanceof Error ? e.message : e}` });
         return z.NEVER;
       }
     })
@@ -125,13 +125,13 @@ const configSchema = z.object({
    * Formato: Record<TipologiaReferente, number>.
    */
   CRM_TIPOLOGIA_REFERENTE_MAP_UAT: z
-    .string({ required_error: "CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria" })
+    .string("CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria")
     .min(1, "CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria")
     .transform((val, ctx) => {
       try {
         return parseMapStringToNumber(val);
       } catch (e) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `CRM_TIPOLOGIA_REFERENTE_MAP_UAT non valido: ${e instanceof Error ? e.message : e}` });
+        ctx.addIssue({ code: "custom", message: `CRM_TIPOLOGIA_REFERENTE_MAP_UAT non valido: ${e instanceof Error ? e.message : e}` });
         return z.NEVER;
       }
     })
@@ -141,13 +141,13 @@ const configSchema = z.object({
    * Formato: Record<TipologiaReferente, number>.
    */
   CRM_TIPOLOGIA_REFERENTE_MAP_PROD: z
-    .string({ required_error: "CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria" })
+    .string("CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria")
     .min(1, "CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria")
     .transform((val, ctx) => {
       try {
         return parseMapStringToNumber(val);
       } catch (e) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `CRM_TIPOLOGIA_REFERENTE_MAP_PROD non valido: ${e instanceof Error ? e.message : e}` });
+        ctx.addIssue({ code: "custom", message: `CRM_TIPOLOGIA_REFERENTE_MAP_PROD non valido: ${e instanceof Error ? e.message : e}` });
         return z.NEVER;
       }
     })
