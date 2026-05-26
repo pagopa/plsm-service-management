@@ -125,8 +125,15 @@ export function validateConfig(config: unknown): AppConfig {
   try {
     return configSchema.parse(config);
   } catch (error) {
-    if (error instanceof ZodError) {
-      const errorMessages = error.issues
+    // Duck-type check instead of instanceof to handle Zod module duplication in monorepos
+    if (
+      error != null &&
+      typeof error === "object" &&
+      "issues" in error &&
+      Array.isArray((error as { issues: unknown }).issues)
+    ) {
+      const issues = (error as ZodError).issues;
+      const errorMessages = issues
         .map((e) => `${e.path.join(".")}: ${e.message}`)
         .join("; ");
       throw new Error(`Configurazione non valida: ${errorMessages}`);
