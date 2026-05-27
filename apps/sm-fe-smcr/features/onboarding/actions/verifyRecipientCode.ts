@@ -6,6 +6,7 @@ import {
 } from "@/lib/logger/logger.server.helpers";
 import { FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL } from "./config/env";
 
+// url
 const BILLING_PORTAL_BASE_URL =
   "https://api.selfcare.pagopa.it/external/billing-portal/v1/institutions/onboarding/recipientCode/verification";
 
