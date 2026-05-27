@@ -88,6 +88,7 @@ fe_smcr:
   FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX: "Selfcare_onboarding_mensili_"
   FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO: "kv:fe_smcr_azure_storage_container_firma_con_io"
   FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX: "kv:fe_smcr_azure_storage_firma_con_io_blob_prefix"
+  FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL: "kv:fe_smcr_api_key_subscription_key_billing_portal"
   DB_NAME: "dbsmcr"
   DB_TABLE: "dbsmcr"
   DB_PORT: "5432"

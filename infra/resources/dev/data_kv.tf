@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-05-18 10:24
+# Generato il: 2026-05-27 12:08
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -51,6 +51,11 @@ data "azurerm_key_vault_secret" "fe_smcr_api_key_prod_get_users" {
 
 data "azurerm_key_vault_secret" "fe_smcr_api_key_services" {
   name         = "fe-smcr-api-key-services"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_api_key_subscription_key_billing_portal" {
+  name         = "fe-smcr-api-key-subscription-key-billing-portal"
   key_vault_id = data.azurerm_key_vault.common_kv.id
 }
 
