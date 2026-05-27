@@ -2,10 +2,13 @@ import database from "@/lib/knex";
 import z from "zod";
 import logger from "@/lib/logger/logger.server";
 import EventEmitter from "events";
+import dayjs from "dayjs";
 
 const logsEventBus = new EventEmitter();
 const LOGS_EVENT_BUS = "logs" as const;
 const LOGS_TABLE = "logs" as const;
+const DEFAULT_LOGS_LIMIT = 100;
+const MAX_LOGS_LIMIT = 500;
 
 export const logLevelSchema = z.enum(["DEBUG", "INFO", "WARN", "ERROR"]);
 export type LogLevel = z.infer<typeof logLevelSchema>;
@@ -22,6 +25,15 @@ export const logSchema = z.object({
   requestId: z.string().optional().nullable(),
 });
 export type Log = z.infer<typeof logSchema>;
+
+export const logVolumeSchema = z.object({
+  date: z.string(),
+  debug: z.number(),
+  info: z.number(),
+  warn: z.number(),
+  error: z.number(),
+});
+export type LogVolume = z.infer<typeof logVolumeSchema>;
 
 export const logRequestSchema = z.object({
   method: z.string().optional().nullable(),
@@ -138,6 +150,34 @@ function mapLogDetail(row: {
   };
 }
 
+function normalizeLogLimit(limit?: number | null): number {
+  if (!limit || !Number.isFinite(limit)) {
+    return DEFAULT_LOGS_LIMIT;
+  }
+
+  return Math.min(Math.max(Math.trunc(limit), 1), MAX_LOGS_LIMIT);
+}
+
+function buildEmptyLogVolume(days: number): Array<LogVolume> {
+  const safeDays = Math.max(Math.trunc(days), 1);
+  const startDate = dayjs().startOf("day").subtract(safeDays - 1, "day");
+
+  return Array.from({ length: safeDays }, (_, index) => ({
+    date: startDate.add(index, "day").format("YYYY-MM-DD"),
+    debug: 0,
+    info: 0,
+    warn: 0,
+    error: 0,
+  }));
+}
+
+const LOG_VOLUME_LEVEL_KEYS: Record<LogLevel, keyof Omit<LogVolume, "date">> = {
+  DEBUG: "debug",
+  INFO: "info",
+  WARN: "warn",
+  ERROR: "error",
+};
+
 export async function saveLog(
   input: LogInput,
 ): Promise<{ data: LogDetail; error: null } | { data: null; error: string }> {
@@ -174,11 +214,12 @@ export async function saveLog(
   }
 }
 
-export async function readLogs(): Promise<
+export async function readLogs(options: { limit?: number; before?: string | null } = {}): Promise<
   { data: Array<Log>; error: null } | { data: null; error: string }
 > {
   try {
-    const logs = await database
+    const limit = normalizeLogLimit(options.limit);
+    const query = database
       .from(LOGS_TABLE)
       .select([
         "id",
@@ -188,12 +229,63 @@ export async function readLogs(): Promise<
         "service",
         "request as requestId",
       ])
-      .orderBy("timestamp", "desc");
+      .orderBy("timestamp", "desc")
+      .limit(limit);
+
+    if (options.before) {
+      query.where("timestamp", "<", options.before);
+    }
+
+    const logs = await query;
 
     return { data: logs, error: null };
   } catch (error) {
     logger.error({ error }, "readLogs - database error");
     return { data: null, error: "Error reading log." };
+  }
+}
+
+export async function readLogVolume(options: { days?: number } = {}): Promise<
+  { data: Array<LogVolume>; error: null } | { data: null; error: string }
+> {
+  try {
+    const days = Math.max(Math.trunc(options.days ?? 30), 1);
+    const startDate = dayjs()
+      .startOf("day")
+      .subtract(days - 1, "day")
+      .toISOString();
+    const volume = buildEmptyLogVolume(days);
+    const volumeByDate = new Map(volume.map((item) => [item.date, item]));
+    const rows = await database
+      .from(LOGS_TABLE)
+      .select(
+        database.raw(
+          `to_char(date_trunc('day', "timestamp"::timestamptz), 'YYYY-MM-DD') as date`,
+        ),
+        "level",
+      )
+      .count({ count: "*" })
+      .where("timestamp", ">=", startDate)
+      .groupByRaw(`date_trunc('day', "timestamp"::timestamptz), "level"`)
+      .orderBy("date", "asc");
+
+    for (const row of rows as Array<{
+      date: string;
+      level: LogLevel;
+      count: string | number;
+    }>) {
+      const item = volumeByDate.get(row.date);
+      if (!item) {
+        continue;
+      }
+
+      item[LOG_VOLUME_LEVEL_KEYS[row.level]] = Number(row.count);
+    }
+
+    return { data: volume, error: null };
+  } catch (error) {
+    logger.error({ error }, "readLogVolume - database error");
+    return { data: null, error: "Error reading log volume." };
   }
 }
 
