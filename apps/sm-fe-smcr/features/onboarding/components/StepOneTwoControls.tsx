@@ -11,12 +11,14 @@ type Props = {
   handleDataTable?: (data: ProductStatus[] | undefined) => void;
   handleDeleteOn?: (data: boolean) => void;
   resetProductOptions?: () => void;
+  isVerifying?: boolean;
 };
 export default function StepOneTwoControls({
   form,
   handleDataTable,
   handleDeleteOn,
   resetProductOptions,
+  isVerifying = false,
 }: Props) {
   const { isFirstStep, isStepThree, prevStep } = useFormContext();
   return (
@@ -58,11 +60,12 @@ export default function StepOneTwoControls({
         </Button>
         <Button
           name="next"
-          variant={form.formState.isValid ? "pagopaprimary" : "outline"}
+          variant={form.formState.isValid && !isVerifying ? "pagopaprimary" : "outline"}
           type="submit"
+          disabled={isVerifying}
           className="w-fit sm:w-32"
         >
-          Avanti
+          {isVerifying ? "Verifica..." : "Avanti"}
         </Button>
       </div>
     </div>

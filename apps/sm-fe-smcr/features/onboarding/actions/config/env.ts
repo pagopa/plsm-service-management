@@ -1,6 +1,8 @@
 import { serverEnv } from "@/config/env";
 
 export const UPLOAD = serverEnv.UPLOAD;
+export const FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL =
+  serverEnv.FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL;
 export const ONBOARDING_BASE_PATH = serverEnv.ONBOARDING_BASE_PATH;
 export const ONBOARDING_BASE_PATH_UAT = serverEnv.ONBOARDING_BASE_PATH_UAT;
 export const FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY =
