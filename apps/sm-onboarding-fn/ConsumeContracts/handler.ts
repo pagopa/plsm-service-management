@@ -160,7 +160,7 @@ export const handle =
         ),
       TE.chain((data) =>
         pipe(
-          sendToSlack(
+          sendToSlack( // TODO serve aggiungere l'invio a smcr
             _context,
             data.channel as NonEmptyString,
             data.formattedDecodedContract
@@ -211,3 +211,6 @@ export const handle =
       }),
       TE.toUnion
     )();
+
+
+  

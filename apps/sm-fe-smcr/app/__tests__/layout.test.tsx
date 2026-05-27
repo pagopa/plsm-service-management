@@ -16,7 +16,9 @@ jest.mock("nuqs/adapters/next/app", () => ({
 }));
 
 jest.mock("@/context/MSALproviders", () => ({
-  MSALProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  MSALProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 jest.mock("@/context/sessionProvider", () => ({
@@ -32,7 +34,7 @@ beforeAll(async () => {
 });
 
 describe("RootLayout", () => {
-  it("wraps the app in a flex column shell and includes the global footer", () => {
+  it("wraps the app providers without forcing the global footer into public routes", () => {
     const html = renderToStaticMarkup(
       <RootLayout>
         <div>page content</div>
