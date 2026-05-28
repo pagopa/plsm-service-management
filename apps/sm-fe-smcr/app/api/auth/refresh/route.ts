@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         maxAge: 0,
         name: AUTH_COOKIE_NAME,
         path: "/",
-        sameSite: "strict",
+        sameSite: "lax",
         secure,
         value: "",
       });

@@ -142,7 +142,7 @@ export async function handler(
     const responseCookies = [
       `pkce_verifier=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`, // Clear
       `auth_state=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`, // Clear
-      `auth-token=${internalJwt}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${config.jwtExpirySeconds}`, // Set JWT
+      `auth-token=${internalJwt}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${config.jwtExpirySeconds}`, // Set JWT
     ];
 
     // Redirect back to the frontend app after the auth cookie is set.

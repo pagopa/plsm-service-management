@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AUTH_RETURN_URL_COOKIE_NAME } from "@/lib/auth/constants";
+import {
+  AUTH_COOKIE_NAME,
+  AUTH_RETURN_URL_COOKIE_NAME,
+} from "@/lib/auth/constants";
+import { verifyAuthToken } from "@/lib/auth/jwt";
 import {
   applyProxyCookies,
   buildAuthFunctionUrl,
@@ -13,6 +17,13 @@ export async function GET(request: NextRequest) {
   const returnUrl = sanitizeReturnUrl(
     request.nextUrl.searchParams.get("returnUrl"),
   );
+  const session = await verifyAuthToken(
+    request.cookies.get(AUTH_COOKIE_NAME)?.value,
+  );
+
+  if (session) {
+    return NextResponse.redirect(new URL(returnUrl, request.url));
+  }
 
   try {
     const authResponse = await fetch(buildAuthFunctionUrl("/auth/login"), {
