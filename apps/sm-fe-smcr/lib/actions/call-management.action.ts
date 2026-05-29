@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { format as formatDate } from "date-fns";
 import { it } from "date-fns/locale";
 import z from "zod";
@@ -288,17 +289,49 @@ export type CreateMeetingResult =
   | { success: true; activityId?: string; message?: string }
   | { success: false; error: string };
 
+type CreateMeetingResponse = {
+  activityId?: string;
+  message?: string;
+  error?: unknown;
+};
+
+const truncateLogValue = (value: string, maxLength = 2000) =>
+  value.length > maxLength ? `${value.slice(0, maxLength)}...` : value;
+
+const stringifyLogValue = (value: unknown) => {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  try {
+    return JSON.stringify(value ?? {});
+  } catch {
+    return String(value);
+  }
+};
+
 export async function createMeetingAction(
   input: CreateMeetingInput,
 ): Promise<CreateMeetingResult> {
+  const operationId = randomUUID();
   logger.info(
-    { info: { event: "call-management.create-meeting", metadata: input } },
+    {
+      info: {
+        event: "call-management.create-meeting",
+        metadata: { operationId, ...input },
+      },
+    },
     "Create meeting input received",
   );
   const baseUrl = serverEnv.FE_SMCR_CRM_API_URL?.replace(/\/$/, "");
   if (!baseUrl) {
     logger.warn(
-      { info: { event: "call-management.create-meeting.missing-env" } },
+      {
+        info: {
+          event: "call-management.create-meeting.missing-env",
+          metadata: { operationId },
+        },
+      },
       "FE_SMCR_CRM_API_URL not set",
     );
     return { success: false, error: "API CRM non configurata." };
@@ -352,6 +385,29 @@ export async function createMeetingAction(
     ...(input.dryRun !== undefined ? { dryRun: input.dryRun } : {}),
   };
 
+  const loggedPayload = {
+    institutionIdSelfcare: body.institutionIdSelfcare,
+    productIdSelfcare: body.productIdSelfcare,
+    partecipanti: body.partecipanti.map((partecipante) => ({
+      tipologiaReferente: partecipante.tipologiaReferente,
+      hasEmail: Boolean(partecipante.email),
+    })),
+    partecipantiCount: body.partecipanti.length,
+    subject: body.subject,
+    scheduledstart: body.scheduledstart,
+    scheduledend: body.scheduledend,
+    location: body.location,
+    hasDescription: Boolean(description),
+    descriptionLength: description.length,
+    hasLink: Boolean(input.link),
+    categoria: body.categoria,
+    dataProssimoContatto: body.dataProssimoContatto,
+    oggettoDelContatto: body.oggettoDelContatto,
+    enableCreateContact: body.enableCreateContact,
+    enableGrantAccess: body.enableGrantAccess,
+    dryRun: body.dryRun,
+  };
+
   try {
     const res = await fetch(url, {
       method: "POST",
@@ -359,20 +415,42 @@ export async function createMeetingAction(
       body: JSON.stringify(body),
     });
 
-    const data = await res.json().catch(() => ({}));
+    const responseText = await res.text().catch(() => "");
+    let data: CreateMeetingResponse = {};
+
+    try {
+      data = responseText
+        ? (JSON.parse(responseText) as CreateMeetingResponse)
+        : {};
+    } catch {
+      data = {};
+    }
 
     if (!res.ok) {
       const message =
-        typeof data?.message === "string"
+        typeof data.message === "string"
           ? data.message
-          : (data?.error ?? `HTTP ${res.status}`);
+          : typeof data.error === "string"
+            ? data.error
+            : data.error
+              ? stringifyLogValue(data.error)
+              : responseText
+                ? truncateLogValue(responseText)
+                : `HTTP ${res.status}`;
       logger.error(
         {
           request: { method: "POST", path: url, statusCode: res.status },
-          error: { message },
+          error: {
+            message,
+            responseBodyPreview: truncateLogValue(responseText),
+          },
           info: {
             event: "call-management.create-meeting.failed",
-            metadata: { dynamicsEnvironment: dynamicsEnv },
+            metadata: {
+              operationId,
+              dynamicsEnvironment: dynamicsEnv,
+              payload: loggedPayload,
+            },
           },
         },
         "createMeetingAction failed",
@@ -387,6 +465,7 @@ export async function createMeetingAction(
           metadata: {
             activityId: data?.activityId,
             dynamicsEnvironment: dynamicsEnv,
+            operationId,
           },
         },
       },
@@ -403,7 +482,14 @@ export async function createMeetingAction(
     logger.error(
       {
         error: { name: "CreateMeetingError", message },
-        info: { event: "call-management.create-meeting.error" },
+        info: {
+          event: "call-management.create-meeting.error",
+          metadata: {
+            operationId,
+            dynamicsEnvironment: dynamicsEnv,
+            payload: loggedPayload,
+          },
+        },
       },
       "createMeetingAction error",
     );
