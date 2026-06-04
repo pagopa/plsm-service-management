@@ -8,6 +8,7 @@ import {
   applyProxyCookies,
   buildAuthFunctionUrl,
   buildForwardCookieHeader,
+  getPublicOrigin,
   getRequestIsSecure,
   sanitizeReturnUrl,
 } from "@/lib/auth/proxy";
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
 
   if (request.nextUrl.searchParams.get("error")) {
     const errorResponse = NextResponse.redirect(
-      new URL("/auth/login?error=callback", request.url),
+      new URL("/auth/login?error=callback", getPublicOrigin(request)),
     );
     clearTemporaryCookies(errorResponse, secure);
     return errorResponse;
@@ -88,7 +89,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = NextResponse.redirect(new URL(returnUrl, request.url));
+    const response = NextResponse.redirect(
+      new URL(returnUrl, getPublicOrigin(request)),
+    );
 
     applyProxyCookies(response, authResponse.headers, secure);
     response.cookies.set({
@@ -105,7 +108,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("[auth/callback] Failed to complete auth flow", error);
     const errorResponse = NextResponse.redirect(
-      new URL("/auth/login?error=callback", request.url),
+      new URL("/auth/login?error=callback", getPublicOrigin(request)),
     );
     clearTemporaryCookies(errorResponse, secure);
     return errorResponse;

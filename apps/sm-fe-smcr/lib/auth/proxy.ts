@@ -144,6 +144,20 @@ export function getRequestIsSecure(request: NextRequest): boolean {
   );
 }
 
+export function getPublicOrigin(request: NextRequest): string {
+  const proto =
+    request.headers.get("x-forwarded-proto") ??
+    request.headers.get("x-appservice-proto") ??
+    request.nextUrl.protocol.replace(":", "");
+  // Azure App Service sets DISGUISED-HOST with the real public hostname
+  const host =
+    request.headers.get("disguised-host") ??
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    request.nextUrl.host;
+  return `${proto}://${host}`;
+}
+
 export function buildAuthFunctionUrl(pathname: string): URL {
   return new URL(`/api/v1${pathname}`, getAuthConfig().functionBaseUrl);
 }

@@ -7,6 +7,7 @@ import { verifyAuthToken } from "@/lib/auth/jwt";
 import {
   applyProxyCookies,
   buildAuthFunctionUrl,
+  getPublicOrigin,
   getRequestIsSecure,
   sanitizeReturnUrl,
 } from "@/lib/auth/proxy";
@@ -22,7 +23,9 @@ export async function GET(request: NextRequest) {
   );
 
   if (session) {
-    return NextResponse.redirect(new URL(returnUrl, request.url));
+    return NextResponse.redirect(
+      new URL(returnUrl, getPublicOrigin(request)),
+    );
   }
 
   try {
@@ -55,7 +58,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("[auth/login] Failed to initiate auth flow", error);
     return NextResponse.redirect(
-      new URL("/auth/login?error=unavailable", request.url),
+      new URL("/auth/login?error=unavailable", getPublicOrigin(request)),
     );
   }
 }
