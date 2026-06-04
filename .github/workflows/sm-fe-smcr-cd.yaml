@@ -18,6 +18,12 @@ on:
         required: false
         default: false
 
+      skip_migrate:
+        description: Salta le DB migrations (usa solo se non ci sono migration pendenti)
+        type: boolean
+        required: false
+        default: true
+
 permissions:
   id-token: write
   contents: read
@@ -177,7 +183,7 @@ jobs:
   migrate:
     name: Run DB Migrations
     needs: build
-    if: ${{ inputs.environment == 'app-dev' }}
+    if: ${{ inputs.environment == 'app-dev' && !inputs.skip_migrate }}
     runs-on: dev
     environment: app-dev-cd
 
