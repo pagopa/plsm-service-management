@@ -4,6 +4,8 @@ import { CloudUpload, FileIcon, UploadIcon, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
 import { UploadedFilesTable } from "./UploadedFilesTable";
 import { slackMessageManual } from "@/lib/services/portale-fatturazione.service";
 
@@ -13,6 +15,7 @@ export function UploadFileSection() {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [tableKey, setTableKey] = useState(0);
+  const [changelog, setChangelog] = useState("");
 
   const handleUpload = () => {
     inputRef.current?.click();
@@ -52,8 +55,9 @@ export function UploadFileSection() {
       );
       setTableKey((k) => k + 1); // force table re-render
       setFile(null);
+      setChangelog("");
       if (inputRef.current) inputRef.current.value = "";
-      await slackMessageManual();
+      await slackMessageManual(changelog);
     }
   };
 
@@ -118,6 +122,17 @@ export function UploadFileSection() {
               </div>
             </div>
           )}
+        </div>
+        <div className="space-y-2 mb-4">
+          <Label htmlFor="manual-changelog">Changelog</Label>
+          <Textarea
+            id="manual-changelog"
+            name="changelog"
+            placeholder="Descrivi le modifiche effettuate sul manuale (opzionale)"
+            rows={4}
+            value={changelog}
+            onChange={(e) => setChangelog(e.target.value)}
+          />
         </div>
         <div className="flex gap-2">
           <Button

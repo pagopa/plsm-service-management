@@ -1,6 +1,7 @@
 "use server";
 import { betterFetch } from "@better-fetch/fetch";
 import { serverEnv } from "@/config/env";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const STORAGE_TOKEN = serverEnv.STORAGE_TOKEN as string;
 const WEBHOOK_MANUAL_STORAGE = serverEnv.WEBHOOK_MANUAL_STORAGE as string;
@@ -26,7 +27,7 @@ export async function updateManual(file: File, fileName: string) {
     );
 
     if (error || !data) {
-      console.error(error);
+      logServerError(error, "updateManual - upload error");
       if (error?.status === 403)
         return {
           error: "Non autorizzato al caricamento del file, controllare la VPN",
@@ -43,12 +44,13 @@ export async function updateManual(file: File, fileName: string) {
 
     return { error: null, data: data as string };
   } catch (error) {
-    console.error(error);
+    logServerError(error, "updateManual - unexpected error");
     return { error: "Si è verificato un errore, riprova più tardi." };
   }
 }
 
-export async function slackMessageManual() {
+export async function slackMessageManual(changelog?: string) {
+  const normalizedChangelog = changelog?.trim();
   const payload = {
     blocks: [
       {
@@ -65,6 +67,17 @@ export async function slackMessageManual() {
           text: "Ciao a tutti,\nabbiamo appena aggiornato il manuale di fatturazione alla nuova versione.\nVi invitiamo a prenderne visione per rimanere aggiornati su tutte le novità.\n:book:",
         },
       },
+      ...(normalizedChangelog
+        ? [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*Changelog:*\n${normalizedChangelog}`,
+              },
+            },
+          ]
+        : []),
       {
         type: "actions",
         elements: [
@@ -83,7 +96,7 @@ export async function slackMessageManual() {
         elements: [
           {
             type: "mrkdwn",
-            text: "Grazie per l'\''attenzione!",
+            text: "Grazie per l'attenzione!",
           },
         ],
       },
@@ -99,7 +112,7 @@ export async function slackMessageManual() {
   });
 
   if (error || !data) {
-    console.error(error);
+    logServerError(error, "slackMessageManual - webhook error");
     return {
       error:
         "Si è verificato un errore nell'invio del messaggio su Slack, riprova più tardi.",

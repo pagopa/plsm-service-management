@@ -8,6 +8,7 @@ import { deleteMemberById as deleteMemberByIdService } from "@/lib/services/memb
 import { validateFormData } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import z from "zod";
+import { logServerInfo } from "@/lib/logger/logger.server.helpers";
 
 const updateMemberTeamSchema = z.object({
   memberId: z.coerce.number().int(),
@@ -49,7 +50,7 @@ export async function updateMemberTeamAction(
     return { data: input, error: errors };
   }
 
-  console.log(input);
+  logServerInfo("updateMemberTeamAction input", input);
   let result: { error: unknown };
 
   if (input.active) {

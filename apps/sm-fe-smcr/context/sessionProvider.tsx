@@ -14,6 +14,7 @@ import {
   readMemberByEmail,
   createMember,
 } from "@/lib/services/members.service";
+import clientLogger from "@/lib/logger/logger.client";
 
 type SessionClaims = {
   email: string;
@@ -104,8 +105,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // Check if member exists in the new members table, create if not
       const memberResult = await readMemberByEmail(claims.email);
       if (memberResult.error || !memberResult.data) {
-        // Member doesn't exist - create one
-        console.log("Member not found, creating new member for:", claims.email);
+        void clientLogger.info(
+          {
+            info: {
+              event: "session.member.create_missing",
+              metadata: { email: claims.email },
+            },
+          },
+          "Member not found, creating new member",
+        );
 
         const { firstname, lastname } = splitDisplayName(claims.name);
 
@@ -116,9 +124,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         });
 
         if (createResult.error) {
-          console.error("Failed to create member:", createResult.error);
+          void clientLogger.error(
+            { error: createResult.error },
+            "Failed to create member",
+          );
         } else {
-          console.log("Member created successfully:", createResult.data);
+          void clientLogger.info("Member created successfully");
         }
       }
 
@@ -137,7 +148,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         },
       });
     } catch (err: any) {
-      console.error("Errore caricamento profilo:", err);
+      void clientLogger.error({ error: err }, "Errore caricamento profilo");
       setError(err.message || "Errore sconosciuto");
       setUser(null);
     } finally {
@@ -152,7 +163,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setIsReady(false);
       window.location.assign("/api/auth/logout");
     } catch (err: any) {
-      console.error("Errore durante il logout:", err);
+      void clientLogger.error({ error: err }, "Errore durante il logout");
       setError(err.message);
     }
   }, []);

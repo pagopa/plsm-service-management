@@ -121,7 +121,6 @@
 //   active: boolean;
 //   isSidebarExpanded: boolean;
 // }> = ({ name, label, icon, path, active, isSidebarExpanded }) => {
-//   console.log(label);
 //   return (
 //     <>
 //       {isSidebarExpanded ? (

@@ -5,6 +5,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 
 import { Space_Grotesk } from "next/font/google";
+import { AppFooter } from "@/components/layout/app-footer";
 
 const font = Space_Grotesk({
   subsets: ["latin"],
@@ -23,10 +24,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it" className={font.className}>
-      <body className="h-screen">
-        <SessionProvider>
-          <NuqsAdapter>{children}</NuqsAdapter>
-        </SessionProvider>
+      <body className="min-h-screen bg-background">
+        <div className="flex min-h-dvh flex-col">
+          <div className="flex flex-1 flex-col">
+            <SessionProvider>
+              <NuqsAdapter>{children}</NuqsAdapter>
+            </SessionProvider>
+          </div>
+
+          <AppFooter />
+        </div>
 
         <Toaster />
       </body>

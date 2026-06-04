@@ -3,6 +3,7 @@
 import { betterFetch } from "@better-fetch/fetch";
 import { z } from "zod";
 import { type FirmaConIO, FirmaConIOSchema } from "./firma-con-io.schema";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 type GetFirmaConIOResponse =
   | {
@@ -38,7 +39,7 @@ export async function getFirmaConIoInstitution(
   );
 
   if (error || !data) {
-    console.error(error);
+    logServerError(error, "getFirmaConIoInstitution - fetch error");
     return { data: undefined, error: "Errore nel recupero dati" };
   }
 
@@ -71,7 +72,7 @@ export async function getFirmaConIoSignerID(formData: FormData) {
   );
 
   if (error || !data) {
-    console.error(error);
+    logServerError(error, "getFirmaConIoSignerID - fetch error");
     return { error: error.status, data: null };
   }
 

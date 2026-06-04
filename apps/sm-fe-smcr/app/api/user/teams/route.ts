@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pg from "@/lib/knex";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 export const runtime = "nodejs";
 
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(getUserWithTeamsByEmail, { status: 200 });
   } catch (error) {
-    console.error("Errore API user team:", error);
+    logServerError(error, "Errore API user team");
     return NextResponse.json(
       { error: "Errore interno del server" },
       { status: 500 },

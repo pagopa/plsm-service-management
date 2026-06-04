@@ -6,6 +6,7 @@ import { LoginForm } from "../auth/login";
 import { Switch } from "../ui/switch";
 import { useEffect, useState } from "react";
 import { clientEnv } from "@/config/env";
+import clientLogger from "@/lib/logger/logger.client";
 
 export const LoginPage = () => {
   const redirectURL = clientEnv.NEXT_PUBLIC_APP_URL;
@@ -24,7 +25,7 @@ export const LoginPage = () => {
         setDbStatus(json.status === "online" ? "online" : "error");
       } catch (err) {
         setDbStatus("error");
-        console.error(err);
+        void clientLogger.error({ error: err }, "DB status check failed");
       }
     }
 
@@ -32,9 +33,9 @@ export const LoginPage = () => {
   }, []);
 
   return (
-    <main className="min-w-screen h-full flex flex-row sm:items-center sm:justify-center">
-      <div className="w-full sm:w-[50%] h-full p-10">
-        <div className="flex flex-col h-full">
+    <main className="min-w-screen flex-1 flex flex-row">
+      <div className="w-full sm:w-[50%] p-10 self-stretch flex flex-col">
+        <div className="flex flex-1 flex-col">
           <div className="flex flex-row items-center text-lg gap-2">
             <Image
               src={logoPagoPa.src}
@@ -45,7 +46,7 @@ export const LoginPage = () => {
             <p>Service Management Control Room</p>
           </div>
 
-          <div className="w-full h-full flex flex-row justify-center">
+          <div className="w-full flex-1 flex flex-row justify-center">
             <div className="flex flex-col items-center mt-52 text-center gap-5">
               <div>
                 <p className="text-2xl">Welcome back</p>
@@ -88,7 +89,7 @@ export const LoginPage = () => {
           </div>
         </div>
       </div>
-      <div className="hidden sm:block w-[50%] h-full relative">
+      <div className="hidden sm:block w-[50%] relative self-stretch">
         <Image
           src={loginBg.src}
           alt="login image"

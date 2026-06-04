@@ -1,5 +1,6 @@
 // import { Team } from "../types/team";
 import { clientEnv } from "@/config/env";
+import clientLogger from "@/lib/logger/logger.client";
 
 const baseUrl = clientEnv.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -15,10 +16,9 @@ export const getTeams = async () =>
       });
 
       const data = await response.json();
-      // console.log("Teams exist in database:", data);
       return data; //setTeams(data);
     } catch (error) {
-      console.error("Error retrieving teams in database:", error);
+      void clientLogger.error({ error }, "Error retrieving teams in database");
     }
   };
 
@@ -35,7 +35,7 @@ export const getTeamById = async (teamId: string) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error retrieving team in database:", error);
+    void clientLogger.error({ error }, "Error retrieving team in database");
   }
 };
 
@@ -51,7 +51,10 @@ export const getTeamMembers = async (teamId: string) => {
     const data = await response.json();
     return data; //setTeams(data);
   } catch (error) {
-    console.error("Error retrieving member in team in database:", error);
+    void clientLogger.error(
+      { error },
+      "Error retrieving member in team in database",
+    );
   }
 };
 
@@ -66,10 +69,18 @@ export async function removeUserFromTeam(memberId: string, teamId: string) {
     });
 
     const res1 = await res.json();
-    console.log(res1);
+    void clientLogger.info(
+      {
+        info: {
+          event: "team.member.removed",
+          metadata: { memberId, teamId, result: res1 },
+        },
+      },
+      "User removed from team",
+    );
     return res1;
   } catch (err) {
-    console.error("Errore nella fetch removeUserFromTeam", err);
+    void clientLogger.error({ error: err }, "Errore nella fetch removeUserFromTeam");
     return { error: "Errore di rete" };
   }
 }
@@ -84,7 +95,7 @@ export async function deleteTeam(teamId: string) {
 
     return await res.json();
   } catch (err) {
-    console.error("Errore nella fetch removeTeam", err);
+    void clientLogger.error({ error: err }, "Errore nella fetch removeTeam");
     return { error: "Errore di rete" };
   }
 }
@@ -104,7 +115,10 @@ export async function updateUserRoleInTeam(
 
     return await res.json();
   } catch (err) {
-    console.error("Errore nella fetch updateUserRoleInTeam", err);
+    void clientLogger.error(
+      { error: err },
+      "Errore nella fetch updateUserRoleInTeam",
+    );
     return { error: "Errore di rete" };
   }
 }
@@ -122,9 +136,7 @@ export async function updateUserRoleInTeam(
 //     });
 
 //     const data = await response.json();
-//     console.log("Teams add:", data);
 //   } catch (error) {
-//     console.error("Error add team to user:", error);
 //   }
 // }
 export async function addUserToTeam(
@@ -142,6 +154,6 @@ export async function addUserToTeam(
     const data = await res.json();
     return data;
   } catch (err) {
-    console.error("Errore aggiunta utente:", err);
+    void clientLogger.error({ error: err }, "Errore aggiunta utente");
   }
 }

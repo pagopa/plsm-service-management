@@ -8,6 +8,7 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import clientLogger from "@/lib/logger/logger.client";
 import { SignIDFormSchema } from "@/lib/services/firma-con-io.schema";
 import { getFirmaConIoSignerID } from "@/lib/services/firma-con-io.service";
 import { CheckIcon, ClipboardIcon, CornerDownLeft } from "lucide-react";
@@ -57,7 +58,10 @@ export function SearchSignerID() {
             }
             const result = await getFirmaConIoSignerID(formData);
             if (result?.error) {
-              console.error(result?.error);
+              void clientLogger.error(
+                { error: result.error },
+                "SearchSignerID - signer lookup error",
+              );
               toast.error(
                 errorMessages[result?.error as keyof typeof errorMessages] ||
                   errorMessages.default,

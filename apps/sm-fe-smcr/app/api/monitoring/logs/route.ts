@@ -2,8 +2,14 @@ import logger from "@/lib/logger/logger.server";
 import { logInputSchema, readLogs, saveLog } from "@/lib/services/logs.service";
 import { z } from "zod";
 
-export async function GET() {
-  const { data, error } = await readLogs();
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const limit = Number(searchParams.get("limit"));
+  const before = searchParams.get("before");
+  const { data, error } = await readLogs({
+    limit: Number.isFinite(limit) ? limit : undefined,
+    before,
+  });
   if (error) {
     logger.error({ data: data, error }, error);
     return Response.json({ message: error }, { status: 500 });
@@ -17,9 +23,8 @@ export async function POST(request: Request) {
   const result = logInputSchema.safeParse(body);
 
   if (!result.success) {
-    console.warn(
-      "log validation error",
-      z.flattenError(result.error).fieldErrors,
+    process.stderr.write(
+      `log validation error: ${JSON.stringify(z.flattenError(result.error).fieldErrors)}\n`,
     );
     return Response.json(
       { message: z.flattenError(result.error).fieldErrors },

@@ -18,6 +18,12 @@ on:
         required: false
         default: false
 
+      skip_migrate:
+        description: Salta le DB migrations (usa solo se non ci sono migration pendenti)
+        type: boolean
+        required: false
+        default: true
+
 permissions:
   id-token: write
   contents: read
@@ -55,10 +61,10 @@ jobs:
       MSAL_REDIRECT_URI: ${{ secrets.MSAL_REDIRECT_URI }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -177,7 +183,7 @@ jobs:
   migrate:
     name: Run DB Migrations
     needs: build
-    if: ${{ inputs.environment == 'app-dev' }}
+    if: ${{ inputs.environment == 'app-dev' && !inputs.skip_migrate }}
     runs-on: dev
     environment: app-dev-cd
 
@@ -190,10 +196,10 @@ jobs:
       DB_SSL: ${{ secrets.DB_SSL }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
 

@@ -29,8 +29,6 @@ export default function SearchInstitution({
           event.preventDefault();
           if (isPNPG) router.push(`/dashboard/pnpg/${query.trim()}`);
           else router.push(`/dashboard/overview/${query.trim()}`);
-
-          console.log("submit", query);
         }}
       >
         <Input

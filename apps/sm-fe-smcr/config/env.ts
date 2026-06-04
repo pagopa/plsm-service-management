@@ -5,6 +5,7 @@ const optionalString = z.string().optional();
 const serverEnvSchema = z.object({
   // API Keys
   FE_SMCR_USERS_API_KEY: optionalString,
+  FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL: optionalString,
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY: optionalString,
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT: optionalString,
   FE_SMCR_API_KEY_INSTITUTION: optionalString,
@@ -49,6 +50,8 @@ const serverEnvSchema = z.object({
   FE_SMCR_AZURE_STORAGE_CONNECTION_STRING: optionalString,
   FE_SMCR_AZURE_STORAGE_CONTAINER: z.string().default("config"),
   FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX: optionalString,
+  FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO: optionalString,
+  FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX: optionalString,
 
   // Portale Fatturazione
   STORAGE_TOKEN: optionalString,
@@ -87,6 +90,8 @@ const rawServerEnv = {
   FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID:
     process.env.FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID,
   FE_SMCR_API_KEY_CERTIFICATI: process.env.FE_SMCR_API_KEY_CERTIFICATI,
+  FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL:
+    process.env.FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL,
   FE_SMCR_API_SLACK_REPORT_HOOK: process.env.FE_SMCR_API_SLACK_REPORT_HOOK,
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST:
     process.env.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST,
@@ -115,6 +120,10 @@ const rawServerEnv = {
   FE_SMCR_AZURE_STORAGE_CONTAINER: process.env.FE_SMCR_AZURE_STORAGE_CONTAINER,
   FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX:
     process.env.FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX,
+  FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO:
+    process.env.FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO,
+  FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX:
+    process.env.FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX,
   STORAGE_TOKEN: process.env.STORAGE_TOKEN,
   WEBHOOK_MANUAL_STORAGE: process.env.WEBHOOK_MANUAL_STORAGE,
   FE_SMCR_LOGS_ENDPOINT: process.env.FE_SMCR_LOGS_ENDPOINT,
@@ -134,18 +143,16 @@ const rawClientEnv = {
 
 const serverEnvParse = serverEnvSchema.safeParse(rawServerEnv);
 if (!serverEnvParse.success) {
-  console.error(
-    "Invalid server env configuration:",
-    serverEnvParse.error.issues,
+  process.stderr.write(
+    `Invalid server env configuration: ${JSON.stringify(serverEnvParse.error.issues)}\n`,
   );
   throw new Error("Invalid server env configuration");
 }
 
 const clientEnvParse = clientEnvSchema.safeParse(rawClientEnv);
 if (!clientEnvParse.success) {
-  console.error(
-    "Invalid client env configuration:",
-    clientEnvParse.error.issues,
+  process.stderr.write(
+    `Invalid client env configuration: ${JSON.stringify(clientEnvParse.error.issues)}\n`,
   );
   throw new Error("Invalid client env configuration");
 }

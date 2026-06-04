@@ -1,4 +1,5 @@
 import { useState } from "react";
+import clientLogger from "@/lib/logger/logger.client";
 
 const useClipboard = () => {
   const [isCopied, setIsCopied] = useState(false);
@@ -20,7 +21,7 @@ const useClipboard = () => {
       setTimeout(() => setIsCopied(false), 2000);
       return true;
     } catch (err) {
-      console.error("Failed to copy text: ", err);
+      void clientLogger.error({ error: err }, "Failed to copy text");
       return false;
     }
   };

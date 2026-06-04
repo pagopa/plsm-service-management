@@ -112,7 +112,6 @@ export default class Trie {
   print(node = this.root) {
     const currentNode = node;
     for (const [key, childNode] of currentNode.children) {
-      console.log(key);
       if (key !== "*" && childNode && isTrieNode(childNode)) {
         this.print(childNode);
       }

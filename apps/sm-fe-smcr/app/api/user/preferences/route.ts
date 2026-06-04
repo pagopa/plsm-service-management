@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import knex from "@/lib/knex";
 import { randomUUID } from "crypto";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
 
 export const runtime = "nodejs";
 
@@ -37,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
     return NextResponse.json(preferences[0], { status: 200 });
   } catch (error) {
-    console.error("Errore API get preferences:", error);
+    logServerError(error, "Errore API get preferences");
     return NextResponse.json(
       { error: `Errore interno del server ${error}` },
       { status: 500 },
@@ -61,8 +65,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Log utile per debug
-    console.log("Aggiornamento preferenze:", { userId, teamId, theme });
+    logServerInfo("Aggiornamento preferenze", { userId, teamId, theme });
 
     // Esegui UPDATE con await
     const result = await knex("preferences")
@@ -84,7 +87,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ status: 200, updated: result[0] });
   } catch (error) {
-    console.error("Errore API PATCH /user/preferences:", error);
+    logServerError(error, "Errore API PATCH /user/preferences");
     return NextResponse.json(
       { error: "Errore interno del server" },
       { status: 500 },

@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import knex from "@/lib/knex";
 import sharp from "sharp";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 export async function POST(
   request: NextRequest,
@@ -11,7 +12,6 @@ export async function POST(
 
   const formData = await request.formData();
   const imageFile = formData.get("image") as File | null;
-  console.log(formData);
   if (!imageFile) {
     return NextResponse.json(
       { error: "File immagine mancante" },
@@ -43,7 +43,7 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Errore aggiornamento immagine team:", error);
+    logServerError(error, "Errore aggiornamento immagine team");
     return NextResponse.json({ error: "Errore interno" }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 export const runtime = "nodejs";
 
@@ -16,7 +17,7 @@ async function getCurrentProfileResponse() {
       { status: currentUser.created ? 201 : 200 },
     );
   } catch (error) {
-    console.error("Errore API profile:", error);
+    logServerError(error, "Errore API profile");
     return NextResponse.json(
       { error: "Errore interno del server" },
       { status: 500 },
@@ -58,7 +59,7 @@ export async function POST() {
 
 //     res.json(user);
 //   } catch (error) {
-//     console.error("Errore API profile:", error);
+//     logServerError(error, "Errore API profile");
 //     res.status(500).json({ error: "Errore interno del server" });
 //   }
 // }

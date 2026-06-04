@@ -25,19 +25,12 @@ export default function AccountProfilePage() {
 
   useEffect(() => {
     if (user) {
-      console.log("PREFERENZE");
-      console.log(user);
-
       setSelectedTeamId(user.preferences.teamId);
       setSelectedTheme(user.preferences.theme);
     }
   }, [user]);
 
   const handleUpdatePreferences = () => {
-    console.log("Salvataggio preferences:", {
-      teamId: selectedTeamId,
-      theme: selectedTheme,
-    });
     if (user) {
       postUserPreferences(user.id, {
         teamId: selectedTeamId,

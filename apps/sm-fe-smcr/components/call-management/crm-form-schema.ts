@@ -64,13 +64,12 @@ export const crmFormSchema = z
       .array(partecipanteSchema)
       .min(1, "Aggiungi almeno un partecipante"),
     enableCreateContact: z.boolean(),
-    enableGrantAccess: z.boolean(),
-    dryRun: z.boolean(),
-    location: z.string().optional(),
+    location: z.enum(["call", "presenza"]),
     description: z.string().optional(),
     category: z.string().optional(),
     dataProssimoContatto: z.string().optional(),
     oggettoDelContatto: oggettoDelContattoPicklistSchema.optional(),
+    link: z.url("Inserire un link valido"),
   })
   .refine(
     (data) => {
@@ -114,12 +113,11 @@ export function getCrmFormDefaultValues(): CrmFormSchema {
     institutionIdSelfcare: "",
     partecipanti: [],
     enableCreateContact: true,
-    enableGrantAccess: false,
-    dryRun: false,
-    location: "",
+    location: "call",
     description: "",
     category: "",
     dataProssimoContatto: "",
     oggettoDelContatto: 100000005,
+    link: "",
   };
 }

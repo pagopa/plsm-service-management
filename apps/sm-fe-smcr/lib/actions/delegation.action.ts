@@ -6,6 +6,7 @@ import {
   deleteDelegation,
 } from "../services/delegations.service";
 import { validateFormData } from "../utils";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const addDelegationSchema = z
   .object({
@@ -63,7 +64,7 @@ export async function addDelegationAction(
   const { error } = await addDelegation(input);
 
   if (error) {
-    console.error("Errore durante il salvataggio della delega:", error);
+    logServerError(error, "Errore durante il salvataggio della delega");
 
     return {
       fields: input,
@@ -97,7 +98,7 @@ export async function deleteDelegationAction(
 
   const { error } = await deleteDelegation(input);
   if (error) {
-    console.error("Errore durante l'eliminazione della delega:", error);
+    logServerError(error, "Errore durante l'eliminazione della delega");
 
     return {
       fields: input,

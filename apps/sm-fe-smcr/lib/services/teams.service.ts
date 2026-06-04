@@ -1,5 +1,9 @@
 import database from "@/lib/knex";
 import z from "zod";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
 
 export const teamSchema = z.object({
   id: z.number(),
@@ -96,23 +100,20 @@ export async function submitTeamAccessRequest(
       fields.reason = flatErrors.reason[0];
     }
 
-    console.error(
-      "submitTeamAccessRequest - validation error",
-      validation.error,
-    );
+    logServerError(validation.error, "submitTeamAccessRequest - validation error");
 
     return { data: null, error: "validation error", fields };
   }
 
   try {
-    console.info("submitTeamAccessRequest - payload", {
+    logServerInfo("submitTeamAccessRequest - payload", {
       team: validation.data.team,
       reason: validation.data.reason,
     });
 
     return { data: validation.data, error: null, fields: null };
   } catch (error) {
-    console.error("submitTeamAccessRequest - internal error", error);
+    logServerError(error, "submitTeamAccessRequest - internal error");
     return { data: null, error: "internal error", fields: null };
   }
 }
@@ -142,7 +143,7 @@ export async function readTeams() {
   const rawTeams = await database.from("teams").select("*");
   const teams = z.array(teamSchema).safeParse(rawTeams);
   if (!teams.success) {
-    console.error("readTeams - validation error", teams.error);
+    logServerError(teams.error, "readTeams - validation error");
     return { data: null, error: "validation error" };
   }
 
@@ -153,9 +154,9 @@ export async function readTeams() {
     .array(teamPermissionSchema)
     .safeParse(rawTeamPermissions);
   if (!teamPermissions.success) {
-    console.error(
-      "readPermissions - team permissions validation error",
+    logServerError(
       teamPermissions.error,
+      "readPermissions - team permissions validation error",
     );
     return { data: null, error: "validation error" };
   }
@@ -182,9 +183,9 @@ export async function readTeamMemberCounts() {
 
     const parsedCounts = z.array(teamMembersCountSchema).safeParse(rawCounts);
     if (!parsedCounts.success) {
-      console.error(
-        "readTeamMemberCounts - validation error",
+      logServerError(
         parsedCounts.error,
+        "readTeamMemberCounts - validation error",
       );
       return { data: null, error: "validation error" };
     }
@@ -198,7 +199,7 @@ export async function readTeamMemberCounts() {
 
     return { data: memberCountsByTeamId, error: null };
   } catch (error) {
-    console.error("readTeamMemberCounts - database error", error);
+    logServerError(error, "readTeamMemberCounts - database error");
     return { data: null, error: "database error" };
   }
 }
@@ -217,13 +218,13 @@ export async function readTeamById(teamId: number) {
 
     const team = teamSchema.safeParse(rawTeam);
     if (!team.success) {
-      console.error("readTeamById - validation error", team.error);
+      logServerError(team.error, "readTeamById - validation error");
       return { data: null, error: "validation error" };
     }
 
     return { data: team.data, error: null };
   } catch (error) {
-    console.error("readTeamById - database error", error);
+    logServerError(error, "readTeamById - database error");
     return { data: null, error: "database error" };
   }
 }
@@ -252,7 +253,7 @@ export async function deleteTeamById(input: {
       .safeParse(rawTeam);
 
     if (!parsedTeam.success) {
-      console.error("deleteTeamById - validation error", parsedTeam.error);
+      logServerError(parsedTeam.error, "deleteTeamById - validation error");
       return {
         data: null,
         error: { code: "validation_error", message: "validation error" },
@@ -283,7 +284,7 @@ export async function deleteTeamById(input: {
 
     return { data: { id: input.teamId }, error: null };
   } catch (error) {
-    console.error("deleteTeamById - database error", error);
+    logServerError(error, "deleteTeamById - database error");
     return {
       data: null,
       error: { code: "database_error", message: "database error" },
@@ -321,7 +322,7 @@ export async function updateTeamById(input: {
 
     const team = teamSchema.safeParse(rawTeam);
     if (!team.success) {
-      console.error("updateTeamById - validation error", team.error);
+      logServerError(team.error, "updateTeamById - validation error");
       return {
         data: null,
         error: {
@@ -333,7 +334,7 @@ export async function updateTeamById(input: {
 
     return { data: team.data, error: null };
   } catch (error: unknown) {
-    console.error("updateTeamById - database error", error);
+    logServerError(error, "updateTeamById - database error");
 
     if (
       typeof error === "object" &&
@@ -393,7 +394,7 @@ export async function createTeam(input: {
 
   const validation = z.array(teamSchema).safeParse(result);
   if (!validation.success) {
-    console.error("createTeam - validation error", validation.error);
+    logServerError(validation.error, "createTeam - validation error");
     return { data: null, error: "validation error" };
   }
 
@@ -404,9 +405,9 @@ export async function readPermissions() {
   const rawFeatures = await database.from("features").select("*");
   const features = z.array(featureSchema).safeParse(rawFeatures);
   if (!features.success) {
-    console.error(
-      "readPermissions - features validation error",
+    logServerError(
       features.error,
+      "readPermissions - features validation error",
     );
     return { data: null, error: "validation error" };
   }
@@ -414,9 +415,9 @@ export async function readPermissions() {
   const rawPermissions = await database.from("permissions").select("*");
   const permissions = z.array(permissionSchema).safeParse(rawPermissions);
   if (!permissions.success) {
-    console.error(
-      "readPermissions - permissions validation error",
+    logServerError(
       permissions.error,
+      "readPermissions - permissions validation error",
     );
     return { data: null, error: "validation error" };
   }
@@ -525,7 +526,7 @@ export async function syncTeamPermissions(input: {
       error: null,
     };
   } catch (error) {
-    console.error("syncTeamPermissions - database error", error);
+    logServerError(error, "syncTeamPermissions - database error");
     return {
       data: null,
       error: {
@@ -544,7 +545,7 @@ export async function readMemberTeams(memberId: number) {
     .where({ memberId: memberId });
   const teams = z.array(teamSchema).safeParse(rawTeams);
   if (!teams.success) {
-    console.error("readTeams - validation error", teams.error);
+    logServerError(teams.error, "readTeams - validation error");
     return { data: null, error: "validation error" };
   }
 
@@ -566,7 +567,7 @@ export async function createMemberTeam(input: {
 
     return { error: null };
   } catch (error) {
-    console.error(error);
+    logServerError(error, "createMemberTeam - database error");
     return { error };
   }
 }
@@ -583,7 +584,7 @@ export async function removeMemberTeam(input: {
 
     return { error: null };
   } catch (error) {
-    console.error(error);
+    logServerError(error, "removeMemberTeam - database error");
     return { error };
   }
 }

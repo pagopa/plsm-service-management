@@ -6,7 +6,7 @@ type Props = {
 
 export default function Layout({ children }: Props) {
   return (
-    <div className="bg-neutral-50 h-screen w-full overflow-hidden p-3 flex flex-col gap-3">
+    <div className="bg-neutral-50 h-screen w-full max-w-full min-w-0 overflow-hidden p-3 flex flex-col gap-3">
       <LogsHeader />
 
       {children}

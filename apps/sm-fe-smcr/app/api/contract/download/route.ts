@@ -1,4 +1,5 @@
 import { serverEnv } from "@/config/env";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -73,7 +74,7 @@ export async function GET(request: Request) {
       headers,
     });
   } catch (err) {
-    console.error("Errore interno nel proxy", err);
+    logServerError(err, "Errore interno nel proxy");
     return new Response(JSON.stringify({ error: "Errore interno nel proxy" }), {
       status: 500,
     });

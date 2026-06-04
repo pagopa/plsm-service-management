@@ -2,6 +2,7 @@
 
 import z from "zod";
 import { serverEnv } from "@/config/env";
+import logger from "@/lib/logger/logger.server";
 
 const reportErrorSchema = z.object({
   title: z
@@ -45,7 +46,10 @@ export async function reportError(
 
   const webhook = serverEnv.FE_SMCR_API_SLACK_REPORT_HOOK;
   if (!webhook) {
-    console.error(
+    logger.error(
+      {
+        info: { event: "report-error.missing-slack-webhook" },
+      },
       "Errore durante l'invio della segnalazione, env FE_SMCR_API_SLACK_REPORT_HOOK mancante.",
     );
     return {
@@ -81,9 +85,14 @@ export async function reportError(
   });
 
   if (!response.ok) {
-    console.error(
-      "Errore durante l'invio della segnalazione, status:",
-      response.status,
+    logger.error(
+      {
+        info: {
+          event: "report-error.slack-webhook-failed",
+          metadata: { status: response.status },
+        },
+      },
+      "Errore durante l'invio della segnalazione",
     );
 
     return {
