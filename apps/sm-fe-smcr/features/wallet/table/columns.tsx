@@ -1,11 +1,44 @@
 "use client";
 
 import { Check, Copy, Landmark } from "lucide-react";
-import { useState } from "react";
+import { ComponentProps, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 
+import { Badge } from "@/components/ui/badge";
 import type { WalletRow } from "@/lib/services/wallet.service";
 import { cn } from "@/lib/utils";
+
+type BadgeVariant = NonNullable<ComponentProps<typeof Badge>["variant"]>;
+
+const stateBadgeConfig: Record<
+  string,
+  { variant?: BadgeVariant; className?: string }
+> = {
+  Active: { variant: "outline-success" },
+  Suspended: { variant: "outline-warning" },
+  Rejected: { variant: "outline-destructive" },
+  Pending: {
+    variant: "outline",
+    className: "border-amber-100 bg-amber-50 text-amber-700",
+  },
+  MissingCertifiedAttributes: {
+    variant: "outline",
+    className: "border-blue-100 bg-blue-50 text-blue-700",
+  },
+  Archived: { variant: "secondary" },
+  sconosciuto: { variant: "outline" },
+};
+
+function WalletStateBadge({ state }: { state: string }) {
+  const label = state.trim() || "sconosciuto";
+  const config = stateBadgeConfig[label] ?? { variant: "outline" as const };
+
+  return (
+    <Badge variant={config.variant ?? "outline"} className={config.className}>
+      {label}
+    </Badge>
+  );
+}
 
 type EnteKind = "com" | "reg" | "uni" | "gov";
 
@@ -49,7 +82,7 @@ function shortId(id: string) {
   return id.slice(0, 8);
 }
 
-type SortKey = "name" | "nomeEnte" | "createdat";
+type SortKey = "name" | "nomeEnte" | "state" | "createdat";
 type SortDir = "asc" | "desc";
 
 function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
@@ -158,6 +191,20 @@ export function createWalletColumns({
           </div>
         );
       },
+    },
+    {
+      accessorKey: "state",
+      header: () => (
+        <button
+          type="button"
+          className="cursor-pointer font-medium hover:text-foreground"
+          onClick={() => onSort("state")}
+        >
+          Stato{" "}
+          <SortIndicator active={sort.key === "state"} dir={sort.dir} />
+        </button>
+      ),
+      cell: ({ row }) => <WalletStateBadge state={row.original.state} />,
     },
     {
       accessorKey: "createdat",

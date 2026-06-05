@@ -33,7 +33,7 @@ export function WalletTable({ columns, data, isEmpty }: WalletTableProps) {
 
   return (
     <div className="overflow-x-auto rounded-md border">
-      <Table className="min-w-[720px]">
+      <Table className="min-w-[860px]">
         <TableHeader className="bg-muted/50 text-muted-foreground">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow
@@ -47,6 +47,7 @@ export function WalletTable({ columns, data, isEmpty }: WalletTableProps) {
                     "h-auto px-3 py-3 text-left font-medium text-muted-foreground whitespace-normal",
                     header.column.id === "id" && "w-32",
                     header.column.id === "nomeEnte" && "w-72",
+                    header.column.id === "state" && "w-44",
                     header.column.id === "createdat" && "w-40",
                   )}
                 >

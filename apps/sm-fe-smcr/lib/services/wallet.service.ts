@@ -15,6 +15,7 @@ const walletRowSchema = z.object({
   description: z.string(),
   mode: z.string(),
   technology: z.string(),
+  state: z.string(),
   createdat: z.string(),
 });
 

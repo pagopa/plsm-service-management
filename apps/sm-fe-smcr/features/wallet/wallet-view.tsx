@@ -49,7 +49,7 @@ function fmtTime(iso: string) {
   return d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
 }
 
-type SortKey = "name" | "nomeEnte" | "createdat";
+type SortKey = "name" | "nomeEnte" | "state" | "createdat";
 type SortDir = "asc" | "desc";
 
 type Props = {
