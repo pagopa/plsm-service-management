@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-05-27 12:08
+# Generato il: 2026-06-05 09:54
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -72,6 +72,8 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO          = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_firma_con_io.value
     FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX        = data.azurerm_key_vault_secret.fe_smcr_azure_storage_firma_con_io_blob_prefix.value
     FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL       = data.azurerm_key_vault_secret.fe_smcr_api_key_subscription_key_billing_portal.value
+    FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET                = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_wallet.value
+    FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX              = data.azurerm_key_vault_secret.fe_smcr_azure_storage_wallet_blob_prefix.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"
@@ -125,6 +127,8 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO          = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_firma_con_io.value
     FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX        = data.azurerm_key_vault_secret.fe_smcr_azure_storage_firma_con_io_blob_prefix.value
     FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL       = data.azurerm_key_vault_secret.fe_smcr_api_key_subscription_key_billing_portal.value
+    FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET                = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_wallet.value
+    FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX              = data.azurerm_key_vault_secret.fe_smcr_azure_storage_wallet_blob_prefix.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"

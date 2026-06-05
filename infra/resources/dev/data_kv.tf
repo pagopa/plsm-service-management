@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-05-27 12:08
+# Generato il: 2026-06-05 09:54
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -79,8 +79,18 @@ data "azurerm_key_vault_secret" "fe_smcr_azure_storage_container_firma_con_io" {
   key_vault_id = data.azurerm_key_vault.common_kv.id
 }
 
+data "azurerm_key_vault_secret" "fe_smcr_azure_storage_container_wallet" {
+  name         = "fe-smcr-azure-storage-container-wallet"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
 data "azurerm_key_vault_secret" "fe_smcr_azure_storage_firma_con_io_blob_prefix" {
   name         = "fe-smcr-azure-storage-firma-con-io-blob-prefix"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_azure_storage_wallet_blob_prefix" {
+  name         = "fe-smcr-azure-storage-wallet-blob-prefix"
   key_vault_id = data.azurerm_key_vault.common_kv.id
 }
 
