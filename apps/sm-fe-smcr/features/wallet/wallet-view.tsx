@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  CircleDot,
   Landmark,
   Search,
   Wallet,
@@ -31,7 +32,13 @@ import {
 import type { WalletRow } from "@/lib/services/wallet.service";
 import { cn } from "@/lib/utils";
 
-import { createWalletColumns, WalletTable } from "./table";
+import {
+  createWalletColumns,
+  normalizeWalletState,
+  WALLET_STATE_ORDER,
+  WalletStateBadge,
+  WalletTable,
+} from "./table";
 
 const fmtNum = new Intl.NumberFormat("it-IT");
 
@@ -59,6 +66,7 @@ type Props = {
 export function WalletView({ rows }: Props) {
   const [query, setQuery] = useState("");
   const [ente, setEnte] = useState("");
+  const [state, setState] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({
     key: "createdat",
     dir: "desc",
@@ -74,6 +82,24 @@ export function WalletView({ rows }: Props) {
     );
   }, [rows]);
 
+  const allStates = useMemo(() => {
+    const fromData = [
+      ...new Set(rows.map((r) => normalizeWalletState(r.state))),
+    ];
+    return fromData.sort((a, b) => {
+      const ai = WALLET_STATE_ORDER.indexOf(
+        a as (typeof WALLET_STATE_ORDER)[number],
+      );
+      const bi = WALLET_STATE_ORDER.indexOf(
+        b as (typeof WALLET_STATE_ORDER)[number],
+      );
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.localeCompare(b, "it");
+    });
+  }, [rows]);
+
   const lastDate = useMemo(() => {
     if (rows.length === 0) return null;
     return rows.reduce(
@@ -87,9 +113,10 @@ export function WalletView({ rows }: Props) {
     return rows.filter((r) => {
       if (q && !r.name.toLowerCase().includes(q)) return false;
       if (ente && r.nomeEnte !== ente) return false;
+      if (state && normalizeWalletState(r.state) !== state) return false;
       return true;
     });
-  }, [rows, query, ente]);
+  }, [rows, query, ente, state]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
@@ -117,10 +144,11 @@ export function WalletView({ rows }: Props) {
   const clearFilters = () => {
     setQuery("");
     setEnte("");
+    setState("");
     setPage(1);
   };
 
-  const hasFilters = query.trim() !== "" || ente !== "";
+  const hasFilters = query.trim() !== "" || ente !== "" || state !== "";
 
   const columns = useMemo(
     () =>
@@ -228,7 +256,22 @@ export function WalletView({ rows }: Props) {
                   </button>
                 )}
               </div>
-              <EnteCombo value={ente} onChange={setEnte} options={allEnti} />
+              <EnteCombo
+                value={ente}
+                onChange={(v) => {
+                  setEnte(v);
+                  setPage(1);
+                }}
+                options={allEnti}
+              />
+              <StateCombo
+                value={state}
+                onChange={(v) => {
+                  setState(v);
+                  setPage(1);
+                }}
+                options={allStates}
+              />
               {hasFilters && (
                 <Button
                   type="button"
@@ -310,6 +353,96 @@ export function WalletView({ rows }: Props) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function StateCombo({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className="min-w-[200px] justify-between font-normal"
+        >
+          <span className="flex items-center gap-2 truncate">
+            <CircleDot className="size-4 opacity-70" />
+            <span className="truncate">
+              {value ? <WalletStateBadge state={value} /> : "Tutti gli stati"}
+            </span>
+          </span>
+          <span className="ml-2 flex items-center gap-1">
+            {value && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onChange("");
+                  }
+                }}
+                className="text-muted-foreground hover:text-foreground inline-flex items-center"
+                aria-label="Rimuovi filtro stato"
+              >
+                <X className="size-3.5" />
+              </span>
+            )}
+            <ChevronDown className="size-4 opacity-70" />
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[280px] p-1">
+        <div className="max-h-72 overflow-y-auto">
+          <button
+            type="button"
+            onClick={() => {
+              onChange("");
+              setOpen(false);
+            }}
+            className={cn(
+              "hover:bg-muted flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm",
+              value === "" && "bg-teal-50 text-teal-800 font-medium",
+            )}
+          >
+            <span>Tutti gli stati</span>
+            {value === "" && <Check className="size-4" />}
+          </button>
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => {
+                onChange(opt);
+                setOpen(false);
+              }}
+              className={cn(
+                "hover:bg-muted flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm",
+                value === opt && "bg-teal-50 text-teal-800 font-medium",
+              )}
+            >
+              <WalletStateBadge state={opt} />
+              {value === opt && <Check className="size-4 shrink-0" />}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 

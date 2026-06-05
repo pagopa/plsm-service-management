@@ -29,8 +29,22 @@ const stateBadgeConfig: Record<
   sconosciuto: { variant: "outline" },
 };
 
-function WalletStateBadge({ state }: { state: string }) {
-  const label = state.trim() || "sconosciuto";
+export const WALLET_STATE_ORDER = [
+  "Active",
+  "Suspended",
+  "Rejected",
+  "Pending",
+  "MissingCertifiedAttributes",
+  "Archived",
+  "sconosciuto",
+] as const;
+
+export function normalizeWalletState(state: string) {
+  return state.trim() || "sconosciuto";
+}
+
+export function WalletStateBadge({ state }: { state: string }) {
+  const label = normalizeWalletState(state);
   const config = stateBadgeConfig[label] ?? { variant: "outline" as const };
 
   return (
