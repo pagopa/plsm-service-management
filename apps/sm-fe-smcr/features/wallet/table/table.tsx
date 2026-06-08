@@ -46,6 +46,7 @@ export function WalletTable({ columns, data, isEmpty }: WalletTableProps) {
                   className={cn(
                     "h-auto px-3 py-3 text-left font-medium text-muted-foreground whitespace-normal",
                     header.column.id === "id" && "w-32",
+                    header.column.id === "descriptorid" && "w-32",
                     header.column.id === "nomeEnte" && "w-72",
                     header.column.id === "state" && "w-44",
                     header.column.id === "createdat" && "w-40",

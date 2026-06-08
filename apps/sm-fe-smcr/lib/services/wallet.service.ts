@@ -17,6 +17,7 @@ const walletRowSchema = z.object({
   technology: z.string(),
   state: z.string(),
   createdat: z.string(),
+  descriptorid: z.string().optional(),
 });
 
 const walletPayloadSchema = z.array(walletRowSchema);

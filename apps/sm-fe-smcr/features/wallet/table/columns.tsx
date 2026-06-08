@@ -152,6 +152,16 @@ export function createWalletColumns({
       cell: ({ row }) => <UuidChip id={row.original.id} />,
     },
     {
+      accessorKey: "descriptorid",
+      header: "Descriptor ID",
+      cell: ({ row }) =>
+        row.original.descriptorid ? (
+          <UuidChip id={row.original.descriptorid} />
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        ),
+    },
+    {
       accessorKey: "name",
       header: () => (
         <button
@@ -180,8 +190,7 @@ export function createWalletColumns({
           className="cursor-pointer font-medium hover:text-foreground"
           onClick={() => onSort("nomeEnte")}
         >
-          Ente{" "}
-          <SortIndicator active={sort.key === "nomeEnte"} dir={sort.dir} />
+          Ente <SortIndicator active={sort.key === "nomeEnte"} dir={sort.dir} />
         </button>
       ),
       cell: ({ row }) => {
@@ -197,7 +206,9 @@ export function createWalletColumns({
               <Landmark className="size-4" />
             </span>
             <div className="min-w-0">
-              <p className="font-semibold leading-tight">{row.original.nomeEnte}</p>
+              <p className="font-semibold leading-tight">
+                {row.original.nomeEnte}
+              </p>
               <p className="text-muted-foreground text-xs uppercase tracking-wide">
                 {enteLabel[kind]}
               </p>
@@ -214,8 +225,7 @@ export function createWalletColumns({
           className="cursor-pointer font-medium hover:text-foreground"
           onClick={() => onSort("state")}
         >
-          Stato{" "}
-          <SortIndicator active={sort.key === "state"} dir={sort.dir} />
+          Stato <SortIndicator active={sort.key === "state"} dir={sort.dir} />
         </button>
       ),
       cell: ({ row }) => <WalletStateBadge state={row.original.state} />,
