@@ -22,6 +22,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -246,14 +247,15 @@ export function WalletView({ rows }: Props) {
                   aria-label="Cerca per nome servizio"
                 />
                 {query && (
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => setQuery("")}
-                    className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 -translate-y-1/2 rounded p-1"
+                    className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 h-auto -translate-y-1/2 rounded p-1 hover:bg-transparent has-[>svg]:p-1"
                     aria-label="Pulisci ricerca"
                   >
                     <X className="size-3.5" />
-                  </button>
+                  </Button>
                 )}
               </div>
               <EnteCombo
@@ -408,39 +410,41 @@ function StateCombo({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[280px] p-1">
-        <div className="max-h-72 overflow-y-auto">
-          <button
+        <ScrollArea className="max-h-72">
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => {
               onChange("");
               setOpen(false);
             }}
             className={cn(
-              "hover:bg-muted flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm",
-              value === "" && "bg-teal-50 text-teal-800 font-medium",
+              "hover:bg-muted hover:text-foreground flex h-auto w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm font-normal",
+              value === "" && "bg-teal-50 text-teal-800 font-medium hover:text-teal-800",
             )}
           >
             <span>Tutti gli stati</span>
             {value === "" && <Check className="size-4" />}
-          </button>
+          </Button>
           {options.map((opt) => (
-            <button
+            <Button
               key={opt}
               type="button"
+              variant="ghost"
               onClick={() => {
                 onChange(opt);
                 setOpen(false);
               }}
               className={cn(
-                "hover:bg-muted flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm",
-                value === opt && "bg-teal-50 text-teal-800 font-medium",
+                "hover:bg-muted hover:text-foreground flex h-auto w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm font-normal",
+                value === opt && "bg-teal-50 text-teal-800 font-medium hover:text-teal-800",
               )}
             >
               <WalletStateBadge state={opt} />
               {value === opt && <Check className="size-4 shrink-0" />}
-            </button>
+            </Button>
           ))}
-        </div>
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   );
@@ -515,44 +519,46 @@ function EnteCombo({
             />
           </div>
         </div>
-        <div className="max-h-72 overflow-y-auto p-1">
-          <button
+        <ScrollArea className="max-h-72 p-1">
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => {
               onChange("");
               setOpen(false);
             }}
             className={cn(
-              "hover:bg-muted flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm",
-              value === "" && "bg-teal-50 text-teal-800 font-medium",
+              "hover:bg-muted hover:text-foreground flex h-auto w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm font-normal",
+              value === "" && "bg-teal-50 text-teal-800 font-medium hover:text-teal-800",
             )}
           >
             <span>Tutti gli enti</span>
             {value === "" && <Check className="size-4" />}
-          </button>
+          </Button>
           {filtered.map((opt) => (
-            <button
+            <Button
               key={opt}
               type="button"
+              variant="ghost"
               onClick={() => {
                 onChange(opt);
                 setOpen(false);
               }}
               className={cn(
-                "hover:bg-muted flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm",
-                value === opt && "bg-teal-50 text-teal-800 font-medium",
+                "hover:bg-muted hover:text-foreground flex h-auto w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm font-normal",
+                value === opt && "bg-teal-50 text-teal-800 font-medium hover:text-teal-800",
               )}
             >
               <span className="truncate">{opt}</span>
               {value === opt && <Check className="size-4 shrink-0" />}
-            </button>
+            </Button>
           ))}
           {filtered.length === 0 && (
             <p className="text-muted-foreground p-3 text-center text-sm">
               Nessun ente trovato
             </p>
           )}
-        </div>
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   );

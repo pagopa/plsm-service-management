@@ -5,6 +5,7 @@ import { ComponentProps, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { WalletRow } from "@/lib/services/wallet.service";
 import { cn } from "@/lib/utils";
 
@@ -120,11 +121,12 @@ function UuidChip({ id }: { id: string }) {
     }
   };
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       onClick={onCopy}
       title={id}
-      className="bg-muted/60 hover:border-primary hover:text-primary inline-flex items-center gap-1.5 rounded-md border px-2 py-1 transition-colors"
+      className="bg-muted/60 hover:bg-muted/60 hover:border-primary hover:text-primary h-auto gap-1.5 rounded-md border px-2 py-1 font-normal transition-colors has-[>svg]:px-2"
     >
       <span className="font-mono text-xs">{shortId(id)}</span>
       {copied ? (
@@ -132,7 +134,7 @@ function UuidChip({ id }: { id: string }) {
       ) : (
         <Copy className="size-3 opacity-60" />
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -164,14 +166,15 @@ export function createWalletColumns({
     {
       accessorKey: "name",
       header: () => (
-        <button
+        <Button
           type="button"
-          className="cursor-pointer font-medium hover:text-foreground"
+          variant="ghost"
+          className="h-auto cursor-pointer gap-0 whitespace-normal p-0 font-medium hover:bg-transparent hover:text-foreground"
           onClick={() => onSort("name")}
         >
           Nome servizio{" "}
           <SortIndicator active={sort.key === "name"} dir={sort.dir} />
-        </button>
+        </Button>
       ),
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
@@ -185,13 +188,14 @@ export function createWalletColumns({
     {
       accessorKey: "nomeEnte",
       header: () => (
-        <button
+        <Button
           type="button"
-          className="cursor-pointer font-medium hover:text-foreground"
+          variant="ghost"
+          className="h-auto cursor-pointer gap-0 whitespace-normal p-0 font-medium hover:bg-transparent hover:text-foreground"
           onClick={() => onSort("nomeEnte")}
         >
           Ente <SortIndicator active={sort.key === "nomeEnte"} dir={sort.dir} />
-        </button>
+        </Button>
       ),
       cell: ({ row }) => {
         const kind = classifyEnte(row.original.nomeEnte);
@@ -220,27 +224,29 @@ export function createWalletColumns({
     {
       accessorKey: "state",
       header: () => (
-        <button
+        <Button
           type="button"
-          className="cursor-pointer font-medium hover:text-foreground"
+          variant="ghost"
+          className="h-auto cursor-pointer gap-0 whitespace-normal p-0 font-medium hover:bg-transparent hover:text-foreground"
           onClick={() => onSort("state")}
         >
           Stato <SortIndicator active={sort.key === "state"} dir={sort.dir} />
-        </button>
+        </Button>
       ),
       cell: ({ row }) => <WalletStateBadge state={row.original.state} />,
     },
     {
       accessorKey: "createdat",
       header: () => (
-        <button
+        <Button
           type="button"
-          className="cursor-pointer font-medium hover:text-foreground"
+          variant="ghost"
+          className="h-auto cursor-pointer gap-0 whitespace-normal p-0 font-medium hover:bg-transparent hover:text-foreground"
           onClick={() => onSort("createdat")}
         >
           Data creazione{" "}
           <SortIndicator active={sort.key === "createdat"} dir={sort.dir} />
-        </button>
+        </Button>
       ),
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
