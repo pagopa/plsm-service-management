@@ -1,25 +1,28 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import {
   Calendar,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Copy,
+  CircleDot,
   Landmark,
   Search,
   Wallet,
   X,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 
-import type { WalletRow } from "@/lib/services/wallet.service";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -27,31 +30,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { WalletRow } from "@/lib/services/wallet.service";
 import { cn } from "@/lib/utils";
 
-type EnteKind = "com" | "reg" | "uni" | "gov";
-
-function classifyEnte(name: string): EnteKind {
-  const n = (name || "").toLowerCase();
-  if (n.startsWith("comune")) return "com";
-  if (n.startsWith("regione")) return "reg";
-  if (n.startsWith("università") || n.startsWith("universita")) return "uni";
-  return "gov";
-}
-
-const enteLabel: Record<EnteKind, string> = {
-  com: "Comune",
-  reg: "Regione",
-  uni: "Università",
-  gov: "Ente nazionale",
-};
-
-const enteIconStyle: Record<EnteKind, string> = {
-  com: "bg-teal-100 text-teal-700",
-  reg: "bg-orange-100 text-orange-700",
-  uni: "bg-blue-100 text-blue-700",
-  gov: "bg-indigo-100 text-indigo-700",
-};
+import {
+  createWalletColumns,
+  normalizeWalletState,
+  WALLET_STATE_ORDER,
+  WalletStateBadge,
+  WalletTable,
+} from "./table";
 
 const fmtNum = new Intl.NumberFormat("it-IT");
 
@@ -69,11 +57,7 @@ function fmtTime(iso: string) {
   return d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
 }
 
-function shortId(id: string) {
-  return id.slice(0, 8);
-}
-
-type SortKey = "name" | "nomeEnte" | "createdat";
+type SortKey = "name" | "nomeEnte" | "state" | "createdat";
 type SortDir = "asc" | "desc";
 
 type Props = {
@@ -83,6 +67,7 @@ type Props = {
 export function WalletView({ rows }: Props) {
   const [query, setQuery] = useState("");
   const [ente, setEnte] = useState("");
+  const [state, setState] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({
     key: "createdat",
     dir: "desc",
@@ -98,6 +83,24 @@ export function WalletView({ rows }: Props) {
     );
   }, [rows]);
 
+  const allStates = useMemo(() => {
+    const fromData = [
+      ...new Set(rows.map((r) => normalizeWalletState(r.state))),
+    ];
+    return fromData.sort((a, b) => {
+      const ai = WALLET_STATE_ORDER.indexOf(
+        a as (typeof WALLET_STATE_ORDER)[number],
+      );
+      const bi = WALLET_STATE_ORDER.indexOf(
+        b as (typeof WALLET_STATE_ORDER)[number],
+      );
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.localeCompare(b, "it");
+    });
+  }, [rows]);
+
   const lastDate = useMemo(() => {
     if (rows.length === 0) return null;
     return rows.reduce(
@@ -111,9 +114,10 @@ export function WalletView({ rows }: Props) {
     return rows.filter((r) => {
       if (q && !r.name.toLowerCase().includes(q)) return false;
       if (ente && r.nomeEnte !== ente) return false;
+      if (state && normalizeWalletState(r.state) !== state) return false;
       return true;
     });
-  }, [rows, query, ente]);
+  }, [rows, query, ente, state]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
@@ -138,29 +142,36 @@ export function WalletView({ rows }: Props) {
       ? "0 di 0"
       : `${start + 1} – ${Math.min(start + pageSize, sorted.length)} di ${sorted.length}`;
 
-  const flip = (key: SortKey) => {
-    if (sort.key === key) {
-      setSort({ key, dir: sort.dir === "desc" ? "asc" : "desc" });
-    } else {
-      setSort({ key, dir: key === "createdat" ? "desc" : "asc" });
-    }
-  };
-
   const clearFilters = () => {
     setQuery("");
     setEnte("");
+    setState("");
     setPage(1);
   };
 
-  const hasFilters = query.trim() !== "" || ente !== "";
+  const hasFilters = query.trim() !== "" || ente !== "" || state !== "";
+
+  const columns = useMemo(
+    () =>
+      createWalletColumns({
+        sort,
+        onSort: (key) => {
+          if (sort.key === key) {
+            setSort({ key, dir: sort.dir === "desc" ? "asc" : "desc" });
+          } else {
+            setSort({ key, dir: key === "createdat" ? "desc" : "asc" });
+          }
+        },
+      }),
+    [sort],
+  );
 
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight">Wallet</h1>
         <p className="text-muted-foreground max-w-3xl text-sm md:text-base">
-          Servizi di interoperabilità erogati verso IT Wallet — il portafoglio
-          digitale italiano.
+          E-Services erogati verso IT Wallet.
         </p>
       </header>
 
@@ -236,17 +247,33 @@ export function WalletView({ rows }: Props) {
                   aria-label="Cerca per nome servizio"
                 />
                 {query && (
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => setQuery("")}
-                    className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 -translate-y-1/2 rounded p-1"
+                    className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 h-auto -translate-y-1/2 rounded p-1 hover:bg-transparent has-[>svg]:p-1"
                     aria-label="Pulisci ricerca"
                   >
                     <X className="size-3.5" />
-                  </button>
+                  </Button>
                 )}
               </div>
-              <EnteCombo value={ente} onChange={setEnte} options={allEnti} />
+              <EnteCombo
+                value={ente}
+                onChange={(v) => {
+                  setEnte(v);
+                  setPage(1);
+                }}
+                options={allEnti}
+              />
+              <StateCombo
+                value={state}
+                onChange={(v) => {
+                  setState(v);
+                  setPage(1);
+                }}
+                options={allStates}
+              />
               {hasFilters && (
                 <Button
                   type="button"
@@ -263,110 +290,15 @@ export function WalletView({ rows }: Props) {
               <span className="text-foreground font-semibold tabular-nums">
                 {fmtNum.format(filtered.length)}
               </span>{" "}
-              di {fmtNum.format(total)}{" "}
-              {total === 1 ? "servizio" : "servizi"}
+              di {fmtNum.format(total)} {total === 1 ? "servizio" : "servizi"}
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-md border">
-            <table className="w-full min-w-[720px] text-sm">
-              <thead className="bg-muted/50 text-muted-foreground">
-                <tr className="border-b">
-                  <th className="w-32 px-3 py-3 text-left font-medium">ID</th>
-                  <th
-                    className="px-3 py-3 text-left font-medium cursor-pointer hover:text-foreground"
-                    onClick={() => flip("name")}
-                  >
-                    Nome servizio{" "}
-                    <SortIndicator
-                      active={sort.key === "name"}
-                      dir={sort.dir}
-                    />
-                  </th>
-                  <th
-                    className="w-72 px-3 py-3 text-left font-medium cursor-pointer hover:text-foreground"
-                    onClick={() => flip("nomeEnte")}
-                  >
-                    Ente{" "}
-                    <SortIndicator
-                      active={sort.key === "nomeEnte"}
-                      dir={sort.dir}
-                    />
-                  </th>
-                  <th
-                    className="w-40 px-3 py-3 text-left font-medium cursor-pointer hover:text-foreground"
-                    onClick={() => flip("createdat")}
-                  >
-                    Data creazione{" "}
-                    <SortIndicator
-                      active={sort.key === "createdat"}
-                      dir={sort.dir}
-                    />
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.map((r) => {
-                  const kind = classifyEnte(r.nomeEnte);
-                  return (
-                    <tr
-                      key={r.id}
-                      className="border-b last:border-0 hover:bg-muted/30"
-                    >
-                      <td className="px-3 py-3 align-middle">
-                        <UuidChip id={r.id} />
-                      </td>
-                      <td className="px-3 py-3 align-middle">
-                        <div className="flex flex-col gap-0.5">
-                          <p className="font-semibold leading-tight">
-                            {r.name}
-                          </p>
-                          <p className="text-muted-foreground line-clamp-2 text-xs">
-                            {r.description}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 align-middle">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={cn(
-                              "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
-                              enteIconStyle[kind],
-                            )}
-                          >
-                            <Landmark className="size-4" />
-                          </span>
-                          <div className="min-w-0">
-                            <p className="font-semibold leading-tight">
-                              {r.nomeEnte}
-                            </p>
-                            <p className="text-muted-foreground text-xs uppercase tracking-wide">
-                              {enteLabel[kind]}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 align-middle">
-                        <div className="flex flex-col gap-0.5">
-                          <p className="text-sm font-medium tabular-nums">
-                            {fmtDate(r.createdat)}
-                          </p>
-                          <p className="text-muted-foreground text-xs tabular-nums">
-                            {fmtTime(r.createdat)}
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            {sorted.length === 0 && (
-              <p className="text-muted-foreground p-6 text-center text-sm">
-                Nessun servizio corrisponde ai filtri impostati.
-              </p>
-            )}
-          </div>
+          <WalletTable
+            columns={columns}
+            data={pageRows}
+            isEmpty={sorted.length === 0}
+          />
 
           <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -426,40 +358,95 @@ export function WalletView({ rows }: Props) {
   );
 }
 
-function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
-  if (!active) return null;
-  return (
-    <span className="ml-1 inline-block opacity-70">
-      {dir === "desc" ? "▼" : "▲"}
-    </span>
-  );
-}
+function StateCombo({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}) {
+  const [open, setOpen] = useState(false);
 
-function UuidChip({ id }: { id: string }) {
-  const [copied, setCopied] = useState(false);
-  const onCopy = async () => {
-    try {
-      await navigator.clipboard?.writeText(id);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {
-      // no-op
-    }
-  };
   return (
-    <button
-      type="button"
-      onClick={onCopy}
-      title={id}
-      className="bg-muted/60 hover:border-primary hover:text-primary inline-flex items-center gap-1.5 rounded-md border px-2 py-1 transition-colors"
-    >
-      <span className="font-mono text-xs">{shortId(id)}</span>
-      {copied ? (
-        <Check className="size-3" />
-      ) : (
-        <Copy className="size-3 opacity-60" />
-      )}
-    </button>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className="min-w-[200px] justify-between font-normal"
+        >
+          <span className="flex items-center gap-2 truncate">
+            <CircleDot className="size-4 opacity-70" />
+            <span className="truncate">
+              {value ? <WalletStateBadge state={value} /> : "Tutti gli stati"}
+            </span>
+          </span>
+          <span className="ml-2 flex items-center gap-1">
+            {value && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onChange("");
+                  }
+                }}
+                className="text-muted-foreground hover:text-foreground inline-flex items-center"
+                aria-label="Rimuovi filtro stato"
+              >
+                <X className="size-3.5" />
+              </span>
+            )}
+            <ChevronDown className="size-4 opacity-70" />
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[280px] p-1">
+        <ScrollArea className="max-h-72">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              onChange("");
+              setOpen(false);
+            }}
+            className={cn(
+              "hover:bg-muted hover:text-foreground flex h-auto w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm font-normal",
+              value === "" && "bg-teal-50 text-teal-800 font-medium hover:text-teal-800",
+            )}
+          >
+            <span>Tutti gli stati</span>
+            {value === "" && <Check className="size-4" />}
+          </Button>
+          {options.map((opt) => (
+            <Button
+              key={opt}
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                onChange(opt);
+                setOpen(false);
+              }}
+              className={cn(
+                "hover:bg-muted hover:text-foreground flex h-auto w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm font-normal",
+                value === opt && "bg-teal-50 text-teal-800 font-medium hover:text-teal-800",
+              )}
+            >
+              <WalletStateBadge state={opt} />
+              {value === opt && <Check className="size-4 shrink-0" />}
+            </Button>
+          ))}
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -532,44 +519,46 @@ function EnteCombo({
             />
           </div>
         </div>
-        <div className="max-h-72 overflow-y-auto p-1">
-          <button
+        <ScrollArea className="max-h-72 p-1">
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => {
               onChange("");
               setOpen(false);
             }}
             className={cn(
-              "hover:bg-muted flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm",
-              value === "" && "bg-teal-50 text-teal-800 font-medium",
+              "hover:bg-muted hover:text-foreground flex h-auto w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm font-normal",
+              value === "" && "bg-teal-50 text-teal-800 font-medium hover:text-teal-800",
             )}
           >
             <span>Tutti gli enti</span>
             {value === "" && <Check className="size-4" />}
-          </button>
+          </Button>
           {filtered.map((opt) => (
-            <button
+            <Button
               key={opt}
               type="button"
+              variant="ghost"
               onClick={() => {
                 onChange(opt);
                 setOpen(false);
               }}
               className={cn(
-                "hover:bg-muted flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm",
-                value === opt && "bg-teal-50 text-teal-800 font-medium",
+                "hover:bg-muted hover:text-foreground flex h-auto w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm font-normal",
+                value === opt && "bg-teal-50 text-teal-800 font-medium hover:text-teal-800",
               )}
             >
               <span className="truncate">{opt}</span>
               {value === opt && <Check className="size-4 shrink-0" />}
-            </button>
+            </Button>
           ))}
           {filtered.length === 0 && (
             <p className="text-muted-foreground p-3 text-center text-sm">
               Nessun ente trovato
             </p>
           )}
-        </div>
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   );
