@@ -101,7 +101,7 @@ const configSchema = z.object({
       } catch {
         throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_UAT: JSON non valido");
       }
-    }, z.record(z.string(), z.number())),
+    }, z.record(z.string(), z.coerce.number())),
   /**
    * Mappa tipologie referente CRM per ambiente PROD (JSON serializzato da Key Vault).
    * Formato: Record<TipologiaReferente, number>.
@@ -116,7 +116,7 @@ const configSchema = z.object({
       } catch {
         throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_PROD: JSON non valido");
       }
-    }, z.record(z.string(), z.number())),
+    }, z.record(z.string(), z.coerce.number())),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
