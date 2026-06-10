@@ -1,4 +1,3 @@
-import logger from "@/lib/logger/logger.server";
 import { logInputSchema, readLogs, saveLog } from "@/lib/services/logs.service";
 import { z } from "zod";
 
@@ -11,7 +10,7 @@ export async function GET(request: Request) {
     before,
   });
   if (error) {
-    logger.error({ data: data, error }, error);
+    process.stderr.write(`read logs error: ${error}\n`);
     return Response.json({ message: error }, { status: 500 });
   }
 
@@ -34,7 +33,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await saveLog(result.data);
   if (error) {
-    logger.error({ data: result.data, error }, error);
+    process.stderr.write(`save log error: ${error}\n`);
     return Response.json({ message: error }, { status: 500 });
   }
 
