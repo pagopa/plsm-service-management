@@ -17,6 +17,7 @@ import {
   Smartphone,
   SlidersHorizontal,
 } from "lucide-react";
+import { useLocalStorage } from "@uidotdev/usehooks";
 import { useMemo, useState, useTransition } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -46,11 +47,21 @@ import { cn } from "@/lib/utils";
 const CF_RE = /^[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]$/;
 const fmtNum = new Intl.NumberFormat("it-IT");
 const PAGE_SIZE = 8;
+const RECENT_KEY = "io-profile-history";
+const RECENT_MAX = 5;
+
+type RecentProfile = { cf: string; email: string };
 
 const KNOWN_SERVICES = [
   { id: "01FR2NAY2C2BJKGNHF2SJ4YQ1A", name: "Comune di Milano — Avvisi TARI" },
-  { id: "01HQ8M5K3P9V2N7XB4RW6TZC0D", name: "INPS — Comunicazioni previdenziali" },
-  { id: "01J5KW9D7E3A1F8GH2QM6PYV4N", name: "Agenzia delle Entrate — Cartelle" },
+  {
+    id: "01HQ8M5K3P9V2N7XB4RW6TZC0D",
+    name: "INPS — Comunicazioni previdenziali",
+  },
+  {
+    id: "01J5KW9D7E3A1F8GH2QM6PYV4N",
+    name: "Agenzia delle Entrate — Cartelle",
+  },
 ];
 
 function copy(text: string) {
@@ -237,7 +248,7 @@ function ProfileCard({
       <SectionHead title="Profilo attivo" sub={`GET /profiles/${cf}`} />
       <Card className="overflow-hidden p-0">
         <div className="flex items-center gap-4 border-b p-5">
-          <div className="grid size-[50px] shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-teal-500 to-teal-300 text-white shadow-sm">
+          <div className="grid size-[50px] shrink-0 place-items-center rounded-2xl bg-linear-to-br from-teal-500 to-teal-300 text-white shadow-sm">
             <Smartphone className="size-5.5" />
           </div>
           <div className="flex min-w-0 flex-col gap-1">
@@ -301,9 +312,18 @@ function ProfileCard({
         </div>
 
         <div className="flex flex-wrap gap-2.5 p-5">
-          <StatusFlag label="Inbox abilitata" value={profile.is_inbox_enabled} />
-          <StatusFlag label="Email validata" value={profile.is_email_validated} />
-          <StatusFlag label="Email abilitata" value={profile.is_email_enabled} />
+          <StatusFlag
+            label="Inbox abilitata"
+            value={profile.is_inbox_enabled}
+          />
+          <StatusFlag
+            label="Email validata"
+            value={profile.is_email_validated}
+          />
+          <StatusFlag
+            label="Email abilitata"
+            value={profile.is_email_enabled}
+          />
           <StatusFlag
             label="Webhook abilitato"
             value={profile.is_webhook_enabled}
@@ -702,7 +722,7 @@ function SearchStage({
   recent,
   onSearch,
 }: {
-  recent: string[];
+  recent: RecentProfile[];
   onSearch: (cf: string) => void;
 }) {
   const [cf, setCf] = useState("");
@@ -780,15 +800,16 @@ function SearchStage({
           <div className="flex flex-wrap justify-center gap-2">
             {recent.map((r) => (
               <Button
-                key={r}
+                key={r.cf}
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => submit(r)}
+                onClick={() => submit(r.cf)}
+                title={r.email || undefined}
                 className="font-mono text-xs font-medium"
               >
                 <Smartphone className="size-3.5" />
-                {r}
+                {r.cf}
               </Button>
             ))}
           </div>
@@ -810,10 +831,10 @@ export function VerificaUtenzeIoView() {
   const [error, setError] = useState("");
   const [showRaw, setShowRaw] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [recent, setRecent] = useState<string[]>([
-    "GDAGPP84L16F284J",
-    "FRRDTR86P12C002K",
-  ]);
+  const [recent, setRecent] = useLocalStorage<{ items: RecentProfile[] }>(
+    RECENT_KEY,
+    { items: [] },
+  );
 
   const search = async (code: string) => {
     setCf(code);
@@ -834,7 +855,12 @@ export function VerificaUtenzeIoView() {
     setProfile(profileRes.data);
     setVersions(versionsRes.data?.items ?? []);
     setHasMore(Boolean(versionsRes.data?.has_more));
-    setRecent((prev) => [code, ...prev.filter((x) => x !== code)].slice(0, 4));
+    setRecent((prev) => ({
+      items: [
+        { cf: code, email: profileRes.data.email ?? "" },
+        ...prev.items.filter((x) => x.cf !== code),
+      ].slice(0, RECENT_MAX),
+    }));
     setStage("result");
   };
 
@@ -930,7 +956,7 @@ export function VerificaUtenzeIoView() {
           {error}
         </p>
       )}
-      <SearchStage recent={recent} onSearch={search} />
+      <SearchStage recent={recent.items} onSearch={search} />
     </div>
   );
 }
