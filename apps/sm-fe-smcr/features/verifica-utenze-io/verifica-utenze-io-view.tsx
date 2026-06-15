@@ -144,35 +144,6 @@ function BoolDot({ value }: { value: boolean | null | undefined }) {
   );
 }
 
-/* ============================== RAW JSON ============================== */
-function RawJson({ title, data }: { title: string; data: unknown }) {
-  const [copied, setCopied] = useState(false);
-  const json = JSON.stringify(data, null, 2);
-  const doCopy = () => {
-    copy(json);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1400);
-  };
-  return (
-    <div className="mt-3.5 overflow-hidden rounded-xl border">
-      <div className="flex items-center justify-between bg-[#0d2826] px-3.5 py-2 font-mono text-xs font-semibold text-[#aef0ee]">
-        <span>{title}</span>
-        <button
-          type="button"
-          onClick={doCopy}
-          className="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-2 py-1 font-mono text-[11px] font-semibold text-[#cdeae9] hover:bg-white/20"
-        >
-          <Copy className="size-3" />
-          {copied ? "Copiato" : "Copia JSON"}
-        </button>
-      </div>
-      <pre className="m-0 overflow-x-auto bg-[#0b1f1e] p-4 font-mono text-[12.5px] leading-relaxed text-[#d7eceb]">
-        {json}
-      </pre>
-    </div>
-  );
-}
-
 /* ============================== SECTION HEADER ============================== */
 function SectionHead({
   title,
@@ -230,22 +201,13 @@ function Field({
 }
 
 /* ============================== PROFILE CARD ============================== */
-function ProfileCard({
-  cf,
-  profile,
-  showRaw,
-}: {
-  cf: string;
-  profile: IoProfile;
-  showRaw: boolean;
-}) {
+function ProfileCard({ cf, profile }: { cf: string; profile: IoProfile }) {
   const langs = (profile.preferred_languages ?? [])
     .map((l) => l.replace("_", "-"))
     .join(", ");
 
   return (
     <section className="mb-6">
-      <SectionHead title="Profilo attivo" sub={`GET /profiles/${cf}`} />
       <Card className="overflow-hidden p-0">
         <div className="flex items-center gap-4 border-b p-5">
           <div className="grid size-[50px] shrink-0 place-items-center rounded-2xl bg-linear-to-br from-teal-500 to-teal-300 text-white shadow-sm">
@@ -340,7 +302,6 @@ function ProfileCard({
           />
         </div>
       </Card>
-      {showRaw && <RawJson title="Response · profilo attivo" data={profile} />}
     </section>
   );
 }
@@ -351,16 +312,13 @@ function VersionsCard({
   versions,
   currentVersion,
   hasMore,
-  showRaw,
 }: {
   cf: string;
   versions: IoProfile[];
   currentVersion: number;
   hasMore: boolean;
-  showRaw: boolean;
 }) {
   const [page, setPage] = useState(1);
-  const [showDiff, setShowDiff] = useState(true);
 
   const totalPages = Math.max(1, Math.ceil(versions.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -369,7 +327,6 @@ function VersionsCard({
   const localHasMore = safePage < totalPages;
 
   const changed = (gi: number, key: keyof IoProfile | "sp") => {
-    if (!showDiff) return false;
     const cur = versions[gi];
     const prev = versions[gi + 1];
     if (!cur || !prev) return false;
@@ -384,16 +341,6 @@ function VersionsCard({
 
   return (
     <section className="mb-6">
-      <SectionHead
-        title="Versioni storiche"
-        sub={`GET /profiles/${cf}/versions?page=1&page_size=100`}
-      >
-        <Label className="text-muted-foreground flex items-center gap-2 text-xs font-semibold">
-          <Switch checked={showDiff} onCheckedChange={setShowDiff} />
-          Evidenzia differenze
-        </Label>
-      </SectionHead>
-
       <Card className="overflow-hidden p-0">
         <Table>
           <TableHeader>
@@ -551,23 +498,12 @@ function VersionsCard({
           </div>
         </div>
       </Card>
-      {showRaw && (
-        <RawJson
-          title="Response · versioni (estratto)"
-          data={{
-            items: versions.slice(0, 2),
-            page: 1,
-            page_size: 100,
-            has_more: hasMore,
-          }}
-        />
-      )}
     </section>
   );
 }
 
 /* ============================== SERVICE CARD ============================== */
-function ServiceCard({ cf, showRaw }: { cf: string; showRaw: boolean }) {
+function ServiceCard({ cf }: { cf: string }) {
   const [svc, setSvc] = useState("");
   const [result, setResult] = useState<{
     svc: string;
@@ -597,16 +533,11 @@ function ServiceCard({ cf, showRaw }: { cf: string; showRaw: boolean }) {
 
   return (
     <section className="mb-6">
-      <SectionHead
-        title="Preferenze per servizio"
-        sub={`GET /profiles/${cf}/services/{servizio}/preferences`}
-      />
       <Card className="p-5 md:p-6">
         <CardContent className="p-0">
           <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
-            Il codice fiscale è già nel contesto di questa pagina. Inserisci
-            l&apos;identificativo del servizio per verificare le preferenze
-            impostate dall&apos;utente su quel servizio specifico.
+            Inserisci l&apos;identificativo del servizio per verificare le
+            preferenze impostate dall&apos;utente su quel servizio specifico.
           </p>
 
           <div className="flex flex-wrap items-stretch gap-3">
@@ -703,12 +634,6 @@ function ServiceCard({ cf, showRaw }: { cf: string; showRaw: boolean }) {
                   settings_version #{result.data.settings_version ?? 0}
                 </span>
               </div>
-              {showRaw && (
-                <RawJson
-                  title="Response · preferenze servizio"
-                  data={result.data}
-                />
-              )}
             </div>
           )}
         </CardContent>
@@ -829,7 +754,6 @@ export function VerificaUtenzeIoView() {
   const [versions, setVersions] = useState<IoProfile[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState("");
-  const [showRaw, setShowRaw] = useState(false);
   const [copied, setCopied] = useState(false);
   const [recent, setRecent] = useLocalStorage<{ items: RecentProfile[] }>(
     RECENT_KEY,
@@ -907,10 +831,6 @@ export function VerificaUtenzeIoView() {
             </p>
           </div>
           <div className="flex items-center gap-2.5">
-            <Label className="text-muted-foreground flex items-center gap-2 text-xs font-semibold">
-              <Switch checked={showRaw} onCheckedChange={setShowRaw} />
-              JSON grezzo
-            </Label>
             <span className="inline-flex items-center gap-2 rounded-full border bg-card py-1.5 pl-3.5 pr-1.5 font-mono text-sm font-semibold tracking-wide">
               {cf}
               <button
@@ -933,15 +853,14 @@ export function VerificaUtenzeIoView() {
           </div>
         </div>
 
-        <ProfileCard cf={cf} profile={profile} showRaw={showRaw} />
+        <ProfileCard cf={cf} profile={profile} />
         <VersionsCard
           cf={cf}
           versions={versions}
           currentVersion={versionsHeader}
           hasMore={hasMore}
-          showRaw={showRaw}
         />
-        <ServiceCard cf={cf} showRaw={showRaw} />
+        <ServiceCard cf={cf} />
       </div>
     );
   }
