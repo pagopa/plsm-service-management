@@ -1,0 +1,10 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AzureWebJobsStorage": "{AzureWebJobsStorage}",
+    "FUNCTIONS_V2_COMPATIBILITY_MODE": false,
+    "DSS_API_BASE_URL": "http://dss-api-dem.northeurope.azurecontainer.io:8080",
+    "MAX_FILE_SIZE_BYTES": "10485760"
+  }
+}

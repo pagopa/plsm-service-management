@@ -19147,6 +19147,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"sm-signature-fn@workspace:apps/sm-signature-fn":
+  version: 0.0.0-use.local
+  resolution: "sm-signature-fn@workspace:apps/sm-signature-fn"
+  dependencies:
+    "@azure/functions": "npm:^4.7.2-preview"
+    "@types/jest": "npm:^30.0.0"
+    "@types/node": "npm:^24.1.0"
+    jest: "npm:^30.2.0"
+    ts-jest: "npm:^29.4.5"
+    typescript: "npm:^5.9.2"
+    zod: "npm:^4.0.14"
+  languageName: unknown
+  linkType: soft
+
 "sonic-boom@npm:^4.0.1":
   version: 4.2.1
   resolution: "sonic-boom@npm:4.2.1"
