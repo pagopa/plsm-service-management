@@ -30,7 +30,7 @@ export async function handler(
       "auth-token=",
       "HttpOnly",
       "Secure",
-      "SameSite=Strict",
+      "SameSite=Lax",
       "Path=/",
       "Max-Age=0",
     ].join("; ");
