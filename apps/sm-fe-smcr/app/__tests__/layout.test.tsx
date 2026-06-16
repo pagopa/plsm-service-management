@@ -15,12 +15,6 @@ jest.mock("nuqs/adapters/next/app", () => ({
   NuqsAdapter: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock("@/context/MSALproviders", () => ({
-  MSALProvider: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
-}));
-
 jest.mock("@/context/sessionProvider", () => ({
   SessionProvider: ({ children }: { children: React.ReactNode }) => (
     <>{children}</>

@@ -108,11 +108,17 @@ fe_smcr:
     # NEXT_PUBLIC_MSAL_REDIRECT_URI: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL: "https://plsm-p-itn-auth-func-01.azurewebsites.net"
+    AUTH_JWT_SECRET: "kv:auth_jwt_secret"
+    AUTH_JWT_ISSUER: "plsm-auth-service"
+    AUTH_JWT_AUDIENCE: "plsm-fe-smcr"
   staging:
     NEXT_PUBLIC_APP_URL: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     # NEXT_PUBLIC_MSAL_REDIRECT_URI: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL: "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net"
+    AUTH_JWT_SECRET: "kv:auth_jwt_secret"
+    AUTH_JWT_ISSUER: "plsm-auth-service-staging"
+    AUTH_JWT_AUDIENCE: "plsm-fe-smcr-staging"
 
 # ─── CRM Function (Dynamics CRM Integration) ─────────────────────────────────
 # Production = Staging (stessi valori per entrambi gli slot)
@@ -148,16 +154,36 @@ network:
 
 auth_func:
   __local: yaml_auth_func
-  NODE_ENV: "production"
-  WEBSITE_RUN_FROM_PACKAGE: "1"
-  # MSAL Configuration (Token Validation approach - no Client Secret needed)
   MSAL_CLIENT_ID: "kv:auth_msal_client_id"
   MSAL_TENANT_ID: "kv:auth_msal_tenant_id"
-  # JWT Configuration
   JWT_SECRET: "kv:auth_jwt_secret"
   JWT_EXPIRY_SECONDS: "3600"
   JWT_ISSUER: "plsm-auth-service"
   JWT_AUDIENCE: "plsm-fe-smcr"
+  NODE_ENV: "production"
+  WEBSITE_RUN_FROM_PACKAGE: "1"
+  # Slot production
+  production:
+    MSAL_CLIENT_ID: "kv:auth_msal_client_id"
+    MSAL_TENANT_ID: "kv:auth_msal_tenant_id"
+    JWT_SECRET: "kv:auth_jwt_secret"
+    MSAL_REDIRECT_URI: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
+    JWT_EXPIRY_SECONDS: "3600"
+    JWT_ISSUER: "plsm-auth-service"
+    JWT_AUDIENCE: "plsm-fe-smcr"
+    NODE_ENV: "production"
+    WEBSITE_RUN_FROM_PACKAGE: "1"
+  # Slot staging
+  staging:
+    MSAL_CLIENT_ID: "kv:auth_msal_client_id"
+    MSAL_TENANT_ID: "kv:auth_msal_tenant_id"
+    JWT_SECRET: "kv:auth_jwt_secret"
+    MSAL_REDIRECT_URI: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
+    JWT_EXPIRY_SECONDS: "3600"
+    JWT_ISSUER: "plsm-auth-service-staging"
+    JWT_AUDIENCE: "plsm-fe-smcr-staging"
+    NODE_ENV: "production"
+    WEBSITE_RUN_FROM_PACKAGE: "1"
 
 # ─── Certificates Function ───────────────────────────────────────────────────
 

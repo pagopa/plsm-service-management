@@ -8,7 +8,6 @@ import {
   useCallback,
   ReactNode,
 } from "react";
-import { useMsal } from "@azure/msal-react";
 import { UserProfile } from "@/lib/types/userProfile";
 import { getUserMember, getUserPreferences } from "@/lib/actions/user.action";
 import {
@@ -16,6 +15,13 @@ import {
   createMember,
 } from "@/lib/services/members.service";
 import clientLogger from "@/lib/logger/logger.client";
+
+type SessionClaims = {
+  email: string;
+  name: string;
+  roles: string[];
+  userId: string;
+};
 
 interface SessionContextType {
   user: UserProfile | null;
@@ -31,86 +37,88 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const { accounts, instance, inProgress } = useMsal();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUserProfile = useCallback(
-    async (email: string, name: string): Promise<UserProfile> => {
-      const response = await fetch("/api/user/profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, name }),
+  const fetchUserProfile = useCallback(async (): Promise<
+    Pick<UserProfile, "email" | "id" | "name">
+  > => {
+    const response = await fetch("/api/user/profile", {
+      cache: "no-store",
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      throw new Error("Errore nel recupero del profilo utente");
+    }
+
+    const res = await response.json();
+    return res.data;
+  }, []);
+
+  const fetchSessionClaims =
+    useCallback(async (): Promise<SessionClaims | null> => {
+      const response = await fetch("/api/auth/me", {
+        cache: "no-store",
+        credentials: "same-origin",
+        method: "GET",
       });
 
-      if (!response.ok) {
-        throw new Error("Errore nel recupero del profilo utente");
+      if (response.status === 401) {
+        return null;
       }
 
-      const res = await response.json();
-      return res.data;
-    },
-    [],
-  );
+      if (!response.ok) {
+        throw new Error("Errore nel recupero della sessione autenticata");
+      }
+
+      const payload = await response.json();
+      return payload.claims ?? null;
+    }, []);
+
+  const splitDisplayName = useCallback((name: string) => {
+    const [firstname = "Unknown", ...lastnameParts] = name.trim().split(/\s+/);
+
+    return {
+      firstname,
+      lastname: lastnameParts.join(" ") || "User",
+    };
+  }, []);
 
   const refreshUserData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     setIsReady(false);
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    if (!accounts || accounts.length === 0) {
-      setUser(null);
-      setIsLoading(false);
-      setIsReady(true);
-      return;
-    }
-
-    const msalAccount = accounts[0];
-    if (!msalAccount || !msalAccount.username || !msalAccount.name) {
-      setError("Account MSAL non valido o incompleto");
-      setUser(null);
-      setIsLoading(false);
-      setIsReady(true);
-      return;
-    }
-
     try {
-      const userProfile = await fetchUserProfile(
-        msalAccount.username,
-        msalAccount.name,
-      );
+      const claims = await fetchSessionClaims();
+
+      if (!claims?.email || !claims.name) {
+        setUser(null);
+        return;
+      }
+
+      const userProfile = await fetchUserProfile();
 
       // Check if member exists in the new members table, create if not
-      const memberResult = await readMemberByEmail(msalAccount.username);
+      const memberResult = await readMemberByEmail(claims.email);
       if (memberResult.error || !memberResult.data) {
         void clientLogger.info(
           {
             info: {
               event: "session.member.create_missing",
-              metadata: { email: msalAccount.username },
+              metadata: { email: claims.email },
             },
           },
           "Member not found, creating new member",
         );
 
-        // Extract firstname and lastname from MSAL claims or parse from name
-        const firstname =
-          (msalAccount.idTokenClaims as any)?.given_name ||
-          msalAccount.name?.split(" ")[0] ||
-          "Unknown";
-        const lastname =
-          (msalAccount.idTokenClaims as any)?.family_name ||
-          msalAccount.name?.split(" ").slice(1).join(" ") ||
-          "User";
+        const { firstname, lastname } = splitDisplayName(claims.name);
 
         const createResult = await createMember({
-          email: msalAccount.username,
+          email: claims.email,
           firstname,
           lastname,
         });
@@ -130,8 +138,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const userPreferences = await getUserPreferences(userProfile.id);
       setUser({
         ...userProfile,
-        email: msalAccount.username,
-        name: msalAccount.name,
+        email: claims.email,
+        name: claims.name,
         membersOf: userMember,
         activeTeam: null,
         preferences: {
@@ -147,37 +155,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       setIsReady(true);
     }
-  }, [accounts, fetchUserProfile]);
+  }, [fetchSessionClaims, fetchUserProfile, splitDisplayName]);
 
   const logout = useCallback(async () => {
     try {
       setUser(null);
-      await instance.logoutRedirect();
+      setIsReady(false);
+      window.location.assign("/api/auth/logout");
     } catch (err: any) {
       void clientLogger.error({ error: err }, "Errore durante il logout");
       setError(err.message);
     }
-  }, [instance]);
+  }, []);
 
   useEffect(() => {
-    if (inProgress !== "none") return;
-
-    const timer = setTimeout(() => {
-      refreshUserData();
-    }, 50);
-
-    return () => clearTimeout(timer);
-  }, [inProgress, refreshUserData]);
-
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key?.includes("msal")) {
-        refreshUserData();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    void refreshUserData();
   }, [refreshUserData]);
 
   const value: SessionContextType = {
