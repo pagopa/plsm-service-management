@@ -9,10 +9,12 @@ import {
   PhoneIcon,
   Search,
   ShieldCheck,
+  Smartphone,
   SquareTerminal,
   TextCursorInput,
   Users,
   UsersIcon,
+  Wallet,
 } from "lucide-react";
 
 export interface ProtectedRouteChild {
@@ -74,6 +76,22 @@ export const protectedRoutes: ProtectedRoute[] = [
         requiredTeams: ["service-management"],
       },
     ],
+  },
+  {
+    label: "Wallet",
+    path: "/dashboard/wallet",
+    requiredTeams: ["service-management"],
+    icon: Wallet,
+    sidebar: true,
+    teamId: "service-management",
+  },
+  {
+    label: "Utenze IO",
+    path: "/dashboard/verifica-utenze-io",
+    requiredTeams: ["service-management"],
+    icon: Smartphone,
+    sidebar: true,
+    teamId: "service-management",
   },
   {
     label: "Certificati",
