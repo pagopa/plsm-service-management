@@ -1,5 +1,6 @@
-import { mapDssResponse } from "../signature/dss";
+import { mapDssResponse, callDssApi, DssApiError } from "../signature/dss";
 import type { DssValidationReport } from "../signature/models/signature";
+import type { AppConfig } from "../utils/checkConfig";
 
 const report: DssValidationReport = {
   simpleReport: {
@@ -65,5 +66,81 @@ describe("mapDssResponse", () => {
     expect(result.signatures[0].indication).toBe("INDETERMINATE");
     expect(result.signatures[0].signerName).toBe("X");
     expect(result.signatures[0].qtsp).toBe("");
+  });
+
+  it("tolerates a non-array signatureOrTimestamp", () => {
+    const result = mapDssResponse(
+      { simpleReport: { signatureOrTimestamp: {} as never } },
+      "x.pdf",
+      "pdf",
+    );
+    expect(result.totalSignatures).toBe(0);
+    expect(result.signatures).toEqual([]);
+  });
+
+  it("skips null entries in the signature array", () => {
+    const result = mapDssResponse(
+      {
+        simpleReport: {
+          signatureOrTimestamp: [null as never, { signedBy: "Y" }],
+        },
+      },
+      "x.pdf",
+      "pdf",
+    );
+    expect(result.totalSignatures).toBe(1);
+    expect(result.signatures[0].signerName).toBe("Y");
+  });
+});
+
+describe("callDssApi", () => {
+  const config: AppConfig = {
+    dssApiBaseUrl: "http://dss.example:8080",
+    maxFileSizeBytes: 1024,
+  };
+  const originalFetch = global.fetch;
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  it("returns the parsed report on success", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ simpleReport: { signatureOrTimestamp: [] } }),
+    }) as unknown as typeof fetch;
+    const report = await callDssApi(config, "aGk=", "doc.pdf");
+    expect(report.simpleReport?.signatureOrTimestamp).toEqual([]);
+  });
+
+  it("maps a 500 'not recognized' body to a 422 DssApiError", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => "Document format not recognized/handled",
+    }) as unknown as typeof fetch;
+    await expect(callDssApi(config, "aGk=", "doc.pdf")).rejects.toMatchObject({
+      status: 422,
+    });
+  });
+
+  it("maps a generic 500 body to a 502 DssApiError", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => "NullPointerException at com.example",
+    }) as unknown as typeof fetch;
+    await expect(callDssApi(config, "aGk=", "doc.pdf")).rejects.toMatchObject({
+      status: 502,
+    });
+  });
+
+  it("maps a network failure to a 502 DssApiError", async () => {
+    global.fetch = jest
+      .fn()
+      .mockRejectedValue(new Error("ECONNREFUSED")) as unknown as typeof fetch;
+    await expect(callDssApi(config, "aGk=", "doc.pdf")).rejects.toBeInstanceOf(
+      DssApiError,
+    );
   });
 });

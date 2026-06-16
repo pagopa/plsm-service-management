@@ -51,7 +51,10 @@ export function mapDssResponse(
   fileName: string,
   fileType: "pdf" | "p7m",
 ): ValidationResponse {
-  const rawSignatures = report.simpleReport?.signatureOrTimestamp ?? [];
+  const raw = report.simpleReport?.signatureOrTimestamp;
+  const rawSignatures = (Array.isArray(raw) ? raw : []).filter(
+    (s): s is DssSignature => Boolean(s),
+  );
   const signatures = rawSignatures.map(mapSignature);
   return {
     fileName,
@@ -98,8 +101,14 @@ export async function callDssApi(
   }
 
   if (response.status === 500) {
-    // DSS returns 500 with a plain-text body for unrecognized documents.
-    throw new DssApiError("Document format not recognized", 422);
+    // DSS returns HTTP 500 with a plain-text body for unrecognized documents.
+    // Only treat it as a client-side 422 when the body matches that signature;
+    // any other 500 is a genuine DSS server error and must surface as 502.
+    const body = await response.text().catch(() => "");
+    if (/not recognized|format not recognized|not handled/i.test(body)) {
+      throw new DssApiError("Document format not recognized", 422);
+    }
+    throw new DssApiError(`DSS error 500: ${body.slice(0, 200)}`, 502);
   }
   if (!response.ok) {
     throw new DssApiError(`DSS error ${response.status}`, 502);
