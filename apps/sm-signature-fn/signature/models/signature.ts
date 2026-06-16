@@ -24,30 +24,46 @@ export type ValidationResponse = {
 
 // --- Raw DSS response shapes (defensive: every field optional) ---
 // NOTE: field names are best-effort and MUST be verified against a real
-// DSS `validateSignature` response. Mapping logic isolates this risk.
+// DSS `validateSignature` response. The real DSS casing is unconfirmed, so
+// every field is accepted in BOTH camelCase and PascalCase; the mapping logic
+// (dss.ts) reads whichever is present. This isolates the casing risk.
 export type DssCertificate = {
   qualifiedName?: string;
+  QualifiedName?: string;
   countryName?: string;
+  CountryName?: string;
 };
 
 export type DssCertificateChain = {
   certificate?: DssCertificate[];
+  Certificate?: DssCertificate[];
 };
 
 export type DssSignature = {
   signedBy?: string;
+  SignedBy?: string;
   indication?: string;
+  Indication?: string;
   signatureLevel?: string;
+  SignatureLevel?: string;
   signingTime?: string;
+  SigningTime?: string;
   certificateChain?: DssCertificateChain;
+  CertificateChain?: DssCertificateChain;
   errors?: string[];
+  Errors?: string[];
   warnings?: string[];
+  Warnings?: string[];
 };
 
 export type DssSimpleReport = {
   signatureOrTimestamp?: DssSignature[];
+  SignatureOrTimestamp?: DssSignature[];
+  signatures?: DssSignature[];
+  Signatures?: DssSignature[];
 };
 
 export type DssValidationReport = {
   simpleReport?: DssSimpleReport;
+  SimpleReport?: DssSimpleReport;
 };

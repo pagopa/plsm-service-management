@@ -91,6 +91,40 @@ describe("mapDssResponse", () => {
     expect(result.totalSignatures).toBe(1);
     expect(result.signatures[0].signerName).toBe("Y");
   });
+
+  it("maps a PascalCase DSS report (unconfirmed real casing)", () => {
+    const pascalReport: DssValidationReport = {
+      SimpleReport: {
+        Signatures: [
+          {
+            SignedBy: "Mario Rossi",
+            Indication: "TOTAL_PASSED",
+            SignatureLevel: "PAdES-BASELINE-LT",
+            SigningTime: "2026-01-01T10:00:00Z",
+            CertificateChain: {
+              Certificate: [
+                { QualifiedName: "Mario Rossi", CountryName: "IT" },
+                { QualifiedName: "Aruba PEC QTSP", CountryName: "IT" },
+              ],
+            },
+            Warnings: ["minor warning"],
+          },
+        ],
+      },
+    };
+    const result = mapDssResponse(pascalReport, "doc.pdf", "pdf");
+    expect(result.totalSignatures).toBe(1);
+    expect(result.validSignatures).toBe(1);
+    expect(result.signatures[0]).toEqual({
+      signerName: "Mario Rossi",
+      qtsp: "Aruba PEC QTSP",
+      country: "IT",
+      indication: "TOTAL_PASSED",
+      signatureLevel: "PAdES-BASELINE-LT",
+      signingTime: "2026-01-01T10:00:00Z",
+      issues: ["minor warning"],
+    });
+  });
 });
 
 describe("callDssApi", () => {

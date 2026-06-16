@@ -20,29 +20,38 @@ function normalizeIndication(raw?: string): SignatureIndication {
 }
 
 // The QTSP/issuer is the last entry in the certificate chain; the signer is the
-// first. Best-effort extraction, defensive against missing fields.
+// first. Best-effort extraction, defensive against missing fields and against
+// the unconfirmed DSS key casing (camelCase vs PascalCase).
 function extractTrustAnchor(sig: DssSignature): {
   qtsp: string;
   country: string;
 } {
-  const chain = sig.certificateChain?.certificate ?? [];
+  const chain =
+    sig.certificateChain?.certificate ??
+    sig.certificateChain?.Certificate ??
+    sig.CertificateChain?.certificate ??
+    sig.CertificateChain?.Certificate ??
+    [];
   const anchor = chain.length > 0 ? chain[chain.length - 1] : undefined;
   return {
-    qtsp: anchor?.qualifiedName ?? "",
-    country: anchor?.countryName ?? "",
+    qtsp: anchor?.qualifiedName ?? anchor?.QualifiedName ?? "",
+    country: anchor?.countryName ?? anchor?.CountryName ?? "",
   };
 }
 
 function mapSignature(sig: DssSignature): SignatureResult {
   const { qtsp, country } = extractTrustAnchor(sig);
   return {
-    signerName: sig.signedBy ?? "",
+    signerName: sig.signedBy ?? sig.SignedBy ?? "",
     qtsp,
     country,
-    indication: normalizeIndication(sig.indication),
-    signatureLevel: sig.signatureLevel ?? "",
-    signingTime: sig.signingTime ?? "",
-    issues: [...(sig.errors ?? []), ...(sig.warnings ?? [])],
+    indication: normalizeIndication(sig.indication ?? sig.Indication),
+    signatureLevel: sig.signatureLevel ?? sig.SignatureLevel ?? "",
+    signingTime: sig.signingTime ?? sig.SigningTime ?? "",
+    issues: [
+      ...(sig.errors ?? sig.Errors ?? []),
+      ...(sig.warnings ?? sig.Warnings ?? []),
+    ],
   };
 }
 
@@ -51,7 +60,12 @@ export function mapDssResponse(
   fileName: string,
   fileType: "pdf" | "p7m",
 ): ValidationResponse {
-  const raw = report.simpleReport?.signatureOrTimestamp;
+  const simpleReport = report.simpleReport ?? report.SimpleReport;
+  const raw =
+    simpleReport?.signatureOrTimestamp ??
+    simpleReport?.SignatureOrTimestamp ??
+    simpleReport?.signatures ??
+    simpleReport?.Signatures;
   const rawSignatures = (Array.isArray(raw) ? raw : []).filter(
     (s): s is DssSignature => Boolean(s),
   );
