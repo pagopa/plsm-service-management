@@ -79,6 +79,10 @@ locals {
   auth_func_app_settings      = local.yaml_auth_func_app_settings
   auth_slot_func_app_settings = local.yaml_auth_func_slot_app_settings
 
+  # 9. Signature Validation Function
+  signature_func_app_settings      = local.yaml_signature_func_app_settings
+  signature_slot_func_app_settings = local.yaml_signature_func_slot_app_settings
+
 
   # OLD HARDCODED CONFIGURATION (COMMENTED OUT FOR REFERENCE)
   # crm_func_app_settings = {

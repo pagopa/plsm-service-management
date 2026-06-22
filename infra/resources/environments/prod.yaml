@@ -191,3 +191,9 @@ certificates:
   __local: yaml_certificates_func
   API_KEY: "kv:fe_cert_api_key"
   SMTP_PASSWORD: "kv:askmebot_smtp_password"
+
+# ─── Signature Validation Function ───────────────────────────────────────────
+signature:
+  __local: yaml_signature_func
+  DSS_API_BASE_URL: "http://dss-api-dem.northeurope.azurecontainer.io:8080"
+  MAX_FILE_SIZE_BYTES: "10485760"

@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-06-15 09:28
+# Generato il: 2026-06-16 11:24
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -151,7 +151,7 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr"
     NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
   }
 
   yaml_auth_func_slot_app_settings = {
@@ -163,7 +163,7 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr-staging"
     NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
   }
 
   # ────────────────────────────────────────────────────────────
@@ -328,6 +328,17 @@ locals {
   }
 
   yaml_crm_func_slot_app_settings = local.yaml_crm_func_app_settings
+
+  # ────────────────────────────────────────────────────────────
+  # signature
+  # ────────────────────────────────────────────────────────────
+
+  yaml_signature_func_app_settings = {
+    DSS_API_BASE_URL    = "http://dss-api-dem.northeurope.azurecontainer.io:8080"
+    MAX_FILE_SIZE_BYTES = "10485760"
+  }
+
+  yaml_signature_func_slot_app_settings = local.yaml_signature_func_app_settings
 
   # ────────────────────────────────────────────────────────────────
   # Metadati ambiente
