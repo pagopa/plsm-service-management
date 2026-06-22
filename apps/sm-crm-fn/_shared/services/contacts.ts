@@ -445,6 +445,11 @@ export interface VerifyOrCreateContactParams {
   enableCreateContact: boolean;
   /** Sessione diagnostica opzionale per il logging su Blob Storage */
   diagnosticSession?: DiagnosticSession;
+  /** Riferimento al partecipante per il tracking dei log diagnostici */
+  participantRef?: {
+    index: number;
+    email?: string;
+  };
 }
 
 export interface VerifyOrCreateContactResult {
@@ -496,12 +501,29 @@ export async function verifyOrCreateContact(
 
     if (params.diagnosticSession) {
       addDiagnosticCall(params.diagnosticSession, {
-        step: "searchContactByInstitution",
+        step: "verifyOrCreateContact",
+        substep: "searchContactByInstitution",
+        entity: "contacts",
+        attempt: 1,
+        participantRef: params.participantRef,
         method: "GET",
         url: step1Url,
+        requestDetails: {
+          entity: "contacts",
+          filter: `pgp_identificativoselfcarecliente eq '${params.institutionIdSelfcare}' and emailaddress1 eq '${params.email?.replace(/'/g, "''")}' and contains(pgp_identificativoidpagopa, '${params.productIdSelfcare}')`,
+          select: "contactid,fullname,emailaddress1,firstname,lastname",
+        },
         requestBody: null,
+        derivedFromFrontend: {
+          institutionIdSelfcare: params.institutionIdSelfcare,
+          productIdSelfcare: params.productIdSelfcare,
+          participantIndex: params.participantRef?.index,
+          participantEmail: params.participantRef?.email,
+          notes: ["participant email + institutionIdSelfcare + productIdSelfcare -> contact search"],
+        },
         responseStatus: 200,
         durationMs: Date.now() - step1Start,
+        success: contact !== null,
       });
     }
 
@@ -536,12 +558,29 @@ export async function verifyOrCreateContact(
 
     if (params.diagnosticSession) {
       addDiagnosticCall(params.diagnosticSession, {
-        step: "searchContactByProduct",
+        step: "verifyOrCreateContact",
+        substep: "searchContactByProduct",
+        entity: "contacts",
+        attempt: 1,
+        participantRef: params.participantRef,
         method: "GET",
         url: step2Url,
+        requestDetails: {
+          entity: "contacts",
+          filter: `emailaddress1 eq '${params.email.replace(/'/g, "''")}' and _pgp_prodottoid_value eq '${productGuid}'`,
+          select: "contactid,fullname,emailaddress1,firstname,lastname",
+        },
         requestBody: null,
+        derivedFromFrontend: {
+          productIdSelfcare: params.productIdSelfcare,
+          productGuid,
+          participantIndex: params.participantRef?.index,
+          participantEmail: params.participantRef?.email,
+          notes: ["fallback: participant email + productGuid -> contact search"],
+        },
         responseStatus: 200,
         durationMs: Date.now() - step2Start,
+        success: contact !== null,
       });
     }
 
@@ -574,12 +613,27 @@ export async function verifyOrCreateContact(
 
     if (params.diagnosticSession) {
       addDiagnosticCall(params.diagnosticSession, {
-        step: "searchContactByEmailOnly",
+        step: "verifyOrCreateContact",
+        substep: "searchContactByEmailOnly",
+        entity: "contacts",
+        attempt: 1,
+        participantRef: params.participantRef,
         method: "GET",
         url: step3Url,
+        requestDetails: {
+          entity: "contacts",
+          filter: `emailaddress1 eq '${params.email.replace(/'/g, "''")}'`,
+          select: "contactid,fullname,emailaddress1,firstname,lastname",
+        },
         requestBody: null,
-        responseStatus: contact !== null ? 200 : 200,
+        derivedFromFrontend: {
+          participantIndex: params.participantRef?.index,
+          participantEmail: params.participantRef?.email,
+          notes: ["final fallback: participant email only -> contact search"],
+        },
+        responseStatus: 200,
         durationMs: Date.now() - step3Start,
+        success: contact !== null,
       });
     }
 
@@ -656,12 +710,25 @@ export async function verifyOrCreateContact(
           ...(params.email ? { emailaddress1: params.email } : {}),
         };
         addDiagnosticCall(params.diagnosticSession, {
-          step: "createContact",
+          step: "verifyOrCreateContact",
+          substep: "createContact",
+          entity: "contacts",
+          attempt: 1,
+          participantRef: params.participantRef,
           method: "POST",
           url: `${params.baseUrl}/api/data/v9.2/contacts`,
           requestBody: contactBody,
+          derivedFromFrontend: {
+            accountId: params.accountId,
+            productIdSelfcare: params.productIdSelfcare,
+            productGuid: prodGuid,
+            participantIndex: params.participantRef?.index,
+            participantEmail: params.participantRef?.email,
+            notes: ["contact not found, creating new contact"],
+          },
           responseStatus: 201,
           durationMs: Date.now() - createStart,
+          success: true,
         });
       }
 
@@ -674,13 +741,39 @@ export async function verifyOrCreateContact(
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       if (params.diagnosticSession) {
+        const environment = resolveEnvironment(params.baseUrl);
+        const prodGuid = getProductGuid(params.productIdSelfcare, environment);
+        const tipologiaId = getTipologiaReferenteId(params.tipologiaReferente, environment);
+        const contactBody: CreateContactRequest = {
+          firstname: params.nome,
+          lastname: params.cognome,
+          pgp_tipologiareferente: tipologiaId,
+          "parentcustomerid_account@odata.bind": `/accounts(${params.accountId})`,
+          ...(prodGuid
+            ? { "pgp_Prodottoid@odata.bind": `/products(${prodGuid})` }
+            : {}),
+          ...(params.email ? { emailaddress1: params.email } : {}),
+        };
         addDiagnosticCall(params.diagnosticSession, {
-          step: "createContact",
+          step: "verifyOrCreateContact",
+          substep: "createContact",
+          entity: "contacts",
+          attempt: 1,
+          participantRef: params.participantRef,
           method: "POST",
           url: `${params.baseUrl}/api/data/v9.2/contacts`,
-          requestBody: null,
+          requestBody: contactBody,
+          derivedFromFrontend: {
+            accountId: params.accountId,
+            productIdSelfcare: params.productIdSelfcare,
+            productGuid: prodGuid,
+            participantIndex: params.participantRef?.index,
+            participantEmail: params.participantRef?.email,
+            notes: ["contact creation failed"],
+          },
           responseStatus: null,
           durationMs: Date.now() - createStart,
+          success: false,
           error: msg,
         });
       }
