@@ -69,6 +69,7 @@ function StepOne({ children, ...props }: Props) {
     updateFormData,
     isStepOneSubmitted,
     handleStepOneSubmit,
+    isVerifying,
   } = useFormContext();
 
   const [productOptionsToDisplay, setProductOptionsToDisplay] =
@@ -132,11 +133,28 @@ function StepOne({ children, ...props }: Props) {
   const isSubunit = subunitOption === "AOO" || subunitOption === "UO";
   const isApicale = subunitOption === "Apicale";
 
-  function onSubmit(values: StepOneSchema) {
-    if (!isStepThree && updateFormData) {
+  async function onSubmit(values: StepOneSchema) {
+    if (!isStepThree) {
       updateFormData(values);
       handleStepOneSubmit();
-      nextStep();
+      const result = await nextStep({
+        productId: values.productId,
+        origin: values.origin,
+        originId: values.originId,
+        recipientCode: values.recipientCode ?? "",
+      });
+      if (!result.advanced) {
+        if (result.fieldErrors.recipientCode) {
+          form.setError("recipientCode", {
+            message: "Questo codice SDI non è associato a questo ente",
+          });
+        }
+        if (result.fieldErrors.originId) {
+          form.setError("originId", {
+            message: "Questo ente non è associato al codice SDI",
+          });
+        }
+      }
     }
   }
   function isBothPendingAndCompleted(
@@ -439,6 +457,7 @@ function StepOne({ children, ...props }: Props) {
                 handleDataTable={handleDataTable}
                 handleDeleteOn={handleDeleteOn}
                 resetProductOptions={resetProductOptions}
+                isVerifying={isVerifying}
               />
             )}
           </form>

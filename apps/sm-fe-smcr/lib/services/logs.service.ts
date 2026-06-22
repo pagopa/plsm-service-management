@@ -1,6 +1,5 @@
 import database from "@/lib/knex";
 import z from "zod";
-import logger from "@/lib/logger/logger.server";
 import EventEmitter from "events";
 import dayjs from "dayjs";
 
@@ -9,6 +8,22 @@ const LOGS_EVENT_BUS = "logs" as const;
 const LOGS_TABLE = "logs" as const;
 const DEFAULT_LOGS_LIMIT = 100;
 const MAX_LOGS_LIMIT = 500;
+
+function writeInternalLogError(message: string, error: unknown) {
+  process.stderr.write(`${message}: ${formatInternalLogError(error)}\n`);
+}
+
+function formatInternalLogError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.stack ?? `${error.name}: ${error.message}`;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
 
 export const logLevelSchema = z.enum(["DEBUG", "INFO", "WARN", "ERROR"]);
 export type LogLevel = z.infer<typeof logLevelSchema>;
@@ -112,14 +127,14 @@ function parseLogContext(raw: unknown): LogContext | null {
     try {
       value = JSON.parse(raw);
     } catch (error) {
-      logger.warn({ error }, "parseLogContext - invalid json");
+      writeInternalLogError("parseLogContext - invalid json", error);
       return null;
     }
   }
 
   const parsed = logContextSchema.safeParse(value);
   if (!parsed.success) {
-    logger.warn({ error: parsed.error }, "parseLogContext - invalid context");
+    writeInternalLogError("parseLogContext - invalid context", parsed.error);
     return null;
   }
 
@@ -209,7 +224,7 @@ export async function saveLog(
 
     return { data: mappedLog, error: null };
   } catch (error) {
-    logger.error({ error }, "saveLog - database error");
+    writeInternalLogError("saveLog - database error", error);
     return { data: null, error: "Error saving log." };
   }
 }
@@ -240,7 +255,7 @@ export async function readLogs(options: { limit?: number; before?: string | null
 
     return { data: logs, error: null };
   } catch (error) {
-    logger.error({ error }, "readLogs - database error");
+    writeInternalLogError("readLogs - database error", error);
     return { data: null, error: "Error reading log." };
   }
 }
@@ -284,7 +299,7 @@ export async function readLogVolume(options: { days?: number } = {}): Promise<
 
     return { data: volume, error: null };
   } catch (error) {
-    logger.error({ error }, "readLogVolume - database error");
+    writeInternalLogError("readLogVolume - database error", error);
     return { data: null, error: "Error reading log volume." };
   }
 }
@@ -313,7 +328,7 @@ export async function readLogDetail(
 
     return { data: mapLogDetail(log), error: null };
   } catch (error) {
-    logger.error({ error }, "readLogDetail - database error");
+    writeInternalLogError("readLogDetail - database error", error);
     return { data: null, error: "Error reading log detail." };
   }
 }

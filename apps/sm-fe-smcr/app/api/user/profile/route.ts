@@ -1,35 +1,21 @@
-// App Router: app/api/user/profile/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import pg from "@/lib/knex";
-import { randomUUID } from "crypto";
+import { NextResponse } from "next/server";
+import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 
-export async function POST(request: NextRequest) {
+export const runtime = "nodejs";
+
+async function getCurrentProfileResponse() {
   try {
-    const body = await request.json();
-    const { name, email } = body;
+    const currentUser = await getOrCreateCurrentAppUser();
 
-    // Query database
-    const result = await pg
-      .select("id")
-      .from<{ id: string }>("user")
-      .where("email", email);
-
-    if (!result || result.length === 0) {
-      const [insertedId] = await pg("user")
-        .insert({
-          id: randomUUID(),
-          name: name,
-          email: email,
-          createdAt: pg.fn.now(),
-          updatedAt: pg.fn.now(),
-        })
-        .returning("id"); // Restituisce solo l'ID
-
-      return NextResponse.json({ data: insertedId }, { status: 201 });
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    return NextResponse.json({ data: result[0] });
+    return NextResponse.json(
+      { data: currentUser.user },
+      { status: currentUser.created ? 201 : 200 },
+    );
   } catch (error) {
     logServerError(error, "Errore API profile");
     return NextResponse.json(
@@ -37,6 +23,14 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+export async function GET() {
+  return getCurrentProfileResponse();
+}
+
+export async function POST() {
+  return getCurrentProfileResponse();
 }
 
 // Pages Router: pages/api/user/profile.ts

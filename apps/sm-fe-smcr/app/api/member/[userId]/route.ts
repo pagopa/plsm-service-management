@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import knex from "@/lib/knex";
+import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
+
+export const runtime = "nodejs";
 
 export async function GET(
   request: NextRequest,
@@ -12,6 +15,16 @@ export async function GET(
   }
 
   try {
+    const currentUser = await getOrCreateCurrentAppUser();
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (userId !== currentUser.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const members = await knex("user as u")
       .select(
         "m.id",

@@ -6,8 +6,6 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
-  FileText,
-  Landmark,
   Pencil,
   Search,
   TrendingUp,
@@ -26,7 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { inferEnteKind, type EnteKind } from "./entity-kind";
+
+import {
+  createFirmePerEnteColumns,
+  FirmePerEnteTable,
+  volumeLegend,
+} from "./table";
 
 export type FirmePerEnteKpis = {
   totalFirme: number;
@@ -36,58 +39,6 @@ export type FirmePerEnteKpis = {
   mediaPerEnte: number;
   universitaCount: number;
   altriEnti: number;
-};
-
-const volumeLegend = [
-  { key: "lt20", label: "Meno di 20", className: "bg-rose-100 text-rose-800 border-rose-200" },
-  {
-    key: "20-99",
-    label: "Tra 20 e 99",
-    className: "bg-orange-100 text-orange-900 border-orange-200",
-  },
-  {
-    key: "100-499",
-    label: "Tra 100 e 499",
-    className: "bg-amber-100 text-amber-900 border-amber-200",
-  },
-  {
-    key: "gte500",
-    label: "500 o più",
-    className: "bg-emerald-100 text-emerald-900 border-emerald-200",
-  },
-] as const;
-
-function volumeTier(count: number) {
-  if (count < 20) return "lt20" as const;
-  if (count < 100) return "20-99" as const;
-  if (count < 500) return "100-499" as const;
-  return "gte500" as const;
-}
-
-function volumeBadgeClass(count: number) {
-  const tier = volumeTier(count);
-  return volumeLegend.find((l) => l.key === tier)?.className ?? "";
-}
-
-const kindStyles: Record<
-  EnteKind,
-  { badge: string; iconWrap: string; label: string }
-> = {
-  UNIVERSITÀ: {
-    label: "UNIVERSITÀ",
-    badge: "bg-teal-100 text-teal-900 border-teal-200",
-    iconWrap: "bg-teal-500 text-white",
-  },
-  GOV: {
-    label: "GOV",
-    badge: "bg-violet-100 text-violet-900 border-violet-200",
-    iconWrap: "bg-violet-400 text-white",
-  },
-  REGIONE: {
-    label: "REGIONE",
-    badge: "bg-orange-100 text-orange-900 border-orange-200",
-    iconWrap: "bg-orange-400 text-white",
-  },
 };
 
 function formatItInt(n: number) {
@@ -100,18 +51,6 @@ function formatItPercent(ratio: number) {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   }).format(ratio);
-}
-
-function rankCircleClass(rank: number) {
-  if (rank === 1) return "bg-amber-400 text-amber-950 shadow-sm";
-  if (rank === 2) return "bg-slate-300 text-slate-900";
-  if (rank === 3) return "bg-amber-700 text-amber-50";
-  return "bg-sky-100 text-sky-800";
-}
-
-function KindIcon({ kind }: { kind: EnteKind }) {
-  if (kind === "GOV") return <FileText className="size-4" aria-hidden />;
-  return <Landmark className="size-4" aria-hidden />;
 }
 
 type Props = {
@@ -143,6 +82,11 @@ export function FirmePerEnteView({ rows, kpis }: Props) {
     filtered.length === 0
       ? "0 di 0"
       : `${start + 1} - ${Math.min(start + pageSize, filtered.length)} di ${filtered.length}`;
+
+  const columns = useMemo(
+    () => createFirmePerEnteColumns({ rankOffset: start }),
+    [start],
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -233,86 +177,11 @@ export function FirmePerEnteView({ rows, kpis }: Props) {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-md border">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead className="bg-muted/50 text-muted-foreground">
-                <tr className="border-b">
-                  <th className="w-12 px-3 py-3 text-left font-medium">#</th>
-                  <th className="px-3 py-3 text-left font-medium">Ente</th>
-                  <th className="px-3 py-3 text-left font-medium">Tipo</th>
-                  <th className="w-36 px-3 py-3 text-right font-medium">Firme</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.map((row, i) => {
-                  const rank = start + i + 1;
-                  const kind = inferEnteKind(row.description);
-                  const styles = kindStyles[kind];
-                  return (
-                    <tr
-                      key={row.internalinstitutionid}
-                      className="border-b last:border-0 hover:bg-muted/30"
-                    >
-                      <td className="px-3 py-3 align-middle">
-                        <span
-                          className={cn(
-                            "inline-flex size-8 items-center justify-center rounded-full text-xs font-semibold",
-                            rankCircleClass(rank),
-                          )}
-                        >
-                          {rank}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 align-middle">
-                        <div className="flex items-start gap-3">
-                          <span
-                            className={cn(
-                              "flex size-9 shrink-0 items-center justify-center rounded-lg",
-                              styles.iconWrap,
-                            )}
-                          >
-                            <KindIcon kind={kind} />
-                          </span>
-                          <div className="min-w-0">
-                            <p className="font-semibold leading-tight">
-                              {row.description}
-                            </p>
-                            <p className="text-muted-foreground mt-0.5 truncate text-xs font-mono">
-                              {row.internalinstitutionid}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 align-middle">
-                        <Badge
-                          variant="outline"
-                          className={cn("font-medium", styles.badge)}
-                        >
-                          {styles.label}
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-3 text-right align-middle">
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "font-medium tabular-nums",
-                            volumeBadgeClass(row.totale_firme),
-                          )}
-                        >
-                          {formatItInt(row.totale_firme)} firme
-                        </Badge>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            {filtered.length === 0 && (
-              <p className="text-muted-foreground p-6 text-center text-sm">
-                Nessun ente corrisponde alla ricerca.
-              </p>
-            )}
-          </div>
+          <FirmePerEnteTable
+            columns={columns}
+            data={pageRows}
+            isEmpty={filtered.length === 0}
+          />
 
           <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">

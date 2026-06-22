@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-05-18 10:24
+# Generato il: 2026-06-15 09:28
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -151,7 +151,7 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr"
     NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-p-itn-auth-func-01.azurewebsites.net/api/v1/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback"
   }
 
   yaml_auth_func_slot_app_settings = {
@@ -163,7 +163,7 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr-staging"
     NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net/api/v1/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback"
   }
 
   # ────────────────────────────────────────────────────────────
@@ -202,6 +202,10 @@ locals {
     FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX = "Selfcare_onboarding_mensili_"
     FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO          = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_firma_con_io.value
     FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX        = data.azurerm_key_vault_secret.fe_smcr_azure_storage_firma_con_io_blob_prefix.value
+    FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL       = data.azurerm_key_vault_secret.fe_smcr_api_key_subscription_key_billing_portal.value
+    FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET                = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_wallet.value
+    FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX              = data.azurerm_key_vault_secret.fe_smcr_azure_storage_wallet_blob_prefix.value
+    FE_SMCR_API_KEY_UTENTI_IO                             = data.azurerm_key_vault_secret.fe_smcr_api_key_utenti_io.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"
@@ -219,6 +223,9 @@ locals {
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL                                = "https://plsm-p-itn-auth-func-01.azurewebsites.net"
+    AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
+    AUTH_JWT_ISSUER                                       = "plsm-auth-service"
+    AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr"
   }
 
   yaml_fe_smcr_slot_app_settings = {
@@ -253,6 +260,10 @@ locals {
     FE_SMCR_AZURE_STORAGE_ONBOARDING_PRODUCTS_BLOB_PREFIX = "Selfcare_onboarding_mensili_"
     FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO          = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_firma_con_io.value
     FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX        = data.azurerm_key_vault_secret.fe_smcr_azure_storage_firma_con_io_blob_prefix.value
+    FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL       = data.azurerm_key_vault_secret.fe_smcr_api_key_subscription_key_billing_portal.value
+    FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET                = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_wallet.value
+    FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX              = data.azurerm_key_vault_secret.fe_smcr_azure_storage_wallet_blob_prefix.value
+    FE_SMCR_API_KEY_UTENTI_IO                             = data.azurerm_key_vault_secret.fe_smcr_api_key_utenti_io.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"
@@ -270,6 +281,9 @@ locals {
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL                                = "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net"
+    AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
+    AUTH_JWT_ISSUER                                       = "plsm-auth-service-staging"
+    AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr-staging"
   }
 
   # ────────────────────────────────────────────────────────────
