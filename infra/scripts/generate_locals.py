@@ -178,6 +178,22 @@ def render_map(settings: dict, indent: int = 4) -> str:
     return "{\n" + rows + f"\n{' ' * (indent - 2)}}}"
 
 
+def hcl_string(value) -> str:
+    escaped = str(value).replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
+def render_string_list(values: list, indent: int = 4) -> str:
+    """Serializza una lista Python come lista HCL Terraform di stringhe."""
+    if not values:
+        return "[]"
+    rows = "\n".join(
+        f"{' ' * indent}{hcl_string(value)},"
+        for value in values
+    )
+    return "[\n" + rows + f"\n{' ' * (indent - 2)}]"
+
+
 # ─── Parsing della sezione app ────────────────────────────────────────────────
 
 
@@ -221,6 +237,7 @@ def generate_app_block(app_key: str, app_cfg: dict) -> str:
         yaml_fe_smcr_slot_app_settings = { ... }   # o reference se identici
     """
     local_name = app_cfg["__local"]
+    sticky = app_cfg.get("__sticky", []) or []
     shared, prod_only, staging_only = split_settings(app_cfg)
 
     prod = {**shared, **prod_only}
@@ -253,6 +270,11 @@ def generate_app_block(app_key: str, app_cfg: dict) -> str:
         )
     else:
         lines.append(f"  {local_name}_slot_app_settings = {render_map(staging)}")
+
+    lines += [
+        "",
+        f"  {local_name}_sticky_app_setting_names = {render_string_list(sticky)}",
+    ]
 
     return "\n".join(lines)
 

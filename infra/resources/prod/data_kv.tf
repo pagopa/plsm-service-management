@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-06-15 09:28
+# Generato il: 2026-06-22 11:57
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -101,5 +101,10 @@ data "azurerm_key_vault_secret" "fe_smcr_crm_api_url" {
 
 data "azurerm_key_vault_secret" "fe_smcr_logs_endpoint" {
   name         = "fe-smcr-logs-endpoint"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_signature_fn_key" {
+  name         = "fe-smcr-signature-fn-key"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
