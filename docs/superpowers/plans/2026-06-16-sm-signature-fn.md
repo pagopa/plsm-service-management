@@ -198,7 +198,7 @@ MAX_FILE_SIZE_BYTES=10485760
 
 - [ ] **Step 9: Install workspace dependencies**
 
-Run: `cd /Users/lorenzo.franceschini/dev/pagopa/plsm-service-management && yarn install`
+Run: `cd <repo-root> && yarn install`
 Expected: Lockfile updates, `sm-signature-fn` linked into the workspace, no errors.
 
 - [ ] **Step 10: Commit**
@@ -1004,17 +1004,17 @@ Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 
 - [ ] **Step 1: Type-check the whole repo**
 
-Run: `cd /Users/lorenzo.franceschini/dev/pagopa/plsm-service-management && yarn check-types`
+Run: `cd <repo-root> && yarn check-types`
 Expected: PASS including `sm-signature-fn`.
 
 - [ ] **Step 2: Build via turbo**
 
-Run: `cd /Users/lorenzo.franceschini/dev/pagopa/plsm-service-management && yarn build`
+Run: `cd <repo-root> && yarn build`
 Expected: PASS — `sm-signature-fn#build` succeeds.
 
 - [ ] **Step 3: Run tests via turbo**
 
-Run: `cd /Users/lorenzo.franceschini/dev/pagopa/plsm-service-management && yarn turbo run test --filter=sm-signature-fn`
+Run: `cd <repo-root> && yarn turbo run test --filter=sm-signature-fn`
 Expected: PASS — all suites green.
 
 - [ ] **Step 4: Confirm clean status**
@@ -1049,12 +1049,12 @@ signature:
 
 - [ ] **Step 2: Regenerate the dev locals**
 
-Run: `cd /Users/lorenzo.franceschini/dev/pagopa/plsm-service-management && python3 infra/scripts/generate_locals.py --env dev`
+Run: `cd <repo-root> && python3 infra/scripts/generate_locals.py --env dev`
 Expected: `infra/resources/dev/locals_yaml.tf` now contains a `yaml_signature_func_app_settings` local with `DSS_API_BASE_URL` and `MAX_FILE_SIZE_BYTES`.
 
 - [ ] **Step 3: Regenerate the prod locals**
 
-Run: `cd /Users/lorenzo.franceschini/dev/pagopa/plsm-service-management && python3 infra/scripts/generate_locals.py --env prod`
+Run: `cd <repo-root> && python3 infra/scripts/generate_locals.py --env prod`
 Expected: `infra/resources/prod/locals_yaml.tf` now contains `yaml_signature_func_app_settings`.
 
 - [ ] **Step 4: Confirm no secrets were added**
@@ -1157,7 +1157,7 @@ dev locals. If the dev environment uses different local/data names than prod
 
 - [ ] **Step 4: Format**
 
-Run: `cd /Users/lorenzo.franceschini/dev/pagopa/plsm-service-management && terraform -chdir=infra/resources/prod fmt && terraform -chdir=infra/resources/dev fmt`
+Run: `cd <repo-root> && terraform -chdir=infra/resources/prod fmt && terraform -chdir=infra/resources/dev fmt`
 Expected: files reformatted, exit 0.
 
 - [ ] **Step 5: Commit**
@@ -1177,12 +1177,12 @@ Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 
 - [ ] **Step 1: Terraform validate (prod)**
 
-Run: `cd /Users/lorenzo.franceschini/dev/pagopa/plsm-service-management && terraform -chdir=infra/resources/prod init -backend=false && terraform -chdir=infra/resources/prod validate`
+Run: `cd <repo-root> && terraform -chdir=infra/resources/prod init -backend=false && terraform -chdir=infra/resources/prod validate`
 Expected: "Success! The configuration is valid." (If `init` requires backend/network access unavailable locally, at minimum run `terraform -chdir=infra/resources/prod fmt -check` and resolve any HCL syntax errors; note the limitation.)
 
 - [ ] **Step 2: Terraform validate (dev)**
 
-Run: `cd /Users/lorenzo.franceschini/dev/pagopa/plsm-service-management && terraform -chdir=infra/resources/dev init -backend=false && terraform -chdir=infra/resources/dev validate`
+Run: `cd <repo-root> && terraform -chdir=infra/resources/dev init -backend=false && terraform -chdir=infra/resources/dev validate`
 Expected: "Success! The configuration is valid."
 
 - [ ] **Step 3: Confirm clean status**

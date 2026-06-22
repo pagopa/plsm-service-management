@@ -3,6 +3,21 @@ name: CD - Signature Function
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: Environment where the artifact will be deployed.
+        type: string
+        required: true
+        default: "app-prod"
+      resource_group_name:
+        description: "Function App resource group name"
+        type: string
+        required: true
+        default: "plsm-p-itn-fn-rg-01"
+      function_app_name:
+        description: "Function App name"
+        type: string
+        required: true
+        default: "plsm-p-itn-sig-func-01"
       use_staging_slot:
         description: True if artifact should be deployed to staging slot
         type: boolean
@@ -18,6 +33,11 @@ on:
         type: boolean
         required: false
         default: true
+      override_labels:
+        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        type: string
+        required: false
+        default: "prod"
 
 permissions:
   contents: read
@@ -29,11 +49,11 @@ jobs:
     uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@main
     with:
       workspace_name: sm-signature-fn
-      environment: app-prod
-      resource_group_name: plsm-p-itn-fn-rg-01
-      function_app_name: plsm-p-itn-sig-func-01
+      environment: ${{ inputs.environment }}
+      resource_group_name: ${{ inputs.resource_group_name }}
+      function_app_name: ${{ inputs.function_app_name }}
       use_staging_slot: ${{ inputs.use_staging_slot }}
       use_private_agent: ${{ inputs.use_private_agent }}
       use_labels: ${{ inputs.use_labels }}
-      override_labels: prod
+      override_labels: ${{ inputs.override_labels }}
     secrets: inherit

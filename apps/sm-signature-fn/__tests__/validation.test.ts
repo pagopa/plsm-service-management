@@ -40,6 +40,24 @@ describe("validateFile", () => {
       error: "Unsupported file type",
     });
   });
+
+  it("rejects a .pdf file with an unexpected MIME type", () => {
+    const res = validateFile(makeFile("doc.pdf", 100, "text/plain"), max);
+    expect(res).toEqual({
+      ok: false,
+      status: 415,
+      error: "Unsupported file type",
+    });
+  });
+
+  it("rejects a .p7m file with an unexpected MIME type", () => {
+    const res = validateFile(makeFile("doc.p7m", 100, "text/plain"), max);
+    expect(res).toEqual({
+      ok: false,
+      status: 415,
+      error: "Unsupported file type",
+    });
+  });
 });
 
 describe("fileToBase64", () => {
