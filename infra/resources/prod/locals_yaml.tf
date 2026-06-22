@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-06-22 12:12
+# Generato il: 2026-06-22 12:31
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -230,14 +230,14 @@ locals {
     ONBOARDING_BASE_PATH                                  = "https://api.selfcare.pagopa.it/"
     UPLOAD                                                = "external/internal/v1/onboarding"
     TEST_ENDPOINT                                         = "mytestendpoint"
-    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01.azurewebsites.net"
-    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL                                = "https://plsm-p-itn-auth-func-01.azurewebsites.net"
     AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
     AUTH_JWT_ISSUER                                       = "plsm-auth-service"
     AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr"
+    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01.azurewebsites.net"
+    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
   }
 
   yaml_fe_smcr_slot_app_settings = {
@@ -290,19 +290,24 @@ locals {
     ONBOARDING_BASE_PATH                                  = "https://api.selfcare.pagopa.it/"
     UPLOAD                                                = "external/internal/v1/onboarding"
     TEST_ENDPOINT                                         = "mytestendpoint"
-    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01.azurewebsites.net"
-    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL                                = "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net"
     AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
     AUTH_JWT_ISSUER                                       = "plsm-auth-service-staging"
     AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr-staging"
+    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01-staging.azurewebsites.net"
+    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
   }
 
   yaml_fe_smcr_sticky_app_setting_names = [
     "SIGNATURE_FN_URL",
     "SIGNATURE_FN_KEY",
+    "AUTH_FUNCTION_BASE_URL",
+    "AUTH_JWT_AUDIENCE",
+    "AUTH_JWT_ISSUER",
+    "NEXT_PUBLIC_APP_URL",
+    "NEXT_PUBLIC_POST_LOGIN_REDIRECT",
   ]
 
   # ────────────────────────────────────────────────────────────

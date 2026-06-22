@@ -52,6 +52,11 @@ fe_smcr:
   __sticky:
     - SIGNATURE_FN_URL
     - SIGNATURE_FN_KEY
+    - AUTH_FUNCTION_BASE_URL
+    - AUTH_JWT_AUDIENCE
+    - AUTH_JWT_ISSUER
+    - NEXT_PUBLIC_APP_URL
+    - NEXT_PUBLIC_POST_LOGIN_REDIRECT
   # Segreti KV
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT: "kv:fe_smcr_ocp_apim_subscription_key_uat"
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST: "kv:fe_smcr_api_slack_call_management_hook_test"
@@ -105,8 +110,6 @@ fe_smcr:
   ONBOARDING_BASE_PATH: "https://api.selfcare.pagopa.it/"
   UPLOAD: "external/internal/v1/onboarding"
   TEST_ENDPOINT: "mytestendpoint"
-  SIGNATURE_FN_URL: "https://plsm-p-itn-sig-func-01.azurewebsites.net"
-  SIGNATURE_FN_KEY: "kv:fe_smcr_signature_fn_key"
   # Slot-specifici: URL pubblici
   production:
     NEXT_PUBLIC_APP_URL: "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
@@ -116,6 +119,8 @@ fe_smcr:
     AUTH_JWT_SECRET: "kv:auth_jwt_secret"
     AUTH_JWT_ISSUER: "plsm-auth-service"
     AUTH_JWT_AUDIENCE: "plsm-fe-smcr"
+    SIGNATURE_FN_URL: "https://plsm-p-itn-sig-func-01.azurewebsites.net"
+    SIGNATURE_FN_KEY: "kv:fe_smcr_signature_fn_key"
   staging:
     NEXT_PUBLIC_APP_URL: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     # NEXT_PUBLIC_MSAL_REDIRECT_URI: "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
@@ -124,6 +129,8 @@ fe_smcr:
     AUTH_JWT_SECRET: "kv:auth_jwt_secret"
     AUTH_JWT_ISSUER: "plsm-auth-service-staging"
     AUTH_JWT_AUDIENCE: "plsm-fe-smcr-staging"
+    SIGNATURE_FN_URL: "https://plsm-p-itn-sig-func-01-staging.azurewebsites.net"
+    SIGNATURE_FN_KEY: "kv:fe_smcr_signature_fn_key"
 
 # ─── CRM Function (Dynamics CRM Integration) ─────────────────────────────────
 # Production = Staging (stessi valori per entrambi gli slot)
