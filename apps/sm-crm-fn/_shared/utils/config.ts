@@ -104,8 +104,7 @@ const configSchema = z.object({
         ctx.addIssue({ code: "custom", message: `CRM_PRODUCTS_MAP_UAT non valido: ${e instanceof Error ? e.message : e}` });
         return z.NEVER;
       }
-    })
-    .pipe(z.record(z.string(), z.string())),
+    }),
   /**
    * Mappa prodotti CRM per ambiente PROD (JSON serializzato da Key Vault).
    * Formato: Record<ProductIdSelfcare, string> dove il valore è il GUID Dynamics.
@@ -120,8 +119,7 @@ const configSchema = z.object({
         ctx.addIssue({ code: "custom", message: `CRM_PRODUCTS_MAP_PROD non valido: ${e instanceof Error ? e.message : e}` });
         return z.NEVER;
       }
-    })
-    .pipe(z.record(z.string(), z.string())),
+    }),
   /**
    * Mappa tipologie referente CRM per ambiente UAT (JSON serializzato da Key Vault).
    * Formato: Record<TipologiaReferente, number>.
@@ -136,7 +134,7 @@ const configSchema = z.object({
         ctx.addIssue({ code: "custom", message: `CRM_TIPOLOGIA_REFERENTE_MAP_UAT non valido: ${e instanceof Error ? e.message : e}` });
         return z.NEVER;
       }
-    }, z.record(z.string(), z.coerce.number())),
+}),
   /**
    * Mappa tipologie referente CRM per ambiente PROD (JSON serializzato da Key Vault).
    * Formato: Record<TipologiaReferente, number>.
@@ -151,7 +149,7 @@ const configSchema = z.object({
         ctx.addIssue({ code: "custom", message: `CRM_TIPOLOGIA_REFERENTE_MAP_PROD non valido: ${e instanceof Error ? e.message : e}` });
         return z.NEVER;
       }
-    }, z.record(z.string(), z.coerce.number())),
+}),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
