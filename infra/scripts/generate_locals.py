@@ -194,6 +194,17 @@ def render_string_list(values: list, indent: int = 4) -> str:
     return "[\n" + rows + f"\n{' ' * (indent - 2)}]"
 
 
+def parse_sticky_settings(app_key: str, app_cfg: dict) -> list[str]:
+    """Legge e valida la metachiave __sticky da una sezione YAML."""
+    sticky = app_cfg.get("__sticky", []) or []
+    if not isinstance(sticky, list):
+        raise TypeError(f"__sticky for {app_key} must be a list of strings")
+    invalid = [value for value in sticky if not isinstance(value, str)]
+    if invalid:
+        raise TypeError(f"__sticky for {app_key} must contain only strings")
+    return sticky
+
+
 # ─── Parsing della sezione app ────────────────────────────────────────────────
 
 
@@ -237,7 +248,7 @@ def generate_app_block(app_key: str, app_cfg: dict) -> str:
         yaml_fe_smcr_slot_app_settings = { ... }   # o reference se identici
     """
     local_name = app_cfg["__local"]
-    sticky = app_cfg.get("__sticky", []) or []
+    sticky = parse_sticky_settings(app_key, app_cfg)
     shared, prod_only, staging_only = split_settings(app_cfg)
 
     prod = {**shared, **prod_only}
