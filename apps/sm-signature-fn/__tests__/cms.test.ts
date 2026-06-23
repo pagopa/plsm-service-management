@@ -18,4 +18,16 @@ describe("extractCmsSignedContent", () => {
     expect(extracted).not.toBeNull();
     expect(Buffer.from(extracted ?? [])).toEqual(Buffer.from("hello", "utf8"));
   });
+
+  it("extracts constructed signed content split into OCTET STRING chunks", () => {
+    const fixture = Buffer.from(
+      "303006092a864886f70d010702a02330210201013100301806092a864886f70d010701a00b24090402686504036c6c6f3100",
+      "hex",
+    );
+
+    const extracted = extractCmsSignedContent(fixture);
+
+    expect(extracted).not.toBeNull();
+    expect(Buffer.from(extracted ?? [])).toEqual(Buffer.from("hello", "utf8"));
+  });
 });
