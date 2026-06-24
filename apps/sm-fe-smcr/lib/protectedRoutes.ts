@@ -75,6 +75,11 @@ export const protectedRoutes: ProtectedRoute[] = [
         path: "/dashboard/firme-per-ente",
         requiredTeams: ["service-management"],
       },
+      {
+        label: "Verifica firma",
+        path: "/dashboard/verifica-firma",
+        requiredTeams: ["service-management"],
+      },
     ],
   },
   {
