@@ -34,43 +34,7 @@ check_result() {
 }
 
 echo "================================================"
-echo "SECTION 1: VNet Integration (askmebot function)"
-echo "================================================"
-echo
-
-echo "1.1. Checking VNet Integration (askmebot production slot)..."
-vnet_prod=$(az functionapp show \
-  --name plsm-p-itn-askmebot-func-01 \
-  --resource-group plsm-p-itn-fn-rg-01 \
-  --query "virtualNetworkSubnetId" -o tsv 2>/dev/null || echo "NOT_SET")
-check_result "VNet Integration (askmebot prod)" \
-  "plsm-p-itn-fe-smcr-app-snet-01" \
-  "$vnet_prod"
-
-echo
-echo "1.2. Checking VNet Integration (askmebot staging slot)..."
-vnet_staging=$(az functionapp deployment slot show \
-  --name plsm-p-itn-askmebot-func-01 \
-  --resource-group plsm-p-itn-fn-rg-01 \
-  --slot staging \
-  --query "virtualNetworkSubnetId" -o tsv 2>/dev/null || echo "NOT_SET")
-check_result "VNet Integration (askmebot staging)" \
-  "plsm-p-itn-fe-smcr-app-snet-01" \
-  "$vnet_staging"
-
-echo
-echo "1.3. Checking vnetRouteAllEnabled (askmebot production)..."
-vnet_route_prod=$(az functionapp show \
-  --name plsm-p-itn-askmebot-func-01 \
-  --resource-group plsm-p-itn-fn-rg-01 \
-  --query "siteConfig.vnetRouteAllEnabled" -o tsv 2>/dev/null || echo "false")
-check_result "vnetRouteAllEnabled (askmebot prod)" \
-  "true" \
-  "$vnet_route_prod"
-
-echo
-echo "================================================"
-echo "SECTION 2: Startup Command (fe_smcr web app)"
+echo "SECTION 1: Startup Command (fe_smcr web app)"
 echo "================================================"
 echo
 
@@ -226,7 +190,6 @@ fi
 echo -e "${GREEN}✅ All checks passed successfully!${NC}"
 echo
 echo "The following configurations have been verified:"
-echo "  • VNet Integration for askmebot function (production + staging)"
 echo "  • Startup command for fe_smcr app (production + staging)"
 echo "  • Front Door resources deleted"
 echo "  • Custom domain smcr.pagopa.it configured with managed certificate"

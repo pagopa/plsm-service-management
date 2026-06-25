@@ -38,9 +38,6 @@ certificates:
 onboarding:
   __skip: true # onboarding-fn non deployata in DEV
 
-askmebot:
-  __skip: true # askmebot-fn non deployata in DEV
-
 # =============================================================================
 # Risorse Azure — processate da generate_locals.py (__local = prefisso local TF)
 # =============================================================================
