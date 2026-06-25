@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-06-15 09:28
+# Generato il: 2026-06-22 12:31
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -21,6 +21,8 @@ locals {
   }
 
   yaml_common_slot_app_settings = local.yaml_common_app_settings
+
+  yaml_common_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # certificates
@@ -45,6 +47,8 @@ locals {
   }
 
   yaml_certificates_func_slot_app_settings = local.yaml_certificates_func_app_settings
+
+  yaml_certificates_func_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # onboarding
@@ -79,6 +83,8 @@ locals {
     APPINSIGHTS_INSTRUMENTATIONKEY        = data.azurerm_key_vault_secret.appinsights_instrumentationkey.value
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY     = data.azurerm_key_vault_secret.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY.value
   }
+
+  yaml_onboarding_func_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # askmebot
@@ -138,6 +144,8 @@ locals {
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY = data.azurerm_key_vault_secret.askmebot_ocp_apim_subscription_key.value
   }
 
+  yaml_askmebot_func_sticky_app_setting_names = []
+
   # ────────────────────────────────────────────────────────────
   # auth_func
   # ────────────────────────────────────────────────────────────
@@ -151,7 +159,7 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr"
     NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
   }
 
   yaml_auth_func_slot_app_settings = {
@@ -163,8 +171,10 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr-staging"
     NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
   }
+
+  yaml_auth_func_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # fe_smcr
@@ -226,6 +236,8 @@ locals {
     AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
     AUTH_JWT_ISSUER                                       = "plsm-auth-service"
     AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr"
+    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01.azurewebsites.net"
+    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
   }
 
   yaml_fe_smcr_slot_app_settings = {
@@ -284,7 +296,19 @@ locals {
     AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
     AUTH_JWT_ISSUER                                       = "plsm-auth-service-staging"
     AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr-staging"
+    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01-staging.azurewebsites.net"
+    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
   }
+
+  yaml_fe_smcr_sticky_app_setting_names = [
+    "SIGNATURE_FN_URL",
+    "SIGNATURE_FN_KEY",
+    "AUTH_FUNCTION_BASE_URL",
+    "AUTH_JWT_AUDIENCE",
+    "AUTH_JWT_ISSUER",
+    "NEXT_PUBLIC_APP_URL",
+    "NEXT_PUBLIC_POST_LOGIN_REDIRECT",
+  ]
 
   # ────────────────────────────────────────────────────────────
   # portale_fatturazione
@@ -298,6 +322,8 @@ locals {
 
   yaml_pf_func_slot_app_settings = local.yaml_pf_func_app_settings
 
+  yaml_pf_func_sticky_app_setting_names = []
+
   # ────────────────────────────────────────────────────────────
   # backend_smcr
   # ────────────────────────────────────────────────────────────
@@ -305,6 +331,8 @@ locals {
   yaml_backend_app_settings = {}
 
   yaml_backend_slot_app_settings = local.yaml_backend_app_settings
+
+  yaml_backend_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # crm_function
@@ -328,6 +356,21 @@ locals {
   }
 
   yaml_crm_func_slot_app_settings = local.yaml_crm_func_app_settings
+
+  yaml_crm_func_sticky_app_setting_names = []
+
+  # ────────────────────────────────────────────────────────────
+  # signature
+  # ────────────────────────────────────────────────────────────
+
+  yaml_signature_func_app_settings = {
+    DSS_API_BASE_URL    = "http://dss-api-dem.northeurope.azurecontainer.io:8080"
+    MAX_FILE_SIZE_BYTES = "10485760"
+  }
+
+  yaml_signature_func_slot_app_settings = local.yaml_signature_func_app_settings
+
+  yaml_signature_func_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────────
   # Metadati ambiente

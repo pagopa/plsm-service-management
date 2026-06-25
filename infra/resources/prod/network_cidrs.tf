@@ -66,3 +66,10 @@ resource "dx_available_subnet_cidr" "auth_fa_subnet_cidr" {
   prefix_length      = 24
   depends_on         = [module.crm_function]
 }
+
+# CIDR per la Function App: Signature
+resource "dx_available_subnet_cidr" "signature_fa_subnet_cidr" {
+  virtual_network_id = module.azure_core_infra.common_vnet.id
+  prefix_length      = 24
+  depends_on         = [module.auth_function]
+}
