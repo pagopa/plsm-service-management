@@ -28,6 +28,8 @@ module "azure_app_service" {
   app_settings      = var.app_settings
   slot_app_settings = var.slot_app_settings
 
+  sticky_app_setting_names = var.sticky_app_setting_names
+
   health_check_path = var.health_check_path
   tags              = var.tags
 

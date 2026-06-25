@@ -20,6 +20,8 @@ module "azure_fe_app_service_smcr" {
   app_settings      = merge(local.common_app_settings, local.fe_smcr_app_settings)
   slot_app_settings = merge(local.common_app_settings, local.fe_smcr_slot_app_settings)
 
+  sticky_app_setting_names = local.yaml_fe_smcr_sticky_app_setting_names
+
   health_check_path = "/api/health"
   tags              = local.tags
 

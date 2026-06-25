@@ -51,6 +51,12 @@ variable "slot_app_settings" {
   description = "Resources tags"
 }
 
+variable "sticky_app_setting_names" {
+  type        = list(string)
+  default     = []
+  description = "List of application setting names that are not swapped between slots."
+}
+
 variable "tags" {
   type        = map(any)
   description = "Resources tags"
