@@ -2,7 +2,6 @@
 
 import {
   ActivityIcon,
-  BotIcon,
   FileSignature,
   FolderIcon,
   LucideIcon,
