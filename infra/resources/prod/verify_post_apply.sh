@@ -38,7 +38,7 @@ echo "SECTION 1: Startup Command (fe_smcr web app)"
 echo "================================================"
 echo
 
-echo "2.1. Checking Startup Command (fe_smcr production slot)..."
+echo "1.1. Checking Startup Command (fe_smcr production slot)..."
 startup_prod=$(az webapp config show \
   --name plsm-p-itn-fe-smcr-app-01 \
   --resource-group plsm-p-itn-apps-rg-01 \
@@ -48,7 +48,7 @@ check_result "Startup Command (fe_smcr prod)" \
   "$startup_prod"
 
 echo
-echo "2.2. Checking Startup Command (fe_smcr staging slot)..."
+echo "1.2. Checking Startup Command (fe_smcr staging slot)..."
 startup_staging=$(az webapp config show \
   --name plsm-p-itn-fe-smcr-app-01 \
   --resource-group plsm-p-itn-apps-rg-01 \
@@ -60,11 +60,11 @@ check_result "Startup Command (fe_smcr staging)" \
 
 echo
 echo "================================================"
-echo "SECTION 3: Front Door Deletion"
+echo "SECTION 2: Front Door Deletion"
 echo "================================================"
 echo
 
-echo "3.1. Verifying Front Door Profile deletion..."
+echo "2.1. Verifying Front Door Profile deletion..."
 afd_check=$(az afd profile show \
   --profile-name plsm-p-itn-smcr-afd-01 \
   --resource-group plsm-p-itn-apps-rg-01 2>&1 | grep -o "ResourceNotFound" || echo "STILL_EXISTS")
@@ -73,14 +73,14 @@ check_result "Front Door Deleted" \
   "$afd_check"
 
 echo
-echo "3.2. Verifying DNS TXT record _dnsauth removal (Front Door validation)..."
+echo "2.2. Verifying DNS TXT record _dnsauth removal (Front Door validation)..."
 dns_dnsauth=$(dig +short _dnsauth.smcr.pagopa.it @8.8.8.8 2>/dev/null || echo "")
 check_result "DNS _dnsauth Removed" \
   "" \
   "$dns_dnsauth"
 
 echo
-echo "3.3. Verifying DNS TXT record asuid removal..."
+echo "2.3. Verifying DNS TXT record asuid removal..."
 dns_asuid=$(dig +short asuid.smcr.pagopa.it @8.8.8.8 2>/dev/null || echo "")
 check_result "DNS asuid Removed" \
   "" \
@@ -88,11 +88,11 @@ check_result "DNS asuid Removed" \
 
 echo
 echo "================================================"
-echo "SECTION 4: Custom Domain & Managed Certificate"
+echo "SECTION 3: Custom Domain & Managed Certificate"
 echo "================================================"
 echo
 
-echo "4.1. Checking Custom Hostname (smcr.pagopa.it)..."
+echo "3.1. Checking Custom Hostname (smcr.pagopa.it)..."
 hostname_check=$(az webapp config hostname list \
   --webapp-name plsm-p-itn-fe-smcr-app-01 \
   --resource-group plsm-p-itn-apps-rg-01 \
@@ -102,7 +102,7 @@ check_result "Custom Hostname Present" \
   "$hostname_check"
 
 echo
-echo "4.2. Checking Managed Certificate binding..."
+echo "3.2. Checking Managed Certificate binding..."
 cert_check=$(az webapp config hostname list \
   --webapp-name plsm-p-itn-fe-smcr-app-01 \
   --resource-group plsm-p-itn-apps-rg-01 \
@@ -113,18 +113,18 @@ check_result "Certificate Bound" \
 
 echo
 echo "================================================"
-echo "SECTION 5: DNS Configuration"
+echo "SECTION 4: DNS Configuration"
 echo "================================================"
 echo
 
-echo "5.1. Checking Public DNS A Record..."
+echo "4.1. Checking Public DNS A Record..."
 dns_a=$(dig +short smcr.pagopa.it @8.8.8.8 2>/dev/null | head -1 || echo "NOT_SET")
 check_result "DNS A Record (validation IP)" \
   "4.232.99.4" \
   "$dns_a"
 
 echo
-echo "5.2. Checking Private DNS Zone exists..."
+echo "4.2. Checking Private DNS Zone exists..."
 private_zone=$(az network private-dns zone show \
   --name smcr.pagopa.it \
   --resource-group plsm-p-itn-common-rg-01 \
@@ -134,7 +134,7 @@ check_result "Private DNS Zone" \
   "$private_zone"
 
 echo
-echo "5.3. Checking Private DNS Zone VNet Link..."
+echo "4.3. Checking Private DNS Zone VNet Link..."
 vnet_link=$(az network private-dns link vnet list \
   --zone-name smcr.pagopa.it \
   --resource-group plsm-p-itn-common-rg-01 \
@@ -145,11 +145,11 @@ check_result "Private DNS VNet Link" \
 
 echo
 echo "================================================"
-echo "SECTION 6: Access Restrictions (should be removed)"
+echo "SECTION 5: Access Restrictions (should be removed)"
 echo "================================================"
 echo
 
-echo "6.1. Checking IP Security Restrictions (fe_smcr production)..."
+echo "5.1. Checking IP Security Restrictions (fe_smcr production)..."
 ip_restrictions=$(az webapp config access-restriction show \
   --name plsm-p-itn-fe-smcr-app-01 \
   --resource-group plsm-p-itn-apps-rg-01 \
@@ -159,7 +159,7 @@ check_result "Front Door Access Restriction Removed (prod)" \
   "$ip_restrictions"
 
 echo
-echo "6.2. Checking IP Security Restrictions (fe_smcr staging)..."
+echo "5.2. Checking IP Security Restrictions (fe_smcr staging)..."
 ip_restrictions_staging=$(az webapp config access-restriction show \
   --name plsm-p-itn-fe-smcr-app-01 \
   --resource-group plsm-p-itn-apps-rg-01 \
