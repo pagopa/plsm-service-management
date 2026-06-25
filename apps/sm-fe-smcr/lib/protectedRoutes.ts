@@ -150,14 +150,6 @@ export const protectedRoutes: ProtectedRoute[] = [
     teamId: "admin",
   },
   {
-    label: "Ask Me Anything",
-    path: "/dashboard/ask-me-anything",
-    requiredTeams: ["admin"],
-    sidebar: true,
-    icon: BotIcon,
-    teamId: "admin",
-  },
-  {
     label: "Logs",
     path: "/dashboard/logs",
     icon: ActivityIcon,
