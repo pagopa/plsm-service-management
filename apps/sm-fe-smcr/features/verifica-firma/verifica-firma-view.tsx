@@ -22,13 +22,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  validateSignature,
-  type SignatureIndication,
-  type SignatureResult,
-  type ValidationResponse,
-} from "@/lib/services/verifica-firma.service";
+import { validateSignature } from "@/lib/services/verifica-firma.service";
 import { cn } from "@/lib/utils";
+import {
+  SignatureIndication,
+  SignatureResult,
+  ValidationResponse,
+} from "./types";
 
 const ACCEPTED = ".pdf,.p7m";
 
@@ -352,7 +352,10 @@ function UploadStage({
           <div className="flex min-w-0 items-center gap-3">
             <FileText className="size-5 shrink-0 text-teal-600" />
             <div className="flex min-w-0 flex-col">
-              <span className="truncate text-sm font-semibold" title={file.name}>
+              <span
+                className="truncate text-sm font-semibold"
+                title={file.name}
+              >
                 {file.name}
               </span>
               <span className="text-muted-foreground text-xs">
