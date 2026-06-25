@@ -66,6 +66,7 @@ export type DssSignature = {
 };
 
 export type DssSignatureOrTimestampOrEvidenceRecord = {
+  signature?: DssSignature;
   Signature?: DssSignature;
 };
 

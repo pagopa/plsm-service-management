@@ -63,9 +63,14 @@ function mapSignature(sig: DssSignature): SignatureResult {
     indication: normalizeIndication(sig.indication ?? sig.Indication),
     signatureLevel: normalizeSignatureLevel(
       sig.signatureLevel ?? sig.SignatureLevel,
-      sig.SignatureFormat,
+      sig.signatureFormat ?? sig.SignatureFormat,
     ),
-    signingTime: sig.signingTime ?? sig.SigningTime ?? sig.BestSignatureTime ?? "",
+    signingTime:
+      sig.signingTime ??
+      sig.SigningTime ??
+      sig.bestSignatureTime ??
+      sig.BestSignatureTime ??
+      "",
     issues: [
       ...(sig.errors ?? sig.Errors ?? []),
       ...(sig.warnings ?? sig.Warnings ?? []),
@@ -89,7 +94,7 @@ export function mapDssResponse(
     simpleReport?.SignatureOrTimestampOrEvidenceRecord;
   const rawEvidenceSignatures = Array.isArray(rawEvidenceRecords)
     ? rawEvidenceRecords
-        .map((record) => record.Signature)
+        .map((record) => record.signature ?? record.Signature)
         .filter((s): s is DssSignature => Boolean(s))
     : [];
   const rawSignatures = (Array.isArray(raw) ? raw : [])

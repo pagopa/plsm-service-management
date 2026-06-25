@@ -161,6 +161,33 @@ describe("mapDssResponse", () => {
       issues: [],
     });
   });
+
+  it("maps camelCase DSS evidence record and signature timing fields", () => {
+    const camelCaseReport = {
+      simpleReport: {
+        signatureOrTimestampOrEvidenceRecord: [
+          {
+            signature: {
+              signedBy: "Mario Rossi",
+              indication: "TOTAL_PASSED",
+              signatureFormat: "CAdES-BASELINE-B",
+              bestSignatureTime: "2026-06-23T08:53:51Z",
+            },
+          },
+        ],
+      },
+    } as DssValidationReport;
+
+    const result = mapDssResponse(camelCaseReport, "doc.p7m", "p7m");
+
+    expect(result.totalSignatures).toBe(1);
+    expect(result.signatures[0]).toMatchObject({
+      signerName: "Mario Rossi",
+      indication: "TOTAL_PASSED",
+      signatureLevel: "CAdES-BASELINE-B",
+      signingTime: "2026-06-23T08:53:51Z",
+    });
+  });
 });
 
 describe("callDssApi", () => {
