@@ -1,11 +1,7 @@
-/**
- * Servizio di verifica della firma digitale di un documento.
- *
- * La verifica viene effettuata dalla Azure Function `sm-signature-fn`,
- * raggiunta tramite il proxy interno `POST /api/signature/validate`
- * (vedi `app/api/signature/validate/route.ts`), che aggiunge la function key
- * lato server senza esporla al client.
- */
+"use server";
+
+import { serverEnv } from "@/config/env";
+import { logServerError } from "../logger/logger.server.helpers";
 
 export type SignatureIndication =
   | "TOTAL_PASSED"
@@ -36,17 +32,10 @@ export type ValidationResult =
   | { data: ValidationResponse; error: null }
   | { data: null; error: string };
 
-const ACCEPTED_EXTENSIONS = ["pdf", "p7m"] as const;
+const ACCEPTED_EXTENSIONS = ["pdf", "p7m"];
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const SIGNATURE_FN_API_URL = `${serverEnv.SIGNATURE_FN_URL}/api/v1/validate-signature`;
 
-function getFileType(fileName: string): SignatureFileType | null {
-  const ext = fileName.split(".").pop()?.toLowerCase();
-  if (ext === "pdf") return "pdf";
-  if (ext === "p7m") return "p7m";
-  return null;
-}
-
-/** Messaggi leggibili per gli stati di errore restituiti dal backend. */
 function errorMessageForStatus(status: number): string {
   switch (status) {
     case 400:
@@ -62,17 +51,20 @@ function errorMessageForStatus(status: number): string {
   }
 }
 
-/**
- * Verifica le firme presenti in un documento (.pdf o .p7m).
- *
- * @returns risposta strutturata con l'esito di ogni firma, oppure un errore
- *          leggibile da mostrare in UI.
- */
+function hasAllowedExtension(fileName: string): boolean {
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  return !!ext && ACCEPTED_EXTENSIONS.includes(ext);
+}
+
 export async function validateSignature(file: File): Promise<ValidationResult> {
-  if (!getFileType(file.name)) {
+  if (!serverEnv.SIGNATURE_FN_URL || !serverEnv.SIGNATURE_FN_KEY) {
+    logServerError(
+      new Error("SIGNATURE_FN_URL/SIGNATURE_FN_KEY non configurate"),
+      "validate-signature - missing configuration",
+    );
     return {
       data: null,
-      error: `Formato non supportato. Carica un file ${ACCEPTED_EXTENSIONS.map((e) => `.${e}`).join(" o ")}.`,
+      error: "SIGNATURE_FN_URL/SIGNATURE_FN_KEY non configurate",
     };
   }
 
@@ -84,33 +76,33 @@ export async function validateSignature(file: File): Promise<ValidationResult> {
     };
   }
 
+  if (!hasAllowedExtension(file.name)) {
+    return {
+      data: null,
+      error: `Formato non supportato. Carica un file ${ACCEPTED_EXTENSIONS.map((e) => `.${e}`).join(" o ")}.`,
+    };
+  }
+
   const formData = new FormData();
   formData.append("file", file);
 
   let res: Response;
   try {
-    res = await fetch("/api/signature/validate", {
+    res = await fetch(SIGNATURE_FN_API_URL, {
       method: "POST",
+      headers: {
+        "x-functions-key": serverEnv.SIGNATURE_FN_KEY,
+      },
       body: formData,
     });
-  } catch {
-    return {
-      data: null,
-      error: "Impossibile contattare il servizio di verifica. Riprova.",
-    };
-  }
 
-  if (!res.ok) {
-    return { data: null, error: errorMessageForStatus(res.status) };
-  }
-
-  try {
+    if (!res.ok) {
+      return { data: null, error: errorMessageForStatus(res.status) };
+    }
     const data = (await res.json()) as ValidationResponse;
     return { data, error: null };
-  } catch {
-    return {
-      data: null,
-      error: "Risposta del servizio non valida.",
-    };
+  } catch (error) {
+    logServerError(error, "validate-signature - error");
+    return { data: null, error: "Errore interno nel proxy" };
   }
 }
