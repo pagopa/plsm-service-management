@@ -18998,7 +18998,10 @@ __metadata:
     "@azure/functions": "npm:^4.10.0"
     "@azure/identity": "npm:^4.13.0"
     "@azure/storage-blob": "npm:^12.29.1"
+    "@types/jest": "npm:^30.0.0"
     "@types/node": "npm:^24.1.2"
+    jest: "npm:^30.2.0"
+    ts-jest: "npm:^29.4.5"
     typescript: "npm:^5.9.3"
     zod: "npm:^4.1.13"
   languageName: unknown

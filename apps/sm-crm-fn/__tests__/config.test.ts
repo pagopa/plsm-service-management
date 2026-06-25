@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict'
+import { equal, throws } from 'node:assert/strict'
 import { validateConfig } from '../_shared/utils/config'
 
 const baseConfig = {
@@ -20,24 +20,54 @@ const tipologiaMap = {
   REFERENTE_BUSINESS_APICALE_ACCOUNT: 100000008,
 }
 
-const configFromObject = validateConfig({
-  ...baseConfig,
-  CRM_TIPOLOGIA_REFERENTE_MAP_UAT: tipologiaMap,
-  CRM_TIPOLOGIA_REFERENTE_MAP_PROD: tipologiaMap,
+describe('validateConfig', () => {
+  it('accepts tipologia referente maps with numeric values from parsed objects', () => {
+    const configFromObject = validateConfig({
+      ...baseConfig,
+      CRM_TIPOLOGIA_REFERENTE_MAP_UAT: tipologiaMap,
+      CRM_TIPOLOGIA_REFERENTE_MAP_PROD: tipologiaMap,
+    })
+
+    equal(configFromObject.CRM_TIPOLOGIA_REFERENTE_MAP_UAT.TECNICO, 100000002)
+    equal(configFromObject.CRM_TIPOLOGIA_REFERENTE_MAP_PROD.ACCOUNT, 100000004)
+  })
+
+  it('accepts tipologia referente maps with numeric values from JSON strings', () => {
+    const configFromJsonStringWithNumbers = validateConfig({
+      ...baseConfig,
+      CRM_TIPOLOGIA_REFERENTE_MAP_UAT: JSON.stringify(tipologiaMap),
+      CRM_TIPOLOGIA_REFERENTE_MAP_PROD: JSON.stringify(tipologiaMap),
+    })
+
+    equal(
+      configFromJsonStringWithNumbers
+        .CRM_TIPOLOGIA_REFERENTE_MAP_UAT
+        .REFERENTE_BUSINESS_APICALE_ACCOUNT,
+      100000008,
+    )
+  })
+
+  it('rejects product maps with numeric values', () => {
+    throws(() =>
+      validateConfig({
+        ...baseConfig,
+        CRM_PRODUCTS_MAP_UAT: { 'prod-io': 123 },
+        CRM_TIPOLOGIA_REFERENTE_MAP_UAT: tipologiaMap,
+        CRM_TIPOLOGIA_REFERENTE_MAP_PROD: tipologiaMap,
+      }),
+    )
+  })
+
+  it('rejects blank tipologia referente map values', () => {
+    throws(() =>
+      validateConfig({
+        ...baseConfig,
+        CRM_TIPOLOGIA_REFERENTE_MAP_UAT: {
+          ...tipologiaMap,
+          TECNICO: '   ',
+        },
+        CRM_TIPOLOGIA_REFERENTE_MAP_PROD: tipologiaMap,
+      }),
+    )
+  })
 })
-
-assert.equal(configFromObject.CRM_TIPOLOGIA_REFERENTE_MAP_UAT.TECNICO, 100000002)
-assert.equal(configFromObject.CRM_TIPOLOGIA_REFERENTE_MAP_PROD.ACCOUNT, 100000004)
-
-const configFromJsonStringWithNumbers = validateConfig({
-  ...baseConfig,
-  CRM_TIPOLOGIA_REFERENTE_MAP_UAT: JSON.stringify(tipologiaMap),
-  CRM_TIPOLOGIA_REFERENTE_MAP_PROD: JSON.stringify(tipologiaMap),
-})
-
-assert.equal(
-  configFromJsonStringWithNumbers
-    .CRM_TIPOLOGIA_REFERENTE_MAP_UAT
-    .REFERENTE_BUSINESS_APICALE_ACCOUNT,
-  100000008,
-)

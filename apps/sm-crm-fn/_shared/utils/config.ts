@@ -43,10 +43,10 @@ function parseMapString(val: unknown): Record<string, string> {
   const raw = parseMapValue(val);
   return Object.fromEntries(
     Object.entries(raw).map(([k, v]) => {
-      if (typeof v !== "string" && typeof v !== "number") {
+      if (typeof v !== "string") {
         throw new Error(`valore non valido per chiave "${k}": ${String(v)}`);
       }
-      const value = String(v).replace(/\s/g, "");
+      const value = v.replace(/\s/g, "");
       if (!value) throw new Error(`valore vuoto per chiave "${k}"`);
       return [k, value];
     })
@@ -60,7 +60,9 @@ function parseMapStringToNumber(val: unknown): Record<string, number> {
       if (typeof v !== "string" && typeof v !== "number") {
         throw new Error(`valore non numerico per chiave "${k}": ${String(v)}`);
       }
-      const n = Number(String(v).replace(/\s/g, ""));
+      const rawValue = String(v).replace(/\s/g, "");
+      if (!rawValue) throw new Error(`valore vuoto per chiave "${k}"`);
+      const n = Number(rawValue);
       if (isNaN(n)) throw new Error(`valore non numerico per chiave "${k}": ${v}`);
       return [k, n];
     })

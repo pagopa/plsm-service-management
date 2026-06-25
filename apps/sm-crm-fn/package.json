@@ -4,7 +4,8 @@
   "main": "dist/**/*/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "func start"
+    "start": "func start",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -17,7 +18,10 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.1.2",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5",
     "typescript": "^5.9.3"
   }
 }
