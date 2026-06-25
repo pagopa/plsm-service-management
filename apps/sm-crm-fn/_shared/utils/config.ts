@@ -1,18 +1,35 @@
 import { z, ZodError } from "zod";
 
 /**
- * Parses a map stored as either standard JSON {"k":"v"} or the bare format {k:v}
- * that Azure Key Vault References produce when quotes are stripped.
+ * Parses a map stored as standard JSON, as an already parsed object, or as the
+ * bare format {k:v} that Azure Key Vault References can expose when quotes are
+ * stripped.
  */
-function parseMapString(val: string): Record<string, string> {
+function parseMapValue(val: unknown): Record<string, unknown> {
+  if (val && typeof val === "object" && !Array.isArray(val)) {
+    return val as Record<string, unknown>;
+  }
+
+  if (typeof val !== "string") {
+    throw new Error("mappa non valida");
+  }
+
   // Strip whitespace (spaces, newlines) that Key Vault portal may inject mid-value
   const sanitized = val.replace(/\s/g, "");
+  if (!sanitized) {
+    throw new Error("mappa vuota");
+  }
+
   try {
-    return JSON.parse(sanitized) as Record<string, string>;
+    const parsed = JSON.parse(sanitized) as unknown;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+    throw new Error("mappa JSON non valida");
   } catch {
     // Bare format: {key:value,key:value}
     const inner = sanitized.replace(/^\{/, "").replace(/\}$/, "");
-    const result: Record<string, string> = {};
+    const result: Record<string, unknown> = {};
     for (const entry of inner.split(",")) {
       const colon = entry.indexOf(":");
       if (colon === -1) throw new Error("coppia chiave:valore non valida");
@@ -22,11 +39,30 @@ function parseMapString(val: string): Record<string, string> {
   }
 }
 
-function parseMapStringToNumber(val: string): Record<string, number> {
-  const raw = parseMapString(val);
+function parseMapString(val: unknown): Record<string, string> {
+  const raw = parseMapValue(val);
   return Object.fromEntries(
     Object.entries(raw).map(([k, v]) => {
-      const n = Number(v.replace(/\s/g, ""));
+      if (typeof v !== "string") {
+        throw new Error(`valore non valido per chiave "${k}": ${String(v)}`);
+      }
+      const value = v.replace(/\s/g, "");
+      if (!value) throw new Error(`valore vuoto per chiave "${k}"`);
+      return [k, value];
+    })
+  );
+}
+
+function parseMapStringToNumber(val: unknown): Record<string, number> {
+  const raw = parseMapValue(val);
+  return Object.fromEntries(
+    Object.entries(raw).map(([k, v]) => {
+      if (typeof v !== "string" && typeof v !== "number") {
+        throw new Error(`valore non numerico per chiave "${k}": ${String(v)}`);
+      }
+      const rawValue = String(v).replace(/\s/g, "");
+      if (!rawValue) throw new Error(`valore vuoto per chiave "${k}"`);
+      const n = Number(rawValue);
       if (isNaN(n)) throw new Error(`valore non numerico per chiave "${k}": ${v}`);
       return [k, n];
     })
@@ -95,8 +131,8 @@ const configSchema = z.object({
    * @example '{"prod-pn":"617cbe1b-...","prod-io":"26a975ef-..."}'
    */
   CRM_PRODUCTS_MAP_UAT: z
-    .string("CRM_PRODUCTS_MAP_UAT è obbligatoria")
-    .min(1, "CRM_PRODUCTS_MAP_UAT è obbligatoria")
+    .unknown()
+    .refine((val) => val !== undefined && val !== null && val !== "", "CRM_PRODUCTS_MAP_UAT è obbligatoria")
     .transform((val, ctx) => {
       try {
         return parseMapString(val);
@@ -110,8 +146,8 @@ const configSchema = z.object({
    * Formato: Record<ProductIdSelfcare, string> dove il valore è il GUID Dynamics.
    */
   CRM_PRODUCTS_MAP_PROD: z
-    .string("CRM_PRODUCTS_MAP_PROD è obbligatoria")
-    .min(1, "CRM_PRODUCTS_MAP_PROD è obbligatoria")
+    .unknown()
+    .refine((val) => val !== undefined && val !== null && val !== "", "CRM_PRODUCTS_MAP_PROD è obbligatoria")
     .transform((val, ctx) => {
       try {
         return parseMapString(val);
@@ -125,8 +161,8 @@ const configSchema = z.object({
    * Formato: Record<TipologiaReferente, number>.
    */
   CRM_TIPOLOGIA_REFERENTE_MAP_UAT: z
-    .string("CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria")
-    .min(1, "CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria")
+    .unknown()
+    .refine((val) => val !== undefined && val !== null && val !== "", "CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria")
     .transform((val, ctx) => {
       try {
         return parseMapStringToNumber(val);
@@ -140,8 +176,8 @@ const configSchema = z.object({
    * Formato: Record<TipologiaReferente, number>.
    */
   CRM_TIPOLOGIA_REFERENTE_MAP_PROD: z
-    .string("CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria")
-    .min(1, "CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria")
+    .unknown()
+    .refine((val) => val !== undefined && val !== null && val !== "", "CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria")
     .transform((val, ctx) => {
       try {
         return parseMapStringToNumber(val);
