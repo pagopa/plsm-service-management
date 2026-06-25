@@ -6,6 +6,7 @@ import {
 import { getConfigOrThrow } from "../utils/checkConfig";
 import { validateFile, fileToBase64 } from "./validation";
 import { callDssApi, mapDssResponse, DssApiError } from "./dss";
+import { validateNestedP7m } from "./nestedP7m";
 
 export async function validateSignature(
   request: HttpRequest,
@@ -43,6 +44,16 @@ export async function validateSignature(
   }
 
   try {
+    if (validation.fileType === "p7m") {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const result = await validateNestedP7m({
+        bytes,
+        config,
+        fileName: file.name,
+      });
+      return { status: 200, jsonBody: result };
+    }
+
     const bytesBase64 = await fileToBase64(file);
     const report = await callDssApi(config, bytesBase64, file.name);
     const result = mapDssResponse(report, file.name, validation.fileType);

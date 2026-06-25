@@ -14,6 +14,8 @@
   "description": "Azure Function that validates document signatures via the DSS API",
   "dependencies": {
     "@azure/functions": "^4.7.2-preview",
+    "asn1js": "^3.0.10",
+    "pkijs": "^3.4.0",
     "zod": "^4.0.14"
   },
   "devDependencies": {

@@ -90,8 +90,9 @@ yarn start   # func start
 
 ## Notes for the frontend
 
-- `.p7m` files are sent to DSS as-is; the original embedded PDF is **not**
-  extracted or returned.
+- `.p7m` files with nested CMS envelopes are validated recursively. The
+  response aggregates signatures from the outermost envelope to the innermost
+  envelope; the original embedded PDF is **not** returned.
 - The DSS field mapping (`signerName`, `qtsp`, `country`, ...) is best-effort and
   should be re-verified against a real signed document; the public contract above
   is stable regardless.

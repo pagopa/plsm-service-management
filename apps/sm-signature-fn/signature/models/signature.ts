@@ -39,15 +39,24 @@ export type DssCertificateChain = {
   Certificate?: DssCertificate[];
 };
 
+export type DssValueDescription = {
+  value?: string;
+  description?: string;
+};
+
 export type DssSignature = {
   signedBy?: string;
   SignedBy?: string;
   indication?: string;
   Indication?: string;
   signatureLevel?: string;
-  SignatureLevel?: string;
+  SignatureLevel?: string | DssValueDescription;
+  signatureFormat?: string;
+  SignatureFormat?: string;
   signingTime?: string;
   SigningTime?: string;
+  bestSignatureTime?: string;
+  BestSignatureTime?: string;
   certificateChain?: DssCertificateChain;
   CertificateChain?: DssCertificateChain;
   errors?: string[];
@@ -56,9 +65,16 @@ export type DssSignature = {
   Warnings?: string[];
 };
 
+export type DssSignatureOrTimestampOrEvidenceRecord = {
+  signature?: DssSignature;
+  Signature?: DssSignature;
+};
+
 export type DssSimpleReport = {
   signatureOrTimestamp?: DssSignature[];
   SignatureOrTimestamp?: DssSignature[];
+  signatureOrTimestampOrEvidenceRecord?: DssSignatureOrTimestampOrEvidenceRecord[];
+  SignatureOrTimestampOrEvidenceRecord?: DssSignatureOrTimestampOrEvidenceRecord[];
   signatures?: DssSignature[];
   Signatures?: DssSignature[];
 };

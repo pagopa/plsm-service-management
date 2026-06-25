@@ -19,6 +19,21 @@ function normalizeIndication(raw?: string): SignatureIndication {
     : "INDETERMINATE";
 }
 
+function normalizeSignatureLevel(
+  level: DssSignature["signatureLevel"] | DssSignature["SignatureLevel"],
+  fallback?: string,
+): string {
+  if (typeof level === "string") {
+    return level;
+  }
+
+  if (level && typeof level === "object" && typeof level.value === "string") {
+    return level.value;
+  }
+
+  return fallback ?? "";
+}
+
 // The QTSP/issuer is the last entry in the certificate chain; the signer is the
 // first. Best-effort extraction, defensive against missing fields and against
 // the unconfirmed DSS key casing (camelCase vs PascalCase).
@@ -46,8 +61,16 @@ function mapSignature(sig: DssSignature): SignatureResult {
     qtsp,
     country,
     indication: normalizeIndication(sig.indication ?? sig.Indication),
-    signatureLevel: sig.signatureLevel ?? sig.SignatureLevel ?? "",
-    signingTime: sig.signingTime ?? sig.SigningTime ?? "",
+    signatureLevel: normalizeSignatureLevel(
+      sig.signatureLevel ?? sig.SignatureLevel,
+      sig.signatureFormat ?? sig.SignatureFormat,
+    ),
+    signingTime:
+      sig.signingTime ??
+      sig.SigningTime ??
+      sig.bestSignatureTime ??
+      sig.BestSignatureTime ??
+      "",
     issues: [
       ...(sig.errors ?? sig.Errors ?? []),
       ...(sig.warnings ?? sig.Warnings ?? []),
@@ -66,9 +89,17 @@ export function mapDssResponse(
     simpleReport?.SignatureOrTimestamp ??
     simpleReport?.signatures ??
     simpleReport?.Signatures;
-  const rawSignatures = (Array.isArray(raw) ? raw : []).filter(
-    (s): s is DssSignature => Boolean(s),
-  );
+  const rawEvidenceRecords =
+    simpleReport?.signatureOrTimestampOrEvidenceRecord ??
+    simpleReport?.SignatureOrTimestampOrEvidenceRecord;
+  const rawEvidenceSignatures = Array.isArray(rawEvidenceRecords)
+    ? rawEvidenceRecords
+        .map((record) => record.signature ?? record.Signature)
+        .filter((s): s is DssSignature => Boolean(s))
+    : [];
+  const rawSignatures = (Array.isArray(raw) ? raw : [])
+    .concat(rawEvidenceSignatures)
+    .filter((s): s is DssSignature => Boolean(s));
   const signatures = rawSignatures.map(mapSignature);
   return {
     fileName,

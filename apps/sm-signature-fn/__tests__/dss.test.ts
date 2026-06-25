@@ -125,6 +125,69 @@ describe("mapDssResponse", () => {
       issues: ["minor warning"],
     });
   });
+
+  it("maps the DSS SimpleReport signatureOrTimestampOrEvidenceRecord shape", () => {
+    const realDssShape = {
+      SimpleReport: {
+        SignaturesCount: 1,
+        ValidSignaturesCount: 1,
+        signatureOrTimestampOrEvidenceRecord: [
+          {
+            Signature: {
+              SignedBy: "Mario Rossi",
+              Indication: "TOTAL_PASSED",
+              SignatureLevel: {
+                description: "Qualified Electronic Signature",
+                value: "QESig",
+              },
+              BestSignatureTime: "2026-06-23T08:53:51Z",
+            },
+          },
+        ],
+      },
+    } as DssValidationReport;
+
+    const result = mapDssResponse(realDssShape, "doc.p7m", "p7m");
+
+    expect(result.totalSignatures).toBe(1);
+    expect(result.validSignatures).toBe(1);
+    expect(result.signatures[0]).toEqual({
+      signerName: "Mario Rossi",
+      qtsp: "",
+      country: "",
+      indication: "TOTAL_PASSED",
+      signatureLevel: "QESig",
+      signingTime: "2026-06-23T08:53:51Z",
+      issues: [],
+    });
+  });
+
+  it("maps camelCase DSS evidence record and signature timing fields", () => {
+    const camelCaseReport = {
+      simpleReport: {
+        signatureOrTimestampOrEvidenceRecord: [
+          {
+            signature: {
+              signedBy: "Mario Rossi",
+              indication: "TOTAL_PASSED",
+              signatureFormat: "CAdES-BASELINE-B",
+              bestSignatureTime: "2026-06-23T08:53:51Z",
+            },
+          },
+        ],
+      },
+    } as DssValidationReport;
+
+    const result = mapDssResponse(camelCaseReport, "doc.p7m", "p7m");
+
+    expect(result.totalSignatures).toBe(1);
+    expect(result.signatures[0]).toMatchObject({
+      signerName: "Mario Rossi",
+      indication: "TOTAL_PASSED",
+      signatureLevel: "CAdES-BASELINE-B",
+      signingTime: "2026-06-23T08:53:51Z",
+    });
+  });
 });
 
 describe("callDssApi", () => {
