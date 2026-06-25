@@ -51,9 +51,11 @@ export type DssSignature = {
   Indication?: string;
   signatureLevel?: string;
   SignatureLevel?: string | DssValueDescription;
+  signatureFormat?: string;
   SignatureFormat?: string;
   signingTime?: string;
   SigningTime?: string;
+  bestSignatureTime?: string;
   BestSignatureTime?: string;
   certificateChain?: DssCertificateChain;
   CertificateChain?: DssCertificateChain;
