@@ -13,6 +13,8 @@ const SIGNATURE_FN_API_URL = `${serverEnv.SIGNATURE_FN_URL}/api/v1/validate-sign
 
 function errorMessageForStatus(status: number): string {
   switch (status) {
+    case 403:
+      return "Non autorizzato. Controlla la VPN.";
     case 400:
       return "File mancante, vuoto o troppo grande.";
     case 415:
