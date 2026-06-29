@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-06-15 09:28
+# Generato il: 2026-06-29 09:50
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -19,7 +19,7 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr-dev"
     NODE_ENV                 = "development"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-d-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-d-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
   }
 
   yaml_auth_func_slot_app_settings = {
@@ -31,8 +31,10 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr-dev-staging"
     NODE_ENV                 = "development"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-d-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-d-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
   }
+
+  yaml_auth_func_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # fe_smcr
@@ -75,6 +77,8 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET                = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_wallet.value
     FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX              = data.azurerm_key_vault_secret.fe_smcr_azure_storage_wallet_blob_prefix.value
     FE_SMCR_API_KEY_UTENTI_IO                             = data.azurerm_key_vault_secret.fe_smcr_api_key_utenti_io.value
+    SIGNATURE_FN_URL                                      = data.azurerm_key_vault_secret.signature_fn_url.value
+    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.signature_fn_key.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"
@@ -135,6 +139,8 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET                = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_wallet.value
     FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX              = data.azurerm_key_vault_secret.fe_smcr_azure_storage_wallet_blob_prefix.value
     FE_SMCR_API_KEY_UTENTI_IO                             = data.azurerm_key_vault_secret.fe_smcr_api_key_utenti_io.value
+    SIGNATURE_FN_URL                                      = data.azurerm_key_vault_secret.signature_fn_url.value
+    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.signature_fn_key.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"
@@ -157,6 +163,8 @@ locals {
     AUTH_JWT_ISSUER                                       = "plsm-auth-service-dev-staging"
     AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr-dev-staging"
   }
+
+  yaml_fe_smcr_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────────
   # Metadati ambiente

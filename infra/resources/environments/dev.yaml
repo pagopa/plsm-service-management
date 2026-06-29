@@ -92,6 +92,8 @@ fe_smcr:
   FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET: "kv:fe_smcr_azure_storage_container_wallet"
   FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX: "kv:fe_smcr_azure_storage_wallet_blob_prefix"
   FE_SMCR_API_KEY_UTENTI_IO: "kv:fe_smcr_api_key_utenti_io"
+  SIGNATURE_FN_URL: "kv:signature_fn_url"
+  SIGNATURE_FN_KEY: "kv:signature_fn_key"
   DB_NAME: "dbsmcr"
   DB_TABLE: "dbsmcr"
   DB_PORT: "5432"
