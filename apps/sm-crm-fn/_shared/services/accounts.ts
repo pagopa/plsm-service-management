@@ -53,11 +53,24 @@ export async function getAccountBySelfcareId(
     if (diagnosticSession) {
       addDiagnosticCall(diagnosticSession, {
         step: "verifyAccount",
+        substep: "getAccountBySelfcareId",
+        entity: "accounts",
+        attempt: 1,
         method: "GET",
         url,
+        requestDetails: {
+          entity: "accounts",
+          filter,
+          select,
+        },
         requestBody: null,
+        derivedFromFrontend: {
+          institutionIdSelfcare,
+          notes: ["institutionIdSelfcare -> account lookup filter"],
+        },
         responseStatus: 200,
         durationMs: Date.now() - startMs,
+        success: true,
       });
     }
 
@@ -101,11 +114,23 @@ export async function getAccountBySelfcareId(
     if (diagnosticSession) {
       addDiagnosticCall(diagnosticSession, {
         step: "verifyAccount",
+        substep: "getAccountBySelfcareId",
+        entity: "accounts",
+        attempt: 1,
         method: "GET",
         url,
+        requestDetails: {
+          entity: "accounts",
+          filter,
+          select,
+        },
         requestBody: null,
+        derivedFromFrontend: {
+          institutionIdSelfcare,
+        },
         responseStatus: null,
         durationMs: Date.now() - startMs,
+        success: false,
         error: error instanceof Error ? error.message : String(error),
       });
     }
@@ -161,11 +186,23 @@ export async function getAccountByName(
     if (diagnosticSession) {
       addDiagnosticCall(diagnosticSession, {
         step: "verifyAccountByName",
+        substep: "getAccountByName",
+        entity: "accounts",
+        attempt: 1,
         method: "GET",
         url,
+        requestDetails: {
+          entity: "accounts",
+          filter,
+          select,
+        },
         requestBody: null,
+        derivedFromFrontend: {
+          notes: ["nomeEnte -> fallback account lookup filter"],
+        },
         responseStatus: 200,
         durationMs: Date.now() - startMs,
+        success: true,
       });
     }
 
@@ -200,11 +237,23 @@ export async function getAccountByName(
     if (diagnosticSession) {
       addDiagnosticCall(diagnosticSession, {
         step: "verifyAccountByName",
+        substep: "getAccountByName",
+        entity: "accounts",
+        attempt: 1,
         method: "GET",
         url,
+        requestDetails: {
+          entity: "accounts",
+          filter,
+          select,
+        },
         requestBody: null,
+        derivedFromFrontend: {
+          notes: ["nomeEnte -> fallback account lookup filter"],
+        },
         responseStatus: null,
         durationMs: Date.now() - startMs,
+        success: false,
         error: error instanceof Error ? error.message : String(error),
       });
     }

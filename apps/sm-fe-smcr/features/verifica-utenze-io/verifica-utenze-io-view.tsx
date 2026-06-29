@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocalStorage } from "@uidotdev/usehooks";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -14,19 +15,16 @@ import {
   Mail,
   Minus,
   Search,
-  Smartphone,
   SlidersHorizontal,
+  Smartphone,
 } from "lucide-react";
-import { useLocalStorage } from "@uidotdev/usehooks";
 import { useMemo, useState, useTransition } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -141,32 +139,6 @@ function BoolDot({ value }: { value: boolean | null | undefined }) {
         <Minus className="size-3" strokeWidth={3} />
       )}
     </span>
-  );
-}
-
-/* ============================== SECTION HEADER ============================== */
-function SectionHead({
-  title,
-  sub,
-  children,
-}: {
-  title: string;
-  sub: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div className="mb-3.5 flex items-center justify-between gap-4 px-0.5">
-      <div className="flex items-center gap-2.5 text-[19px] font-extrabold tracking-tight">
-        <span className="size-2.5 rounded-full bg-teal-500" />
-        {title}
-      </div>
-      <div className="flex items-center gap-3">
-        {children}
-        <span className="text-muted-foreground font-mono text-xs font-semibold">
-          {sub}
-        </span>
-      </div>
-    </div>
   );
 }
 
