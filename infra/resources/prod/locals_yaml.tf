@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-06-22 12:31
+# Generato il: 2026-06-29 09:50
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -156,6 +156,8 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET                = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_wallet.value
     FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX              = data.azurerm_key_vault_secret.fe_smcr_azure_storage_wallet_blob_prefix.value
     FE_SMCR_API_KEY_UTENTI_IO                             = data.azurerm_key_vault_secret.fe_smcr_api_key_utenti_io.value
+    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01.azurewebsites.net"
+    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"
@@ -176,8 +178,6 @@ locals {
     AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
     AUTH_JWT_ISSUER                                       = "plsm-auth-service"
     AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr"
-    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01.azurewebsites.net"
-    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
   }
 
   yaml_fe_smcr_slot_app_settings = {
@@ -216,6 +216,8 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET                = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_wallet.value
     FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX              = data.azurerm_key_vault_secret.fe_smcr_azure_storage_wallet_blob_prefix.value
     FE_SMCR_API_KEY_UTENTI_IO                             = data.azurerm_key_vault_secret.fe_smcr_api_key_utenti_io.value
+    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01-staging.azurewebsites.net"
+    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"
@@ -236,8 +238,6 @@ locals {
     AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
     AUTH_JWT_ISSUER                                       = "plsm-auth-service-staging"
     AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr-staging"
-    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01-staging.azurewebsites.net"
-    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
   }
 
   yaml_fe_smcr_sticky_app_setting_names = [
