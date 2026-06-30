@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-06-15 09:28
+# Generato il: 2026-06-29 09:50
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -171,5 +171,15 @@ data "azurerm_key_vault_secret" "fe_smcr_users_api_key" {
 
 data "azurerm_key_vault_secret" "fe_smcr_webhook_manual_storage" {
   name         = "fe-smcr-webhook-manual-storage"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "signature_fn_key" {
+  name         = "signature-fn-key"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "signature_fn_url" {
+  name         = "signature-fn-url"
   key_vault_id = data.azurerm_key_vault.common_kv.id
 }
