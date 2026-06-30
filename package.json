@@ -6,7 +6,8 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "check-types": "turbo run check-types",
+    "sm-fe-smcr:start": "trap 'kill 0' EXIT; (cd apps/sm-auth-fn && func start) & (cd apps/sm-fe-smcr && yarn dev) & wait"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
