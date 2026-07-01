@@ -1,4 +1,3 @@
-import { readAskMeAnythingMember } from "@/lib/services/ask-me-anything.service";
 import { z } from "zod";
 
 const schema = z.object({
@@ -16,13 +15,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data, error } = await readAskMeAnythingMember(result.data.email);
-
-  if (error) {
-    return Response.json({ message: "unauthorized" }, { status: 403 });
-  }
-
-  return Response.json({
-    ...data,
-  });
+  // Ask Me Anything service removed — respond with 404
+  return Response.json({ message: "Ask Me Anything service removed" }, { status: 404 });
 }
