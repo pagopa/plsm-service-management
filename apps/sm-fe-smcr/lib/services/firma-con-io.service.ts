@@ -4,6 +4,7 @@ import { betterFetch } from "@better-fetch/fetch";
 import { z } from "zod";
 import { type FirmaConIO, FirmaConIOSchema } from "./firma-con-io.schema";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
+import { serverEnv } from "@/config/env";
 
 type GetFirmaConIOResponse =
   | {
@@ -30,8 +31,7 @@ export async function getFirmaConIoInstitution(
       method: "POST",
       output: FirmaConIOSchema,
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env
-          .FE_SMCR_API_KEY_FIRMA_CON_IO as string,
+        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_FIRMA_CON_IO as string,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
@@ -61,8 +61,7 @@ export async function getFirmaConIoSignerID(formData: FormData) {
         id: z.string(),
       }),
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env
-          .FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID as string,
+        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID as string,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
