@@ -7,6 +7,7 @@ import {
   DeleteDelegationInput,
 } from "../actions/delegation.action";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
+import { serverEnv } from "@/config/env";
 
 const delegationSchema = z
   .object({
@@ -36,8 +37,7 @@ export async function getDelegations(institutionId: string) {
     {
       output: z.array(delegationSchema),
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env
-          .FE_SMCR_API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
       },
     },
   );
@@ -52,8 +52,7 @@ export async function addDelegation(input: AddDelegationInput) {
       method: "POST",
       body: JSON.stringify(input),
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env
-          .FE_SMCR_API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
         "Content-Type": "application/json",
       },
       output: z.any(),
@@ -78,8 +77,7 @@ export async function deleteDelegation(input: DeleteDelegationInput) {
     {
       method: "DELETE",
       headers: {
-        "Ocp-Apim-Subscription-Key": process.env
-          .FE_SMCR_API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
       },
     },
   );
