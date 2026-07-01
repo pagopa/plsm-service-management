@@ -234,7 +234,7 @@ plsm-{env_short}-itn-{resource_type}-{name}-{instance}
 
 | Resource Group            | Scopo               | Risorse Contenute                                                                                         |
 | ------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------- |
-| `plsm-p-itn-fn-rg-01`     | Function Apps       | Tutte le Azure Function del progetto (certificati, onboarding, askmebot, CRM, auth, portale fatturazione) |
+| `plsm-p-itn-fn-rg-01`     | Function Apps       | Tutte le Azure Function del progetto (certificati, onboarding, CRM, auth, portale fatturazione) |
 | `plsm-p-itn-apps-rg-01`   | App Services        | App Service per frontend (FE SMCR) e backend                                                              |
 | `plsm-p-itn-ext-rg-01`    | Risorse esterne     | Risorse condivise o integrazioni esterne                                                                  |
 | `plsm-p-itn-common-rg-01` | Core Infrastructure | VNet, Key Vault, Application Insights, DNS Zone (gestito da modulo DX)                                    |
@@ -448,7 +448,7 @@ graph TB
 
         PRODTF --> COREPROD[Core Infra Module<br/>VNet, KV, VPN, AppInsights]
         PRODTF --> RGPROD[Resource Groups<br/>fn-rg, apps-rg, ext-rg]
-        PRODTF --> FUNCPROD[Function Apps<br/>certificati, onboarding, askmebot, crm, auth, pf]
+        PRODTF --> FUNCPROD[Function Apps<br/>certificati, onboarding, crm, auth, pf]
         PRODTF --> APPPROD[App Services<br/>fe-smcr, backend-smcr]
         PRODTF --> DNSPROD[DNS & Networking<br/>Private DNS, Custom Domain]
     end
