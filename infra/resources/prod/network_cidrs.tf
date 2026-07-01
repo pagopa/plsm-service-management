@@ -32,18 +32,11 @@ resource "dx_available_subnet_cidr" "pf_fa_subnet_cidr" {
   depends_on         = [module.onboarding_function]
 }
 
-# CIDR per la Function App: ASK ME Everything
-# resource "dx_available_subnet_cidr" "askmebot_fa_subnet_cidr" {
-#   virtual_network_id = module.azure_core_infra.common_vnet.id
-#   prefix_length      = 24
-#   depends_on         = [module.portalefatturazione_function]
-# }
-
 # CIDR per la WEB APP di Backend BSMCR
 resource "dx_available_subnet_cidr" "app_backend_service_subnet_cidr" {
   virtual_network_id = module.azure_core_infra.common_vnet.id
   prefix_length      = 24
-  depends_on         = [module.askmebot_function]
+  depends_on         = [module.portalefatturazione_function]
 }
 
 # CIDR per l'App Service FE-SMCR
