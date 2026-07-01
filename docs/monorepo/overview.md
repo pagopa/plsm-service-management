@@ -10,7 +10,6 @@ La piattaforma gestisce operazioni critiche tra cui:
 - Flussi di autenticazione e autorizzazione
 - Integrazione CRM con Dynamics 365
 - Onboarding e certificazione dei contratti
-- Integrazione con chatbot di supporto
 
 ---
 
@@ -22,7 +21,6 @@ plsm-service-management/
 ├── apps/                           # Applicazioni del monorepo
 │   ├── sm-fe-smcr/                # 🎨 Frontend - Service Manager Control Room (Next.js 15 + React 19)
 │   ├── sm-auth-fn/                # 🔐 Function - Autenticazione (MSAL/OAuth2 PKCE)
-│   ├── sm-ask-me-fn/              # 🤖 Function - Bot "Ask Me Anything" (integrazione Slack)
 │   ├── sm-be-smcr/                # 🔧 Backend - SMCR (in sviluppo)
 │   ├── sm-certification-fn/       # 📜 Function - Certificazione XML (PostgreSQL)
 │   ├── sm-crm-fn/                 # 📞 Function - Integrazione CRM (Dynamics 365)
@@ -50,7 +48,6 @@ plsm-service-management/
 | ----------------------- | -------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------- |
 | **sm-fe-smcr**          | Frontend       | Dashboard principale della Service Manager Control Room per la gestione dei servizi e le analytics | Next.js 15, React 19, TailwindCSS 4, Radix UI, MSAL, Zustand, TanStack Table | [Dettagli](./apps/sm-fe-smcr.md)          |
 | **sm-auth-fn**          | Azure Function | Servizio di autenticazione con flusso MSAL OAuth2 PKCE e gestione token JWT                        | MSAL Node, JWT, Azure Functions v4                                           | [Dettagli](./apps/sm-auth-fn.md)          |
-| **sm-ask-me-fn**        | Azure Function | Chatbot "Ask Me Anything" con integrazione Slack e notifiche email                                 | Slack Bolt, nodemailer, Azure Functions v4, Zod                              | Documentazione WIP                        |
 | **sm-certification-fn** | Azure Function | Elaborazione certificazione XML con archiviazione su PostgreSQL                                    | fast-xml-parser, PostgreSQL (pg), Azure Functions v4                         | Documentazione WIP                        |
 | **sm-crm-fn**           | Azure Function | Integrazione con Dynamics 365 CRM per la gestione delle relazioni con i clienti                    | Azure Identity, Azure Storage Blob, Azure Functions v4                       | Documentazione WIP                        |
 | **sm-onboarding-fn**    | Azure Function | Flusso di onboarding contratti con event streaming Kafka e serializzazione Avro                    | Kafka, Avro, fp-ts, io-ts, Azure Functions v3                                | Documentazione WIP                        |
@@ -217,14 +214,12 @@ graph TD
     CERT[sm-certification-fn<br/>Certificazione]
     ONBOARD[sm-onboarding-fn<br/>Onboarding]
     PF[sm-pf-fn<br/>Persone Fisiche]
-    ASK[sm-ask-me-fn<br/>Bot di Supporto]
 
     EXT_MSAL[Azure AD / MSAL]
     EXT_D365[Dynamics 365]
     EXT_KAFKA[Kafka Cluster]
     EXT_PG[PostgreSQL]
     EXT_BLOB[Azure Blob Storage]
-    EXT_SLACK[Slack API]
 
     FE -->|OAuth2 PKCE| AUTH
     FE -->|Chiamate API| CRM
@@ -238,7 +233,6 @@ graph TD
     CERT -->|Salvataggio Dati| EXT_PG
     ONBOARD -->|Pubblicazione Eventi| EXT_KAFKA
     PF -->|Archiviazione File| EXT_BLOB
-    ASK -->|Invio Messaggi| EXT_SLACK
 
     style FE fill:#e1f5ff
     style AUTH fill:#fff4e1
@@ -246,7 +240,6 @@ graph TD
     style CERT fill:#f5e1ff
     style ONBOARD fill:#e1ffe1
     style PF fill:#ffe1e1
-    style ASK fill:#f5ffe1
 ```
 
 **Interazioni principali:**
@@ -257,7 +250,6 @@ graph TD
 4. **Certificazione (sm-certification-fn)** analizza documenti XML e persiste i dati strutturati su PostgreSQL
 5. **Onboarding (sm-onboarding-fn)** pubblica eventi di contratto su Kafka con validazione dello schema Avro
 6. **Persone Fisiche (sm-pf-fn)** gestisce le informazioni sensibili degli utenti con archiviazione sicura su blob
-7. **Ask Me Bot (sm-ask-me-fn)** opera in modo indipendente, rispondendo ai messaggi su Slack
 
 ---
 
@@ -272,7 +264,6 @@ Sei nuovo nel monorepo? Parti da qui:
 
 - **sm-fe-smcr — Applicazione Frontend** *(documentazione in preparazione)*
 - **sm-auth-fn — Servizio di Autenticazione** *(documentazione in preparazione)*
-- **sm-ask-me-fn — Bot di Supporto** *(documentazione in preparazione)*
 - **sm-certification-fn — Servizio di Certificazione** *(documentazione in preparazione)*
 - **sm-crm-fn — Integrazione CRM** *(documentazione in preparazione)*
 - **sm-onboarding-fn — Servizio di Onboarding** *(documentazione in preparazione)*
@@ -321,7 +312,6 @@ Sei nuovo nel monorepo? Parti da qui:
 | Applicazione            | Azure Functions | TypeScript | Dipendenze chiave                                          |
 | ----------------------- | --------------- | ---------- | ---------------------------------------------------------- |
 | **sm-auth-fn**          | v4 `^4.10.0`    | ^5.9.3     | `@azure/msal-node ^2`, `jsonwebtoken ^9`                   |
-| **sm-ask-me-fn**        | v4 `^4.0.0`     | ^5.6.3     | `@slack/bolt ^3`, `nodemailer ^6`, `zod ^3`                |
 | **sm-certification-fn** | v4 `^4.7.2`     | ^5.9.2     | `fast-xml-parser ^5`, `pg ^8`, `zod ^4`                    |
 | **sm-crm-fn**           | v4 `^4.10.0`    | ^5.9.3     | `@azure/identity ^4`, `@azure/storage-blob ^12`, `zod ^4`  |
 | **sm-onboarding-fn**    | v3 `^3.5.0`     | ^5.7.2     | `fp-ts ^2`, `io-ts ^2`, `avsc ^5`, `@pagopa/fp-ts-kafkajs` |
@@ -337,7 +327,7 @@ Sei nuovo nel monorepo? Parti da qui:
 | **Messaggistica**  | Apache Kafka + Avro  | Usato da `sm-onboarding-fn`                                 |
 | **Database**       | PostgreSQL           | Usato da `sm-certification-fn` e `sm-fe-smcr` (server-side) |
 | **Storage**        | Azure Blob Storage   | Usato da `sm-crm-fn` e `sm-pf-fn`                           |
-| **Monitoring**     | Application Insights | Integrato in `sm-ask-me-fn` e `sm-onboarding-fn`            |
+| **Monitoring**     | Application Insights | Integrato nelle Azure Functions e nei servizi applicativi   |
 
 ---
 
