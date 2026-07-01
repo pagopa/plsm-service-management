@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 import {
   ActivityIcon,
   AlertTriangleIcon,
-  BotMessageSquareIcon,
   CalendarIcon,
   GlobeIcon,
   HashIcon,
@@ -91,13 +90,6 @@ function getServiceBadge(service: string) {
         <Badge variant="outline" className="bg-secondary font-normal">
           <LayoutDashboardIcon className="opacity-60" />
           SMCR
-        </Badge>
-      );
-    case "AMA":
-      return (
-        <Badge variant="outline" className="bg-secondary font-normal">
-          <BotMessageSquareIcon className="opacity-60" />
-          Ask Me Anything
         </Badge>
       );
     default:
