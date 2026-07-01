@@ -22,7 +22,6 @@ The platform handles critical operations including authentication flows, CRM int
 | ----------------------- | --------------------- | -------------------------------------------------------- |
 | **sm-fe-smcr**          | Next.js 15 + React 19 | Main application frontend - Service Manager Control Room |
 | **sm-auth-fn**          | Azure Function v4     | MSAL OAuth2 PKCE authentication service                  |
-| **sm-ask-me-fn**        | Azure Function v4     | "Ask Me Anything" chatbot with Slack integration         |
 | **sm-certification-fn** | Azure Function v4     | XML certification processing with PostgreSQL storage     |
 | **sm-crm-fn**           | Azure Function v4     | Dynamics 365 CRM integration                             |
 | **sm-onboarding-fn**    | Azure Function v3     | Contract onboarding with Kafka event streaming (legacy)  |
