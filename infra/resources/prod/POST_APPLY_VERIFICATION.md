@@ -26,28 +26,20 @@ chmod +x verify_post_apply.sh
 
 ## Cosa Verifica
 
-### 1. VNet Integration (askmebot function)
-
-- ✅ Production slot ha `virtualNetworkSubnetId` configurato
-- ✅ Staging slot ha `virtualNetworkSubnetId` configurato
-- ✅ `vnetRouteAllEnabled = true`
-
-**Gestito da**: `azapi_update_resource.askmebot_vnet_integration` in `askmebot.tf`
-
-### 2. Startup Command (fe_smcr web app)
+### 1. Startup Command (fe_smcr web app)
 
 - ✅ Production slot ha `appCommandLine = "node server.js"`
 - ✅ Staging slot ha `appCommandLine = "node server.js"`
 
 **Gestito da**: `azapi_update_resource.fe_smcr_startup_command` in `app_fe_smcr.tf`
 
-### 3. Front Door Deletion
+### 2. Front Door Deletion
 
 - ✅ Front Door Profile `plsm-p-itn-smcr-afd-01` eliminato
 - ✅ DNS TXT record `_dnsauth.smcr.pagopa.it` eliminato
 - ✅ DNS TXT record `asuid.smcr.pagopa.it` eliminato
 
-### 4. Custom Domain & Managed Certificate
+### 3. Custom Domain & Managed Certificate
 
 - ✅ Custom hostname `smcr.pagopa.it` configurato
 - ✅ Managed certificate associato e attivo
@@ -55,7 +47,7 @@ chmod +x verify_post_apply.sh
 
 **Gestito da**: `app_fe_smcr_custom_hostname.tf`
 
-### 5. DNS Configuration
+### 4. DNS Configuration
 
 - ✅ Public DNS A record punta a `4.232.99.4` (validazione managed cert)
 - ✅ Private DNS Zone `smcr.pagopa.it` esiste
@@ -63,7 +55,7 @@ chmod +x verify_post_apply.sh
 
 **Gestito da**: `dns_smcr.tf` e `private_dns_smcr.tf`
 
-### 6. Access Restrictions
+### 5. Access Restrictions
 
 - ✅ Front Door access restriction rimossa da production slot
 - ✅ Front Door access restriction rimossa da staging slot
@@ -72,13 +64,11 @@ chmod +x verify_post_apply.sh
 
 ```
 ================================================
-SECTION 1: VNet Integration (askmebot function)
+SECTION 1: Startup Command (fe_smcr web app)
 ================================================
 
-1.1. Checking VNet Integration (askmebot production slot)...
-✓ VNet Integration (askmebot prod): PASS
-
-[... altre verifiche ...]
+1.1. Checking Startup Command (fe_smcr production slot)...
+✓ Startup Command (fe_smcr prod): PASS
 
 ================================================
 Summary:
@@ -90,7 +80,6 @@ Failed: 0
 ✅ All checks passed successfully!
 
 The following configurations have been verified:
-  • VNet Integration for askmebot function (production + staging)
   • Startup command for fe_smcr app (production + staging)
   • Front Door resources deleted
   • Custom domain smcr.pagopa.it configured with managed certificate
@@ -101,18 +90,6 @@ The VPN-only access pattern is working correctly! 🎉
 ```
 
 ## Troubleshooting
-
-### Check Failed: VNet Integration
-
-Se `virtualNetworkSubnetId` risulta `NOT_SET`:
-
-```bash
-# Verifica lo stato della risorsa azapi
-terraform state show azapi_update_resource.askmebot_vnet_integration
-
-# Re-applica solo la risorsa azapi
-terraform apply -target=azapi_update_resource.askmebot_vnet_integration
-```
 
 ### Check Failed: Startup Command
 

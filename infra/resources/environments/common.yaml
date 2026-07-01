@@ -96,40 +96,6 @@ onboarding:
     APPINSIGHTS_INSTRUMENTATIONKEY: "kv:appinsights_instrumentationkey"
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY: "kv:FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY"
 
-# ─── Ask Me Bot Function ─────────────────────────────────────────────────────
-
-askmebot:
-  __local: yaml_askmebot_func
-  SERVICENAME: "Ask Me Bot"
-  SLACK_API_URL: "https://slack.com/api"
-  INSTITUTION_URL: "https://api.selfcare.pagopa.it/external/support/v1/institutions"
-  USERS_URL: "https://api.selfcare.pagopa.it/external/internal/v1/institutions"
-  CONTRACT_URL: "https://api.selfcare.pagopa.it/external/support/v1/institutions"
-  SMTP_HOST: "smtp.gmail.com"
-  SMTP_PORT: "587"
-  SMTP_SECURE: "false"
-  SMTP_USERNAME: "noreply@pagopa.it"
-  FROM_EMAIL: "noreply@pagopa.it"
-  CCN_EMAIL: "Bot_Selfcare@pagopa.it"
-  MAX_DATA_LENGTH: "10"
-  APPINSIGHTS_SAMPLING_PERCENTAGE: "5"
-  SLACK_BOT_TOKEN: "kv:askmebot_slack_bot_token"
-  SLACK_SIGNING_SECRET: "kv:askmebot_slack_signing_secret"
-  ENABLED_EMAILS_SECRET: "kv:askmebot_enabled_emails_secret"
-  LEGAL_ENABLED_EMAILS_SECRET: "kv:askmebot_legal_enabled_emails_secret"
-  USERS_APIM_SUBSCRIPTION_KEY: "kv:askmebot_users_apim_subscription_key"
-  CONTRACT_APIM_SUBSCRIPTION_KEY: "kv:askmebot_contract_apim_subscription_key"
-  SMTP_PASSWORD: "kv:askmebot_smtp_password"
-  APPINSIGHTS_CONNECTION_STRING: "kv:appinsights_connection_string"
-  APPINSIGHTS_INSTRUMENTATIONKEY: "kv:appinsights_instrumentationkey"
-  # Production e staging usano segreti KV diversi per FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY
-  production:
-    NODE_ENV: "production"
-    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY: "kv:askmebot_FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY"
-  staging:
-    NODE_ENV: "production"
-    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY: "kv:askmebot_ocp_apim_subscription_key"
-
 # ─── Auth Function ─────────────────────────────────────────────────────
 
 auth_func:

@@ -4,6 +4,7 @@ import { betterFetch } from "@better-fetch/fetch";
 import { z } from "zod";
 
 import { logServerError } from "@/lib/logger/logger.server.helpers";
+import { serverEnv } from "@/config/env";
 
 const IO_API_BASE =
   "https://api.io.italia.it/operation/auth/profile/api/v1/profiles";
@@ -59,8 +60,7 @@ type IoResult<T> =
 function ioHeaders() {
   return {
     "Content-Type": "application/json",
-    "Ocp-Apim-Subscription-Key": process.env
-      .FE_SMCR_API_KEY_UTENTI_IO as string,
+    "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_UTENTI_IO as string,
   };
 }
 
