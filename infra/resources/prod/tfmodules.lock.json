@@ -1,10 +1,4 @@
 {
-  "askmebot_function.azurerm_linux_function_app_exposed": {
-    "hash": "e01c423c86ced5a898912ce9201ee3b2889ebcd7e63b41d0b0bc338e5a9fa4fc",
-    "version": "1.0.1",
-    "name": "azure_function_app_exposed",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app-exposed/azurerm/1.0.1"
-  },
   "azure_app_service_backend_smcr.azure_app_service": {
     "hash": "1578c3d974a6e23784264e334d4a5fc51fc11bb42e73d650d7f6ff335346184c",
     "version": "1.0.1",
