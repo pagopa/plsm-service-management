@@ -61,10 +61,10 @@ jobs:
       MSAL_REDIRECT_URI: ${{ secrets.MSAL_REDIRECT_URI }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -114,7 +114,7 @@ jobs:
           zip -r ../${BUNDLE_NAME}.zip .
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ env.BUNDLE_NAME }}
           path: ${{ env.BUNDLE_NAME }}.zip
@@ -196,10 +196,10 @@ jobs:
       DB_SSL: ${{ secrets.DB_SSL }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
 

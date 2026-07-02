@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Login to Azure using OIDC
-        uses: azure/login@v2.2.0
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
         with:
           # Usa i segreti configurati nell'ambiente GitHub di ci
           client-id: ${{ secrets.ARM_CLIENT_ID }}
