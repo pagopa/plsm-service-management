@@ -32,8 +32,8 @@ function createTestConfig(): PdndConfig {
   const clientAssertionKeyPair = generateKeyPairSync("rsa", {
     modulusLength: 2048,
   });
-  const dpopKeyPair = generateKeyPairSync("ec", {
-    namedCurve: "P-256",
+  const dpopKeyPair = generateKeyPairSync("rsa", {
+    modulusLength: 2048,
   });
 
   return {
@@ -115,12 +115,11 @@ describe("PDND DPoP client", () => {
     const decoded = decodeJwt(proof);
 
     expect(decoded.header).toMatchObject({
-      alg: "ES256",
+      alg: "RS256",
       typ: "dpop+jwt",
     });
     expect(decoded.header.jwk).toMatchObject({
-      crv: "P-256",
-      kty: "EC",
+      kty: "RSA",
     });
     expect(decoded.payload).toMatchObject({
       htm: "GET",

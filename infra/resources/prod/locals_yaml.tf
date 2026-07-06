@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-06-15 09:28
+# Generato il: 2026-07-06 15:43
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -218,6 +218,17 @@ locals {
     GET_STATUS                                            = "external/support/v1/onboarding/institutionOnboardings"
     GET_USERS_PATH                                        = "external/v2/users"
     ONBOARDING_BASE_PATH                                  = "https://api.selfcare.pagopa.it/"
+    PDND_ENV                                              = data.azurerm_key_vault_secret.fe_smcr_pdnd_env.value
+    PDND_CLIENT_ID                                        = data.azurerm_key_vault_secret.fe_smcr_pdnd_client_id.value
+    PDND_CLIENT_ASSERTION_KID                             = data.azurerm_key_vault_secret.fe_smcr_pdnd_client_assertion_kid.value
+    PDND_CLIENT_ASSERTION_AUDIENCE                        = data.azurerm_key_vault_secret.fe_smcr_pdnd_client_assertion_audience.value
+    PDND_AUTH_TOKEN_URL                                   = data.azurerm_key_vault_secret.fe_smcr_pdnd_auth_token_url.value
+    PDND_API_BASE_URL                                     = data.azurerm_key_vault_secret.fe_smcr_pdnd_api_base_url.value
+    PDND_CLIENT_ASSERTION_PRIVATE_KEY                     = data.azurerm_key_vault_secret.fe_smcr_pdnd_client_assertion_private_key.value
+    PDND_DPOP_PRIVATE_KEY                                 = data.azurerm_key_vault_secret.fe_smcr_pdnd_dpop_private_key.value
+    PDND_CLIENT_ASSERTION_TTL_SECONDS                     = data.azurerm_key_vault_secret.fe_smcr_pdnd_client_assertion_ttl_seconds.value
+    PDND_TOKEN_REFRESH_MARGIN_SECONDS                     = data.azurerm_key_vault_secret.fe_smcr_pdnd_token_refresh_margin_seconds.value
+    PDND_REQUEST_TIMEOUT_MS                               = data.azurerm_key_vault_secret.fe_smcr_pdnd_request_timeout_ms.value
     UPLOAD                                                = "external/internal/v1/onboarding"
     TEST_ENDPOINT                                         = "mytestendpoint"
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
@@ -273,6 +284,17 @@ locals {
     GET_STATUS                                            = "external/support/v1/onboarding/institutionOnboardings"
     GET_USERS_PATH                                        = "external/v2/users"
     ONBOARDING_BASE_PATH                                  = "https://api.selfcare.pagopa.it/"
+    PDND_ENV                                              = data.azurerm_key_vault_secret.fe_smcr_pdnd_env.value
+    PDND_CLIENT_ID                                        = data.azurerm_key_vault_secret.fe_smcr_pdnd_client_id.value
+    PDND_CLIENT_ASSERTION_KID                             = data.azurerm_key_vault_secret.fe_smcr_pdnd_client_assertion_kid.value
+    PDND_CLIENT_ASSERTION_AUDIENCE                        = data.azurerm_key_vault_secret.fe_smcr_pdnd_client_assertion_audience.value
+    PDND_AUTH_TOKEN_URL                                   = data.azurerm_key_vault_secret.fe_smcr_pdnd_auth_token_url.value
+    PDND_API_BASE_URL                                     = data.azurerm_key_vault_secret.fe_smcr_pdnd_api_base_url.value
+    PDND_CLIENT_ASSERTION_PRIVATE_KEY                     = data.azurerm_key_vault_secret.fe_smcr_pdnd_client_assertion_private_key.value
+    PDND_DPOP_PRIVATE_KEY                                 = data.azurerm_key_vault_secret.fe_smcr_pdnd_dpop_private_key.value
+    PDND_CLIENT_ASSERTION_TTL_SECONDS                     = data.azurerm_key_vault_secret.fe_smcr_pdnd_client_assertion_ttl_seconds.value
+    PDND_TOKEN_REFRESH_MARGIN_SECONDS                     = data.azurerm_key_vault_secret.fe_smcr_pdnd_token_refresh_margin_seconds.value
+    PDND_REQUEST_TIMEOUT_MS                               = data.azurerm_key_vault_secret.fe_smcr_pdnd_request_timeout_ms.value
     UPLOAD                                                = "external/internal/v1/onboarding"
     TEST_ENDPOINT                                         = "mytestendpoint"
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"

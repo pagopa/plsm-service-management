@@ -32,7 +32,7 @@ export function createDpopProof(options: CreateDpopProofOptions): string {
 
   return signJwt(
     {
-      alg: "ES256",
+      alg: "RS256",
       typ: "dpop+jwt",
       jwk: publicJwkFromPrivateKey(options.privateKey),
     },
