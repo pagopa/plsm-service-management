@@ -3,14 +3,13 @@
 import StepOne from "./StepOne";
 import StepTwo from "./StepTwo";
 import useClipboard from "@/hooks/useClipboard";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { onSubmitFormData } from "../actions/onSubmitFormData";
 import { generatePayload } from "../utils/generatePayload";
 import { toast } from "sonner";
 import StepFour from "./StepFour";
 import StepperComponent from "./StepperComponent";
 import { useFormContext } from "../context/FormContext";
-import { StepThreeOutputOption } from "../utils/constants";
 import { StepThreeControls } from "./StepThreeControls";
 
 export default function OnBoardingForm() {
@@ -24,27 +23,21 @@ export default function OnBoardingForm() {
     resetStepTwoIsSubmitted,
   } = useFormContext();
 
-  const { isCopied, copyToClipboard } = useClipboard();
-
-  const [outputOption, setOutputOption] =
-    useState<StepThreeOutputOption>("clipboard");
-
-  function handleOutputOptionChange(value: StepThreeOutputOption) {
-    setOutputOption(value);
-  }
+  const { copyToClipboard } = useClipboard();
 
   const [state, action, isPending] = useActionState(onSubmitFormData, null);
   const handledStateRef = useRef<typeof state>(null);
-  async function handleSubmit() {
-    if (outputOption === "clipboard") {
-      copyToClipboard(JSON.stringify(generatePayload(formData)));
-      toast.success("Json copiato nella clipboard!");
-    } else {
-      const newFormData = new FormData();
-      newFormData.append("output", environment);
-      newFormData.append("data", JSON.stringify(formData));
-      return action(newFormData);
-    }
+
+  function handleCopy() {
+    copyToClipboard(JSON.stringify(generatePayload(formData)));
+    toast.success("Json copiato nella clipboard!");
+  }
+
+  async function handleInvia() {
+    const newFormData = new FormData();
+    newFormData.append("output", environment);
+    newFormData.append("data", JSON.stringify(formData));
+    return action(newFormData);
   }
   useEffect(() => {
     if (!state || isPending) return;
@@ -89,12 +82,8 @@ export default function OnBoardingForm() {
               <StepperComponent />
             </StepOne>
             <StepTwo />
-            <form action={handleSubmit}>
-              <StepThreeControls
-                isPending={isPending}
-                outputOption={outputOption}
-                handleOutputOptionChange={handleOutputOptionChange}
-              />
+            <form action={handleInvia}>
+              <StepThreeControls isPending={isPending} onCopy={handleCopy} />
             </form>
           </>
         );
