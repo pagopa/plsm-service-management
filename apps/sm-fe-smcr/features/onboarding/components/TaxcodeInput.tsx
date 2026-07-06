@@ -14,7 +14,11 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { LoaderCircle } from "lucide-react";
 import { ApiOptionsApicale } from "../types/apiOptionsType";
-import { apiOptionsApicale } from "../utils/constants";
+import {
+  apiOptionsApicale,
+  Environment,
+  environmentValues,
+} from "../utils/constants";
 import { UseFormReturn } from "react-hook-form";
 import { StepOneSchema } from "../types/stepOneSchema";
 import { useFormContext } from "../context/FormContext";
@@ -37,7 +41,8 @@ export const TaxcodeInput = ({
   handleApiOption,
   isPending,
 }: Props) => {
-  const { isStepThree } = useFormContext();
+  const { isStepThree, environment, handleEnvironmentChange } =
+    useFormContext();
   return (
     <>
       <Card className="rounded-none shadow-xl ui:bg-pagopa-primary border-none">
@@ -116,6 +121,39 @@ export const TaxcodeInput = ({
                         <SelectGroup>
                           <SelectLabel>APIs disponibili</SelectLabel>
                           {apiOptionsApicale.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {isApicale && (
+                  <div className="flex flex-col">
+                    <Label htmlFor="environment-select" className="hidden">
+                      Ambiente
+                    </Label>
+                    <Select
+                      key={environment}
+                      disabled={isStepThree}
+                      name="environment"
+                      value={environment}
+                      onValueChange={(value: Environment) => {
+                        handleEnvironmentChange(value);
+                      }}
+                    >
+                      <SelectTrigger
+                        id="environment-select"
+                        className="ui:hover cursor-pointer disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500 disabled:shadow-none hover:cursor-pointer"
+                      >
+                        <SelectValue placeholder="Seleziona ambiente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Ambiente</SelectLabel>
+                          {environmentValues.map((option) => (
                             <SelectItem key={option} value={option}>
                               {option}
                             </SelectItem>

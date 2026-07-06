@@ -8,14 +8,14 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { LoaderCircle } from "lucide-react";
-import { OutputOption } from "../utils/constants";
+import { StepThreeOutputOption } from "../utils/constants";
 import { useFormContext } from "../context/FormContext";
-import { outputOptions } from "../utils/constants";
+import { stepThreeOutputOptions } from "../utils/constants";
 
 type Props = {
   isPending: boolean;
-  outputOption: OutputOption;
-  handleOutputOptionChange: (option: OutputOption) => void;
+  outputOption: StepThreeOutputOption;
+  handleOutputOptionChange: (option: StepThreeOutputOption) => void;
 };
 
 export const StepThreeControls = ({
@@ -43,7 +43,7 @@ export const StepThreeControls = ({
         key={outputOption}
         name="output"
         value={outputOption}
-        onValueChange={(value: OutputOption) => {
+        onValueChange={(value: StepThreeOutputOption) => {
           handleOutputOptionChange(value);
         }}
       >
@@ -52,7 +52,7 @@ export const StepThreeControls = ({
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {outputOptions.map((option: OutputOption) => (
+            {stepThreeOutputOptions.map((option: StepThreeOutputOption) => (
               <SelectItem key={option} value={option}>
                 {option}
               </SelectItem>
