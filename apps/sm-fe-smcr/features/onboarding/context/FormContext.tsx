@@ -12,9 +12,12 @@ import {
   defaultValues as defaultValuesStepTwo,
 } from "../types/stepTwoSchema";
 import { Step, Steps, useStep, StepOneVerificationData, NextStepResult } from "../hooks/useStep";
+import { Environment } from "../utils/constants";
 
 type FormContextType = {
   currentStep: Step;
+  environment: Environment;
+  handleEnvironmentChange: (environment: Environment) => void;
   isFirstStep: boolean;
   isStepTwo: boolean;
   isStepThree: boolean;
@@ -76,6 +79,12 @@ export const FormProvider = ({ children }: Props) => {
   const [isStepOneSubmitted, setIsStepOneSubmitted] = useState(false);
   const [isStepTwoSubmitted, setIsStepTwoSubmitted] = useState(false);
 
+  const [environment, setEnvironment] = useState<Environment>("prod");
+
+  const handleEnvironmentChange = useCallback((value: Environment): void => {
+    setEnvironment(value);
+  }, []);
+
   const handleStepFourData = useCallback((data: Partial<StepFourData>) => {
     setStepFourData((prev) => {
       return { ...prev, ...data };
@@ -111,6 +120,8 @@ export const FormProvider = ({ children }: Props) => {
     <FormContext
       value={{
         currentStep,
+        environment,
+        handleEnvironmentChange,
         isFirstStep,
         isStepTwo,
         isStepThree,
