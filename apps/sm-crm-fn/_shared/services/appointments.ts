@@ -10,10 +10,127 @@ import type {
   ProductIdSelfcare,
 } from "../types/dynamics";
 import { get, post, buildUrl } from "./httpClient";
-import { type Logger } from "../utils/logger";
+import { type Logger, createLogger } from "../utils/logger";
 import { getProductGuid, resolveEnvironment } from "../utils/mappings";
-import type { DiagnosticSession } from "./diagnosticLogger";
+import type {
+  DiagnosticSession,
+  FieldPersistenceIssue,
+} from "./diagnosticLogger";
 import { addDiagnosticCall } from "./diagnosticLogger";
+
+/**
+ * Attributi scalari dell'appuntamento di cui verificare la persistenza reale
+ * confrontando il payload inviato con la rappresentazione restituita da Dynamics.
+ * Sono i campi "di business" più soggetti a scarto silenzioso (field-level
+ * security, campi read-only, plugin/business rule): oggetto del contatto,
+ * categoria/next step e data prossimo contatto.
+ */
+const APPOINTMENT_FIELDS_TO_VERIFY = [
+  "subject",
+  "location",
+  "description",
+  "statuscode",
+  "pgp_oggettodelcontatto",
+  "category",
+  "sortdate",
+] as const;
+
+/**
+ * Confronta due valori in modo tollerante ai formati equivalenti.
+ * Gestisce numeri rappresentati come stringa e date ISO con formattazioni
+ * diverse (es. "2026-07-20T00:00:00Z" vs "2026-07-20T00:00:00+00:00").
+ *
+ * @param sent - Valore inviato nel payload
+ * @param persisted - Valore restituito da Dynamics
+ * @returns true se i due valori sono da considerarsi equivalenti
+ */
+function valuesEquivalent(sent: unknown, persisted: unknown): boolean {
+  if (sent === persisted) {
+    return true;
+  }
+
+  if (sent == null || persisted == null) {
+    return false;
+  }
+
+  const sentNumber = Number(sent);
+  const persistedNumber = Number(persisted);
+  if (
+    !Number.isNaN(sentNumber) &&
+    !Number.isNaN(persistedNumber) &&
+    `${sent}`.trim() !== "" &&
+    `${persisted}`.trim() !== ""
+  ) {
+    return sentNumber === persistedNumber;
+  }
+
+  const sentTime = Date.parse(String(sent));
+  const persistedTime = Date.parse(String(persisted));
+  if (!Number.isNaN(sentTime) && !Number.isNaN(persistedTime)) {
+    return sentTime === persistedTime;
+  }
+
+  return String(sent) === String(persisted);
+}
+
+/**
+ * Verifica quali attributi inviati nel payload dell'appuntamento NON risultano
+ * nella rappresentazione restituita da Dynamics 365 (grazie all'header
+ * `Prefer: return=representation`), individuando campi scartati o sovrascritti.
+ *
+ * È lo strumento chiave per capire, senza accedere direttamente al CRM, perché
+ * alcuni campi (es. `category`, `pgp_oggettodelcontatto`) risultano non salvati
+ * pur ricevendo una risposta di successo.
+ *
+ * @param sentBody - Payload OData inviato alla POST /appointments
+ * @param persisted - Rappresentazione del record restituita da Dynamics
+ * @returns Elenco delle discrepanze rilevate (vuoto se tutto persistito)
+ */
+export function analyzeAppointmentPersistence(
+  sentBody: Record<string, unknown>,
+  persisted: unknown,
+): FieldPersistenceIssue[] {
+  if (!persisted || typeof persisted !== "object") {
+    return [];
+  }
+
+  const persistedRecord = persisted as Record<string, unknown>;
+  const issues: FieldPersistenceIssue[] = [];
+
+  for (const field of APPOINTMENT_FIELDS_TO_VERIFY) {
+    if (!(field in sentBody)) {
+      continue;
+    }
+
+    const sentValue = sentBody[field];
+    if (sentValue === undefined) {
+      continue;
+    }
+
+    const persistedValue = persistedRecord[field];
+
+    if (persistedValue === undefined || persistedValue === null) {
+      issues.push({
+        field,
+        sentValue,
+        persistedValue: persistedValue ?? null,
+        reason: "missing",
+      });
+      continue;
+    }
+
+    if (!valuesEquivalent(sentValue, persistedValue)) {
+      issues.push({
+        field,
+        sentValue,
+        persistedValue,
+        reason: "overwritten",
+      });
+    }
+  }
+
+  return issues;
+}
 
 // -----------------------------------------------------------------------------
 // Lista Appuntamenti
@@ -209,6 +326,7 @@ export async function createAppointment(
   );
 
   const timer = Date.now();
+  const logger = createLogger();
   const executeCreateAppointment = async (
     requestBody: CreateAppointmentRequest,
     step: string,
@@ -222,6 +340,39 @@ export async function createAppointment(
         params.baseUrl,
       );
 
+      // Verifica quali campi inviati risultano effettivamente persistiti nella
+      // rappresentazione restituita da Dynamics (Prefer: return=representation).
+      const persistenceIssues = analyzeAppointmentPersistence(
+        requestBody as unknown as Record<string, unknown>,
+        result,
+      );
+
+      if (persistenceIssues.length > 0) {
+        logger.warn(
+          "[Appointments] Alcuni campi inviati NON risultano persistiti in Dynamics",
+          {
+            activityId: (result as Appointment).activityid,
+            step,
+            droppedFields: persistenceIssues.map((issue) => issue.field),
+            persistenceIssues,
+          },
+        );
+
+        if (params.diagnosticSession) {
+          params.diagnosticSession.flowSummary.persistenceIssues =
+            persistenceIssues;
+        }
+      } else {
+        logger.info(
+          "[Appointments] Tutti i campi verificati risultano persistiti in Dynamics",
+          {
+            activityId: (result as Appointment).activityid,
+            step,
+            verifiedFields: [...APPOINTMENT_FIELDS_TO_VERIFY],
+          },
+        );
+      }
+
       if (params.diagnosticSession) {
         addDiagnosticCall(params.diagnosticSession, {
           step,
@@ -233,6 +384,7 @@ export async function createAppointment(
           requestBody,
           derivedFromFrontend: appointmentDerivedFromFrontend,
           responseStatus: 201,
+          responseBody: result,
           durationMs: Date.now() - attemptStart,
           success: true,
         });

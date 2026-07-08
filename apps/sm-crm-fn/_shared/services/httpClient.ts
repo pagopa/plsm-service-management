@@ -309,6 +309,14 @@ export async function post<TRequest, TResponse>(
 
     logHttpResponse(logger, "POST", url, response.status, duration);
 
+    // Traccia la rappresentazione persistita restituita da Dynamics
+    // (header Prefer: return=representation): consente di verificare quali
+    // campi sono stati effettivamente salvati senza accedere al CRM.
+    logger.debug("POST persisted representation", {
+      url,
+      representation: data,
+    });
+
     return data as TResponse;
   } catch (error) {
     const duration = timer.elapsed();
