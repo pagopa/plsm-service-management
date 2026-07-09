@@ -20,7 +20,7 @@ const baseSchema = z.object({
       city: z.string(),
       county: z.string(),
       country: z.string(),
-      istatCode: z.string(),
+      istatCode: z.string().optional(),
       onboarding: z.array(
         z.object({
           productId: z.string(),

@@ -4,6 +4,12 @@ import { RoleOptions } from "../types/roleType";
 export const outputOptions = ["clipboard", "uat", "prod"] as const;
 export type OutputOption = (typeof outputOptions)[number];
 
+export const environmentValues = ["prod", "uat"] as const;
+export type Environment = (typeof environmentValues)[number];
+
+export const stepThreeOutputOptions = ["clipboard", "invia"] as const;
+export type StepThreeOutputOption = (typeof stepThreeOutputOptions)[number];
+
 export const institutionValues = [
   "PSP",
   "PA",
