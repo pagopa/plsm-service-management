@@ -84,4 +84,14 @@ describe("analyzeAppointmentPersistence", () => {
 
     expect(analyzeAppointmentPersistence(sent, null)).toEqual([]);
   });
+
+  it("returns no issues when the representation contains none of the verified fields (es. httpClient fallback {})", () => {
+    const sent = {
+      category: "Next step X",
+      pgp_oggettodelcontatto: 100000000,
+      sortdate: "2026-07-20T00:00:00Z",
+    };
+
+    expect(analyzeAppointmentPersistence(sent, {})).toEqual([]);
+  });
 });

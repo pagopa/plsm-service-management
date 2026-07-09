@@ -95,6 +95,17 @@ export function analyzeAppointmentPersistence(
   }
 
   const persistedRecord = persisted as Record<string, unknown>;
+
+  // Se la rappresentazione restituita non contiene NESSUNO dei campi verificati
+  // (es. httpClient.post fa fallback a {} su 204 o su parsing JSON fallito),
+  // non possiamo dedurre la persistenza: evitiamo falsi positivi "missing".
+  const hasAnyVerifiedField = APPOINTMENT_FIELDS_TO_VERIFY.some(
+    (field) => field in persistedRecord,
+  );
+  if (!hasAnyVerifiedField) {
+    return [];
+  }
+
   const issues: FieldPersistenceIssue[] = [];
 
   for (const field of APPOINTMENT_FIELDS_TO_VERIFY) {
@@ -354,7 +365,7 @@ export async function createAppointment(
             activityId: (result as Appointment).activityid,
             step,
             droppedFields: persistenceIssues.map((issue) => issue.field),
-            persistenceIssues,
+            issuesCount: persistenceIssues.length,
           },
         );
 
