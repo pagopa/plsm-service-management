@@ -164,7 +164,7 @@ export function createFirmePerEnteColumns({
     {
       id: "firme_cancelled",
       accessorKey: "firme_cancelled",
-      header: () => <span className="block w-full text-right">Annullate</span>,
+      header: () => <span className="block w-full text-right">Cancellate</span>,
       cell: ({ row }) => (
         <span
           className={cn(

@@ -34,7 +34,7 @@ import {
 export type FirmePerEnteKpis = {
   totalFirme: number;
   totalRichieste: number;
-  totalAnnullate: number;
+  totalCancellate: number;
   totalRifiutate: number;
   totalEnti: number;
   topDescription: string;
@@ -97,7 +97,7 @@ export function FirmePerEnteView({ rows, kpis }: Props) {
         <h1 className="text-2xl font-bold tracking-tight">Firme per ente</h1>
         <p className="text-muted-foreground max-w-3xl text-sm md:text-base">
           Firme richieste tramite Firma con IO per ente aderente, con dettaglio
-          di quelle completate, annullate e rifiutate.
+          di quelle completate, cancellate e rifiutate.
         </p>
       </header>
 
@@ -125,8 +125,8 @@ export function FirmePerEnteView({ rows, kpis }: Props) {
           icon={<XCircle className="size-5 text-rose-700" />}
           iconClassName="bg-rose-100"
           title="Firme non completate"
-          value={formatItInt(kpis.totalAnnullate + kpis.totalRifiutate)}
-          hint={`${formatItInt(kpis.totalAnnullate)} annullate · ${formatItInt(
+          value={formatItInt(kpis.totalCancellate + kpis.totalRifiutate)}
+          hint={`${formatItInt(kpis.totalCancellate)} cancellate · ${formatItInt(
             kpis.totalRifiutate,
           )} rifiutate`}
         />

@@ -26,7 +26,7 @@ function buildKpis(rows: FirmaPerEnteRow[]): FirmePerEnteKpis {
     return {
       totalFirme: 0,
       totalRichieste: 0,
-      totalAnnullate: 0,
+      totalCancellate: 0,
       totalRifiutate: 0,
       totalEnti: 0,
       topDescription: "—",
@@ -38,9 +38,9 @@ function buildKpis(rows: FirmaPerEnteRow[]): FirmePerEnteKpis {
   }
   const totalEnti = rows.length;
   const totalFirme = rows.reduce((s, r) => s + r.firme_signed, 0);
-  const totalAnnullate = rows.reduce((s, r) => s + r.firme_cancelled, 0);
+  const totalCancellate = rows.reduce((s, r) => s + r.firme_cancelled, 0);
   const totalRifiutate = rows.reduce((s, r) => s + r.firme_rejected, 0);
-  const totalRichieste = totalFirme + totalAnnullate + totalRifiutate;
+  const totalRichieste = totalFirme + totalCancellate + totalRifiutate;
   const top = rows[0]!;
   let universitaCount = 0;
   for (const r of rows) {
@@ -49,7 +49,7 @@ function buildKpis(rows: FirmaPerEnteRow[]): FirmePerEnteKpis {
   return {
     totalFirme,
     totalRichieste,
-    totalAnnullate,
+    totalCancellate,
     totalRifiutate,
     totalEnti,
     topDescription: top.description,
