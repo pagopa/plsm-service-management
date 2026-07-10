@@ -6,6 +6,7 @@ import { it } from "date-fns/locale";
 import z from "zod";
 import { PRODUCT_MAP } from "../types/product";
 import logger from "@/lib/logger/logger.server";
+import { getCrmErrorMessage } from "@/lib/crm-error-messages";
 import { serverEnv } from "@/config/env";
 import { tipologiaReferenteValues } from "@/components/call-management/crm-form-schema";
 
@@ -293,6 +294,7 @@ type CreateMeetingResponse = {
   activityId?: string;
   message?: string;
   error?: unknown;
+  errorCode?: string;
 };
 
 const truncateLogValue = (value: string, maxLength = 2000) =>
@@ -455,7 +457,19 @@ export async function createMeetingAction(
         },
         "createMeetingAction failed",
       );
-      return { success: false, error: message };
+      const neutralCode =
+        data.error &&
+        typeof data.error === "object" &&
+        data.error !== null &&
+        "code" in data.error &&
+        typeof (data.error as { code?: unknown }).code === "string"
+          ? (data.error as { code: string }).code
+          : undefined;
+
+      return {
+        success: false,
+        error: neutralCode ? getCrmErrorMessage(neutralCode) : message,
+      };
     }
 
     logger.info(
