@@ -5,6 +5,7 @@
 import type {
   CreateMeetingOrchestratorRequest,
   CreateMeetingOrchestratorResponse,
+  CrmErrorInfo,
   OrchestratorStepResult,
   ProductIdSelfcare,
   TipologiaReferente,
@@ -20,6 +21,7 @@ import {
   isDiagnosticEnabled,
   type DiagnosticSession,
 } from "./diagnosticLogger";
+import { mapCrmError } from "./crmErrorMapper";
 import { resolveEnvironment, getProductGuid } from "../utils/mappings";
 
 // =============================================================================
@@ -168,6 +170,7 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         `Errore durante verifica ente: ${msg}`,
+        mapCrmError({ step: "verifyAccount", error }),
         diagnosticSession,
       );
     }
@@ -198,6 +201,7 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         accountResult.error ?? "Ente non trovato",
+        mapCrmError({ step: "verifyAccount" }),
         diagnosticSession,
       );
     }
@@ -397,6 +401,7 @@ export async function createMeetingOrchestrator(
           warnings,
           dryRun,
           "Nessun contatto valido trovato o creato",
+          mapCrmError({ step: "verifyOrCreateContacts" }),
           diagnosticSession,
         );
       }
@@ -449,6 +454,7 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         `Errore durante verifica/creazione contatti: ${msg}`,
+        mapCrmError({ step: "verifyOrCreateContacts", error }),
         diagnosticSession,
       );
     }
@@ -563,6 +569,7 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         `Errore creazione appuntamento: ${msg}`,
+        mapCrmError({ step: "createAppointment", error }),
         diagnosticSession,
       );
     }
@@ -635,6 +642,7 @@ export async function createMeetingOrchestrator(
       dryRun,
       steps,
       warnings: [...warnings, `Errore non gestito: ${msg}`],
+      errorInfo: mapCrmError({ step: "unhandledException", error }),
       timestamp: new Date().toISOString(),
     };
 
@@ -666,6 +674,7 @@ async function buildErrorResponse(
   warnings: string[],
   dryRun: boolean,
   errorMessage: string,
+  errorInfo: CrmErrorInfo,
   diagnosticSession?: DiagnosticSession,
 ): Promise<CreateMeetingOrchestratorResponse> {
   const logger = createLogger(undefined, { dryRun });
@@ -679,6 +688,7 @@ async function buildErrorResponse(
     dryRun,
     steps,
     warnings,
+    errorInfo,
     timestamp: new Date().toISOString(),
   };
 
