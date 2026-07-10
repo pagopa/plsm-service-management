@@ -156,13 +156,27 @@ export async function get<T>(
 
     if (!response.ok) {
       const errorBody = await response.text();
+      let odataCode: string | undefined;
+      try {
+        const parsed = JSON.parse(errorBody) as {
+          error?: { code?: string };
+        };
+        odataCode = parsed.error?.code;
+      } catch {
+        odataCode = undefined;
+      }
+      // rawDetail resta SOLO nei log server-side, mai nella risposta HTTP.
       logger.error(`GET request failed`, new Error(errorBody), {
         url,
         statusCode: response.status,
         duration,
         method: "GET",
       });
-      throw new Error(`GET ${url} failed: ${response.status} - ${errorBody}`);
+      throw new CrmError({
+        status: response.status,
+        odataCode,
+        rawDetail: errorBody,
+      });
     }
 
     const data = await response.json();
@@ -298,7 +312,6 @@ export async function post<TRequest, TResponse>(
         status: response.status,
         odataCode,
         rawDetail: errorBody,
-        message: `POST ${url} failed: ${response.status}`,
       });
     }
 

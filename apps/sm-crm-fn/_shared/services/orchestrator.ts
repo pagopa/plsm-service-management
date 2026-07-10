@@ -153,7 +153,7 @@ export async function createMeetingOrchestrator(
       steps.push({
         step: "verifyAccount",
         success: false,
-        error: `Exception during account verification: ${msg}`,
+        error: "Errore durante la verifica dell'ente",
         dryRun,
       });
 
@@ -437,7 +437,7 @@ export async function createMeetingOrchestrator(
       steps.push({
         step: "verifyOrCreateContacts",
         success: false,
-        error: `Exception during contact processing: ${msg}`,
+        error: "Errore durante la verifica o creazione dei contatti",
         dryRun,
       });
 
@@ -552,7 +552,7 @@ export async function createMeetingOrchestrator(
       steps.push({
         step: "createAppointment",
         success: false,
-        error: msg,
+        error: "Errore durante la creazione dell'appuntamento",
         dryRun,
       });
 
@@ -619,7 +619,6 @@ export async function createMeetingOrchestrator(
     return finalResponse;
   } catch (error) {
     // Catch globale per errori non gestiti
-    const msg = error instanceof Error ? error.message : String(error);
     const totalDuration = overallTimer.elapsed();
 
     logger.error("❌ ORCHESTRATOR UNHANDLED EXCEPTION", error, {
@@ -632,7 +631,7 @@ export async function createMeetingOrchestrator(
       steps.push({
         step: "unhandledException",
         success: false,
-        error: msg,
+        error: "Errore non gestito durante l'elaborazione",
         dryRun,
       });
     }
@@ -641,7 +640,7 @@ export async function createMeetingOrchestrator(
       success: false,
       dryRun,
       steps,
-      warnings: [...warnings, `Errore non gestito: ${msg}`],
+      warnings: [...warnings, "Errore non gestito durante l'elaborazione"],
       errorInfo: mapCrmError({ step: "unhandledException", error }),
       timestamp: new Date().toISOString(),
     };

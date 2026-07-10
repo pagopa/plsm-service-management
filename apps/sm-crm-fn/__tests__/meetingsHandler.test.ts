@@ -92,6 +92,47 @@ describe("createMeetingHandler", () => {
     });
   });
 
+  it("does not leak raw CRM detail from failed orchestration result steps or warnings", async () => {
+    const errorInfo = {
+      code: "ACCOUNT_NOT_FOUND",
+      category: "NOT_FOUND",
+      step: "verifyAccount",
+    } as const;
+    mockedValidateOrchestratorRequest.mockReturnValue({
+      valid: true,
+      data: { dryRun: false },
+    } as ReturnType<typeof validateOrchestratorRequest>);
+    mockedCreateMeetingOrchestrator.mockResolvedValue({
+      success: false,
+      dryRun: false,
+      steps: [
+        {
+          step: "verifyAccount",
+          success: false,
+          error: "Errore durante la verifica dell'ente",
+          dryRun: false,
+        },
+      ],
+      warnings: ["Errore non gestito durante l'elaborazione"],
+      errorInfo,
+      timestamp: new Date().toISOString(),
+    });
+
+    const response = await createMeetingHandler(
+      makeRequest({ subject: "Call" }) as never,
+      makeContext() as never,
+    );
+
+    const serializedBody = JSON.stringify(response.jsonBody);
+    expect(serializedBody).not.toContain("https://");
+    expect(serializedBody).not.toContain("0x8004");
+    expect(serializedBody).not.toContain("failed: ");
+    expect(serializedBody).not.toContain("Exception during");
+    expect(response.jsonBody).toMatchObject({
+      error: errorInfo,
+    });
+  });
+
   it("emits a neutral error object without raw exception text for unexpected failures", async () => {
     const rawErrorMessage = "SECRET Dynamics exception detail";
     const response = await createMeetingHandler(
