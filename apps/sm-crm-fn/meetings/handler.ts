@@ -47,6 +47,11 @@ export async function createMeetingHandler(
           success: false,
           message: "Errore di validazione",
           errors,
+          error: {
+            code: "VALIDATION_ERROR",
+            category: "VALIDATION",
+            step: "validation",
+          },
           timestamp: new Date().toISOString(),
         },
       };
@@ -76,6 +81,7 @@ export async function createMeetingHandler(
       status,
       jsonBody: {
         ...result,
+        ...(result.success ? {} : { error: result.errorInfo }),
         message: result.success
           ? result.dryRun
             ? "Dry-run completato con successo"
@@ -98,13 +104,16 @@ export async function createMeetingHandler(
       };
     }
 
-    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 500,
       jsonBody: {
         success: false,
         message: "Errore interno del server",
-        error: errorMessage,
+        error: {
+          code: "CRM_ERROR",
+          category: "UNKNOWN",
+          step: "unexpected",
+        },
         timestamp: new Date().toISOString(),
       },
     };
