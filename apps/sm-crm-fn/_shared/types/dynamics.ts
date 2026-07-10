@@ -199,7 +199,30 @@ export interface CreateMeetingOrchestratorResponse {
   contactIds?: string[];
   steps: OrchestratorStepResult[];
   warnings: string[];
+  errorInfo?: CrmErrorInfo;
   timestamp: string;
+}
+
+export type CrmErrorCategory =
+  | "VALIDATION"
+  | "NOT_FOUND"
+  | "CRM_REJECTED"
+  | "CRM_UNAVAILABLE"
+  | "UNKNOWN";
+
+export type CrmErrorCode =
+  | "VALIDATION_ERROR"
+  | "ACCOUNT_NOT_FOUND"
+  | "CONTACT_INVALID"
+  | "CRM_FIELD_REJECTED"
+  | "CRM_UNAVAILABLE"
+  | "CRM_ERROR"
+  | "UNKNOWN";
+
+export interface CrmErrorInfo {
+  code: CrmErrorCode;
+  category: CrmErrorCategory;
+  step: string;
 }
 
 // -----------------------------------------------------------------------------
