@@ -146,18 +146,53 @@ export function createFirmePerEnteColumns({
       },
     },
     {
-      accessorKey: "totale_firme",
-      header: () => <span className="block w-full text-right">Firme</span>,
+      id: "firme_signed",
+      accessorKey: "firme_signed",
+      header: () => <span className="block w-full text-right">Firmate</span>,
       cell: ({ row }) => (
         <Badge
           variant="outline"
           className={cn(
             "font-medium tabular-nums",
-            volumeBadgeClass(row.original.totale_firme),
+            volumeBadgeClass(row.original.firme_signed),
           )}
         >
-          {formatItInt(row.original.totale_firme)} firme
+          {formatItInt(row.original.firme_signed)} firme
         </Badge>
+      ),
+    },
+    {
+      id: "firme_cancelled",
+      accessorKey: "firme_cancelled",
+      header: () => <span className="block w-full text-right">Annullate</span>,
+      cell: ({ row }) => (
+        <span
+          className={cn(
+            "tabular-nums text-sm",
+            row.original.firme_cancelled > 0
+              ? "font-medium text-amber-700"
+              : "text-muted-foreground",
+          )}
+        >
+          {formatItInt(row.original.firme_cancelled)}
+        </span>
+      ),
+    },
+    {
+      id: "firme_rejected",
+      accessorKey: "firme_rejected",
+      header: () => <span className="block w-full text-right">Rifiutate</span>,
+      cell: ({ row }) => (
+        <span
+          className={cn(
+            "tabular-nums text-sm",
+            row.original.firme_rejected > 0
+              ? "font-medium text-rose-700"
+              : "text-muted-foreground",
+          )}
+        >
+          {formatItInt(row.original.firme_rejected)}
+        </span>
       ),
     },
   ];

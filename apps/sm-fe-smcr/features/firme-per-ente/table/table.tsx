@@ -37,7 +37,7 @@ export function FirmePerEnteTable({
 
   return (
     <div className="overflow-x-auto rounded-md border">
-      <Table className="min-w-[640px]">
+      <Table className="min-w-[760px]">
         <TableHeader className="bg-muted/50 text-muted-foreground">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow
@@ -52,7 +52,9 @@ export function FirmePerEnteTable({
                     header.column.id === "rank" && "w-12 text-left",
                     header.column.id === "description" && "text-left",
                     header.column.id === "kind" && "text-left",
-                    header.column.id === "totale_firme" && "w-36 text-right",
+                    header.column.id === "firme_signed" && "w-36 text-right",
+                    header.column.id === "firme_cancelled" && "w-24 text-right",
+                    header.column.id === "firme_rejected" && "w-24 text-right",
                   )}
                 >
                   {header.isPlaceholder
@@ -77,7 +79,10 @@ export function FirmePerEnteTable({
                   key={cell.id}
                   className={cn(
                     "px-3 py-3 whitespace-normal",
-                    cell.column.id === "totale_firme" && "text-right",
+                    (cell.column.id === "firme_signed" ||
+                      cell.column.id === "firme_cancelled" ||
+                      cell.column.id === "firme_rejected") &&
+                      "text-right",
                   )}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

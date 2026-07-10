@@ -8,7 +8,7 @@ import {
   ChevronRight,
   Pencil,
   Search,
-  TrendingUp,
+  XCircle,
 } from "lucide-react";
 
 import type { FirmaPerEnteRow } from "@/lib/services/firme-per-ente.service";
@@ -33,6 +33,9 @@ import {
 
 export type FirmePerEnteKpis = {
   totalFirme: number;
+  totalRichieste: number;
+  totalAnnullate: number;
+  totalRifiutate: number;
   totalEnti: number;
   topDescription: string;
   topFirme: number;
@@ -93,18 +96,20 @@ export function FirmePerEnteView({ rows, kpis }: Props) {
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight">Firme per ente</h1>
         <p className="text-muted-foreground max-w-3xl text-sm md:text-base">
-          Numero totale di firme apposte tramite Firma con IO, suddivise per ente
-          aderente.
+          Firme richieste tramite Firma con IO per ente aderente, con dettaglio
+          di quelle completate, annullate e rifiutate.
         </p>
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
-          icon={<Pencil className="size-5 text-sky-700" />}
-          iconClassName="bg-sky-100"
-          title="Firme totali"
+          icon={<Pencil className="size-5 text-emerald-700" />}
+          iconClassName="bg-emerald-100"
+          title="Firme completate"
           value={formatItInt(kpis.totalFirme)}
-          hint={`Su ${formatItInt(kpis.totalEnti)} enti aderenti`}
+          hint={`Su ${formatItInt(kpis.totalRichieste)} richieste · ${formatItPercent(
+            kpis.totalRichieste > 0 ? kpis.totalFirme / kpis.totalRichieste : 0,
+          )} completate`}
         />
         <KpiCard
           icon={<Award className="size-5 text-amber-700" />}
@@ -117,11 +122,13 @@ export function FirmePerEnteView({ rows, kpis }: Props) {
           )} del totale`}
         />
         <KpiCard
-          icon={<TrendingUp className="size-5 text-blue-700" />}
-          iconClassName="bg-blue-100"
-          title="Media per ente"
-          value={formatItInt(kpis.mediaPerEnte)}
-          hint="Firme per ente"
+          icon={<XCircle className="size-5 text-rose-700" />}
+          iconClassName="bg-rose-100"
+          title="Firme non completate"
+          value={formatItInt(kpis.totalAnnullate + kpis.totalRifiutate)}
+          hint={`${formatItInt(kpis.totalAnnullate)} annullate · ${formatItInt(
+            kpis.totalRifiutate,
+          )} rifiutate`}
         />
         <KpiCard
           icon={<Building2 className="size-5 text-orange-800" />}
