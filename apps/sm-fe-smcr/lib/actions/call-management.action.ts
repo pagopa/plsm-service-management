@@ -294,7 +294,6 @@ type CreateMeetingResponse = {
   activityId?: string;
   message?: string;
   error?: unknown;
-  errorCode?: string;
 };
 
 const truncateLogValue = (value: string, maxLength = 2000) =>
