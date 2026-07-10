@@ -14,8 +14,7 @@ const CRM_ERROR_MESSAGES: Record<string, string> = {
     "Contatto non valido o non trovato nel CRM. Verifica i partecipanti.",
   CRM_FIELD_REJECTED:
     "Il CRM ha rifiutato uno dei valori inviati. Contatta il supporto.",
-  CRM_UNAVAILABLE:
-    "Il CRM non è al momento raggiungibile. Riprova più tardi.",
+  CRM_UNAVAILABLE: "Il CRM non è al momento raggiungibile. Riprova più tardi.",
   CRM_ERROR: GENERIC_CRM_ERROR,
   UNKNOWN: GENERIC_CRM_ERROR,
 };
