@@ -82,12 +82,46 @@ export interface DiagnosticCall {
   derivedFromFrontend?: DiagnosticDerivedFromFrontend;
   /** HTTP status code ricevuto (null se la chiamata ha lanciato eccezione) */
   responseStatus: number | null;
+  /**
+   * Body restituito da Dynamics 365 (rappresentazione del record persistito).
+   * Popolato solo per le POST andate a buon fine quando l'header
+   * `Prefer: return=representation` è attivo: contiene il record ESATTO
+   * come salvato da Dynamics, utile per verificare quali campi sono stati
+   * effettivamente scritti senza accedere direttamente al CRM.
+   */
+  responseBody?: unknown;
   /** Durata della chiamata in millisecondi */
   durationMs: number;
   /** Indica se la chiamata ha avuto successo logico */
   success?: boolean;
   /** Messaggio di errore se la chiamata è fallita */
   error?: string;
+}
+
+/**
+ * Motivo per cui un campo inviato a Dynamics non risulta persistito
+ * nella rappresentazione restituita.
+ * - `missing`: il campo era presente nel payload ma è null/assente nel record salvato
+ *   (tipico di field-level security mancante o campo read-only ignorato).
+ * - `overwritten`: il campo è stato salvato con un valore diverso da quello inviato
+ *   (tipico di plugin/business rule/workflow che sovrascrivono il valore).
+ */
+export type FieldPersistenceReason = "missing" | "overwritten";
+
+/**
+ * Esito della verifica di persistenza di un singolo campo dell'appuntamento,
+ * ottenuto confrontando il payload inviato con la rappresentazione restituita
+ * da Dynamics 365.
+ */
+export interface FieldPersistenceIssue {
+  /** Nome dell'attributo Dynamics verificato (es. "category", "pgp_oggettodelcontatto") */
+  field: string;
+  /** Valore inviato nel payload della POST */
+  sentValue: unknown;
+  /** Valore effettivamente persistito e restituito da Dynamics */
+  persistedValue: unknown;
+  /** Motivo della discrepanza */
+  reason: FieldPersistenceReason;
 }
 
 /**
@@ -131,6 +165,14 @@ export interface DiagnosticFlowSummary {
     status: "started" | "completed" | "failed";
     summary: string;
   }>;
+  /**
+   * Esito della verifica di persistenza dei campi dell'appuntamento.
+   * Elenca i campi inviati a Dynamics che NON risultano nella rappresentazione
+   * restituita (mancanti) o che sono stati salvati con un valore diverso
+   * (sovrascritti). Vuoto/assente quando tutti i campi inviati sono stati
+   * persistiti correttamente.
+   */
+  persistenceIssues?: FieldPersistenceIssue[];
   /** Risultato finale dell'orchestrazione (popolato a fine flusso) */
   result?: unknown;
 }
@@ -256,7 +298,9 @@ function sanitizeDiagnosticValue(
     if (ancestors.includes(value)) {
       return "[Circular]";
     }
-    return value.map((item) => sanitizeDiagnosticValue(item, undefined, [...ancestors, value]));
+    return value.map((item) =>
+      sanitizeDiagnosticValue(item, undefined, [...ancestors, value]),
+    );
   }
 
   if (value && typeof value === "object") {
@@ -297,6 +341,7 @@ function buildPersistedDiagnosticSession(
         "requestDetails",
       ) as DiagnosticRequestDetails | undefined,
       requestBody: sanitizeDiagnosticValue(call.requestBody, "requestBody"),
+      responseBody: sanitizeDiagnosticValue(call.responseBody, "responseBody"),
       derivedFromFrontend: sanitizeDiagnosticValue(
         call.derivedFromFrontend,
         "derivedFromFrontend",
