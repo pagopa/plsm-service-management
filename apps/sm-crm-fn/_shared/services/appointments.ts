@@ -10,10 +10,138 @@ import type {
   ProductIdSelfcare,
 } from "../types/dynamics";
 import { get, post, buildUrl } from "./httpClient";
-import { type Logger } from "../utils/logger";
-import { resolveEnvironment } from "../utils/mappings";
-import type { DiagnosticSession } from "./diagnosticLogger";
+import { type Logger, createLogger } from "../utils/logger";
+import { getProductGuid, resolveEnvironment } from "../utils/mappings";
+import type {
+  DiagnosticSession,
+  FieldPersistenceIssue,
+} from "./diagnosticLogger";
 import { addDiagnosticCall } from "./diagnosticLogger";
+
+/**
+ * Attributi scalari dell'appuntamento di cui verificare la persistenza reale
+ * confrontando il payload inviato con la rappresentazione restituita da Dynamics.
+ * Sono i campi "di business" più soggetti a scarto silenzioso (field-level
+ * security, campi read-only, plugin/business rule): oggetto del contatto,
+ * categoria/next step e data prossimo contatto.
+ */
+const APPOINTMENT_FIELDS_TO_VERIFY = [
+  "subject",
+  "location",
+  "description",
+  "statuscode",
+  "pgp_oggettodelcontatto",
+  "category",
+  "sortdate",
+] as const;
+
+/**
+ * Confronta due valori in modo tollerante ai formati equivalenti.
+ * Gestisce numeri rappresentati come stringa e date ISO con formattazioni
+ * diverse (es. "2026-07-20T00:00:00Z" vs "2026-07-20T00:00:00+00:00").
+ *
+ * @param sent - Valore inviato nel payload
+ * @param persisted - Valore restituito da Dynamics
+ * @returns true se i due valori sono da considerarsi equivalenti
+ */
+function valuesEquivalent(sent: unknown, persisted: unknown): boolean {
+  if (sent === persisted) {
+    return true;
+  }
+
+  if (sent == null || persisted == null) {
+    return false;
+  }
+
+  const sentNumber = Number(sent);
+  const persistedNumber = Number(persisted);
+  if (
+    !Number.isNaN(sentNumber) &&
+    !Number.isNaN(persistedNumber) &&
+    `${sent}`.trim() !== "" &&
+    `${persisted}`.trim() !== ""
+  ) {
+    return sentNumber === persistedNumber;
+  }
+
+  const sentTime = Date.parse(String(sent));
+  const persistedTime = Date.parse(String(persisted));
+  if (!Number.isNaN(sentTime) && !Number.isNaN(persistedTime)) {
+    return sentTime === persistedTime;
+  }
+
+  return String(sent) === String(persisted);
+}
+
+/**
+ * Verifica quali attributi inviati nel payload dell'appuntamento NON risultano
+ * nella rappresentazione restituita da Dynamics 365 (grazie all'header
+ * `Prefer: return=representation`), individuando campi scartati o sovrascritti.
+ *
+ * È lo strumento chiave per capire, senza accedere direttamente al CRM, perché
+ * alcuni campi (es. `category`, `pgp_oggettodelcontatto`) risultano non salvati
+ * pur ricevendo una risposta di successo.
+ *
+ * @param sentBody - Payload OData inviato alla POST /appointments
+ * @param persisted - Rappresentazione del record restituita da Dynamics
+ * @returns Elenco delle discrepanze rilevate (vuoto se tutto persistito)
+ */
+export function analyzeAppointmentPersistence(
+  sentBody: Record<string, unknown>,
+  persisted: unknown,
+): FieldPersistenceIssue[] {
+  if (!persisted || typeof persisted !== "object") {
+    return [];
+  }
+
+  const persistedRecord = persisted as Record<string, unknown>;
+
+  // Se la rappresentazione restituita non contiene NESSUNO dei campi verificati
+  // (es. httpClient.post fa fallback a {} su 204 o su parsing JSON fallito),
+  // non possiamo dedurre la persistenza: evitiamo falsi positivi "missing".
+  const hasAnyVerifiedField = APPOINTMENT_FIELDS_TO_VERIFY.some(
+    (field) => field in persistedRecord,
+  );
+  if (!hasAnyVerifiedField) {
+    return [];
+  }
+
+  const issues: FieldPersistenceIssue[] = [];
+
+  for (const field of APPOINTMENT_FIELDS_TO_VERIFY) {
+    if (!(field in sentBody)) {
+      continue;
+    }
+
+    const sentValue = sentBody[field];
+    if (sentValue === undefined) {
+      continue;
+    }
+
+    const persistedValue = persistedRecord[field];
+
+    if (persistedValue === undefined || persistedValue === null) {
+      issues.push({
+        field,
+        sentValue,
+        persistedValue: persistedValue ?? null,
+        reason: "missing",
+      });
+      continue;
+    }
+
+    if (!valuesEquivalent(sentValue, persistedValue)) {
+      issues.push({
+        field,
+        sentValue,
+        persistedValue,
+        reason: "overwritten",
+      });
+    }
+  }
+
+  return issues;
+}
 
 // -----------------------------------------------------------------------------
 // Lista Appuntamenti
@@ -83,9 +211,8 @@ export interface CreateFullAppointmentParams {
   dataProssimoContatto?: string;
   /**
    * ID Selfcare del prodotto.
-   * Viene usato a livello applicativo/orchestrativo, ma al momento non viene
-   * inviato sull'entità `appointment` perché in UAT il binding del prodotto
-   * attiva logica CRM server-side che fallisce con `0x80040265`.
+   * Se presente, viene risolto nel GUID prodotto Dynamics tramite la mappa
+   * ambiente-specifica (UAT/PROD) e bindato anche sull'entità appointment.
    */
   productIdSelfcare?: ProductIdSelfcare;
   accountId: string;
@@ -117,7 +244,7 @@ export interface CreateFullAppointmentParams {
  * @param params.oggettoDelContatto - Oggetto del contatto: valore Picklist (Edm.Int32) da Dynamics 365. Default suggerito: 100000005 (Integrazione Tecnica)
  * @param params.categoria - Categoria appuntamento (campo standard Dynamics)
  * @param params.dataProssimoContatto - Data prossimo contatto previsto. Accetta ISO 8601 datetime o solo data (auto-normalizzata a T00:00:00Z)
- * @param params.productIdSelfcare - ID Selfcare del prodotto. Al momento non viene bindato sull'appuntamento: resta usato per il flusso applicativo e la ricerca contatti.
+ * @param params.productIdSelfcare - ID Selfcare del prodotto. Se mappato per l'ambiente corrente, viene bindato anche sull'appuntamento.
  * @param params.baseUrl - Base URL di Dynamics 365
  * @param params.diagnosticSession - Sessione diagnostica opzionale
  * @returns Appuntamento creato con activityid
@@ -155,6 +282,7 @@ export async function createAppointment(
     description: params.description,
     statuscode: 5, // Busy
     "regardingobjectid_account@odata.bind": `/accounts(${params.accountId})`,
+    "pgp_clienteid_Appointment@odata.bind": `/accounts(${params.accountId})`,
     appointment_activity_parties: activityParties,
   };
 
@@ -182,18 +310,26 @@ export async function createAppointment(
       : `${params.dataProssimoContatto}T00:00:00Z`;
   }
 
-  // NOTE:
-  // I metadata CRM espongono una relazione appointment -> product, ma in UAT il
-  // binding del prodotto sull'appuntamento causa un errore server-side
-  // `0x80040265` ("Errore nella gestione automatica dell'appointment").
-  // Fino a conferma del team CRM, il prodotto non viene inviato in POST
-  // /appointments.
-  if (params.productIdSelfcare) {
-    const environment = resolveEnvironment(params.baseUrl);
-    console.warn(
-      `[Appointments] Binding prodotto su appointment disabilitato temporaneamente per ambiente ${environment} e prodotto ${params.productIdSelfcare}`,
-    );
+  const environment = resolveEnvironment(params.baseUrl);
+  const productGuid = params.productIdSelfcare
+    ? getProductGuid(params.productIdSelfcare, environment)
+    : null;
+
+  if (productGuid) {
+    body["pgp_prodottooggettodelcontattoid_Appointment@odata.bind"] =
+      `/products(${productGuid})`;
   }
+
+  const appointmentDerivedFromFrontend = {
+    accountId: params.accountId,
+    productIdSelfcare: params.productIdSelfcare,
+    productGuid,
+    notes: [
+      "accountId -> regardingobjectid_account@odata.bind",
+      "accountId -> pgp_clienteid_Appointment@odata.bind",
+      "productIdSelfcare -> productGuid -> pgp_prodottooggettodelcontattoid_Appointment@odata.bind",
+    ],
+  };
 
   console.log(`[Appointments] Creazione appuntamento: ${params.subject}`);
   console.log(
@@ -201,6 +337,7 @@ export async function createAppointment(
   );
 
   const timer = Date.now();
+  const logger = createLogger();
   const executeCreateAppointment = async (
     requestBody: CreateAppointmentRequest,
     step: string,
@@ -214,14 +351,53 @@ export async function createAppointment(
         params.baseUrl,
       );
 
+      // Verifica quali campi inviati risultano effettivamente persistiti nella
+      // rappresentazione restituita da Dynamics (Prefer: return=representation).
+      const persistenceIssues = analyzeAppointmentPersistence(
+        requestBody as unknown as Record<string, unknown>,
+        result,
+      );
+
+      if (persistenceIssues.length > 0) {
+        logger.warn(
+          "[Appointments] Alcuni campi inviati NON risultano persistiti in Dynamics",
+          {
+            activityId: (result as Appointment).activityid,
+            step,
+            droppedFields: persistenceIssues.map((issue) => issue.field),
+            issuesCount: persistenceIssues.length,
+          },
+        );
+
+        if (params.diagnosticSession) {
+          params.diagnosticSession.flowSummary.persistenceIssues =
+            persistenceIssues;
+        }
+      } else {
+        logger.info(
+          "[Appointments] Tutti i campi verificati risultano persistiti in Dynamics",
+          {
+            activityId: (result as Appointment).activityid,
+            step,
+            verifiedFields: [...APPOINTMENT_FIELDS_TO_VERIFY],
+          },
+        );
+      }
+
       if (params.diagnosticSession) {
         addDiagnosticCall(params.diagnosticSession, {
           step,
+          substep: step,
+          entity: "appointments",
+          attempt: step === "createAppointmentFallback" ? 2 : 1,
           method: "POST",
           url,
           requestBody,
+          derivedFromFrontend: appointmentDerivedFromFrontend,
           responseStatus: 201,
+          responseBody: result,
           durationMs: Date.now() - attemptStart,
+          success: true,
         });
       }
 
@@ -233,11 +409,16 @@ export async function createAppointment(
       if (params.diagnosticSession) {
         addDiagnosticCall(params.diagnosticSession, {
           step,
+          substep: step,
+          entity: "appointments",
+          attempt: step === "createAppointmentFallback" ? 2 : 1,
           method: "POST",
           url,
           requestBody,
+          derivedFromFrontend: appointmentDerivedFromFrontend,
           responseStatus: null,
           durationMs: Date.now() - attemptStart,
+          success: false,
           error: errorMessage,
         });
       }
@@ -272,6 +453,8 @@ export async function createAppointment(
       description: body.description,
       "regardingobjectid_account@odata.bind":
         body["regardingobjectid_account@odata.bind"],
+      "pgp_clienteid_Appointment@odata.bind":
+        body["pgp_clienteid_Appointment@odata.bind"],
       appointment_activity_parties: body.appointment_activity_parties,
     };
 

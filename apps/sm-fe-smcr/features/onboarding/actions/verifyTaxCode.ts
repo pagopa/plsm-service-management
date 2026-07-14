@@ -21,7 +21,9 @@ import { isIpaAOOData, isIpaUOData } from "../utils/helpers";
 import { isEmptyObj } from "../utils/isNotEmptyObj";
 import {
   FE_SMCR_API_KEY_INSTITUTION,
+  FE_SMCR_API_KEY_INSTITUTION_UAT,
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY,
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT,
   GET_INFOCAMERE,
   GET_INSTITUTION,
   GET_IPA,
@@ -29,7 +31,9 @@ import {
   GET_IPA_UO,
   GET_STATUS,
   ONBOARDING_BASE_PATH,
+  ONBOARDING_BASE_PATH_UAT,
 } from "./config/env";
+import { Environment } from "../utils/constants";
 import {
   logServerError,
   logServerInfo,
@@ -37,7 +41,18 @@ import {
 
 export async function verifyTaxCode(state: any, formData: FormData) {
   const subunit = formData.get("subunitOption") as SubunitOption;
-  logServerInfo("verifyTaxCode - subunit selected", { subunit });
+  // L'ambiente è selezionabile solo per Apicale; per AOO/UO si resta su prod.
+  const environment =
+    (formData.get("environment") as Environment | null) ?? "prod";
+  const isUat = environment === "uat";
+  const baseURL = isUat ? ONBOARDING_BASE_PATH_UAT : ONBOARDING_BASE_PATH;
+  const institutionApiKey = isUat
+    ? FE_SMCR_API_KEY_INSTITUTION_UAT
+    : FE_SMCR_API_KEY_INSTITUTION;
+  const ocpApimSubscriptionKey = isUat
+    ? FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT
+    : FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY;
+  logServerInfo("verifyTaxCode - subunit selected", { subunit, environment });
   let codeToSearch = "";
 
   switch (subunit) {
@@ -93,7 +108,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
   function fetchConfig(code: string, subunit: SubunitOption) {
     if (subunit === "AOO" || subunit === "UO") {
       return {
-        apikey: `${FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY}`,
+        apikey: `${ocpApimSubscriptionKey}`,
         schema: subunit === "AOO" ? getIpaSchemaAOO : getIpaSchemaUO,
         url: `${subunit === "AOO" ? GET_IPA_AOO : GET_IPA_UO}${code}`,
       };
@@ -102,21 +117,21 @@ export async function verifyTaxCode(state: any, formData: FormData) {
     switch (endpoint) {
       case "selfcare":
         return {
-          apikey: `${FE_SMCR_API_KEY_INSTITUTION}`,
+          apikey: `${institutionApiKey}`,
           schema: getSelfCareSchema,
           url: `${GET_INSTITUTION}?taxCode=${code}`,
           endpoint,
         };
       case "ipa":
         return {
-          apikey: `${FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY}`,
+          apikey: `${ocpApimSubscriptionKey}`,
           schema: getIpaSchema,
           url: `${GET_IPA}${code}`,
           endpoint,
         };
       case "infocamere":
         return {
-          apikey: `${FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY}`,
+          apikey: `${ocpApimSubscriptionKey}`,
           schema: getInfocamereSchema,
           url: `${GET_INFOCAMERE}${code}`,
           endpoint,
@@ -130,7 +145,7 @@ export async function verifyTaxCode(state: any, formData: FormData) {
   try {
     const { data, error } = await $fetch(url, {
       method: "GET",
-      baseURL: ONBOARDING_BASE_PATH,
+      baseURL,
       headers: {
         "Ocp-Apim-Subscription-Key": apikey,
       },
@@ -172,9 +187,9 @@ export async function verifyTaxCode(state: any, formData: FormData) {
           `${GET_STATUS}?taxcode=${data.codiceFiscaleEnte}&subunitCode=${subunitCode}`,
           {
             method: "GET",
-            baseURL: ONBOARDING_BASE_PATH,
+            baseURL,
             headers: {
-              "Ocp-Apim-Subscription-Key": `${FE_SMCR_API_KEY_INSTITUTION}`,
+              "Ocp-Apim-Subscription-Key": `${institutionApiKey}`,
             },
             output: getOnboardingStatusSchema,
           },
@@ -244,9 +259,9 @@ export async function verifyTaxCode(state: any, formData: FormData) {
           `${GET_STATUS}?taxcode=${codeToSearch}`,
           {
             method: "GET",
-            baseURL: ONBOARDING_BASE_PATH,
+            baseURL,
             headers: {
-              "Ocp-Apim-Subscription-Key": `${FE_SMCR_API_KEY_INSTITUTION}`,
+              "Ocp-Apim-Subscription-Key": `${institutionApiKey}`,
             },
             output: getOnboardingStatusSchema,
           },

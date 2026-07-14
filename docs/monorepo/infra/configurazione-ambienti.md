@@ -253,7 +253,7 @@ Ambiente: prod  |  KV ref: module.azure_core_infra.common_key_vault.id
 [5/5] Lettura data.tf + generazione data_kv.tf
 
 ✓ Generato: infra/resources/prod/locals_yaml.tf
-  Risorse processate (8): common_app_settings, certificates, onboarding, askmebot, auth_func, portale_fatturazione, backend_smcr, fe_smcr, crm_function
+  Risorse processate (8): common_app_settings, certificates, onboarding, auth_func, portale_fatturazione, backend_smcr, fe_smcr, crm_function
 ✓ Generato: infra/resources/prod/data_kv.tf
   Segreti KV nel YAML: 45  |  generati: 2  |  già in data.tf (skippati): 43
 ```

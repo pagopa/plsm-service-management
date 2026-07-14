@@ -2,7 +2,6 @@
 
 import {
   ActivityIcon,
-  BotIcon,
   FileSignature,
   FolderIcon,
   LucideIcon,
@@ -73,6 +72,11 @@ export const protectedRoutes: ProtectedRoute[] = [
       {
         label: "Firme per ente",
         path: "/dashboard/firme-per-ente",
+        requiredTeams: ["service-management"],
+      },
+      {
+        label: "Verifica firma",
+        path: "/dashboard/verifica-firma",
         requiredTeams: ["service-management"],
       },
     ],
@@ -147,14 +151,6 @@ export const protectedRoutes: ProtectedRoute[] = [
     requiredTeams: ["admin"],
     sidebar: true,
     icon: Users,
-    teamId: "admin",
-  },
-  {
-    label: "Ask Me Anything",
-    path: "/dashboard/ask-me-anything",
-    requiredTeams: ["admin"],
-    sidebar: true,
-    icon: BotIcon,
     teamId: "admin",
   },
   {

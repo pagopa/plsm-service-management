@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-07-06 15:43
+# Generato il: 2026-07-14 23:37
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -21,6 +21,8 @@ locals {
   }
 
   yaml_common_slot_app_settings = local.yaml_common_app_settings
+
+  yaml_common_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # certificates
@@ -45,6 +47,8 @@ locals {
   }
 
   yaml_certificates_func_slot_app_settings = local.yaml_certificates_func_app_settings
+
+  yaml_certificates_func_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # onboarding
@@ -80,63 +84,7 @@ locals {
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY     = data.azurerm_key_vault_secret.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY.value
   }
 
-  # ────────────────────────────────────────────────────────────
-  # askmebot
-  # ────────────────────────────────────────────────────────────
-
-  yaml_askmebot_func_app_settings = {
-    SERVICENAME                       = "Ask Me Bot"
-    SLACK_API_URL                     = "https://slack.com/api"
-    INSTITUTION_URL                   = "https://api.selfcare.pagopa.it/external/support/v1/institutions"
-    USERS_URL                         = "https://api.selfcare.pagopa.it/external/internal/v1/institutions"
-    CONTRACT_URL                      = "https://api.selfcare.pagopa.it/external/support/v1/institutions"
-    SMTP_HOST                         = "smtp.gmail.com"
-    SMTP_PORT                         = "587"
-    SMTP_SECURE                       = "false"
-    SMTP_USERNAME                     = "noreply@pagopa.it"
-    FROM_EMAIL                        = "noreply@pagopa.it"
-    CCN_EMAIL                         = "Bot_Selfcare@pagopa.it"
-    MAX_DATA_LENGTH                   = "10"
-    APPINSIGHTS_SAMPLING_PERCENTAGE   = "5"
-    SLACK_BOT_TOKEN                   = data.azurerm_key_vault_secret.askmebot_slack_bot_token.value
-    SLACK_SIGNING_SECRET              = data.azurerm_key_vault_secret.askmebot_slack_signing_secret.value
-    ENABLED_EMAILS_SECRET             = data.azurerm_key_vault_secret.askmebot_enabled_emails_secret.value
-    LEGAL_ENABLED_EMAILS_SECRET       = data.azurerm_key_vault_secret.askmebot_legal_enabled_emails_secret.value
-    USERS_APIM_SUBSCRIPTION_KEY       = data.azurerm_key_vault_secret.askmebot_users_apim_subscription_key.value
-    CONTRACT_APIM_SUBSCRIPTION_KEY    = data.azurerm_key_vault_secret.askmebot_contract_apim_subscription_key.value
-    SMTP_PASSWORD                     = data.azurerm_key_vault_secret.askmebot_smtp_password.value
-    APPINSIGHTS_CONNECTION_STRING     = data.azurerm_key_vault_secret.appinsights_connection_string.value
-    APPINSIGHTS_INSTRUMENTATIONKEY    = data.azurerm_key_vault_secret.appinsights_instrumentationkey.value
-    NODE_ENV                          = "production"
-    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY = data.azurerm_key_vault_secret.askmebot_FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY.value
-  }
-
-  yaml_askmebot_func_slot_app_settings = {
-    SERVICENAME                       = "Ask Me Bot"
-    SLACK_API_URL                     = "https://slack.com/api"
-    INSTITUTION_URL                   = "https://api.selfcare.pagopa.it/external/support/v1/institutions"
-    USERS_URL                         = "https://api.selfcare.pagopa.it/external/internal/v1/institutions"
-    CONTRACT_URL                      = "https://api.selfcare.pagopa.it/external/support/v1/institutions"
-    SMTP_HOST                         = "smtp.gmail.com"
-    SMTP_PORT                         = "587"
-    SMTP_SECURE                       = "false"
-    SMTP_USERNAME                     = "noreply@pagopa.it"
-    FROM_EMAIL                        = "noreply@pagopa.it"
-    CCN_EMAIL                         = "Bot_Selfcare@pagopa.it"
-    MAX_DATA_LENGTH                   = "10"
-    APPINSIGHTS_SAMPLING_PERCENTAGE   = "5"
-    SLACK_BOT_TOKEN                   = data.azurerm_key_vault_secret.askmebot_slack_bot_token.value
-    SLACK_SIGNING_SECRET              = data.azurerm_key_vault_secret.askmebot_slack_signing_secret.value
-    ENABLED_EMAILS_SECRET             = data.azurerm_key_vault_secret.askmebot_enabled_emails_secret.value
-    LEGAL_ENABLED_EMAILS_SECRET       = data.azurerm_key_vault_secret.askmebot_legal_enabled_emails_secret.value
-    USERS_APIM_SUBSCRIPTION_KEY       = data.azurerm_key_vault_secret.askmebot_users_apim_subscription_key.value
-    CONTRACT_APIM_SUBSCRIPTION_KEY    = data.azurerm_key_vault_secret.askmebot_contract_apim_subscription_key.value
-    SMTP_PASSWORD                     = data.azurerm_key_vault_secret.askmebot_smtp_password.value
-    APPINSIGHTS_CONNECTION_STRING     = data.azurerm_key_vault_secret.appinsights_connection_string.value
-    APPINSIGHTS_INSTRUMENTATIONKEY    = data.azurerm_key_vault_secret.appinsights_instrumentationkey.value
-    NODE_ENV                          = "production"
-    FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY = data.azurerm_key_vault_secret.askmebot_ocp_apim_subscription_key.value
-  }
+  yaml_onboarding_func_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # auth_func
@@ -151,7 +99,7 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr"
     NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-p-itn-auth-func-01.azurewebsites.net/api/v1/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
   }
 
   yaml_auth_func_slot_app_settings = {
@@ -163,8 +111,10 @@ locals {
     JWT_AUDIENCE             = "plsm-fe-smcr-staging"
     NODE_ENV                 = "production"
     WEBSITE_RUN_FROM_PACKAGE = "1"
-    MSAL_REDIRECT_URI        = "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net/api/v1/auth/callback"
+    MSAL_REDIRECT_URI        = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
   }
+
+  yaml_auth_func_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # fe_smcr
@@ -206,6 +156,8 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET                = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_wallet.value
     FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX              = data.azurerm_key_vault_secret.fe_smcr_azure_storage_wallet_blob_prefix.value
     FE_SMCR_API_KEY_UTENTI_IO                             = data.azurerm_key_vault_secret.fe_smcr_api_key_utenti_io.value
+    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01.azurewebsites.net"
+    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"
@@ -234,6 +186,9 @@ locals {
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL                                = "https://plsm-p-itn-auth-func-01.azurewebsites.net"
+    AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
+    AUTH_JWT_ISSUER                                       = "plsm-auth-service"
+    AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr"
   }
 
   yaml_fe_smcr_slot_app_settings = {
@@ -272,6 +227,8 @@ locals {
     FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET                = data.azurerm_key_vault_secret.fe_smcr_azure_storage_container_wallet.value
     FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX              = data.azurerm_key_vault_secret.fe_smcr_azure_storage_wallet_blob_prefix.value
     FE_SMCR_API_KEY_UTENTI_IO                             = data.azurerm_key_vault_secret.fe_smcr_api_key_utenti_io.value
+    SIGNATURE_FN_URL                                      = "https://plsm-p-itn-sig-func-01-staging.azurewebsites.net"
+    SIGNATURE_FN_KEY                                      = data.azurerm_key_vault_secret.fe_smcr_signature_fn_key.value
     DB_NAME                                               = "dbsmcr"
     DB_TABLE                                              = "dbsmcr"
     DB_PORT                                               = "5432"
@@ -300,7 +257,20 @@ locals {
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-p-itn-fe-smcr-app-01-staging.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL                                = "https://plsm-p-itn-auth-func-01-staging.azurewebsites.net"
+    AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret.value
+    AUTH_JWT_ISSUER                                       = "plsm-auth-service-staging"
+    AUTH_JWT_AUDIENCE                                     = "plsm-fe-smcr-staging"
   }
+
+  yaml_fe_smcr_sticky_app_setting_names = [
+    "SIGNATURE_FN_URL",
+    "SIGNATURE_FN_KEY",
+    "AUTH_FUNCTION_BASE_URL",
+    "AUTH_JWT_AUDIENCE",
+    "AUTH_JWT_ISSUER",
+    "NEXT_PUBLIC_APP_URL",
+    "NEXT_PUBLIC_POST_LOGIN_REDIRECT",
+  ]
 
   # ────────────────────────────────────────────────────────────
   # portale_fatturazione
@@ -314,6 +284,8 @@ locals {
 
   yaml_pf_func_slot_app_settings = local.yaml_pf_func_app_settings
 
+  yaml_pf_func_sticky_app_setting_names = []
+
   # ────────────────────────────────────────────────────────────
   # backend_smcr
   # ────────────────────────────────────────────────────────────
@@ -321,6 +293,8 @@ locals {
   yaml_backend_app_settings = {}
 
   yaml_backend_slot_app_settings = local.yaml_backend_app_settings
+
+  yaml_backend_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # crm_function
@@ -344,6 +318,21 @@ locals {
   }
 
   yaml_crm_func_slot_app_settings = local.yaml_crm_func_app_settings
+
+  yaml_crm_func_sticky_app_setting_names = []
+
+  # ────────────────────────────────────────────────────────────
+  # signature
+  # ────────────────────────────────────────────────────────────
+
+  yaml_signature_func_app_settings = {
+    DSS_API_BASE_URL    = "http://dss-api-dem.northeurope.azurecontainer.io:8080"
+    MAX_FILE_SIZE_BYTES = "10485760"
+  }
+
+  yaml_signature_func_slot_app_settings = local.yaml_signature_func_app_settings
+
+  yaml_signature_func_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────────
   # Metadati ambiente

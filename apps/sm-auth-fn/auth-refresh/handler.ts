@@ -75,7 +75,7 @@ export async function handler(
       `auth-token=${newToken}`,
       "HttpOnly",
       "Secure",
-      "SameSite=Strict",
+      "SameSite=Lax",
       "Path=/",
       `Max-Age=${config.jwtExpirySeconds}`,
     ].join("; ");

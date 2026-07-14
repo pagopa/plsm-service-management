@@ -9,7 +9,9 @@ import { downloadLatestAzureBlobByPrefix } from "@/lib/services/azure-blob.stora
 const firmaPerEnteRowSchema = z.object({
   internalinstitutionid: z.string(),
   description: z.string(),
-  totale_firme: z.number(),
+  firme_rejected: z.number(),
+  firme_cancelled: z.number(),
+  firme_signed: z.number(),
 });
 
 const firmePerEntePayloadSchema = z.array(firmaPerEnteRowSchema);
@@ -48,14 +50,16 @@ export async function getFirmePerEnteReport(): Promise<{
   if (!containerNameOrUrl?.trim()) {
     return {
       data: null,
-      error: "Container storage Firma con IO non configurato (FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO).",
+      error:
+        "Container storage Firma con IO non configurato (FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO).",
     };
   }
 
   if (!blobPrefix?.trim()) {
     return {
       data: null,
-      error: "Prefisso blob Firma con IO non configurato (FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX).",
+      error:
+        "Prefisso blob Firma con IO non configurato (FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX).",
     };
   }
 
@@ -86,7 +90,7 @@ export async function getFirmePerEnteReport(): Promise<{
 
     const raw = JSON.parse(downloaded.buffer.toString("utf-8")) as unknown;
     const parsed = firmePerEntePayloadSchema.parse(raw);
-    const sorted = [...parsed].sort((a, b) => b.totale_firme - a.totale_firme);
+    const sorted = [...parsed].sort((a, b) => b.firme_signed - a.firme_signed);
     return { data: sorted, error: null };
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));

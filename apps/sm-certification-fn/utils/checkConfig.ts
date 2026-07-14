@@ -31,7 +31,7 @@ const configSchema = z.object({
     z.boolean(),
   ),
   apiKey: z.string().min(6, "La API key non può essere una stringa vuota"),
-  // SMTP — notifiche email certificati in scadenza (stesso pattern di sm-ask-me-fn)
+  // SMTP — notifiche email certificati in scadenza
   smtpHost: z.string().min(1, "L'host SMTP non può essere vuoto"),
   smtpPort: z.preprocess(
     (a) => parseInt(String(a), 10),

@@ -1,4 +1,4 @@
-name: CD - Ask Me Bot Function
+name: CD - Signature Function
 
 on:
   workflow_dispatch:
@@ -17,7 +17,7 @@ on:
         description: "Function App name"
         type: string
         required: true
-        default: "plsm-p-itn-askmebot-func-01"
+        default: "plsm-p-itn-sig-func-01"
       use_staging_slot:
         description: True if artifact should be deployed to staging slot
         type: boolean
@@ -32,21 +32,23 @@ on:
         description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
         type: boolean
         required: false
-        default: false
+        default: true
       override_labels:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
         required: false
-        default: ""
+        default: "prod"
+
 permissions:
   contents: read
   id-token: write
+
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch'
     uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@main
     with:
-      workspace_name: sm-ask-me-fn
+      workspace_name: sm-signature-fn
       environment: ${{ inputs.environment }}
       resource_group_name: ${{ inputs.resource_group_name }}
       function_app_name: ${{ inputs.function_app_name }}

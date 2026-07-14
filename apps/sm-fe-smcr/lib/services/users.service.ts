@@ -23,6 +23,7 @@ const UserSchema = z.object({
         "ORG_ADMIN",
         "pagopa_admin",
         "ope_base",
+        "admin_aggregator",
       ]),
     )
     .optional(),
@@ -63,8 +64,7 @@ export async function getUsersPNPGByInstitutionId(institutionId: string) {
     `https://api.selfcare.pagopa.it/external/pn-pg/support/v1/institutions/${institutionId}/users`,
     {
       headers: {
-        "Ocp-Apim-Subscription-Key":
-          serverEnv.FE_SMCR_API_KEY_PNPG as string,
+        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_PNPG as string,
       },
       output: z.array(UserSchema),
       next: {
@@ -141,8 +141,7 @@ export async function createUserPNPG(input: {
     {
       method: "POST",
       headers: {
-        "Ocp-Apim-Subscription-Key":
-          serverEnv.FE_SMCR_API_KEY_PNPG as string,
+        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_PNPG as string,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -238,8 +237,7 @@ export async function updateUser(input: {
     {
       method: "PUT",
       headers: {
-        "Ocp-Apim-Subscription-Key":
-          serverEnv.FE_SMCR_USERS_API_KEY as string,
+        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_USERS_API_KEY as string,
       },
     },
   );

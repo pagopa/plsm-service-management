@@ -18,6 +18,10 @@ const serverEnvSchema = z.object({
   FE_SMCR_API_KEY_CERTIFICATI: optionalString,
   FE_SMCR_API_KEY_UTENTI_IO: optionalString,
 
+  // Signature validation function
+  SIGNATURE_FN_URL: optionalString,
+  SIGNATURE_FN_KEY: optionalString,
+
   // Slack webhooks
   FE_SMCR_API_SLACK_REPORT_HOOK: optionalString,
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST: optionalString,
@@ -107,6 +111,8 @@ const rawServerEnv = {
     process.env.FE_SMCR_API_KEY_FIRMA_CON_IO_SIGNER_ID,
   FE_SMCR_API_KEY_CERTIFICATI: process.env.FE_SMCR_API_KEY_CERTIFICATI,
   FE_SMCR_API_KEY_UTENTI_IO: process.env.FE_SMCR_API_KEY_UTENTI_IO,
+  SIGNATURE_FN_URL: process.env.SIGNATURE_FN_URL,
+  SIGNATURE_FN_KEY: process.env.SIGNATURE_FN_KEY,
   FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL:
     process.env.FE_SMCR_API_KEY_SUBSCRIPTION_KEY_BILLING_PORTAL,
   FE_SMCR_API_SLACK_REPORT_HOOK: process.env.FE_SMCR_API_SLACK_REPORT_HOOK,

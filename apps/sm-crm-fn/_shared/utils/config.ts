@@ -1,5 +1,74 @@
 import { z, ZodError } from "zod";
 
+/**
+ * Parses a map stored as standard JSON, as an already parsed object, or as the
+ * bare format {k:v} that Azure Key Vault References can expose when quotes are
+ * stripped.
+ */
+function parseMapValue(val: unknown): Record<string, unknown> {
+  if (val && typeof val === "object" && !Array.isArray(val)) {
+    return val as Record<string, unknown>;
+  }
+
+  if (typeof val !== "string") {
+    throw new Error("mappa non valida");
+  }
+
+  // Strip whitespace (spaces, newlines) that Key Vault portal may inject mid-value
+  const sanitized = val.replace(/\s/g, "");
+  if (!sanitized) {
+    throw new Error("mappa vuota");
+  }
+
+  try {
+    const parsed = JSON.parse(sanitized) as unknown;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+    throw new Error("mappa JSON non valida");
+  } catch {
+    // Bare format: {key:value,key:value}
+    const inner = sanitized.replace(/^\{/, "").replace(/\}$/, "");
+    const result: Record<string, unknown> = {};
+    for (const entry of inner.split(",")) {
+      const colon = entry.indexOf(":");
+      if (colon === -1) throw new Error("coppia chiave:valore non valida");
+      result[entry.slice(0, colon)] = entry.slice(colon + 1);
+    }
+    return result;
+  }
+}
+
+function parseMapString(val: unknown): Record<string, string> {
+  const raw = parseMapValue(val);
+  return Object.fromEntries(
+    Object.entries(raw).map(([k, v]) => {
+      if (typeof v !== "string") {
+        throw new Error(`valore non valido per chiave "${k}": ${String(v)}`);
+      }
+      const value = v.replace(/\s/g, "");
+      if (!value) throw new Error(`valore vuoto per chiave "${k}"`);
+      return [k, value];
+    })
+  );
+}
+
+function parseMapStringToNumber(val: unknown): Record<string, number> {
+  const raw = parseMapValue(val);
+  return Object.fromEntries(
+    Object.entries(raw).map(([k, v]) => {
+      if (typeof v !== "string" && typeof v !== "number") {
+        throw new Error(`valore non numerico per chiave "${k}": ${String(v)}`);
+      }
+      const rawValue = String(v).replace(/\s/g, "");
+      if (!rawValue) throw new Error(`valore vuoto per chiave "${k}"`);
+      const n = Number(rawValue);
+      if (isNaN(n)) throw new Error(`valore non numerico per chiave "${k}": ${v}`);
+      return [k, n];
+    })
+  );
+}
+
 const configSchema = z.object({
   DYNAMICS_BASE_URL: z
     .string()
@@ -62,61 +131,61 @@ const configSchema = z.object({
    * @example '{"prod-pn":"617cbe1b-...","prod-io":"26a975ef-..."}'
    */
   CRM_PRODUCTS_MAP_UAT: z
-    .preprocess((val) => {
-      if (typeof val !== "string" || val.length === 0) {
-        throw new Error("CRM_PRODUCTS_MAP_UAT è obbligatoria");
-      }
+    .unknown()
+    .refine((val) => val !== undefined && val !== null && val !== "", "CRM_PRODUCTS_MAP_UAT è obbligatoria")
+    .transform((val, ctx) => {
       try {
-        return JSON.parse(val);
-      } catch {
-        throw new Error("CRM_PRODUCTS_MAP_UAT: JSON non valido");
+        return parseMapString(val);
+      } catch (e) {
+        ctx.addIssue({ code: "custom", message: `CRM_PRODUCTS_MAP_UAT non valido: ${e instanceof Error ? e.message : e}` });
+        return z.NEVER;
       }
-    }, z.record(z.string(), z.string())),
+    }),
   /**
    * Mappa prodotti CRM per ambiente PROD (JSON serializzato da Key Vault).
    * Formato: Record<ProductIdSelfcare, string> dove il valore è il GUID Dynamics.
    */
   CRM_PRODUCTS_MAP_PROD: z
-    .preprocess((val) => {
-      if (typeof val !== "string" || val.length === 0) {
-        throw new Error("CRM_PRODUCTS_MAP_PROD è obbligatoria");
-      }
+    .unknown()
+    .refine((val) => val !== undefined && val !== null && val !== "", "CRM_PRODUCTS_MAP_PROD è obbligatoria")
+    .transform((val, ctx) => {
       try {
-        return JSON.parse(val);
-      } catch {
-        throw new Error("CRM_PRODUCTS_MAP_PROD: JSON non valido");
+        return parseMapString(val);
+      } catch (e) {
+        ctx.addIssue({ code: "custom", message: `CRM_PRODUCTS_MAP_PROD non valido: ${e instanceof Error ? e.message : e}` });
+        return z.NEVER;
       }
-    }, z.record(z.string(), z.string())),
+    }),
   /**
    * Mappa tipologie referente CRM per ambiente UAT (JSON serializzato da Key Vault).
    * Formato: Record<TipologiaReferente, number>.
    */
   CRM_TIPOLOGIA_REFERENTE_MAP_UAT: z
-    .preprocess((val) => {
-      if (typeof val !== "string" || val.length === 0) {
-        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria");
-      }
+    .unknown()
+    .refine((val) => val !== undefined && val !== null && val !== "", "CRM_TIPOLOGIA_REFERENTE_MAP_UAT è obbligatoria")
+    .transform((val, ctx) => {
       try {
-        return JSON.parse(val);
-      } catch {
-        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_UAT: JSON non valido");
+        return parseMapStringToNumber(val);
+      } catch (e) {
+        ctx.addIssue({ code: "custom", message: `CRM_TIPOLOGIA_REFERENTE_MAP_UAT non valido: ${e instanceof Error ? e.message : e}` });
+        return z.NEVER;
       }
-    }, z.record(z.string(), z.coerce.number())),
+}),
   /**
    * Mappa tipologie referente CRM per ambiente PROD (JSON serializzato da Key Vault).
    * Formato: Record<TipologiaReferente, number>.
    */
   CRM_TIPOLOGIA_REFERENTE_MAP_PROD: z
-    .preprocess((val) => {
-      if (typeof val !== "string" || val.length === 0) {
-        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria");
-      }
+    .unknown()
+    .refine((val) => val !== undefined && val !== null && val !== "", "CRM_TIPOLOGIA_REFERENTE_MAP_PROD è obbligatoria")
+    .transform((val, ctx) => {
       try {
-        return JSON.parse(val);
-      } catch {
-        throw new Error("CRM_TIPOLOGIA_REFERENTE_MAP_PROD: JSON non valido");
+        return parseMapStringToNumber(val);
+      } catch (e) {
+        ctx.addIssue({ code: "custom", message: `CRM_TIPOLOGIA_REFERENTE_MAP_PROD non valido: ${e instanceof Error ? e.message : e}` });
+        return z.NEVER;
       }
-    }, z.record(z.string(), z.coerce.number())),
+}),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
@@ -125,14 +194,22 @@ export function validateConfig(config: unknown): AppConfig {
   try {
     return configSchema.parse(config);
   } catch (error) {
-    if (error instanceof ZodError) {
-      const errorMessages = error.issues
+    // Duck-type check instead of instanceof to handle Zod module duplication in monorepos
+    if (
+      error != null &&
+      typeof error === "object" &&
+      "issues" in error &&
+      Array.isArray((error as { issues: unknown }).issues)
+    ) {
+      const issues = (error as ZodError).issues;
+      const errorMessages = issues
         .map((e) => `${e.path.join(".")}: ${e.message}`)
         .join("; ");
       throw new Error(`Configurazione non valida: ${errorMessages}`);
     }
+    const raw = error instanceof Error ? error.message : String(error);
     throw new Error(
-      "Errore sconosciuto durante la validazione della configurazione.",
+      `Errore sconosciuto durante la validazione della configurazione: ${raw}`,
     );
   }
 }

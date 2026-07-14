@@ -142,11 +142,11 @@ export async function handler(
     const responseCookies = [
       `pkce_verifier=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`, // Clear
       `auth_state=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`, // Clear
-      `auth-token=${internalJwt}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${config.jwtExpirySeconds}`, // Set JWT
+      `auth-token=${internalJwt}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${config.jwtExpirySeconds}`, // Set JWT
     ];
 
-    // Redirect to frontend dashboard (or read from query param)
-    const redirectUrl = request.query.get("redirect_uri") || "/dashboard";
+    // Redirect back to the frontend app after the auth cookie is set.
+    const redirectUrl = `${process.env.FRONTEND_URL || ""}/dashboard`;
 
     return {
       status: 302,

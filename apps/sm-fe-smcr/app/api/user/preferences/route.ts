@@ -1,20 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import knex from "@/lib/knex";
 import { randomUUID } from "crypto";
+import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 import {
   logServerError,
   logServerInfo,
 } from "@/lib/logger/logger.server.helpers";
 
+export const runtime = "nodejs";
+
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.nextUrl.searchParams.get("userId");
+    const currentUser = await getOrCreateCurrentAppUser();
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: "userId is required" },
-        { status: 400 },
-      );
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const requestedUserId = request.nextUrl.searchParams.get("userId");
+    const userId = currentUser.user.id;
+
+    if (requestedUserId && requestedUserId !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const preferences = await knex("preferences")
@@ -44,14 +51,18 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const { theme, teamId } = await request.json();
-    const userId = request.nextUrl.searchParams.get("userId");
+    const currentUser = await getOrCreateCurrentAppUser();
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: "userId is required" },
-        { status: 400 },
-      );
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { theme, teamId } = await request.json();
+    const requestedUserId = request.nextUrl.searchParams.get("userId");
+    const userId = currentUser.user.id;
+
+    if (requestedUserId && requestedUserId !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     logServerInfo("Aggiornamento preferenze", { userId, teamId, theme });

@@ -4,7 +4,7 @@ import { Log, LogLevel } from "@/lib/services/logs.service";
 import { Badge } from "@/components/ui/badge";
 import { Pillow } from "@/components/ui/pillow";
 import { ColumnDef } from "@tanstack/react-table";
-import { BotMessageSquareIcon, LayoutDashboardIcon } from "lucide-react";
+import { LayoutDashboardIcon } from "lucide-react";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
@@ -144,13 +144,6 @@ const getServiceBadge = (service: string) => {
         <Badge variant="outline" className="bg-secondary font-normal">
           <LayoutDashboardIcon className="opacity-60" />
           SMCR
-        </Badge>
-      );
-    case "AMA":
-      return (
-        <Badge variant="outline" className="bg-secondary font-normal">
-          <BotMessageSquareIcon className="opacity-60" />
-          Ask Me Anything
         </Badge>
       );
     default:

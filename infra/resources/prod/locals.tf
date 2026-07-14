@@ -59,25 +59,25 @@ locals {
   onboarding_func_app_settings      = local.yaml_onboarding_func_app_settings
   onboarding_slot_func_app_settings = local.yaml_onboarding_func_slot_app_settings
 
-  # 4. Ask Me Bot Function (Exposed)
-  askmebot_func_app_settings      = local.yaml_askmebot_func_app_settings
-  askmebot_func_slot_app_settings = local.yaml_askmebot_func_slot_app_settings
-
-  # 5. Backend SMCR App Service
+  # 4. Backend SMCR App Service
   backend_app_settings      = local.yaml_backend_app_settings
   backend_slot_app_settings = local.yaml_backend_slot_app_settings
 
-  # 6. Frontend FE-SMCR App Service
+  # 5. Frontend FE-SMCR App Service
   fe_smcr_app_settings      = local.yaml_fe_smcr_app_settings
   fe_smcr_slot_app_settings = local.yaml_fe_smcr_slot_app_settings
 
-  # 7. CRM Function (Dynamics)
+  # 6. CRM Function (Dynamics)
   crm_func_app_settings      = local.yaml_crm_func_app_settings
   crm_func_slot_app_settings = local.yaml_crm_func_slot_app_settings
 
   # 8. Auth Function
   auth_func_app_settings      = local.yaml_auth_func_app_settings
   auth_slot_func_app_settings = local.yaml_auth_func_slot_app_settings
+
+  # 9. Signature Validation Function
+  signature_func_app_settings      = local.yaml_signature_func_app_settings
+  signature_slot_func_app_settings = local.yaml_signature_func_slot_app_settings
 
 
   # OLD HARDCODED CONFIGURATION (COMMENTED OUT FOR REFERENCE)
