@@ -42,7 +42,7 @@ export async function pdndFetch(
     nowSeconds: options.nowSeconds,
   });
   const headers = new Headers(init.headers);
-  headers.set("Authorization", `DPoP ${voucher.accessToken}`);
+  headers.set("Authorization", `Bearer ${voucher.accessToken}`);
   headers.set("DPoP", dpopProof);
 
   return fetchImpl(url, {
