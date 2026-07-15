@@ -33,6 +33,8 @@ const sendToSlackSchema = z.object({
   members: z.string(),
   link: z.url(),
   target: z.enum(["test", "prod"]),
+  status: z.enum(["success", "failure"]).default("success"),
+  errorReason: z.string().optional(),
 });
 
 type SendToSlackInput = z.infer<typeof sendToSlackSchema>;
@@ -118,74 +120,100 @@ export async function sendToSlackAction(
   const membersArray = validation.data.members.split(",").map((m) => m.trim());
   const membersText = membersArray.map((m) => `• ${m}`).join("\n");
   const dateTimeText = formatItalianDateTime(validation.data.date);
+  const isFailure = validation.data.status === "failure";
+
+  const headerBlock = {
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: isFailure
+        ? `:rotating_light: *Creazione appuntamento non riuscita* :rotating_light:\n*${validation.data.name}*`
+        : `:mega: *${validation.data.name}* :mega:`,
+    },
+  };
+
+  const failureIntroBlock = {
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: `La creazione dell'appuntamento su CRM non è andata a buon fine. Di seguito il riepilogo dei dati con cui si è provato a crearlo.${
+        validation.data.errorReason
+          ? `\n\n*Errore:* ${validation.data.errorReason}`
+          : ""
+      }`,
+    },
+  };
+
+  const fieldsBlock = {
+    type: "section",
+    fields: [
+      {
+        type: "mrkdwn",
+        text: `*Prodotto:*\n${PRODUCT_MAP[validation.data.product] || validation.data.product}`,
+      },
+      {
+        type: "mrkdwn",
+        text: `*Data e Ora 📅:*\n${dateTimeText}`,
+      },
+      {
+        type: "mrkdwn",
+        text: `*Partecipanti del Team SM:*\n${membersText}`,
+      },
+    ],
+  };
+
+  const actionsBlock = {
+    type: "actions",
+    elements: [
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "Diario delle call",
+        },
+        url: validation.data.link,
+        style: "primary",
+      },
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "Service Management",
+        },
+        url: "https://pagopa.atlassian.net/wiki/spaces/ISM/overview",
+        style: "danger",
+      },
+    ],
+  };
+
+  const contextBlocks = [
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "IO Service Management :rocket:",
+        },
+      ],
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: ":clap: Service Management transforms customer needs into value-driven solutions.",
+        },
+      ],
+    },
+  ];
 
   const payload = {
     blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `:mega: *${validation.data.name}* :mega:`,
-        },
-      },
-      {
-        type: "section",
-        fields: [
-          {
-            type: "mrkdwn",
-            text: `*Prodotto:*\n${PRODUCT_MAP[validation.data.product] || validation.data.product}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*Data e Ora 📅:*\n${dateTimeText}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*Partecipanti del Team SM:*\n${membersText}`,
-          },
-        ],
-      },
-      {
-        type: "actions",
-        elements: [
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Diario delle call",
-            },
-            url: validation.data.link,
-            style: "primary",
-          },
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Service Management",
-            },
-            url: "https://pagopa.atlassian.net/wiki/spaces/ISM/overview",
-            style: "danger",
-          },
-        ],
-      },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: "IO Service Management :rocket:",
-          },
-        ],
-      },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: ":clap: Service Management transforms customer needs into value-driven solutions.",
-          },
-        ],
-      },
+      headerBlock,
+      ...(isFailure ? [failureIntroBlock] : []),
+      fieldsBlock,
+      actionsBlock,
+      ...contextBlocks,
     ],
   };
 
