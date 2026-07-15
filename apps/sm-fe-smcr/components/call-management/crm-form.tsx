@@ -115,10 +115,15 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
 
     const crmResult = await createMeetingAction(payLoad);
 
+    const affectedFieldsText =
+      !crmResult.success && crmResult.fields?.length
+        ? `Campi interessati: ${crmResult.fields.join(", ")}.`
+        : undefined;
+
     if (crmResult.success) {
       toast.success(crmResult.message ?? "Appuntamento creato con successo");
     } else {
-      toast.error(crmResult.error);
+      toast.error(crmResult.error, { description: affectedFieldsText });
     }
 
     const slackTarget = values.dynamicsEnvironment === "PROD" ? "prod" : "test";
@@ -138,7 +143,10 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
     slackFormData.append("target", slackTarget);
     slackFormData.append("status", crmResult.success ? "success" : "failure");
     if (!crmResult.success) {
-      slackFormData.append("errorReason", crmResult.error);
+      const errorReason = affectedFieldsText
+        ? `${crmResult.error} ${affectedFieldsText}`
+        : crmResult.error;
+      slackFormData.append("errorReason", errorReason);
     }
 
     const slackResult = await sendToSlackAction(

@@ -8,6 +8,10 @@ import { PRODUCT_MAP } from "../types/product";
 import logger from "@/lib/logger/logger.server";
 import { serverEnv } from "@/config/env";
 import { tipologiaReferenteValues } from "@/components/call-management/crm-form-schema";
+import {
+  getCrmErrorMessage,
+  type CrmErrorPayload,
+} from "@/lib/crm-error-messages";
 
 const formatItalianDateTime = (value: string) => {
   const isoMatch =
@@ -315,28 +319,21 @@ export type CreateMeetingInput = {
 
 export type CreateMeetingResult =
   | { success: true; activityId?: string; message?: string }
-  | { success: false; error: string };
+  | {
+      success: false;
+      error: string;
+      code?: string;
+      fields?: string[];
+    };
 
 type CreateMeetingResponse = {
   activityId?: string;
   message?: string;
-  error?: unknown;
+  error?: CrmErrorPayload | string;
 };
 
 const truncateLogValue = (value: string, maxLength = 2000) =>
   value.length > maxLength ? `${value.slice(0, maxLength)}...` : value;
-
-const stringifyLogValue = (value: unknown) => {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  try {
-    return JSON.stringify(value ?? {});
-  } catch {
-    return String(value);
-  }
-};
 
 export async function createMeetingAction(
   input: CreateMeetingInput,
@@ -455,21 +452,37 @@ export async function createMeetingAction(
     }
 
     if (!res.ok) {
-      const message =
-        typeof data.message === "string"
+      const structuredError =
+        data.error && typeof data.error === "object"
+          ? (data.error as CrmErrorPayload)
+          : undefined;
+
+      const errorCode =
+        typeof structuredError?.code === "string"
+          ? structuredError.code
+          : undefined;
+
+      const fields = Array.isArray(structuredError?.fields)
+        ? structuredError!.fields.filter(
+            (field): field is string => typeof field === "string",
+          )
+        : undefined;
+
+      const userMessage = errorCode
+        ? getCrmErrorMessage(errorCode)
+        : typeof data.message === "string" && data.message
           ? data.message
-          : typeof data.error === "string"
-            ? data.error
-            : data.error
-              ? stringifyLogValue(data.error)
-              : responseText
-                ? truncateLogValue(responseText)
-                : `HTTP ${res.status}`;
+          : getCrmErrorMessage(undefined);
+
       logger.error(
         {
           request: { method: "POST", path: url, statusCode: res.status },
           error: {
-            message,
+            code: errorCode,
+            category: structuredError?.category,
+            step: structuredError?.step,
+            ...(fields && fields.length > 0 ? { fields } : {}),
+            message: userMessage,
             responseBodyPreview: truncateLogValue(responseText),
           },
           info: {
@@ -483,7 +496,12 @@ export async function createMeetingAction(
         },
         "createMeetingAction failed",
       );
-      return { success: false, error: message };
+      return {
+        success: false,
+        error: userMessage,
+        code: errorCode,
+        fields: fields && fields.length > 0 ? fields : undefined,
+      };
     }
 
     logger.info(
