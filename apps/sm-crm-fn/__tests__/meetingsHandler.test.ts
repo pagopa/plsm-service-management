@@ -10,9 +10,13 @@ jest.mock("../_shared/services/orchestrator", () => ({
 }));
 
 const mockedCreateMeetingOrchestrator =
-  createMeetingOrchestrator as jest.MockedFunction<typeof createMeetingOrchestrator>;
+  createMeetingOrchestrator as jest.MockedFunction<
+    typeof createMeetingOrchestrator
+  >;
 const mockedValidateOrchestratorRequest =
-  validateOrchestratorRequest as jest.MockedFunction<typeof validateOrchestratorRequest>;
+  validateOrchestratorRequest as jest.MockedFunction<
+    typeof validateOrchestratorRequest
+  >;
 
 function makeRequest(body: unknown) {
   return {
@@ -35,10 +39,16 @@ describe("createMeetingHandler", () => {
     jest.clearAllMocks();
   });
 
-  it("emits a neutral error object for validation failures", async () => {
+  it("emits a neutral error object with per-field detail for validation failures", async () => {
     mockedValidateOrchestratorRequest.mockReturnValue({
       valid: false,
-      errors: ["subject is required"],
+      fields: [
+        {
+          field: "subject",
+          code: "required",
+          message: "subject è obbligatorio",
+        },
+      ],
     } as ReturnType<typeof validateOrchestratorRequest>);
 
     const response = await createMeetingHandler(
@@ -50,11 +60,17 @@ describe("createMeetingHandler", () => {
     expect(response.jsonBody).toMatchObject({
       success: false,
       message: "Errore di validazione",
-      errors: ["subject is required"],
       error: {
         code: "VALIDATION_ERROR",
         category: "VALIDATION",
         step: "validation",
+        fields: [
+          {
+            field: "subject",
+            code: "required",
+            message: "subject è obbligatorio",
+          },
+        ],
       },
     });
   });

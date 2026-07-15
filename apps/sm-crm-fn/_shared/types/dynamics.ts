@@ -219,10 +219,42 @@ export type CrmErrorCode =
   | "CRM_ERROR"
   | "UNKNOWN";
 
+/**
+ * Codici di errore di validazione a livello di singolo campo del payload.
+ *
+ * - `required`: campo obbligatorio mancante
+ * - `invalid_type`: tipo del valore non corretto
+ * - `invalid_email`: formato email non valido
+ * - `invalid_value`: valore non ammesso (es. fuori da un enum/picklist)
+ */
+export type FieldValidationCode =
+  | "required"
+  | "invalid_type"
+  | "invalid_email"
+  | "invalid_value";
+
+/**
+ * Dettaglio di validazione riferito a un singolo campo del payload di richiesta.
+ *
+ * @property field percorso del campo in notazione a punti (es. `partecipanti.0.email`)
+ * @property code  codice macchina dell'errore di validazione
+ * @property message messaggio descrittivo, leggibile dall'utente
+ */
+export interface FieldValidationError {
+  field: string;
+  code: FieldValidationCode;
+  message: string;
+}
+
 export interface CrmErrorInfo {
   code: CrmErrorCode;
   category: CrmErrorCategory;
   step: string;
+  /**
+   * Elenco degli errori di validazione per singolo campo. Valorizzato solo
+   * quando `code` è `VALIDATION_ERROR`; assente negli altri casi.
+   */
+  fields?: FieldValidationError[];
 }
 
 // -----------------------------------------------------------------------------

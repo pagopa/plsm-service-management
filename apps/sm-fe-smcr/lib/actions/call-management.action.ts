@@ -288,12 +288,52 @@ export type CreateMeetingInput = {
 
 export type CreateMeetingResult =
   | { success: true; activityId?: string; message?: string }
-  | { success: false; error: string };
+  | { success: false; error: string; errors?: string[] };
 
 type CreateMeetingResponse = {
   activityId?: string;
   message?: string;
   error?: unknown;
+};
+
+/**
+ * Estrae dagli errori strutturati della function CRM (`error.fields[]`) un
+ * elenco di messaggi leggibili, uno per singolo campo non valido.
+ *
+ * Ogni voce è resa come `"field: message"` quando il campo è disponibile,
+ * altrimenti come solo `message`, così da poter mostrare il dettaglio campo
+ * per campo all'utente.
+ *
+ * @param error valore grezzo del campo `error` del payload di risposta
+ * @returns elenco di messaggi per-campo, oppure `undefined` se non presente
+ */
+const extractFieldValidationErrors = (error: unknown): string[] | undefined => {
+  if (!error || typeof error !== "object") {
+    return undefined;
+  }
+
+  const fields = (error as { fields?: unknown }).fields;
+  if (!Array.isArray(fields)) {
+    return undefined;
+  }
+
+  const messages = fields
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") {
+        return undefined;
+      }
+      const record = entry as { field?: unknown; message?: unknown };
+      const message =
+        typeof record.message === "string" ? record.message : undefined;
+      const field = typeof record.field === "string" ? record.field : undefined;
+      if (!message) {
+        return undefined;
+      }
+      return field ? `${field}: ${message}` : message;
+    })
+    .filter((entry): entry is string => Boolean(entry && entry.trim()));
+
+  return messages.length > 0 ? messages : undefined;
 };
 
 const truncateLogValue = (value: string, maxLength = 2000) =>
@@ -465,9 +505,12 @@ export async function createMeetingAction(
           ? (data.error as { code: string }).code
           : undefined;
 
+      const validationErrors = extractFieldValidationErrors(data.error);
+
       return {
         success: false,
         error: neutralCode ? getCrmErrorMessage(neutralCode) : message,
+        ...(validationErrors ? { errors: validationErrors } : {}),
       };
     }
 
