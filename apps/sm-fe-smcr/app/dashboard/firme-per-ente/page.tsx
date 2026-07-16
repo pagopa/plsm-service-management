@@ -25,6 +25,9 @@ function buildKpis(rows: FirmaPerEnteRow[]): FirmePerEnteKpis {
   if (rows.length === 0) {
     return {
       totalFirme: 0,
+      totalRichieste: 0,
+      totalCancellate: 0,
+      totalRifiutate: 0,
       totalEnti: 0,
       topDescription: "—",
       topFirme: 0,
@@ -34,7 +37,10 @@ function buildKpis(rows: FirmaPerEnteRow[]): FirmePerEnteKpis {
     };
   }
   const totalEnti = rows.length;
-  const totalFirme = rows.reduce((s, r) => s + r.totale_firme, 0);
+  const totalFirme = rows.reduce((s, r) => s + r.firme_signed, 0);
+  const totalCancellate = rows.reduce((s, r) => s + r.firme_cancelled, 0);
+  const totalRifiutate = rows.reduce((s, r) => s + r.firme_rejected, 0);
+  const totalRichieste = totalFirme + totalCancellate + totalRifiutate;
   const top = rows[0]!;
   let universitaCount = 0;
   for (const r of rows) {
@@ -42,9 +48,12 @@ function buildKpis(rows: FirmaPerEnteRow[]): FirmePerEnteKpis {
   }
   return {
     totalFirme,
+    totalRichieste,
+    totalCancellate,
+    totalRifiutate,
     totalEnti,
     topDescription: top.description,
-    topFirme: top.totale_firme,
+    topFirme: top.firme_signed,
     mediaPerEnte: Math.round(totalFirme / totalEnti),
     universitaCount,
     altriEnti: Math.max(0, totalEnti - universitaCount),
