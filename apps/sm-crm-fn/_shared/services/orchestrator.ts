@@ -5,6 +5,8 @@
 import type {
   CreateMeetingOrchestratorRequest,
   CreateMeetingOrchestratorResponse,
+  CrmErrorInfo,
+  FieldValidationError,
   OrchestratorStepResult,
   ProductIdSelfcare,
   TipologiaReferente,
@@ -20,6 +22,7 @@ import {
   isDiagnosticEnabled,
   type DiagnosticSession,
 } from "./diagnosticLogger";
+import { mapCrmError } from "./crmErrorMapper";
 import { resolveEnvironment, getProductGuid } from "../utils/mappings";
 
 // =============================================================================
@@ -151,7 +154,7 @@ export async function createMeetingOrchestrator(
       steps.push({
         step: "verifyAccount",
         success: false,
-        error: `Exception during account verification: ${msg}`,
+        error: "Errore durante la verifica dell'ente",
         dryRun,
       });
 
@@ -168,6 +171,7 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         `Errore durante verifica ente: ${msg}`,
+        mapCrmError({ step: "verifyAccount", error }),
         diagnosticSession,
       );
     }
@@ -198,6 +202,7 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         accountResult.error ?? "Ente non trovato",
+        mapCrmError({ step: "verifyAccount" }),
         diagnosticSession,
       );
     }
@@ -350,7 +355,9 @@ export async function createMeetingOrchestrator(
             email: partecipante.email,
             contactId: contactResult.contact?.contactid,
             status: contactResult.contact
-              ? (contactResult.created ? "created" : "found")
+              ? contactResult.created
+                ? "created"
+                : "found"
               : "failed",
           });
         }
@@ -397,6 +404,7 @@ export async function createMeetingOrchestrator(
           warnings,
           dryRun,
           "Nessun contatto valido trovato o creato",
+          mapCrmError({ step: "verifyOrCreateContacts" }),
           diagnosticSession,
         );
       }
@@ -432,7 +440,7 @@ export async function createMeetingOrchestrator(
       steps.push({
         step: "verifyOrCreateContacts",
         success: false,
-        error: `Exception during contact processing: ${msg}`,
+        error: "Errore durante la verifica o creazione dei contatti",
         dryRun,
       });
 
@@ -449,6 +457,7 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         `Errore durante verifica/creazione contatti: ${msg}`,
+        mapCrmError({ step: "verifyOrCreateContacts", error }),
         diagnosticSession,
       );
     }
@@ -486,7 +495,10 @@ export async function createMeetingOrchestrator(
       // Aggiorna flowSummary con binding appointment e finalDynamicsRequest
       if (diagnosticSession) {
         const productGuid = request.productIdSelfcare
-          ? getProductGuid(request.productIdSelfcare as ProductIdSelfcare, environment)
+          ? getProductGuid(
+              request.productIdSelfcare as ProductIdSelfcare,
+              environment,
+            )
           : null;
 
         diagnosticSession.flowSummary.derivedData.appointmentBindings = {
@@ -497,13 +509,15 @@ export async function createMeetingOrchestrator(
             : undefined,
         };
 
-        const appointmentCalls = diagnosticSession.dynamicsCalls
-          .filter((call) => call.entity === "appointments");
-        
+        const appointmentCalls = diagnosticSession.dynamicsCalls.filter(
+          (call) => call.entity === "appointments",
+        );
+
         diagnosticSession.flowSummary.finalDynamicsRequest = {
           method: "POST",
           url: `${request.baseUrl}/api/data/v9.2/appointments`,
-          requestBody: appointmentCalls[appointmentCalls.length - 1]?.requestBody,
+          requestBody:
+            appointmentCalls[appointmentCalls.length - 1]?.requestBody,
           derivedFromFrontend: {
             accountId,
             productIdSelfcare: request.productIdSelfcare,
@@ -546,7 +560,7 @@ export async function createMeetingOrchestrator(
       steps.push({
         step: "createAppointment",
         success: false,
-        error: msg,
+        error: "Errore durante la creazione dell'appuntamento",
         dryRun,
       });
 
@@ -563,6 +577,7 @@ export async function createMeetingOrchestrator(
         warnings,
         dryRun,
         `Errore creazione appuntamento: ${msg}`,
+        mapCrmError({ step: "createAppointment", error }),
         diagnosticSession,
       );
     }
@@ -612,7 +627,6 @@ export async function createMeetingOrchestrator(
     return finalResponse;
   } catch (error) {
     // Catch globale per errori non gestiti
-    const msg = error instanceof Error ? error.message : String(error);
     const totalDuration = overallTimer.elapsed();
 
     logger.error("❌ ORCHESTRATOR UNHANDLED EXCEPTION", error, {
@@ -625,7 +639,7 @@ export async function createMeetingOrchestrator(
       steps.push({
         step: "unhandledException",
         success: false,
-        error: msg,
+        error: "Errore non gestito durante l'elaborazione",
         dryRun,
       });
     }
@@ -634,7 +648,8 @@ export async function createMeetingOrchestrator(
       success: false,
       dryRun,
       steps,
-      warnings: [...warnings, `Errore non gestito: ${msg}`],
+      warnings: [...warnings, "Errore non gestito durante l'elaborazione"],
+      errorInfo: mapCrmError({ step: "unhandledException", error }),
       timestamp: new Date().toISOString(),
     };
 
@@ -666,6 +681,7 @@ async function buildErrorResponse(
   warnings: string[],
   dryRun: boolean,
   errorMessage: string,
+  errorInfo: CrmErrorInfo,
   diagnosticSession?: DiagnosticSession,
 ): Promise<CreateMeetingOrchestratorResponse> {
   const logger = createLogger(undefined, { dryRun });
@@ -679,6 +695,7 @@ async function buildErrorResponse(
     dryRun,
     steps,
     warnings,
+    errorInfo,
     timestamp: new Date().toISOString(),
   };
 
@@ -700,20 +717,47 @@ async function buildErrorResponse(
 // Validazione request
 // -----------------------------------------------------------------------------
 
+/**
+ * Valida il payload di creazione appuntamento restituendo un dettaglio
+ * strutturato per singolo campo non valido.
+ *
+ * In caso di errori, ogni voce di `fields` riporta il percorso del campo
+ * (notazione a punti, es. `partecipanti.0.email`), un `code` macchina e un
+ * `message` leggibile, così da poter evidenziare il campo lato client.
+ *
+ * @param request - payload grezzo ricevuto dalla richiesta HTTP
+ * @returns `{ valid: true, data }` se valido, altrimenti `{ valid: false, fields }`
+ */
 export function validateOrchestratorRequest(
   request: unknown,
 ):
   | { valid: true; data: CreateMeetingOrchestratorRequest }
-  | { valid: false; errors: string[] } {
-  const errors: string[] = [];
+  | { valid: false; fields: FieldValidationError[] } {
+  const fields: FieldValidationError[] = [];
   const req = request as Record<string, unknown>;
 
+  const addFieldError = (
+    field: string,
+    code: FieldValidationError["code"],
+    message: string,
+  ): void => {
+    fields.push({ field, code, message });
+  };
+
   if (!req.institutionIdSelfcare && !req.nomeEnte) {
-    errors.push("Specificare almeno uno tra institutionIdSelfcare e nomeEnte");
+    addFieldError(
+      "institutionIdSelfcare",
+      "required",
+      "Specificare almeno uno tra institutionIdSelfcare e nomeEnte",
+    );
   }
 
   if (!req.productIdSelfcare) {
-    errors.push("productIdSelfcare è obbligatorio");
+    addFieldError(
+      "productIdSelfcare",
+      "required",
+      "productIdSelfcare è obbligatorio",
+    );
   }
 
   if (
@@ -721,13 +765,21 @@ export function validateOrchestratorRequest(
     !Array.isArray(req.partecipanti) ||
     req.partecipanti.length === 0
   ) {
-    errors.push("partecipanti deve essere un array non vuoto");
+    addFieldError(
+      "partecipanti",
+      "required",
+      "partecipanti deve essere un array non vuoto",
+    );
   } else {
     for (let i = 0; i < req.partecipanti.length; i++) {
       const p = req.partecipanti[i] as Record<string, unknown>;
 
       if (p.email !== undefined && typeof p.email !== "string") {
-        errors.push(`partecipanti[${i}].email deve essere una stringa`);
+        addFieldError(
+          `partecipanti.${i}.email`,
+          "invalid_type",
+          `partecipanti[${i}].email deve essere una stringa`,
+        );
         continue;
       }
 
@@ -738,7 +790,9 @@ export function validateOrchestratorRequest(
       ) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(p.email)) {
-          errors.push(
+          addFieldError(
+            `partecipanti.${i}.email`,
+            "invalid_email",
             `partecipanti[${i}].email non è un indirizzo email valido`,
           );
         }
@@ -747,15 +801,19 @@ export function validateOrchestratorRequest(
   }
 
   if (!req.subject) {
-    errors.push("subject è obbligatorio");
+    addFieldError("subject", "required", "subject è obbligatorio");
   }
 
   if (!req.scheduledstart) {
-    errors.push("scheduledstart è obbligatorio");
+    addFieldError(
+      "scheduledstart",
+      "required",
+      "scheduledstart è obbligatorio",
+    );
   }
 
   if (!req.scheduledend) {
-    errors.push("scheduledend è obbligatorio");
+    addFieldError("scheduledend", "required", "scheduledend è obbligatorio");
   }
 
   /**
@@ -775,15 +833,17 @@ export function validateOrchestratorRequest(
   if (req.oggettoDelContatto !== undefined) {
     const val = Number(req.oggettoDelContatto);
     if (!Number.isInteger(val) || !VALID_OGGETTO_DEL_CONTATTO.includes(val)) {
-      errors.push(
+      addFieldError(
+        "oggettoDelContatto",
+        "invalid_value",
         `oggettoDelContatto non è valido: ricevuto ${req.oggettoDelContatto}. ` +
           `Valori ammessi: ${VALID_OGGETTO_DEL_CONTATTO.join(", ")}`,
       );
     }
   }
 
-  if (errors.length > 0) {
-    return { valid: false, errors };
+  if (fields.length > 0) {
+    return { valid: false, fields };
   }
 
   return {

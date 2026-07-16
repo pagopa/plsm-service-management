@@ -116,7 +116,17 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
     const crmResult = await createMeetingAction(payLoad);
 
     if (!crmResult.success) {
-      toast.error(crmResult.error);
+      const fieldErrors = crmResult.errors;
+      toast.error(crmResult.error, {
+        description:
+          fieldErrors && fieldErrors.length > 0 ? (
+            <ul className="mt-1 list-disc pl-4">
+              {fieldErrors.map((fieldError, index) => (
+                <li key={index}>{fieldError}</li>
+              ))}
+            </ul>
+          ) : undefined,
+      });
       return;
     }
 
@@ -615,7 +625,6 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
                 )}
               />
             </div>
-
           </FieldGroup>
         </FieldSet>
 

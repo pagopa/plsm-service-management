@@ -17,6 +17,7 @@ import type {
   FieldPersistenceIssue,
 } from "./diagnosticLogger";
 import { addDiagnosticCall } from "./diagnosticLogger";
+import { CrmError } from "../errors/CrmError";
 
 /**
  * Attributi scalari dell'appuntamento di cui verificare la persistenza reale
@@ -432,9 +433,10 @@ export async function createAppointment(
     console.log(`[Appointments] Appuntamento creato: ${result.activityid}`);
     return result;
   } catch (error) {
+    const odataCode = error instanceof CrmError ? error.odataCode : undefined;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    if (!errorMessage.includes("0x80040265")) {
+    if (odataCode !== "0x80040265" && !errorMessage.includes("0x80040265")) {
       throw error;
     }
 
