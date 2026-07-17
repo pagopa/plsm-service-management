@@ -624,7 +624,6 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
                 )}
               />
             </div>
-
           </FieldGroup>
         </FieldSet>
 

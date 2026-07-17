@@ -15,7 +15,9 @@ describe("getCrmErrorMessage", () => {
   });
 
   it("returns the generic fallback for an unknown code", () => {
-    expect(getCrmErrorMessage("SOMETHING_NEW")).toBe(CRM_ERROR_FALLBACK_MESSAGE);
+    expect(getCrmErrorMessage("SOMETHING_NEW")).toBe(
+      CRM_ERROR_FALLBACK_MESSAGE,
+    );
   });
 
   it("returns the generic fallback when code is missing", () => {

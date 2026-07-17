@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { getAccessToken, buildScope } from "./auth";
 import { getConfigOrThrow } from "../utils/config";
 import type { DynamicsList } from "../types/dynamics";
+import { CrmError } from "../errors/CrmError";
 import {
   createLogger,
   logHttpRequest,
@@ -155,13 +156,27 @@ export async function get<T>(
 
     if (!response.ok) {
       const errorBody = await response.text();
+      let odataCode: string | undefined;
+      try {
+        const parsed = JSON.parse(errorBody) as {
+          error?: { code?: string };
+        };
+        odataCode = parsed.error?.code;
+      } catch {
+        odataCode = undefined;
+      }
+      // rawDetail resta SOLO nei log server-side, mai nella risposta HTTP.
       logger.error(`GET request failed`, new Error(errorBody), {
         url,
         statusCode: response.status,
         duration,
         method: "GET",
       });
-      throw new Error(`GET ${url} failed: ${response.status} - ${errorBody}`);
+      throw new CrmError({
+        status: response.status,
+        odataCode,
+        rawDetail: errorBody,
+      });
     }
 
     const data = await response.json();
@@ -277,13 +292,27 @@ export async function post<TRequest, TResponse>(
 
     if (!response.ok) {
       const errorBody = await response.text();
+      let odataCode: string | undefined;
+      try {
+        const parsed = JSON.parse(errorBody) as {
+          error?: { code?: string };
+        };
+        odataCode = parsed.error?.code;
+      } catch {
+        odataCode = undefined;
+      }
+      // rawDetail resta SOLO nei log server-side, mai nella risposta HTTP.
       logger.error(`POST request failed`, new Error(errorBody), {
         url,
         statusCode: response.status,
         duration,
         method: "POST",
       });
-      throw new Error(`POST ${url} failed: ${response.status} - ${errorBody}`);
+      throw new CrmError({
+        status: response.status,
+        odataCode,
+        rawDetail: errorBody,
+      });
     }
 
     // Per GrantAccess la response è 204 No Content

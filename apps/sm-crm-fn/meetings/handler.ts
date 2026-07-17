@@ -39,14 +39,19 @@ export async function createMeetingHandler(
     // Validazione
     const validation = validateOrchestratorRequest(body);
     if (!validation.valid) {
-      const errors = validation.errors;
-      context.warn("Validation errors:", errors);
+      const fields = validation.fields;
+      context.warn("Validation errors:", fields);
       return {
         status: 400,
         jsonBody: {
           success: false,
           message: "Errore di validazione",
-          errors,
+          error: {
+            code: "VALIDATION_ERROR",
+            category: "VALIDATION",
+            step: "validation",
+            fields,
+          },
           timestamp: new Date().toISOString(),
         },
       };
@@ -76,6 +81,7 @@ export async function createMeetingHandler(
       status,
       jsonBody: {
         ...result,
+        ...(result.success ? {} : { error: result.errorInfo }),
         message: result.success
           ? result.dryRun
             ? "Dry-run completato con successo"
@@ -98,13 +104,16 @@ export async function createMeetingHandler(
       };
     }
 
-    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       status: 500,
       jsonBody: {
         success: false,
         message: "Errore interno del server",
-        error: errorMessage,
+        error: {
+          code: "CRM_ERROR",
+          category: "UNKNOWN",
+          step: "unexpected",
+        },
         timestamp: new Date().toISOString(),
       },
     };
@@ -200,13 +209,18 @@ export async function dryRunMeetingHandler(
 
     const validation = validateOrchestratorRequest(requestWithDryRun);
     if (!validation.valid) {
-      const errors = validation.errors;
+      const fields = validation.fields;
       return {
         status: 400,
         jsonBody: {
           success: false,
           message: "Errore di validazione",
-          errors,
+          error: {
+            code: "VALIDATION_ERROR",
+            category: "VALIDATION",
+            step: "validation",
+            fields,
+          },
           timestamp: new Date().toISOString(),
         },
       };
