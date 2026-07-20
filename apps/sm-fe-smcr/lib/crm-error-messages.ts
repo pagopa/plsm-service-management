@@ -1,12 +1,14 @@
-const GENERIC_CRM_ERROR =
+export type CrmErrorPayload = {
+  code?: string;
+  category?: string;
+  step?: string;
+  fields?: string[];
+};
+
+export const CRM_ERROR_FALLBACK_MESSAGE =
   "Errore CRM. Riprova più tardi o contatta il supporto.";
 
-/**
- * Mappa i codici d'errore neutri emessi dalla Azure Function (contratto
- * SMION-800) sui messaggi mostrati all'utente in italiano. Unico punto
- * dell'applicazione in cui i codici CRM diventano testo user-facing.
- */
-const CRM_ERROR_MESSAGES: Record<string, string> = {
+export const CRM_ERROR_MESSAGES: Record<string, string> = {
   VALIDATION_ERROR:
     "Alcuni dati inseriti non sono validi. Controlla i campi e riprova.",
   ACCOUNT_NOT_FOUND: "Ente non trovato nel CRM. Verifica l'ente selezionato.",
@@ -15,17 +17,13 @@ const CRM_ERROR_MESSAGES: Record<string, string> = {
   CRM_FIELD_REJECTED:
     "Il CRM ha rifiutato uno dei valori inviati. Contatta il supporto.",
   CRM_UNAVAILABLE: "Il CRM non è al momento raggiungibile. Riprova più tardi.",
-  CRM_ERROR: GENERIC_CRM_ERROR,
-  UNKNOWN: GENERIC_CRM_ERROR,
+  CRM_ERROR: CRM_ERROR_FALLBACK_MESSAGE,
+  UNKNOWN: CRM_ERROR_FALLBACK_MESSAGE,
 };
 
-/**
- * Restituisce il messaggio italiano per un codice d'errore CRM, con
- * fallback generico per codici sconosciuti o assenti.
- */
-export function getCrmErrorMessage(code?: string): string {
-  if (code && Object.prototype.hasOwnProperty.call(CRM_ERROR_MESSAGES, code)) {
-    return CRM_ERROR_MESSAGES[code]!;
+export function getCrmErrorMessage(code?: string | null): string {
+  if (!code) {
+    return CRM_ERROR_FALLBACK_MESSAGE;
   }
-  return GENERIC_CRM_ERROR;
+  return CRM_ERROR_MESSAGES[code] ?? CRM_ERROR_FALLBACK_MESSAGE;
 }

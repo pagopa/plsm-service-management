@@ -6,9 +6,12 @@ import { it } from "date-fns/locale";
 import z from "zod";
 import { PRODUCT_MAP } from "../types/product";
 import logger from "@/lib/logger/logger.server";
-import { getCrmErrorMessage } from "@/lib/crm-error-messages";
 import { serverEnv } from "@/config/env";
 import { tipologiaReferenteValues } from "@/components/call-management/crm-form-schema";
+import {
+  getCrmErrorMessage,
+  type CrmErrorPayload,
+} from "@/lib/crm-error-messages";
 
 const formatItalianDateTime = (value: string) => {
   const isoMatch =
@@ -34,6 +37,8 @@ const sendToSlackSchema = z.object({
   members: z.string(),
   link: z.url(),
   target: z.enum(["test", "prod"]),
+  status: z.enum(["success", "failure"]).default("success"),
+  errorReason: z.string().optional(),
 });
 
 type SendToSlackInput = z.infer<typeof sendToSlackSchema>;
@@ -119,74 +124,100 @@ export async function sendToSlackAction(
   const membersArray = validation.data.members.split(",").map((m) => m.trim());
   const membersText = membersArray.map((m) => `• ${m}`).join("\n");
   const dateTimeText = formatItalianDateTime(validation.data.date);
+  const isFailure = validation.data.status === "failure";
+
+  const headerBlock = {
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: isFailure
+        ? `:rotating_light: *Creazione appuntamento non riuscita* :rotating_light:\n*${validation.data.name}*`
+        : `:mega: *${validation.data.name}* :mega:`,
+    },
+  };
+
+  const failureIntroBlock = {
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: `La creazione dell'appuntamento su CRM non è andata a buon fine. Di seguito il riepilogo dei dati con cui si è provato a crearlo.${
+        validation.data.errorReason
+          ? `\n\n*Errore:* ${validation.data.errorReason}`
+          : ""
+      }`,
+    },
+  };
+
+  const fieldsBlock = {
+    type: "section",
+    fields: [
+      {
+        type: "mrkdwn",
+        text: `*Prodotto:*\n${PRODUCT_MAP[validation.data.product] || validation.data.product}`,
+      },
+      {
+        type: "mrkdwn",
+        text: `*Data e Ora 📅:*\n${dateTimeText}`,
+      },
+      {
+        type: "mrkdwn",
+        text: `*Partecipanti del Team SM:*\n${membersText}`,
+      },
+    ],
+  };
+
+  const actionsBlock = {
+    type: "actions",
+    elements: [
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "Diario delle call",
+        },
+        url: validation.data.link,
+        style: "primary",
+      },
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "Service Management",
+        },
+        url: "https://pagopa.atlassian.net/wiki/spaces/ISM/overview",
+        style: "danger",
+      },
+    ],
+  };
+
+  const contextBlocks = [
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "IO Service Management :rocket:",
+        },
+      ],
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: ":clap: Service Management transforms customer needs into value-driven solutions.",
+        },
+      ],
+    },
+  ];
 
   const payload = {
     blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `:mega: *${validation.data.name}* :mega:`,
-        },
-      },
-      {
-        type: "section",
-        fields: [
-          {
-            type: "mrkdwn",
-            text: `*Prodotto:*\n${PRODUCT_MAP[validation.data.product] || validation.data.product}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*Data e Ora 📅:*\n${dateTimeText}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*Partecipanti del Team SM:*\n${membersText}`,
-          },
-        ],
-      },
-      {
-        type: "actions",
-        elements: [
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Diario delle call",
-            },
-            url: validation.data.link,
-            style: "primary",
-          },
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Service Management",
-            },
-            url: "https://pagopa.atlassian.net/wiki/spaces/ISM/overview",
-            style: "danger",
-          },
-        ],
-      },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: "IO Service Management :rocket:",
-          },
-        ],
-      },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: ":clap: Service Management transforms customer needs into value-driven solutions.",
-          },
-        ],
-      },
+      headerBlock,
+      ...(isFailure ? [failureIntroBlock] : []),
+      fieldsBlock,
+      actionsBlock,
+      ...contextBlocks,
     ],
   };
 
@@ -288,68 +319,21 @@ export type CreateMeetingInput = {
 
 export type CreateMeetingResult =
   | { success: true; activityId?: string; message?: string }
-  | { success: false; error: string; errors?: string[] };
+  | {
+      success: false;
+      error: string;
+      code?: string;
+      fields?: string[];
+    };
 
 type CreateMeetingResponse = {
   activityId?: string;
   message?: string;
-  error?: unknown;
-};
-
-/**
- * Estrae dagli errori strutturati della function CRM (`error.fields[]`) un
- * elenco di messaggi leggibili, uno per singolo campo non valido.
- *
- * Ogni voce è resa come `"field: message"` quando il campo è disponibile,
- * altrimenti come solo `message`, così da poter mostrare il dettaglio campo
- * per campo all'utente.
- *
- * @param error valore grezzo del campo `error` del payload di risposta
- * @returns elenco di messaggi per-campo, oppure `undefined` se non presente
- */
-const extractFieldValidationErrors = (error: unknown): string[] | undefined => {
-  if (!error || typeof error !== "object") {
-    return undefined;
-  }
-
-  const fields = (error as { fields?: unknown }).fields;
-  if (!Array.isArray(fields)) {
-    return undefined;
-  }
-
-  const messages = fields
-    .map((entry) => {
-      if (!entry || typeof entry !== "object") {
-        return undefined;
-      }
-      const record = entry as { field?: unknown; message?: unknown };
-      const message =
-        typeof record.message === "string" ? record.message : undefined;
-      const field = typeof record.field === "string" ? record.field : undefined;
-      if (!message) {
-        return undefined;
-      }
-      return field ? `${field}: ${message}` : message;
-    })
-    .filter((entry): entry is string => Boolean(entry && entry.trim()));
-
-  return messages.length > 0 ? messages : undefined;
+  error?: CrmErrorPayload | string;
 };
 
 const truncateLogValue = (value: string, maxLength = 2000) =>
   value.length > maxLength ? `${value.slice(0, maxLength)}...` : value;
-
-const stringifyLogValue = (value: unknown) => {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  try {
-    return JSON.stringify(value ?? {});
-  } catch {
-    return String(value);
-  }
-};
 
 export async function createMeetingAction(
   input: CreateMeetingInput,
@@ -468,21 +452,37 @@ export async function createMeetingAction(
     }
 
     if (!res.ok) {
-      const message =
-        typeof data.message === "string"
+      const structuredError =
+        data.error && typeof data.error === "object"
+          ? (data.error as CrmErrorPayload)
+          : undefined;
+
+      const errorCode =
+        typeof structuredError?.code === "string"
+          ? structuredError.code
+          : undefined;
+
+      const fields = Array.isArray(structuredError?.fields)
+        ? structuredError!.fields.filter(
+            (field): field is string => typeof field === "string",
+          )
+        : undefined;
+
+      const userMessage = errorCode
+        ? getCrmErrorMessage(errorCode)
+        : typeof data.message === "string" && data.message
           ? data.message
-          : typeof data.error === "string"
-            ? data.error
-            : data.error
-              ? stringifyLogValue(data.error)
-              : responseText
-                ? truncateLogValue(responseText)
-                : `HTTP ${res.status}`;
+          : getCrmErrorMessage(undefined);
+
       logger.error(
         {
           request: { method: "POST", path: url, statusCode: res.status },
           error: {
-            message,
+            code: errorCode,
+            category: structuredError?.category,
+            step: structuredError?.step,
+            ...(fields && fields.length > 0 ? { fields } : {}),
+            message: userMessage,
             responseBodyPreview: truncateLogValue(responseText),
           },
           info: {
@@ -496,21 +496,11 @@ export async function createMeetingAction(
         },
         "createMeetingAction failed",
       );
-      const neutralCode =
-        data.error &&
-        typeof data.error === "object" &&
-        data.error !== null &&
-        "code" in data.error &&
-        typeof (data.error as { code?: unknown }).code === "string"
-          ? (data.error as { code: string }).code
-          : undefined;
-
-      const validationErrors = extractFieldValidationErrors(data.error);
-
       return {
         success: false,
-        error: neutralCode ? getCrmErrorMessage(neutralCode) : message,
-        ...(validationErrors ? { errors: validationErrors } : {}),
+        error: userMessage,
+        code: errorCode,
+        fields: fields && fields.length > 0 ? fields : undefined,
       };
     }
 
