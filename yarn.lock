@@ -13753,17 +13753,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemailer@npm:^6.9.13, nodemailer@npm:^6.9.16":
+"nodemailer@npm:^6.9.13":
   version: 6.10.1
   resolution: "nodemailer@npm:6.10.1"
   checksum: 10c0/e81fde258ea4f4e5646e9e3eebe89294d007939999d2d1a8c96c5488fa00bf659e46cf76fccb2697e9aa6ef9807a1ed47ff2aef6ad30b795e3849b6997066d16
   languageName: node
   linkType: hard
 
-"nodemailer@npm:^7.0.3":
-  version: 7.0.13
-  resolution: "nodemailer@npm:7.0.13"
-  checksum: 10c0/b26aa5b9fa4a033bbc1e1c16ef75ee2a9c8641fd290c00a8361d6a251b3c1b8bad545a23efa627f59cb266340a448891ea8aa49d8a9307c767b8505219d95079
+"nodemailer@npm:^9.0.0":
+  version: 9.0.3
+  resolution: "nodemailer@npm:9.0.3"
+  checksum: 10c0/9e93516fb9fcc8835b683cdf3b90135648dabf0133ac9b04890303c2e23eef1d7bae58fe98afb0e251ae10428b96f05df483deb78f0b49f47793debbb0383216
   languageName: node
   linkType: hard
 
@@ -16522,7 +16522,7 @@ __metadata:
     "@types/nodemailer": "npm:^6.4.16"
     "@types/pg": "npm:^8.15.5"
     fast-xml-parser: "npm:^5.2.5"
-    nodemailer: "npm:^6.9.16"
+    nodemailer: "npm:^9.0.0"
     pg: "npm:^8.16.3"
     typescript: "npm:^5.9.2"
     zod: "npm:^4.0.14"
@@ -16600,7 +16600,7 @@ __metadata:
     knex: "npm:^3.1.0"
     lucide-react: "npm:^0.544.0"
     next: "npm:^15.3.6"
-    nodemailer: "npm:^7.0.3"
+    nodemailer: "npm:^9.0.0"
     nuqs: "npm:^2.8.5"
     pg: "npm:^8.16.2"
     pino: "npm:^10.1.0"
