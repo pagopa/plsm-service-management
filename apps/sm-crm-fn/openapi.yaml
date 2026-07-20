@@ -987,13 +987,55 @@ components:
         message:
           type: string
           example: "Errore di validazione"
-        errors:
-          type: array
-          items:
-            type: string
+        error:
+          $ref: "#/components/schemas/ValidationErrorInfo"
         timestamp:
           type: string
           format: date-time
+
+    ValidationErrorInfo:
+      type: object
+      description: |
+        Dettaglio strutturato dell'errore di validazione. Il campo `fields`,
+        opzionale, elenca i singoli campi del payload non validi.
+      properties:
+        code:
+          type: string
+          example: "VALIDATION_ERROR"
+        category:
+          type: string
+          example: "VALIDATION"
+        step:
+          type: string
+          example: "validation"
+        fields:
+          type: array
+          description: Elenco degli errori di validazione per singolo campo.
+          items:
+            $ref: "#/components/schemas/FieldValidationError"
+
+    FieldValidationError:
+      type: object
+      required:
+        - field
+        - code
+        - message
+      properties:
+        field:
+          type: string
+          description: Percorso del campo in notazione a punti.
+          example: "partecipanti.0.email"
+        code:
+          type: string
+          enum:
+            - required
+            - invalid_type
+            - invalid_email
+            - invalid_value
+          example: "required"
+        message:
+          type: string
+          example: "subject è obbligatorio"
 
     CreateContactsRequest:
       type: object

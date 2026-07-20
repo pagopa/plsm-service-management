@@ -115,12 +115,16 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
 
     const crmResult = await createMeetingAction(payLoad);
 
-    if (!crmResult.success) {
-      toast.error(crmResult.error);
-      return;
-    }
+    const affectedFieldsText =
+      !crmResult.success && crmResult.fields?.length
+        ? `Campi interessati: ${crmResult.fields.join(", ")}.`
+        : undefined;
 
-    toast.success(crmResult.message ?? "Appuntamento creato con successo");
+    if (crmResult.success) {
+      toast.success(crmResult.message ?? "Appuntamento creato con successo");
+    } else {
+      toast.error(crmResult.error, { description: affectedFieldsText });
+    }
 
     const slackTarget = values.dynamicsEnvironment === "PROD" ? "prod" : "test";
     const membersText = partecipanti
@@ -137,6 +141,13 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
     slackFormData.append("members", membersText);
     slackFormData.append("link", values.link);
     slackFormData.append("target", slackTarget);
+    slackFormData.append("status", crmResult.success ? "success" : "failure");
+    if (!crmResult.success) {
+      const errorReason = affectedFieldsText
+        ? `${crmResult.error} ${affectedFieldsText}`
+        : crmResult.error;
+      slackFormData.append("errorReason", errorReason);
+    }
 
     const slackResult = await sendToSlackAction(
       { fields: {}, target: undefined, submittedAt: undefined },
@@ -145,13 +156,11 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
 
     const envLabel = slackTarget === "prod" ? "Produzione" : "Test";
     if (slackResult.errors?.root) {
-      toast.error(`CRM ok, ma invio Slack in ${envLabel} non riuscito.`, {
+      toast.error(`Invio Slack in ${envLabel} non riuscito.`, {
         description: slackResult.errors.root,
       });
     } else if (slackResult.errors && Object.keys(slackResult.errors).length) {
-      toast.error(
-        `CRM ok, ma invio Slack in ${envLabel} non riuscito: dati non validi.`,
-      );
+      toast.error(`Invio Slack in ${envLabel} non riuscito: dati non validi.`);
     } else {
       toast.success(`Messaggio Slack inviato in ${envLabel}.`);
     }
@@ -615,7 +624,6 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
                 )}
               />
             </div>
-
           </FieldGroup>
         </FieldSet>
 

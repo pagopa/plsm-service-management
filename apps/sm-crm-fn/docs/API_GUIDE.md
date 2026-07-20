@@ -1079,6 +1079,19 @@ Content-Type: application/json
 
 ### Error Scenarios
 
+#### Oggetto `error` neutro (contratto SMION-800)
+
+In caso di fallimento, la risposta include un oggetto `error` **neutro e stabile**
+che il frontend usa per mostrare un messaggio user-facing. Il dettaglio grezzo di
+Dynamics non è mai incluso nella risposta: resta solo nei log server-side.
+
+```json
+{ "success": false, "error": { "code": "ACCOUNT_NOT_FOUND", "category": "NOT_FOUND", "step": "verifyAccount" } }
+```
+
+Il catalogo completo dei codici e i messaggi italiani suggeriti sono in
+[`FE_ERROR_CODES_GUIDE.md`](./FE_ERROR_CODES_GUIDE.md).
+
 #### Scenario 1: Institution Not Found
 
 **Request**:

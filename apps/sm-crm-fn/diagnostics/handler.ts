@@ -6,6 +6,7 @@ import type {
 import { resolveEnvironment } from "../_shared/utils/mappings";
 import { getConfig } from "../_shared/utils/config";
 import { get, buildUrl } from "../_shared/services/httpClient";
+import { CrmError } from "../_shared/errors/CrmError";
 import { createLogger } from "../_shared/utils/logger";
 import {
   resolveDynamicsEnvironment,
@@ -459,10 +460,15 @@ export async function probeDynamicsHandler(
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        const statusMatch = errorMessage.match(/failed: (\d+)/);
-        const statusCode = statusMatch
-          ? parseInt(statusMatch[1], 10)
-          : undefined;
+        // CrmError espone lo status come campo tipizzato; per gli altri errori
+        // si ricade sul parsing del pattern "failed: <status>" nel messaggio.
+        let statusCode: number | undefined;
+        if (error instanceof CrmError) {
+          statusCode = error.status;
+        } else {
+          const statusMatch = errorMessage.match(/failed: (\d+)/);
+          statusCode = statusMatch ? parseInt(statusMatch[1], 10) : undefined;
+        }
         results[candidate] = {
           success: false,
           statusCode,
