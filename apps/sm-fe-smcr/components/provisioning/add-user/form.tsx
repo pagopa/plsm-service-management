@@ -23,6 +23,10 @@ const PRODUCT_ROLES = [
 const ROLES = {
   admin: [
     {
+      label: "Manager",
+      value: "MANAGER",
+    },
+    {
       label: "Delegate",
       value: "DELEGATE",
     },
@@ -38,6 +42,9 @@ const ROLES = {
     },
   ],
 } as const;
+
+// Products that don't support the MANAGER role in the add-user flow
+const PRODUCTS_WITHOUT_MANAGER_ROLE = ["prod-fd-garantito"];
 
 type Props = {
   institution: string;
@@ -203,11 +210,17 @@ export default function CreateUserForm({
 
             <SelectContent>
               {productRole &&
-                ROLES[productRole.value as "admin" | "operator"].map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
+                ROLES[productRole.value as keyof typeof ROLES]
+                  .filter(
+                    (item) =>
+                      item.value !== "MANAGER" ||
+                      !PRODUCTS_WITHOUT_MANAGER_ROLE.includes(product),
+                  )
+                  .map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
             </SelectContent>
           </Select>
 
