@@ -3,7 +3,10 @@
 import { betterFetch } from "@better-fetch/fetch";
 import { z } from "zod";
 import { serverEnv } from "@/config/env";
-import { logServerError } from "@/lib/logger/logger.server.helpers";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
 
 const UserSchema = z.object({
   id: z.string().uuid(),
@@ -93,6 +96,25 @@ export async function createUser(input: {
     roleLabel: string;
   };
 }) {
+  const payload = {
+    institutionId: input.meta.institution,
+    productId: input.meta.product,
+    sendCreateUserNotificationEmail: false,
+    users: [
+      {
+        taxCode: input.user.taxCode,
+        name: input.user.firstName,
+        surname: input.user.lastName,
+        email: input.user.email,
+        productRole: input.user.productRole,
+        role: input.user.role,
+        roleLabel: input.user.roleLabel,
+      },
+    ],
+  };
+
+  logServerInfo("createUser - request payload", payload);
+
   const { data, error } = await betterFetch(
     "https://api.selfcare.pagopa.it/external/support/v1/onboarding/users",
     {
@@ -102,22 +124,7 @@ export async function createUser(input: {
           serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        institutionId: input.meta.institution,
-        productId: input.meta.product,
-        sendCreateUserNotificationEmail: false,
-        users: [
-          {
-            taxCode: input.user.taxCode,
-            name: input.user.firstName,
-            surname: input.user.lastName,
-            email: input.user.email,
-            productRole: input.user.productRole,
-            role: input.user.role,
-            roleLabel: input.user.roleLabel,
-          },
-        ],
-      }),
+      body: JSON.stringify(payload),
     },
   );
 
