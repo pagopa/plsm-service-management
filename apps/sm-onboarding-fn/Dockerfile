@@ -17,7 +17,7 @@ RUN yarn predeploy
 # dotnet core sdk tag list:
 # - https://hub.docker.com/_/microsoft-dotnet-sdk/
 # - https://mcr.microsoft.com/v2/dotnet/sdk/tags/list
-FROM mcr.microsoft.com/dotnet/sdk:6.0.421-alpine3.19 as dotnet-builder
+FROM mcr.microsoft.com/dotnet/sdk:6.0.421-alpine3.19@sha256:64a2ed2a7c0ab6cbb40b8730f483e82db1c80fbc168c3ef590b1c816769142db as dotnet-builder
 
 COPY . /home/node
 
