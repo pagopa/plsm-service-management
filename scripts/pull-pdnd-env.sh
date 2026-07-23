@@ -40,6 +40,8 @@ printf '%s' "$PAIRS" | while read -r env_name secret_name; do
   fi
   # newline reali (chiavi PEM) -> \n letterali, come si aspetta normalizePem()
   val="$(printf '%s' "$val" | perl -0pe 's/\n/\\n/g')"
+  # escape dei doppi apici, così un valore con " non rompe la riga .env
+  val="${val//\"/\\\"}"
   printf '%s="%s"\n' "$env_name" "$val" >> "$OUT"
   echo "✅ $env_name"
 done
