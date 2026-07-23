@@ -100,55 +100,83 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const userProfile = await fetchUserProfile();
-
-      // Check if member exists in the new members table, create if not
-      const memberResult = await readMemberByEmail(claims.email);
-      if (memberResult.error || !memberResult.data) {
-        void clientLogger.info(
-          {
-            info: {
-              event: "session.member.create_missing",
-              metadata: { email: claims.email },
-            },
-          },
-          "Member not found, creating new member",
-        );
-
-        const { firstname, lastname } = splitDisplayName(claims.name);
-
-        const createResult = await createMember({
-          email: claims.email,
-          firstname,
-          lastname,
-        });
-
-        if (createResult.error) {
-          void clientLogger.error(
-            { error: createResult.error },
-            "Failed to create member",
-          );
-        } else {
-          void clientLogger.info("Member created successfully");
-        }
-      }
-
-      // const userTeams = await getUserTeams(userProfile.id);
-      const userMember = await getUserMember(userProfile.id);
-      const userPreferences = await getUserPreferences(userProfile.id);
-      setUser({
-        ...userProfile,
+      // Sessione valida: se l'arricchimento del profilo fallisce l'utente resta
+      // comunque autenticato. Un profilo minimo dai claim evita che un errore
+      // transitorio (DB a freddo, timeout) venga scambiato per "non autenticato"
+      // dal guard di rotta, che manderebbe l'utente su /unauthorized.
+      const fallbackUser: UserProfile = {
+        id: claims.userId,
         email: claims.email,
         name: claims.name,
-        membersOf: userMember,
+        membersOf: [],
         activeTeam: null,
-        preferences: {
-          teamId: userPreferences.teamId,
-          theme: userPreferences.theme,
-        },
-      });
+        preferences: { teamId: null, theme: "system" },
+      };
+
+      try {
+        const userProfile = await fetchUserProfile();
+
+        // Check if member exists in the new members table, create if not
+        const memberResult = await readMemberByEmail(claims.email);
+        if (memberResult.error || !memberResult.data) {
+          void clientLogger.info(
+            {
+              info: {
+                event: "session.member.create_missing",
+                metadata: { email: claims.email },
+              },
+            },
+            "Member not found, creating new member",
+          );
+
+          const { firstname, lastname } = splitDisplayName(claims.name);
+
+          const createResult = await createMember({
+            email: claims.email,
+            firstname,
+            lastname,
+          });
+
+          if (createResult.error) {
+            void clientLogger.error(
+              { error: createResult.error },
+              "Failed to create member",
+            );
+          } else {
+            void clientLogger.info("Member created successfully");
+          }
+        }
+
+        // const userTeams = await getUserTeams(userProfile.id);
+        const userMember = await getUserMember(userProfile.id);
+        const userPreferences = await getUserPreferences(userProfile.id);
+        setUser({
+          ...userProfile,
+          email: claims.email,
+          name: claims.name,
+          membersOf: userMember,
+          activeTeam: null,
+          preferences: {
+            teamId: userPreferences.teamId,
+            theme: userPreferences.theme,
+          },
+        });
+      } catch (enrichError: any) {
+        // Autenticato ma arricchimento fallito: degradazione morbida, niente
+        // logout. L'utente accede alle rotte senza vincoli di team; quelle
+        // team-gated ricadono su "insufficient_permissions" (→ /dashboard),
+        // non su "not_authenticated" (→ /unauthorized).
+        void clientLogger.error(
+          { error: enrichError },
+          "Errore caricamento profilo: sessione valida, uso profilo minimo dai claim",
+        );
+        setError(enrichError.message || "Errore caricamento profilo");
+        setUser(fallbackUser);
+      }
     } catch (err: any) {
-      void clientLogger.error({ error: err }, "Errore caricamento profilo");
+      // Errore nel recupero dei claim (/api/auth/me non 401): stato della
+      // sessione non determinabile, trattato come non autenticato.
+      void clientLogger.error({ error: err }, "Errore verifica sessione");
       setError(err.message || "Errore sconosciuto");
       setUser(null);
     } finally {
