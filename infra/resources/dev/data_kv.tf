@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-06-29 09:50
+# Generato il: 2026-07-14 23:37
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -126,6 +126,61 @@ data "azurerm_key_vault_secret" "fe_smcr_ocp_apim_subscription_key_uat" {
 
 data "azurerm_key_vault_secret" "fe_smcr_onboarding_base_path_uat" {
   name         = "fe-smcr-onboarding-base-path-uat"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_pdnd_api_base_url" {
+  name         = "fe-smcr-pdnd-api-base-url"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_pdnd_auth_token_url" {
+  name         = "fe-smcr-pdnd-auth-token-url"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_pdnd_client_assertion_audience" {
+  name         = "fe-smcr-pdnd-client-assertion-audience"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_pdnd_client_assertion_kid" {
+  name         = "fe-smcr-pdnd-client-assertion-kid"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_pdnd_client_assertion_private_key" {
+  name         = "fe-smcr-pdnd-client-assertion-private-key"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_pdnd_client_assertion_ttl_seconds" {
+  name         = "fe-smcr-pdnd-client-assertion-ttl-seconds"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_pdnd_client_id" {
+  name         = "fe-smcr-pdnd-client-id"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_pdnd_dpop_private_key" {
+  name         = "fe-smcr-pdnd-dpop-private-key"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_pdnd_env" {
+  name         = "fe-smcr-pdnd-env"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_pdnd_request_timeout_ms" {
+  name         = "fe-smcr-pdnd-request-timeout-ms"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_pdnd_token_refresh_margin_seconds" {
+  name         = "fe-smcr-pdnd-token-refresh-margin-seconds"
   key_vault_id = data.azurerm_key_vault.common_kv.id
 }
 
