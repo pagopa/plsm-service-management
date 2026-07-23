@@ -101,20 +101,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
 
       // Sessione valida: se l'arricchimento del profilo fallisce l'utente resta
-      // comunque autenticato. Un profilo minimo dai claim evita che un errore
-      // transitorio (DB a freddo, timeout) venga scambiato per "non autenticato"
-      // dal guard di rotta, che manderebbe l'utente su /unauthorized.
-      const fallbackUser: UserProfile = {
-        id: claims.userId,
-        email: claims.email,
-        name: claims.name,
-        membersOf: [],
-        activeTeam: null,
-        preferences: { teamId: null, theme: "system" },
-      };
+      // comunque autenticato, con un profilo minimo. Un errore transitorio (DB
+      // a freddo, timeout) non deve essere scambiato per "non autenticato" dal
+      // guard di rotta, che manderebbe l'utente su /unauthorized.
+      // userProfile è dichiarato qui fuori per poterne preservare l'id (dal DB,
+      // via /api/user/profile) nel fallback quando la fetch è già riuscita;
+      // claims.userId (id di sessione) resta solo come ultima risorsa.
+      let userProfile: Pick<UserProfile, "email" | "id" | "name"> | undefined;
 
       try {
-        const userProfile = await fetchUserProfile();
+        userProfile = await fetchUserProfile();
 
         // Check if member exists in the new members table, create if not
         const memberResult = await readMemberByEmail(claims.email);
@@ -171,7 +167,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           "Errore caricamento profilo: sessione valida, uso profilo minimo dai claim",
         );
         setError(enrichError.message || "Errore caricamento profilo");
-        setUser(fallbackUser);
+        setUser({
+          id: userProfile?.id ?? claims.userId,
+          email: claims.email,
+          name: claims.name,
+          membersOf: [],
+          activeTeam: null,
+          preferences: { teamId: null, theme: "system" },
+        });
       }
     } catch (err: any) {
       // Errore nel recupero dei claim (/api/auth/me non 401): stato della
