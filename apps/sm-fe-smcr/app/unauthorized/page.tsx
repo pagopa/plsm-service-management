@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -17,11 +16,12 @@ export default function UnauthorizedPage() {
           <br />
           Se pensi si tratti di un errore, contatta l’amministratore.
         </p>
-        <Link href="/">
-          <Button className="bg-red-600 hover:bg-red-700 transition-colors">
-            Effettua il Login
-          </Button>
-        </Link>
+        <Button
+          asChild
+          className="bg-red-600 hover:bg-red-700 transition-colors"
+        >
+          <a href="/api/auth/logout">Effettua il Login</a>
+        </Button>
       </div>
     </div>
   );
