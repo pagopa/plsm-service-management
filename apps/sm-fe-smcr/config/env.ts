@@ -53,6 +53,7 @@ const serverEnvSchema = z.object({
 
   // PDND Interoperabilita DPoP client
   PDND_ENV: optionalString,
+  PDND_API_VERSION: z.string().trim().min(1).default("v3").catch("v3"),
   PDND_CLIENT_ID: optionalString,
   PDND_CLIENT_ASSERTION_KID: optionalString,
   PDND_CLIENT_ASSERTION_AUDIENCE: optionalString,
@@ -139,6 +140,7 @@ const rawServerEnv = {
   GET_IPA_UO: process.env.GET_IPA_UO,
   GET_INFOCAMERE: process.env.GET_INFOCAMERE,
   PDND_ENV: process.env.PDND_ENV,
+  PDND_API_VERSION: process.env.PDND_API_VERSION,
   PDND_CLIENT_ID: process.env.PDND_CLIENT_ID,
   PDND_CLIENT_ASSERTION_KID: process.env.PDND_CLIENT_ASSERTION_KID,
   PDND_CLIENT_ASSERTION_AUDIENCE: process.env.PDND_CLIENT_ASSERTION_AUDIENCE,

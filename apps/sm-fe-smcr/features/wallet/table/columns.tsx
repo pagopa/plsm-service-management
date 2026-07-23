@@ -1,11 +1,12 @@
 "use client";
 
-import { Check, Copy, Download, Landmark } from "lucide-react";
-import { ComponentProps, useState } from "react";
+import { Download, Landmark } from "lucide-react";
+import { ComponentProps } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PdndDetailDialog } from "@/features/wallet/table/pdnd-detail-dialog";
 import type { WalletRow } from "@/lib/services/wallet.service";
 import { cn } from "@/lib/utils";
 
@@ -93,10 +94,6 @@ function fmtTime(iso: string) {
   return d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
 }
 
-function shortId(id: string) {
-  return id.slice(0, 8);
-}
-
 type SortKey = "name" | "nomeEnte" | "state" | "createdat";
 type SortDir = "asc" | "desc";
 
@@ -109,33 +106,22 @@ function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
   );
 }
 
-function UuidChip({ id }: { id: string }) {
-  const [copied, setCopied] = useState(false);
-  const onCopy = async () => {
-    try {
-      await navigator.clipboard?.writeText(id);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {
-      // no-op
-    }
-  };
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      onClick={onCopy}
-      title={id}
-      className="bg-muted/60 hover:bg-muted/60 hover:border-primary hover:text-primary h-auto gap-1.5 rounded-md border px-2 py-1 font-normal transition-colors has-[>svg]:px-2"
-    >
-      <span className="font-mono text-xs">{shortId(id)}</span>
-      {copied ? (
-        <Check className="size-3" />
-      ) : (
-        <Copy className="size-3 opacity-60" />
-      )}
-    </Button>
-  );
+function getEserviceDetailUrl(row: WalletRow): string {
+  const params = new URLSearchParams({ eserviceId: row.id });
+  return `/api/pdnd/eservice?${params.toString()}`;
+}
+
+function getDescriptorDetailUrl(row: WalletRow): string | null {
+  if (!row.descriptorid) {
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    eserviceId: row.id,
+    descriptorId: row.descriptorid,
+  });
+
+  return `/api/pdnd/eservice-descriptor?${params.toString()}`;
 }
 
 function getInterfaceDownloadUrl(row: WalletRow): string | null {
@@ -165,17 +151,30 @@ export function createWalletColumns({
     {
       accessorKey: "id",
       header: "ID",
-      cell: ({ row }) => <UuidChip id={row.original.id} />,
+      cell: ({ row }) => (
+        <PdndDetailDialog
+          endpoint={getEserviceDetailUrl(row.original)}
+          id={row.original.id}
+          title="Dettaglio e-service"
+        />
+      ),
     },
     {
       accessorKey: "descriptorid",
       header: "Descriptor ID",
-      cell: ({ row }) =>
-        row.original.descriptorid ? (
-          <UuidChip id={row.original.descriptorid} />
+      cell: ({ row }) => {
+        const endpoint = getDescriptorDetailUrl(row.original);
+
+        return endpoint && row.original.descriptorid ? (
+          <PdndDetailDialog
+            endpoint={endpoint}
+            id={row.original.descriptorid}
+            title="Dettaglio versione (descriptor)"
+          />
         ) : (
           <span className="text-muted-foreground text-xs">—</span>
-        ),
+        );
+      },
     },
     {
       accessorKey: "name",

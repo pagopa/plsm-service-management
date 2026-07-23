@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { serverEnv } from "@/config/env";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 import { pdndFetch } from "@/lib/pdnd";
 
@@ -65,7 +66,7 @@ export async function GET(request: Request) {
 
   try {
     const pdndResponse = await pdndFetch(
-      `/v2/eservices/${eserviceId}/descriptors/${descriptorId}/interface`,
+      `/${serverEnv.PDND_API_VERSION}/eservices/${eserviceId}/descriptors/${descriptorId}/interface`,
     );
     const responseContentType = pdndResponse.headers.get("content-type") ?? "";
 
