@@ -17,7 +17,7 @@ export default function UnauthorizedPage() {
           <br />
           Se pensi si tratti di un errore, contatta l’amministratore.
         </p>
-        <Link href="/">
+        <Link href="/api/auth/logout">
           <Button className="bg-red-600 hover:bg-red-700 transition-colors">
             Effettua il Login
           </Button>
