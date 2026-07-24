@@ -16,7 +16,18 @@ const stateBadgeConfig: Record<
   { variant?: BadgeVariant; className?: string }
 > = {
   Active: { variant: "outline-success" },
-  Suspended: { variant: "outline-warning" },
+  Published: {
+    variant: "outline",
+    className: "border-blue-100 bg-blue-50 text-blue-700",
+  },
+  Suspended: {
+    variant: "outline",
+    className: "border-yellow-100 bg-yellow-50 text-yellow-700",
+  },
+  ArchivingSuspended: {
+    variant: "outline",
+    className: "border-orange-100 bg-orange-50 text-orange-700",
+  },
   Rejected: { variant: "outline-destructive" },
   Pending: {
     variant: "outline",
@@ -26,17 +37,27 @@ const stateBadgeConfig: Record<
     variant: "outline",
     className: "border-blue-100 bg-blue-50 text-blue-700",
   },
-  Archived: { variant: "secondary" },
+  Archived: {
+    variant: "outline",
+    className: "border-red-100 bg-red-50 text-red-700",
+  },
+  Deprecated: {
+    variant: "outline",
+    className: "border-rose-200 bg-rose-100 text-rose-700",
+  },
   sconosciuto: { variant: "outline" },
 };
 
 export const WALLET_STATE_ORDER = [
   "Active",
+  "Published",
   "Suspended",
+  "ArchivingSuspended",
   "Rejected",
   "Pending",
   "MissingCertifiedAttributes",
   "Archived",
+  "Deprecated",
   "sconosciuto",
 ] as const;
 
