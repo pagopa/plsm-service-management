@@ -50,6 +50,7 @@ export function WalletTable({ columns, data, isEmpty }: WalletTableProps) {
                     header.column.id === "nomeEnte" && "w-72",
                     header.column.id === "state" && "w-44",
                     header.column.id === "createdat" && "w-40",
+                    header.column.id === "interface" && "w-28 text-center",
                   )}
                 >
                   {header.isPlaceholder

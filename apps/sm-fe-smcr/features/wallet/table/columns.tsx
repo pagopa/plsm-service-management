@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, Landmark } from "lucide-react";
+import { Check, Copy, Download, Landmark } from "lucide-react";
 import { ComponentProps, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -159,6 +159,20 @@ function UuidChip({ id }: { id: string }) {
   );
 }
 
+function getInterfaceDownloadUrl(row: WalletRow): string | null {
+  if (!row.descriptorid) {
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    eserviceId: row.id,
+    descriptorId: row.descriptorid,
+    filename: `${row.name || row.id}.yaml`,
+  });
+
+  return `/api/pdnd/eservice-interface?${params.toString()}`;
+}
+
 type CreateColumnsOptions = {
   sort: { key: SortKey; dir: SortDir };
   onSort: (key: SortKey) => void;
@@ -279,6 +293,43 @@ export function createWalletColumns({
           </p>
         </div>
       ),
+    },
+    {
+      id: "interface",
+      header: "Interfaccia",
+      cell: ({ row }) => {
+        const href = getInterfaceDownloadUrl(row.original);
+
+        if (!href) {
+          return (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              disabled
+              title="Descriptor ID non disponibile"
+              aria-label="Descriptor ID non disponibile"
+            >
+              <Download className="size-4" />
+            </Button>
+          );
+        }
+
+        return (
+          <Button
+            asChild
+            variant="outline"
+            size="icon"
+            className="size-8"
+            title="Scarica interfaccia YAML"
+          >
+            <a href={href} aria-label="Scarica interfaccia YAML">
+              <Download className="size-4" />
+            </a>
+          </Button>
+        );
+      },
     },
   ];
 }
