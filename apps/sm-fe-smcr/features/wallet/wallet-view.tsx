@@ -22,7 +22,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -410,7 +409,7 @@ function StateCombo({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[280px] p-1">
-        <ScrollArea className="max-h-72">
+        <div className="max-h-72 overflow-y-auto">
           <Button
             type="button"
             variant="ghost"
@@ -444,7 +443,7 @@ function StateCombo({
               {value === opt && <Check className="size-4 shrink-0" />}
             </Button>
           ))}
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );
@@ -519,7 +518,7 @@ function EnteCombo({
             />
           </div>
         </div>
-        <ScrollArea className="max-h-72 p-1">
+        <div className="max-h-72 overflow-y-auto p-1">
           <Button
             type="button"
             variant="ghost"
@@ -558,7 +557,7 @@ function EnteCombo({
               Nessun ente trovato
             </p>
           )}
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );
