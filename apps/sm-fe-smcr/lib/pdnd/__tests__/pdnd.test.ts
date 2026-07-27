@@ -157,7 +157,7 @@ describe("PDND DPoP client", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it("sends Bearer authorization and per-request DPoP headers in pdndFetch", async () => {
+  it("sends DPoP authorization and per-request DPoP headers in pdndFetch", async () => {
     const config = createTestConfig();
     const fetchMock = jest
       .fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>()
@@ -193,7 +193,7 @@ describe("PDND DPoP client", () => {
     expect(url.toString()).toBe(
       "https://api-coll.interop.pagopa.it/v3/eservices?offset=0",
     );
-    expect(headers.get("Authorization")).toBe("Bearer test-access-token");
+    expect(headers.get("Authorization")).toBe("DPoP test-access-token");
     expect(decodedDpop.payload).toMatchObject({
       htm: "GET",
       htu: "https://api-coll.interop.pagopa.it/v3/eservices",
