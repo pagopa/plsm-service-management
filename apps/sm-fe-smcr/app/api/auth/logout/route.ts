@@ -3,6 +3,7 @@ import { AUTH_COOKIE_NAME, AUTH_COOKIE_NAMES } from "@/lib/auth/constants";
 import {
   buildAuthFunctionUrl,
   buildForwardCookieHeader,
+  getPublicOrigin,
   getRequestIsSecure,
 } from "@/lib/auth/proxy";
 
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   await notifyAuthFunction(request);
 
-  const response = NextResponse.redirect(new URL("/", request.url));
+  const response = NextResponse.redirect(new URL("/", getPublicOrigin(request)));
 
   for (const cookieName of AUTH_COOKIE_NAMES) {
     response.cookies.set({
