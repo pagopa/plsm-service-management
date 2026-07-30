@@ -7,6 +7,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { UuidChip } from "@/components/core/uuid-chip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PdndDetailDialog } from "@/features/wallet/table/pdnd-detail-dialog";
 import type { WalletRow } from "@/lib/services/wallet.service";
 import { cn } from "@/lib/utils";
 
@@ -127,6 +128,24 @@ function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
   );
 }
 
+function getEserviceDetailUrl(row: WalletRow): string {
+  const params = new URLSearchParams({ eserviceId: row.id });
+  return `/api/pdnd/eservice?${params.toString()}`;
+}
+
+function getDescriptorDetailUrl(row: WalletRow): string | null {
+  if (!row.descriptorid) {
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    eserviceId: row.id,
+    descriptorId: row.descriptorid,
+  });
+
+  return `/api/pdnd/eservice-descriptor?${params.toString()}`;
+}
+
 function getInterfaceDownloadUrl(row: WalletRow): string | null {
   if (!row.descriptorid) {
     return null;
@@ -154,17 +173,30 @@ export function createWalletColumns({
     {
       accessorKey: "id",
       header: "ID",
-      cell: ({ row }) => <UuidChip id={row.original.id} />,
+      cell: ({ row }) => (
+        <PdndDetailDialog
+          endpoint={getEserviceDetailUrl(row.original)}
+          id={row.original.id}
+          title="Dettaglio e-service"
+        />
+      ),
     },
     {
       accessorKey: "descriptorid",
       header: "Descriptor ID",
-      cell: ({ row }) =>
-        row.original.descriptorid ? (
-          <UuidChip id={row.original.descriptorid} />
+      cell: ({ row }) => {
+        const endpoint = getDescriptorDetailUrl(row.original);
+
+        return endpoint && row.original.descriptorid ? (
+          <PdndDetailDialog
+            endpoint={endpoint}
+            id={row.original.descriptorid}
+            title="Dettaglio versione (descriptor)"
+          />
         ) : (
           <span className="text-muted-foreground text-xs">—</span>
-        ),
+        );
+      },
     },
     {
       accessorKey: "name",

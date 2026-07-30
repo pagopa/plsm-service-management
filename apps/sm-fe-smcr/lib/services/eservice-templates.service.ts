@@ -71,7 +71,7 @@ export async function getEserviceTemplates(): Promise<{
         offset: String(offset),
       });
       const response = await pdndFetch(
-        `/v2/eserviceTemplates?${params.toString()}`,
+        `/${serverEnv.PDND_API_VERSION}/eserviceTemplates?${params.toString()}`,
       );
 
       if (!response.ok) {

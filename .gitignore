@@ -51,3 +51,11 @@ temp
 AzuriteConfig
 
 terraform.tfvars
+.vexpignore
+.gitignore
+.claude/hooks/vexp-guard.sh
+.vexp/.gitattributes
+.gitignore
+.vexp/daemon.log.1
+vexp.toml
+.claude
