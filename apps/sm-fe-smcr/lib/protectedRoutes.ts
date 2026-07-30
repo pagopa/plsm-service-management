@@ -83,11 +83,22 @@ export const protectedRoutes: ProtectedRoute[] = [
   },
   {
     label: "Wallet",
-    path: "/dashboard/wallet",
     requiredTeams: ["service-management"],
     icon: Wallet,
     sidebar: true,
     teamId: "service-management",
+    children: [
+      {
+        label: "E-Service Wallet",
+        path: "/dashboard/wallet",
+        requiredTeams: ["service-management"],
+      },
+      {
+        label: "Template e-service",
+        path: "/dashboard/wallet/eservice-templates",
+        requiredTeams: ["service-management"],
+      },
+    ],
   },
   {
     label: "Utenze IO",

@@ -28,8 +28,12 @@ function NavCollapsibleItem({
   item: ProtectedRoute;
   pathname: string;
 }) {
-  const childPaths = item.children?.map((child) => child.path) ?? [];
-  const isChildActive = childPaths.some((path) => isPathActive(pathname, path));
+  const activeChildPath =
+    item.children?.reduce<string | null>((best, child) => {
+      if (!isPathActive(pathname, child.path)) return best;
+      return !best || child.path.length > best.length ? child.path : best;
+    }, null) ?? null;
+  const isChildActive = activeChildPath !== null;
   const [open, setOpen] = useState(isChildActive);
 
   useEffect(() => {
@@ -61,7 +65,7 @@ function NavCollapsibleItem({
             <SidebarMenuSubItem key={child.path}>
               <SidebarMenuSubButton
                 asChild
-                isActive={isPathActive(pathname, child.path)}
+                isActive={child.path === activeChildPath}
               >
                 <Link href={child.path}>
                   <span>{child.label}</span>
