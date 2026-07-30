@@ -2,6 +2,7 @@
 
 import { Download, ShieldCheck, Radio } from "lucide-react";
 import { ComponentProps } from "react";
+import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { UuidChip } from "@/components/core/uuid-chip";
@@ -202,8 +203,13 @@ export function createEserviceTemplateColumns({
           type="button"
           variant="outline"
           size="icon"
-          className="size-8"
-          disabled
+          className="size-8 cursor-pointer"
+          onClick={() =>
+            toast.info("Funzionalità in arrivo", {
+              description:
+                "Il download dei template e-service verrà implementato successivamente.",
+            })
+          }
           title="Download non ancora disponibile"
           aria-label="Download non ancora disponibile"
         >
