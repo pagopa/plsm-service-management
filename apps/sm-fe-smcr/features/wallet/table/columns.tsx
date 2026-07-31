@@ -4,6 +4,7 @@ import { Download, Landmark } from "lucide-react";
 import { ComponentProps } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 
+import { UuidChip } from "@/components/core/uuid-chip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PdndDetailDialog } from "@/features/wallet/table/pdnd-detail-dialog";
