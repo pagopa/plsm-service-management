@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import pg from "@/lib/knex";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { memberTeams, members, teams } from "@/db/schema";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 
@@ -14,42 +16,39 @@ export async function GET(request: NextRequest) {
     }
 
     const requestedUserId = request.nextUrl.searchParams.get("userId");
-    const userId = currentUser.user.id;
-
-    if (requestedUserId && requestedUserId !== userId) {
+    if (requestedUserId && requestedUserId !== currentUser.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const getUserWithTeamsByEmail = await pg("user as u")
-      .select(
-        "u.id",
-        "u.name",
-        "u.email",
-        "m.role",
-        "t.name as teamName",
-        "t.id as teamId",
-      )
-      .join("member as m", "u.id", "m.userId")
-      .join("team as t", "m.teamId", "t.id")
-      .where("u.id", userId)
-      .then((rows: any) => {
-        if (rows.length === 0) return null;
+    const memberId = Number(currentUser.user.id);
+    const rows = await db
+      .select({
+        email: members.email,
+        firstname: members.firstname,
+        lastname: members.lastname,
+        teamId: teams.id,
+        teamName: teams.name,
+      })
+      .from(members)
+      .innerJoin(memberTeams, eq(members.id, memberTeams.memberId))
+      .innerJoin(teams, eq(memberTeams.teamId, teams.id))
+      .where(eq(members.id, memberId));
 
-        return {
-          user: {
-            id: rows[0].id,
-            name: rows[0].name,
-            email: rows[0].email,
-          },
-          teams: rows.map((row: any) => ({
-            id: row.teamId,
-            name: row.teamName,
-            role: row.role,
-          })),
-        };
-      });
-
-    return NextResponse.json(getUserWithTeamsByEmail, { status: 200 });
+    return NextResponse.json(
+      {
+        teams: rows.map((row) => ({
+          id: String(row.teamId),
+          name: row.teamName,
+          role: "member" as const,
+        })),
+        user: {
+          email: currentUser.user.email,
+          id: currentUser.user.id,
+          name: currentUser.user.name,
+        },
+      },
+      { status: 200 },
+    );
   } catch (error) {
     logServerError(error, "Errore API user team");
     return NextResponse.json(

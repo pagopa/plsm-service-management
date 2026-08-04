@@ -1,33 +1,49 @@
-import { NextRequest, NextResponse } from "next/server";
-import knex from "@/lib/knex";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { memberTeams, members, teams } from "@/db/schema";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ teamId: string }> },
 ) {
   const { teamId } = await params;
+  const parsedTeamId = Number(teamId);
 
-  if (!teamId) {
-    return NextResponse.json({ error: "Missing teamId" }, { status: 400 });
+  if (!Number.isInteger(parsedTeamId) || parsedTeamId <= 0) {
+    return NextResponse.json({ error: "Invalid teamId" }, { status: 400 });
   }
 
   try {
-    const members = await knex("user as u")
-      .select(
-        "m.id",
-        "u.id as userId",
-        "u.name",
-        "u.email",
-        "m.role",
-        "t.name as teamName",
-        "t.id as teamId",
-      )
-      .join("member as m", "u.id", "m.userId")
-      .join("team as t", "m.teamId", "t.id")
-      .where("t.id", teamId);
+    const rows = await db
+      .select({
+        email: members.email,
+        firstname: members.firstname,
+        lastname: members.lastname,
+        membershipId: memberTeams.id,
+        teamId: teams.id,
+        teamName: teams.name,
+        userId: members.id,
+      })
+      .from(memberTeams)
+      .innerJoin(members, eq(memberTeams.memberId, members.id))
+      .innerJoin(teams, eq(memberTeams.teamId, teams.id))
+      .where(eq(memberTeams.teamId, parsedTeamId));
 
-    return NextResponse.json(members, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      rows.map((row) => ({
+        email: row.email,
+        id: String(row.membershipId),
+        name: `${row.firstname} ${row.lastname}`.trim(),
+        role: "member" as const,
+        teamId: String(row.teamId),
+        teamName: row.teamName,
+        userId: String(row.userId),
+      })),
+      { status: 200 },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

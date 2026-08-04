@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import pg from "@/lib/knex";
+import { db } from "@/db";
+import { teams } from "@/db/schema";
 import {
   logServerError,
   logServerInfo,
@@ -8,9 +9,16 @@ import {
 export async function GET() {
   try {
     logServerInfo("CALLING API LIST TEAMS");
-    const teams = await pg.select().table("team");
+    const rows = await db.select().from(teams);
 
-    return NextResponse.json(teams, { status: 200 });
+    return NextResponse.json(
+      rows.map((team) => ({
+        ...team,
+        id: String(team.id),
+        image: team.icon,
+      })),
+      { status: 200 },
+    );
   } catch (error) {
     logServerError(error, "Errore API team");
     return NextResponse.json(

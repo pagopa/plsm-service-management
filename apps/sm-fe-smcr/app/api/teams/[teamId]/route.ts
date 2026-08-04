@@ -1,20 +1,36 @@
-import { NextRequest, NextResponse } from "next/server";
-import knex from "@/lib/knex";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { teams } from "@/db/schema";
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> }, // Destructuring diretto
+  _request: NextRequest,
+  { params }: { params: Promise<{ teamId: string }> },
 ) {
+  const { teamId } = await params;
+  const parsedTeamId = Number(teamId);
+
+  if (!Number.isInteger(parsedTeamId) || parsedTeamId <= 0) {
+    return NextResponse.json({ error: "Invalid teamId" }, { status: 400 });
+  }
+
   try {
-    const { teamId } = await params;
-    if (!teamId) {
-      return NextResponse.json({ error: "Missing teamId" }, { status: 400 });
+    const [team] = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.id, parsedTeamId))
+      .limit(1);
+
+    if (!team) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    const team = await knex.select().table("team").where("id", teamId);
-
-    return NextResponse.json(team[0], { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { ...team, id: String(team.id), image: team.icon },
+      { status: 200 },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

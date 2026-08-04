@@ -1,7 +1,10 @@
 import "server-only";
 
+import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { db } from "@/db";
+import { members } from "@/db/schema";
 import { AUTH_COOKIE_NAME } from "./constants";
 import type { AuthSession } from "./jwt";
 import { verifyAuthToken } from "./jwt";
@@ -46,34 +49,78 @@ export async function getOrCreateCurrentAppUser(): Promise<CurrentAppUserResult 
     return null;
   }
 
-  const { randomUUID } = await import("crypto");
-  const { default: pg } = await import("@/lib/knex");
+  const [existingMember] = await db
+    .select({
+      email: members.email,
+      firstname: members.firstname,
+      id: members.id,
+      lastname: members.lastname,
+    })
+    .from(members)
+    .where(eq(members.email, session.email))
+    .limit(1);
 
-  const existingUser = await pg
-    .select("id", "name", "email")
-    .from<CurrentAppUser>("user")
-    .where("email", session.email)
-    .first();
-
-  if (existingUser) {
+  if (existingMember) {
     return {
       created: false,
-      user: existingUser,
+      user: {
+        email: existingMember.email,
+        id: String(existingMember.id),
+        name: `${existingMember.firstname} ${existingMember.lastname}`.trim(),
+      },
     };
   }
 
-  const [createdUser] = await pg("user")
-    .insert({
-      createdAt: pg.fn.now(),
+  const [firstname = "Unknown", ...lastnameParts] = session.name
+    .trim()
+    .split(/\s+/);
+  const [createdMember] = await db
+    .insert(members)
+    .values({
       email: session.email,
-      id: randomUUID(),
-      name: session.name,
-      updatedAt: pg.fn.now(),
+      firstname,
+      lastname: lastnameParts.join(" ") || "User",
     })
-    .returning(["id", "name", "email"]);
+    .onConflictDoNothing({ target: members.email })
+    .returning({
+      email: members.email,
+      firstname: members.firstname,
+      id: members.id,
+      lastname: members.lastname,
+    });
+
+  if (!createdMember) {
+    const [concurrentMember] = await db
+      .select({
+        email: members.email,
+        firstname: members.firstname,
+        id: members.id,
+        lastname: members.lastname,
+      })
+      .from(members)
+      .where(eq(members.email, session.email))
+      .limit(1);
+
+    if (!concurrentMember) {
+      throw new Error("Unable to create the current application member");
+    }
+
+    return {
+      created: false,
+      user: {
+        email: concurrentMember.email,
+        id: String(concurrentMember.id),
+        name: `${concurrentMember.firstname} ${concurrentMember.lastname}`.trim(),
+      },
+    };
+  }
 
   return {
     created: true,
-    user: createdUser,
+    user: {
+      email: createdMember.email,
+      id: String(createdMember.id),
+      name: `${createdMember.firstname} ${createdMember.lastname}`.trim(),
+    },
   };
 }

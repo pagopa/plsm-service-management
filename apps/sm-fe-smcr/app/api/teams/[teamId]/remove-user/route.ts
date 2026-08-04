@@ -1,30 +1,49 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import knex from "@/lib/knex";
+import { and, eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { memberTeams } from "@/db/schema";
 import {
   logServerError,
   logServerInfo,
 } from "@/lib/logger/logger.server.helpers";
 
 export async function POST(
-  req: NextRequest,
-  // { params }: { params: Promise<{ teamId: string }> }, // Destructuring diretto
+  request: NextRequest,
+  { params }: { params: Promise<{ teamId: string }> },
 ) {
   try {
-    const { memberId } = await req.json();
-    // const { teamId } = await params; // Await dei params
+    const { memberId } = await request.json();
+    const { teamId } = await params;
+    const membershipId = Number(memberId);
+    const parsedTeamId = Number(teamId);
 
-    if (!memberId) {
-      return NextResponse.json({ error: "Missing memberId" }, { status: 400 });
+    if (
+      !Number.isInteger(membershipId) ||
+      membershipId <= 0 ||
+      !Number.isInteger(parsedTeamId) ||
+      parsedTeamId <= 0
+    ) {
+      return NextResponse.json(
+        { error: "Invalid memberId or teamId" },
+        { status: 400 },
+      );
     }
 
-    const result = await knex("member").where({ id: memberId }).del();
+    const deleted = await db
+      .delete(memberTeams)
+      .where(
+        and(
+          eq(memberTeams.id, membershipId),
+          eq(memberTeams.teamId, parsedTeamId),
+        ),
+      )
+      .returning({ id: memberTeams.id });
 
-    logServerInfo("Delete member result", { result });
-
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
+    logServerInfo("Delete member result", { count: deleted.length });
+    return NextResponse.json({ success: deleted.length > 0 });
+  } catch (error) {
     logServerError(error, "Errore API remove-user");
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

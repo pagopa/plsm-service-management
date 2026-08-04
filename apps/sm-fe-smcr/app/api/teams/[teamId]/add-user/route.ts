@@ -1,32 +1,39 @@
-import { NextResponse, type NextRequest } from "next/server";
-import knex from "@/lib/knex";
-import { randomUUID } from "crypto";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { memberTeams } from "@/db/schema";
 
 export async function POST(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ teamId: string }> },
 ) {
-  const body = await req.json();
-  const { userId, role } = body;
-
+  const { userId } = await request.json();
   const { teamId } = await params;
+  const memberId = Number(userId);
+  const parsedTeamId = Number(teamId);
 
-  if (!userId) {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+  if (
+    !Number.isInteger(memberId) ||
+    memberId <= 0 ||
+    !Number.isInteger(parsedTeamId) ||
+    parsedTeamId <= 0
+  ) {
+    return NextResponse.json(
+      { error: "Invalid userId or teamId" },
+      { status: 400 },
+    );
   }
 
   try {
-    await knex("member").insert({
-      id: randomUUID(),
-      userId,
-      teamId,
-      role,
-      createdAt: knex.fn.now(),
-      updatedAt: knex.fn.now(),
-    });
+    await db
+      .insert(memberTeams)
+      .values({ memberId, teamId: parsedTeamId })
+      .onConflictDoNothing({
+        target: [memberTeams.memberId, memberTeams.teamId],
+      });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

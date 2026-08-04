@@ -1,7 +1,8 @@
-// app/api/teams/[teamId]/update-image/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import knex from "@/lib/knex";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
+import { db } from "@/db";
+import { teams } from "@/db/schema";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 export async function POST(
@@ -9,10 +10,14 @@ export async function POST(
   { params }: { params: Promise<{ teamId: string }> },
 ) {
   const { teamId } = await params;
+  const parsedTeamId = Number(teamId);
+  const imageFile = (await request.formData()).get("image");
 
-  const formData = await request.formData();
-  const imageFile = formData.get("image") as File | null;
-  if (!imageFile) {
+  if (!Number.isInteger(parsedTeamId) || parsedTeamId <= 0) {
+    return NextResponse.json({ error: "Invalid teamId" }, { status: 400 });
+  }
+
+  if (!(imageFile instanceof File) || imageFile.size === 0) {
     return NextResponse.json(
       { error: "File immagine mancante" },
       { status: 400 },
@@ -20,26 +25,20 @@ export async function POST(
   }
 
   try {
-    let imageUrl: string | null = null;
+    const resizedImage = await sharp(await imageFile.arrayBuffer())
+      .resize(256, 256, { fit: "inside", withoutEnlargement: true })
+      .toBuffer();
+    const icon = `data:${imageFile.type};base64,${resizedImage.toString("base64")}`;
 
-    if (imageFile) {
-      // Converti l'immagine in buffer
-      const buffer = await imageFile.arrayBuffer();
+    const updated = await db
+      .update(teams)
+      .set({ icon, updatedAt: new Date() })
+      .where(eq(teams.id, parsedTeamId))
+      .returning({ id: teams.id });
 
-      // Ridimensiona l'immagine a max 256x256 mantenendo le proporzioni
-      const resizedImage = await sharp(buffer)
-        .resize(256, 256, {
-          fit: "inside",
-          withoutEnlargement: true,
-        })
-        .toBuffer();
-
-      // Converti in base64
-      imageUrl = `data:${imageFile.type};base64,${resizedImage.toString("base64")}`;
+    if (updated.length === 0) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
-
-    // Salva la stringa Base64 nel database
-    await knex("team").where({ id: teamId }).update({ image: imageUrl });
 
     return NextResponse.json({ success: true });
   } catch (error) {

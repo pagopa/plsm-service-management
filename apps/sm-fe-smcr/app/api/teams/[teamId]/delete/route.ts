@@ -1,31 +1,34 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import knex from "@/lib/knex";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { teams } from "@/db/schema";
 import {
   logServerError,
   logServerInfo,
 } from "@/lib/logger/logger.server.helpers";
 
 export async function GET(
-  req: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ teamId: string }> },
 ) {
   try {
     const { teamId } = await params;
-    logServerInfo("Delete team requested", { teamId });
+    const parsedTeamId = Number(teamId);
 
-    if (!teamId) {
-      return NextResponse.json({ error: "Missing teamId" }, { status: 400 });
+    if (!Number.isInteger(parsedTeamId) || parsedTeamId <= 0) {
+      return NextResponse.json({ error: "Invalid teamId" }, { status: 400 });
     }
 
-    // Recupera il nome del team
-    const team = await knex("team").where({ id: teamId }).first();
+    const [team] = await db
+      .select({ id: teams.id, name: teams.name })
+      .from(teams)
+      .where(eq(teams.id, parsedTeamId))
+      .limit(1);
 
     if (!team) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    // Verifica se il team è "Admin"
     if (team.name === "Admin") {
       return NextResponse.json(
         { error: "Cannot delete the Admin team" },
@@ -33,14 +36,16 @@ export async function GET(
       );
     }
 
-    // Se il team non è "Admin", procedi con la cancellazione
-    const result = await knex("team").where({ id: teamId }).del();
+    const deleted = await db
+      .delete(teams)
+      .where(eq(teams.id, parsedTeamId))
+      .returning({ id: teams.id });
 
-    logServerInfo("Delete team result", { result });
-
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
+    logServerInfo("Delete team result", { count: deleted.length });
+    return NextResponse.json({ success: deleted.length > 0 });
+  } catch (error) {
     logServerError(error, "Errore API delete team");
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

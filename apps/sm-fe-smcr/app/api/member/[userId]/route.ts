@@ -1,17 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
-import knex from "@/lib/knex";
+import { eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { memberTeams, teams } from "@/db/schema";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 
 export const runtime = "nodejs";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ userId: string }> },
 ) {
   const { userId } = await params;
+  const memberId = Number(userId);
 
-  if (!userId) {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+  if (!Number.isInteger(memberId) || memberId <= 0) {
+    return NextResponse.json({ error: "Invalid userId" }, { status: 400 });
   }
 
   try {
@@ -25,37 +28,40 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const members = await knex("user as u")
-      .select(
-        "m.id",
-        "m.role",
-        "t.name as teamName",
-        "t.id as teamId",
-        "t.image as teamImage",
-        "t.createdAt as teamCreatedAt",
-        "t.updatedAt as teamUpdatedAt",
-      )
-      .join("member as m", "u.id", "m.userId")
-      .join("team as t", "m.teamId", "t.id")
-      .where("u.id", userId);
+    const memberships = await db
+      .select({
+        createdAt: memberTeams.createdAt,
+        icon: teams.icon,
+        membershipId: memberTeams.id,
+        teamCreatedAt: teams.createdAt,
+        teamId: teams.id,
+        teamName: teams.name,
+        teamSlug: teams.slug,
+        teamUpdatedAt: teams.updatedAt,
+      })
+      .from(memberTeams)
+      .innerJoin(teams, eq(memberTeams.teamId, teams.id))
+      .where(eq(memberTeams.memberId, memberId));
 
-    const mappedMembers: Array<any> = members.map((member) => ({
-      id: member.id,
-      // teamId: member.teamId,
-      userId: member.userId,
-      role: member.role,
-      createdAt: member.createdAt,
-      team: {
-        id: member.teamId,
-        name: member.teamName,
-        image: member.teamImage,
-        createdAt: new Date(member.teamCreatedAt),
-        updatedAt: new Date(member.teamUpdatedAt),
-      },
-    }));
-
-    return NextResponse.json(mappedMembers, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      memberships.map((membership) => ({
+        createdAt: membership.createdAt.toISOString(),
+        id: String(membership.membershipId),
+        role: "member" as const,
+        team: {
+          createdAt: membership.teamCreatedAt,
+          id: String(membership.teamId),
+          image: membership.icon ?? undefined,
+          name: membership.teamName,
+          slug: membership.teamSlug,
+          updatedAt: membership.teamUpdatedAt,
+        },
+        userId,
+      })),
+      { status: 200 },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

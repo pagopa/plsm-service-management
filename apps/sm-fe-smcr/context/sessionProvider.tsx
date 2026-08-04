@@ -9,11 +9,7 @@ import {
   ReactNode,
 } from "react";
 import { UserProfile } from "@/lib/types/userProfile";
-import { getUserMember, getUserPreferences } from "@/lib/actions/user.action";
-import {
-  readMemberByEmail,
-  createMember,
-} from "@/lib/services/members.service";
+import { getUserMember } from "@/lib/actions/user.action";
 import clientLogger from "@/lib/logger/logger.client";
 
 type SessionClaims = {
@@ -78,15 +74,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       return payload.claims ?? null;
     }, []);
 
-  const splitDisplayName = useCallback((name: string) => {
-    const [firstname = "Unknown", ...lastnameParts] = name.trim().split(/\s+/);
-
-    return {
-      firstname,
-      lastname: lastnameParts.join(" ") || "User",
-    };
-  }, []);
-
   const refreshUserData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -112,40 +99,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       try {
         userProfile = await fetchUserProfile();
 
-        // Check if member exists in the new members table, create if not
-        const memberResult = await readMemberByEmail(claims.email);
-        if (memberResult.error || !memberResult.data) {
-          void clientLogger.info(
-            {
-              info: {
-                event: "session.member.create_missing",
-                metadata: { email: claims.email },
-              },
-            },
-            "Member not found, creating new member",
-          );
-
-          const { firstname, lastname } = splitDisplayName(claims.name);
-
-          const createResult = await createMember({
-            email: claims.email,
-            firstname,
-            lastname,
-          });
-
-          if (createResult.error) {
-            void clientLogger.error(
-              { error: createResult.error },
-              "Failed to create member",
-            );
-          } else {
-            void clientLogger.info("Member created successfully");
-          }
-        }
-
         // const userTeams = await getUserTeams(userProfile.id);
         const userMember = await getUserMember(userProfile.id);
-        const userPreferences = await getUserPreferences(userProfile.id);
         setUser({
           ...userProfile,
           email: claims.email,
@@ -153,8 +108,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           membersOf: userMember,
           activeTeam: null,
           preferences: {
-            teamId: userPreferences.teamId,
-            theme: userPreferences.theme,
+            teamId: null,
+            theme: "system",
           },
         });
       } catch (enrichError: any) {
@@ -186,7 +141,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       setIsReady(true);
     }
-  }, [fetchSessionClaims, fetchUserProfile, splitDisplayName]);
+  }, [fetchSessionClaims, fetchUserProfile]);
 
   const logout = useCallback(async () => {
     try {
