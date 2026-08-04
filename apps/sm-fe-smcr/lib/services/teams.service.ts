@@ -3,6 +3,7 @@ import z from "zod";
 import { db } from "@/db";
 import {
   memberTeams,
+  members,
   permissions,
   teamPermissions,
   teams,
@@ -13,6 +14,9 @@ import {
 } from "@/lib/logger/logger.server.helpers";
 
 export const teamSchema = z.object({
+  createdByMemberId: z.number().int().positive().nullable(),
+  department: z.string().nullable(),
+  description: z.string().nullable(),
   id: z.number().int().positive(),
   name: z.string().nonempty(),
   slug: z.string().nonempty(),
@@ -55,6 +59,41 @@ const teamListItemSchema = teamSchema
     memberCount: z.number().int().nonnegative(),
   });
 export type TeamListItem = z.infer<typeof teamListItemSchema>;
+
+const teamDetailMemberSchema = z.object({
+  email: z.email(),
+  firstname: z.string().nonempty(),
+  id: z.number().int().positive(),
+  lastname: z.string().nonempty(),
+  status: z.enum(["active", "suspended"]),
+});
+export type TeamDetailMember = z.infer<typeof teamDetailMemberSchema>;
+
+const teamDetailPermissionSchema = permissionSchema.pick({
+  code: true,
+  description: true,
+  id: true,
+  name: true,
+  status: true,
+});
+export type TeamDetailPermission = z.infer<
+  typeof teamDetailPermissionSchema
+>;
+
+const teamCreatorSchema = teamDetailMemberSchema.pick({
+  email: true,
+  firstname: true,
+  id: true,
+  lastname: true,
+});
+export type TeamCreator = z.infer<typeof teamCreatorSchema>;
+
+const teamDetailSchema = teamSchema.extend({
+  createdBy: teamCreatorSchema.nullable(),
+  members: z.array(teamDetailMemberSchema),
+  permissions: z.array(teamDetailPermissionSchema),
+});
+export type TeamDetail = z.infer<typeof teamDetailSchema>;
 
 const submitTeamAccessRequestSchema = z.object({
   team: z
@@ -189,6 +228,79 @@ export async function readTeamsList() {
   }
 }
 
+export async function readTeamDetail(teamId: number) {
+  try {
+    const [rawTeam] = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.id, teamId))
+      .limit(1);
+
+    if (!rawTeam) {
+      return { data: null, error: "not found" };
+    }
+
+    const [rawMembers, rawPermissions, rawCreatorRows] = await Promise.all([
+      db
+        .select({
+          email: members.email,
+          firstname: members.firstname,
+          id: members.id,
+          lastname: members.lastname,
+          status: members.status,
+        })
+        .from(memberTeams)
+        .innerJoin(members, eq(memberTeams.memberId, members.id))
+        .where(eq(memberTeams.teamId, teamId))
+        .orderBy(asc(members.lastname), asc(members.firstname)),
+      db
+        .select({
+          code: permissions.code,
+          description: permissions.description,
+          id: permissions.id,
+          name: permissions.name,
+          status: permissions.status,
+        })
+        .from(teamPermissions)
+        .innerJoin(
+          permissions,
+          eq(teamPermissions.permissionId, permissions.id),
+        )
+        .where(eq(teamPermissions.teamId, teamId))
+        .orderBy(asc(permissions.code)),
+      rawTeam.createdByMemberId
+        ? db
+            .select({
+              email: members.email,
+              firstname: members.firstname,
+              id: members.id,
+              lastname: members.lastname,
+            })
+            .from(members)
+            .where(eq(members.id, rawTeam.createdByMemberId))
+            .limit(1)
+        : Promise.resolve([]),
+    ]);
+
+    const parsedTeam = teamDetailSchema.safeParse({
+      ...rawTeam,
+      createdBy: rawCreatorRows[0] ?? null,
+      members: rawMembers,
+      permissions: rawPermissions,
+    });
+
+    if (!parsedTeam.success) {
+      logServerError(parsedTeam.error, "readTeamDetail - validation error");
+      return { data: null, error: "validation error" };
+    }
+
+    return { data: parsedTeam.data, error: null };
+  } catch (error) {
+    logServerError(error, "readTeamDetail - database error");
+    return { data: null, error: "database error" };
+  }
+}
+
 export async function readPermissions() {
   try {
     const rawPermissions = await db.select().from(permissions);
@@ -213,6 +325,9 @@ export async function readMemberTeams(memberId: number) {
     const rawTeams = await db
       .select({
         createdAt: teams.createdAt,
+        createdByMemberId: teams.createdByMemberId,
+        department: teams.department,
+        description: teams.description,
         id: teams.id,
         name: teams.name,
         slug: teams.slug,

@@ -6,20 +6,52 @@ import {
   Plus,
   Search,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
-import type { MockMemberStatus, MockTeam, MockTeamStatus } from "./mock-data";
+
+type TeamStatus = "active" | "draft" | "suspended";
+type MemberStatus = "active" | "suspended";
+type PermissionStatus = "active" | "archived";
 
 export type TeamsListTeam = {
   id: number | string;
   description: string;
   memberCount: number;
   name: string;
-  status: MockTeamStatus;
+  status: TeamStatus;
+};
+
+export type TeamDetailTeam = {
+  createdAt: Date;
+  createdBy: {
+    email: string;
+    firstname: string;
+    id: number;
+    lastname: string;
+  } | null;
+  department: string | null;
+  description: string | null;
+  id: number;
+  members: Array<{
+    email: string;
+    firstname: string;
+    id: number;
+    lastname: string;
+    status: MemberStatus;
+  }>;
+  name: string;
+  permissions: Array<{
+    code: string;
+    description: string | null;
+    id: number;
+    name: string;
+    status: PermissionStatus;
+  }>;
+  slug: string;
+  status: TeamStatus;
 };
 
 const teamStatusPresentation: Record<
-  MockTeamStatus,
+  TeamStatus,
   { label: string; className: string }
 > = {
   active: { label: "Attivo", className: "bg-[#00c950]" },
@@ -28,12 +60,19 @@ const teamStatusPresentation: Record<
 };
 
 const memberStatusPresentation: Record<
-  MockMemberStatus,
+  MemberStatus,
   { label: string; className: string }
 > = {
   active: { label: "Attivo", className: "text-[#00a63e]" },
-  inactive: { label: "Inattivo", className: "text-[#737373]" },
   suspended: { label: "Sospeso", className: "text-[#fb2c36]" },
+};
+
+const permissionStatusPresentation: Record<
+  PermissionStatus,
+  { label: string; className: string }
+> = {
+  active: { label: "Attivo", className: "bg-[#00c950]" },
+  archived: { label: "Archiviato", className: "bg-neutral-300" },
 };
 
 export function TeamManagementBreadcrumb() {
@@ -119,7 +158,7 @@ function DashedAction({ label }: { label: string }) {
   );
 }
 
-function TeamStatusIndicator({ status }: { status: MockTeamStatus }) {
+function TeamStatusIndicator({ status }: { status: TeamStatus }) {
   const presentation = teamStatusPresentation[status];
 
   return (
@@ -191,7 +230,22 @@ function DetailField({
   );
 }
 
-function TeamSummary({ team }: { team: MockTeam }) {
+const teamDateFormatter = new Intl.DateTimeFormat("it-IT", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+function formatPermissionArea(code: string) {
+  const [area = code] = code.split(".");
+  return `${area.charAt(0).toUpperCase()}${area.slice(1)}`;
+}
+
+function TeamSummary({ team }: { team: TeamDetailTeam }) {
+  const creatorInitials = team.createdBy
+    ? `${team.createdBy.firstname.charAt(0)}${team.createdBy.lastname.charAt(0)}`
+    : null;
+
   return (
     <section className="flex w-full flex-col gap-4">
       <div className="flex w-full items-center justify-between px-2">
@@ -208,26 +262,41 @@ function TeamSummary({ team }: { team: MockTeam }) {
 
       <dl className="flex w-full flex-col gap-3 px-2">
         <DetailField label="Creato da">
-          <span className="flex items-center gap-1.5">
-            <Image
-              src={team.createdBy.avatar}
-              alt=""
-              width={16}
-              height={16}
-              className="size-4 rounded-sm border border-neutral-200 object-cover"
-            />
-            <span>{team.createdBy.name}</span>
-          </span>
+          {team.createdBy ? (
+            <span className="flex items-center gap-1.5">
+              <span
+                aria-hidden="true"
+                className="flex size-4 shrink-0 items-center justify-center rounded-sm border border-neutral-200 bg-neutral-100 text-[8px] font-medium uppercase text-neutral-600"
+              >
+                {creatorInitials}
+              </span>
+              <span>
+                {team.createdBy.firstname} {team.createdBy.lastname}
+              </span>
+            </span>
+          ) : (
+            <span className="text-neutral-500">Non disponibile</span>
+          )}
         </DetailField>
-        <DetailField label="Descrizione">{team.description}</DetailField>
-        <DetailField label="Reparto">{team.department}</DetailField>
-        <DetailField label="Data creazione">{team.createdAt}</DetailField>
+        <DetailField label="Descrizione">
+          {team.description || (
+            <span className="text-neutral-500">Non disponibile</span>
+          )}
+        </DetailField>
+        <DetailField label="Reparto">
+          {team.department || (
+            <span className="text-neutral-500">Non disponibile</span>
+          )}
+        </DetailField>
+        <DetailField label="Data creazione">
+          {teamDateFormatter.format(team.createdAt)}
+        </DetailField>
       </dl>
     </section>
   );
 }
 
-function TeamMembers({ team }: { team: MockTeam }) {
+function TeamMembers({ team }: { team: TeamDetailTeam }) {
   return (
     <section className="flex w-full flex-col gap-4">
       <div className="px-0 sm:-mx-2">
@@ -240,6 +309,7 @@ function TeamMembers({ team }: { team: MockTeam }) {
       <div className="flex w-full flex-col gap-3">
         {team.members.map((member) => {
           const status = memberStatusPresentation[member.status];
+          const initials = `${member.firstname.charAt(0)}${member.lastname.charAt(0)}`;
 
           return (
             <div
@@ -247,16 +317,15 @@ function TeamMembers({ team }: { team: MockTeam }) {
               className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-neutral-50"
             >
               <div className="flex min-w-0 items-center gap-2">
-                <Image
-                  src={member.avatar}
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="size-4 shrink-0 rounded-sm border border-neutral-200 object-cover"
-                />
+                <span
+                  aria-hidden="true"
+                  className="flex size-4 shrink-0 items-center justify-center rounded-sm bg-neutral-100 text-[8px] font-medium uppercase text-neutral-600"
+                >
+                  {initials}
+                </span>
                 <div className="flex min-w-0 flex-col sm:flex-row sm:items-baseline sm:gap-2">
                   <span className="shrink-0 text-sm text-black">
-                    {member.name}
+                    {member.firstname} {member.lastname}
                   </span>
                   <span className="truncate text-xs text-neutral-500">
                     {member.email}
@@ -270,18 +339,24 @@ function TeamMembers({ team }: { team: MockTeam }) {
             </div>
           );
         })}
+
+        {team.members.length === 0 ? (
+          <p className="px-2 py-4 text-sm text-neutral-500">
+            Nessun utente assegnato.
+          </p>
+        ) : null}
       </div>
     </section>
   );
 }
 
-function TeamPermissions({ team }: { team: MockTeam }) {
+function TeamPermissions({ team }: { team: TeamDetailTeam }) {
   return (
     <section className="flex w-full flex-col gap-4">
       <div className="px-0 sm:-mx-2">
         <SectionHeader
           title="Permessi"
-          count={`${team.permissionCount} permessi`}
+          count={`${team.permissions.length} permessi`}
         />
       </div>
       <div className="px-0 sm:-mx-2">
@@ -289,37 +364,51 @@ function TeamPermissions({ team }: { team: MockTeam }) {
       </div>
 
       <div className="flex w-full flex-col gap-3">
-        {team.permissions.map((permission) => (
-          <div
-            key={permission.id}
-            className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-neutral-50"
-          >
-            <div className="flex min-w-0 items-center gap-2">
-              <span
-                aria-label="Permesso attivo"
-                className="h-3 w-0.5 shrink-0 rounded-sm bg-[#00c950]"
-              />
-              <div className="flex min-w-0 flex-col sm:flex-row sm:items-baseline sm:gap-2">
-                <span className="shrink-0 text-sm text-black">
-                  {permission.name}
-                </span>
-                <code className="truncate font-mono text-xs text-neutral-500">
-                  {permission.code}
-                </code>
-              </div>
-            </div>
+        {team.permissions.map((permission) => {
+          const status = permissionStatusPresentation[permission.status];
 
-            <span className="shrink-0 font-mono text-xs text-neutral-800">
-              {permission.area}
-            </span>
-          </div>
-        ))}
+          return (
+            <div
+              key={permission.id}
+              title={permission.description ?? undefined}
+              className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-neutral-50"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  aria-label={`Permesso: ${status.label}`}
+                  className={cn(
+                    "h-3 w-0.5 shrink-0 rounded-sm",
+                    status.className,
+                  )}
+                />
+                <div className="flex min-w-0 flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                  <span className="shrink-0 text-sm text-black">
+                    {permission.name}
+                  </span>
+                  <code className="truncate font-mono text-xs text-neutral-500">
+                    {permission.code}
+                  </code>
+                </div>
+              </div>
+
+              <span className="shrink-0 font-mono text-xs text-neutral-800">
+                {formatPermissionArea(permission.code)}
+              </span>
+            </div>
+          );
+        })}
+
+        {team.permissions.length === 0 ? (
+          <p className="px-2 py-4 text-sm text-neutral-500">
+            Nessun permesso assegnato.
+          </p>
+        ) : null}
       </div>
     </section>
   );
 }
 
-export function TeamDetailView({ team }: { team: MockTeam }) {
+export function TeamDetailView({ team }: { team: TeamDetailTeam }) {
   return (
     <div className="mx-auto flex w-full max-w-[528px] flex-col gap-8 px-4 py-6 sm:px-0">
       <TeamSummary team={team} />

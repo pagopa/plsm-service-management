@@ -168,6 +168,11 @@ export const teams = pgTable(
     id: serial().primaryKey(),
     name: text().notNull(),
     slug: text().notNull(),
+    description: text(),
+    department: text(),
+    createdByMemberId: integer().references(() => members.id, {
+      onDelete: "set null",
+    }),
     status: teamStatus().default("draft").notNull(),
     createdAt: timestamp()
       .default(sql`now()`)
