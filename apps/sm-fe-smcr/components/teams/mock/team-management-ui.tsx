@@ -10,6 +10,14 @@ import Image from "next/image";
 import Link from "next/link";
 import type { MockMemberStatus, MockTeam, MockTeamStatus } from "./mock-data";
 
+export type TeamsListTeam = {
+  id: number | string;
+  description: string;
+  memberCount: number;
+  name: string;
+  status: MockTeamStatus;
+};
+
 const teamStatusPresentation: Record<
   MockTeamStatus,
   { label: string; className: string }
@@ -123,7 +131,7 @@ function TeamStatusIndicator({ status }: { status: MockTeamStatus }) {
   );
 }
 
-export function TeamsListView({ teams }: { teams: MockTeam[] }) {
+export function TeamsListView({ teams }: { teams: TeamsListTeam[] }) {
   return (
     <section className="mx-auto flex w-full max-w-[544px] flex-col gap-4 px-4 py-6 sm:px-0">
       <SectionHeader
@@ -157,6 +165,12 @@ export function TeamsListView({ teams }: { teams: MockTeam[] }) {
             </div>
           </Link>
         ))}
+
+        {teams.length === 0 ? (
+          <p className="px-4 py-8 text-center text-sm text-neutral-500">
+            Nessun team disponibile.
+          </p>
+        ) : null}
       </div>
     </section>
   );

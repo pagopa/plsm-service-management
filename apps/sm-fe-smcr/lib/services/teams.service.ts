@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import z from "zod";
 import { db } from "@/db";
 import {
@@ -43,6 +43,18 @@ export type TeamPermission = z.infer<typeof teamPermissionSchema>;
 export type TeamWithPermissions = Team & {
   permissions: Array<number>;
 };
+
+const teamListItemSchema = teamSchema
+  .pick({
+    id: true,
+    name: true,
+    slug: true,
+    status: true,
+  })
+  .extend({
+    memberCount: z.number().int().nonnegative(),
+  });
+export type TeamListItem = z.infer<typeof teamListItemSchema>;
 
 const submitTeamAccessRequestSchema = z.object({
   team: z
@@ -145,6 +157,34 @@ export async function readTeams() {
     return { data: result, error: null };
   } catch (error) {
     logServerError(error, "readTeams - database error");
+    return { data: null, error: "database error" };
+  }
+}
+
+export async function readTeamsList() {
+  try {
+    const rawTeams = await db
+      .select({
+        id: teams.id,
+        memberCount: sql<number>`count(${memberTeams.memberId})::int`,
+        name: teams.name,
+        slug: teams.slug,
+        status: teams.status,
+      })
+      .from(teams)
+      .leftJoin(memberTeams, eq(teams.id, memberTeams.teamId))
+      .groupBy(teams.id, teams.name, teams.slug, teams.status)
+      .orderBy(asc(teams.name));
+    const parsedTeams = z.array(teamListItemSchema).safeParse(rawTeams);
+
+    if (!parsedTeams.success) {
+      logServerError(parsedTeams.error, "readTeamsList - validation error");
+      return { data: null, error: "validation error" };
+    }
+
+    return { data: parsedTeams.data, error: null };
+  } catch (error) {
+    logServerError(error, "readTeamsList - database error");
     return { data: null, error: "database error" };
   }
 }
