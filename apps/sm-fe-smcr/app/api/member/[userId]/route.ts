@@ -31,8 +31,6 @@ export async function GET(
     const memberships = await db
       .select({
         createdAt: memberTeams.createdAt,
-        icon: teams.icon,
-        membershipId: memberTeams.id,
         teamCreatedAt: teams.createdAt,
         teamId: teams.id,
         teamName: teams.name,
@@ -46,12 +44,11 @@ export async function GET(
     return NextResponse.json(
       memberships.map((membership) => ({
         createdAt: membership.createdAt.toISOString(),
-        id: String(membership.membershipId),
+        id: `${memberId}:${membership.teamId}`,
         role: "member" as const,
         team: {
           createdAt: membership.teamCreatedAt,
           id: String(membership.teamId),
-          image: membership.icon ?? undefined,
           name: membership.teamName,
           slug: membership.teamSlug,
           updatedAt: membership.teamUpdatedAt,

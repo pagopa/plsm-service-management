@@ -14,12 +14,12 @@ export async function POST(
   try {
     const { memberId } = await request.json();
     const { teamId } = await params;
-    const membershipId = Number(memberId);
+    const parsedMemberId = Number(memberId);
     const parsedTeamId = Number(teamId);
 
     if (
-      !Number.isInteger(membershipId) ||
-      membershipId <= 0 ||
+      !Number.isInteger(parsedMemberId) ||
+      parsedMemberId <= 0 ||
       !Number.isInteger(parsedTeamId) ||
       parsedTeamId <= 0
     ) {
@@ -33,11 +33,11 @@ export async function POST(
       .delete(memberTeams)
       .where(
         and(
-          eq(memberTeams.id, membershipId),
+          eq(memberTeams.memberId, parsedMemberId),
           eq(memberTeams.teamId, parsedTeamId),
         ),
       )
-      .returning({ id: memberTeams.id });
+      .returning({ memberId: memberTeams.memberId });
 
     logServerInfo("Delete member result", { count: deleted.length });
     return NextResponse.json({ success: deleted.length > 0 });

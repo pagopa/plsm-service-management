@@ -15,7 +15,6 @@ export async function GET() {
       rows.map((team) => ({
         ...team,
         id: String(team.id),
-        image: team.icon,
       })),
       { status: 200 },
     );

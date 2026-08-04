@@ -13,16 +13,9 @@ export const relations = defineRelations(schema, (r) => ({
     permissions: r.many.permissions(),
   },
   permissions: {
-    feature: r.one.features({
-      from: r.permissions.featureId,
-      to: r.features.id,
-    }),
     teams: r.many.teams({
       from: r.permissions.id.through(r.teamPermissions.permissionId),
       to: r.teams.id.through(r.teamPermissions.teamId),
     }),
-  },
-  features: {
-    permissions: r.many.permissions(),
   },
 }));

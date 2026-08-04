@@ -1,5 +1,6 @@
 import {
   pgSchema,
+  pgEnum,
   pgTable,
   integer,
   text,
@@ -9,12 +10,24 @@ import {
   boolean,
   jsonb,
   index,
+  primaryKey,
   unique,
   check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const test = pgSchema("test");
+
+export const memberStatus = pgEnum("member_status", ["active", "suspended"]);
+export const permissionStatus = pgEnum("permission_status", [
+  "active",
+  "archived",
+]);
+export const teamStatus = pgEnum("team_status", [
+  "active",
+  "draft",
+  "suspended",
+]);
 
 export const amaAccess = pgTable("ama_access", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -30,16 +43,6 @@ export const amaAccess = pgTable("ama_access", {
     .default(sql`now()`)
     .notNull(),
 });
-
-export const features = pgTable(
-  "features",
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    name: text().notNull(),
-    description: text(),
-  },
-  (table) => [unique("features_name_key").on(table.name)],
-);
 
 export const logs = pgTable(
   "logs",
@@ -78,7 +81,6 @@ export const logs = pgTable(
 export const memberTeams = pgTable(
   "member_teams",
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
     memberId: integer()
       .notNull()
       .references(() => members.id, { onDelete: "cascade" }),
@@ -90,7 +92,10 @@ export const memberTeams = pgTable(
       .notNull(),
   },
   (table) => [
-    unique("member_teams_unique_pair").on(table.memberId, table.teamId),
+    primaryKey({
+      columns: [table.memberId, table.teamId],
+      name: "member_teams_pkey",
+    }),
   ],
 );
 
@@ -100,9 +105,11 @@ export const members = pgTable(
     id: integer()
       .primaryKey()
       .generatedAlwaysAsIdentity({ name: "users_id_seq" }),
+    authSubject: text(),
     firstname: text().notNull(),
     lastname: text().notNull(),
     email: text().notNull(),
+    status: memberStatus().default("active").notNull(),
     createdAt: timestamp({ withTimezone: true })
       .default(sql`now()`)
       .notNull(),
@@ -110,38 +117,48 @@ export const members = pgTable(
       .default(sql`now()`)
       .notNull(),
   },
-  (table) => [unique("members_email_key").on(table.email)],
+  (table) => [
+    unique("members_auth_subject_key").on(table.authSubject),
+    unique("members_email_key").on(table.email),
+  ],
 );
 
-export const permissions = pgTable("permissions", {
-  id: serial().primaryKey(),
-  name: text().notNull(),
-  description: text(),
-  featureId: integer()
-    .notNull()
-    .references(() => features.id, { onDelete: "cascade" }),
-  createdAt: timestamp().default(sql`now()`),
-  updatedAt: timestamp().default(sql`now()`),
-});
+export const permissions = pgTable(
+  "permissions",
+  {
+    id: serial().primaryKey(),
+    code: text().notNull(),
+    name: text().notNull(),
+    description: text(),
+    status: permissionStatus().default("active").notNull(),
+    createdAt: timestamp({ withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
+    updatedAt: timestamp({ withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
+  },
+  (table) => [unique("permissions_code_key").on(table.code)],
+);
 
 export const teamPermissions = pgTable(
   "team_permissions",
   {
-    id: serial().primaryKey(),
     teamId: integer()
       .notNull()
       .references(() => teams.id, { onDelete: "cascade" }),
     permissionId: integer()
       .notNull()
       .references(() => permissions.id, { onDelete: "cascade" }),
-    createdAt: timestamp().default(sql`now()`),
-    updatedAt: timestamp().default(sql`now()`),
+    createdAt: timestamp({ withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
   },
   (table) => [
-    unique("team_permissions_teamid_permissionid_key").on(
-      table.teamId,
-      table.permissionId,
-    ),
+    primaryKey({
+      columns: [table.teamId, table.permissionId],
+      name: "team_permissions_pkey",
+    }),
   ],
 );
 
@@ -151,7 +168,7 @@ export const teams = pgTable(
     id: serial().primaryKey(),
     name: text().notNull(),
     slug: text().notNull(),
-    icon: text(),
+    status: teamStatus().default("draft").notNull(),
     createdAt: timestamp()
       .default(sql`now()`)
       .notNull(),

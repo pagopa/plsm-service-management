@@ -20,7 +20,6 @@ export async function GET(
         email: members.email,
         firstname: members.firstname,
         lastname: members.lastname,
-        membershipId: memberTeams.id,
         teamId: teams.id,
         teamName: teams.name,
         userId: members.id,
@@ -33,7 +32,7 @@ export async function GET(
     return NextResponse.json(
       rows.map((row) => ({
         email: row.email,
-        id: String(row.membershipId),
+        id: String(row.userId),
         name: `${row.firstname} ${row.lastname}`.trim(),
         role: "member" as const,
         teamId: String(row.teamId),

@@ -25,10 +25,7 @@ export async function GET(
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    return NextResponse.json(
-      { ...team, id: String(team.id), image: team.icon },
-      { status: 200 },
-    );
+    return NextResponse.json({ ...team, id: String(team.id) }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });

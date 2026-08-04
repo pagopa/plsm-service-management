@@ -49,16 +49,43 @@ export async function getOrCreateCurrentAppUser(): Promise<CurrentAppUserResult 
     return null;
   }
 
-  const [existingMember] = await db
-    .select({
-      email: members.email,
-      firstname: members.firstname,
-      id: members.id,
-      lastname: members.lastname,
-    })
+  const memberSelection = {
+    authSubject: members.authSubject,
+    email: members.email,
+    firstname: members.firstname,
+    id: members.id,
+    lastname: members.lastname,
+  };
+
+  const [memberBySubject] = await db
+    .select(memberSelection)
     .from(members)
-    .where(eq(members.email, session.email))
+    .where(eq(members.authSubject, session.userId))
     .limit(1);
+
+  const [memberByEmail] = memberBySubject
+    ? [undefined]
+    : await db
+        .select(memberSelection)
+        .from(members)
+        .where(eq(members.email, session.email))
+        .limit(1);
+
+  if (
+    memberByEmail?.authSubject &&
+    memberByEmail.authSubject !== session.userId
+  ) {
+    throw new Error("The authenticated identity does not match this member");
+  }
+
+  const existingMember = memberBySubject ?? memberByEmail;
+
+  if (existingMember && !existingMember.authSubject) {
+    await db
+      .update(members)
+      .set({ authSubject: session.userId, updatedAt: new Date() })
+      .where(eq(members.id, existingMember.id));
+  }
 
   if (existingMember) {
     return {
@@ -77,32 +104,39 @@ export async function getOrCreateCurrentAppUser(): Promise<CurrentAppUserResult 
   const [createdMember] = await db
     .insert(members)
     .values({
+      authSubject: session.userId,
       email: session.email,
       firstname,
       lastname: lastnameParts.join(" ") || "User",
     })
-    .onConflictDoNothing({ target: members.email })
-    .returning({
-      email: members.email,
-      firstname: members.firstname,
-      id: members.id,
-      lastname: members.lastname,
-    });
+    .onConflictDoNothing()
+    .returning(memberSelection);
 
   if (!createdMember) {
-    const [concurrentMember] = await db
-      .select({
-        email: members.email,
-        firstname: members.firstname,
-        id: members.id,
-        lastname: members.lastname,
-      })
+    const [concurrentMemberBySubject] = await db
+      .select(memberSelection)
       .from(members)
-      .where(eq(members.email, session.email))
+      .where(eq(members.authSubject, session.userId))
       .limit(1);
+    const [concurrentMemberByEmail] = concurrentMemberBySubject
+      ? [undefined]
+      : await db
+          .select(memberSelection)
+          .from(members)
+          .where(eq(members.email, session.email))
+          .limit(1);
+    const concurrentMember =
+      concurrentMemberBySubject ?? concurrentMemberByEmail;
 
     if (!concurrentMember) {
       throw new Error("Unable to create the current application member");
+    }
+
+    if (
+      concurrentMember.authSubject &&
+      concurrentMember.authSubject !== session.userId
+    ) {
+      throw new Error("The authenticated identity does not match this member");
     }
 
     return {
