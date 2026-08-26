@@ -1,5 +1,6 @@
 import { AddTeamMemberDialog } from "@/components/teams/add-team-member-dialog";
 import { AddTeamPermissionDialog } from "@/components/teams/add-team-permission-dialog";
+import { RemoveTeamAssignmentDialog } from "@/components/teams/remove-team-assignment-dialog";
 import { TeamStatusMenu } from "@/components/teams/team-status-menu";
 import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -325,9 +326,18 @@ function TeamMembers({ team }: { team: TeamDetailTeam }) {
                 </div>
               </div>
 
-              <span className={cn("shrink-0 text-xs", status.className)}>
-                {status.label}
-              </span>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className={cn("text-xs", status.className)}>
+                  {status.label}
+                </span>
+                <RemoveTeamAssignmentDialog
+                  description={`L'utente ${member.firstname} ${member.lastname} non farà più parte di questo team.`}
+                  endpoint={`/api/teams/${team.id}/remove-user`}
+                  itemName={`${member.firstname} ${member.lastname}`}
+                  itemType="utente"
+                  payload={{ memberId: member.id }}
+                />
+              </div>
             </div>
           );
         })}
@@ -387,9 +397,18 @@ function TeamPermissions({ team }: { team: TeamDetailTeam }) {
                 </div>
               </div>
 
-              <span className="shrink-0 font-mono text-xs text-neutral-800">
-                {formatPermissionArea(permission.code)}
-              </span>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="font-mono text-xs text-neutral-800">
+                  {formatPermissionArea(permission.code)}
+                </span>
+                <RemoveTeamAssignmentDialog
+                  description={`Il permesso ${permission.code} non sarà più assegnato a questo team.`}
+                  endpoint={`/api/teams/${team.id}/permissions`}
+                  itemName={permission.name}
+                  itemType="permesso"
+                  payload={{ permissionId: permission.id }}
+                />
+              </div>
             </div>
           );
         })}
