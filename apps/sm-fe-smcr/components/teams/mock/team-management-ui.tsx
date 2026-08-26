@@ -1,10 +1,11 @@
 import { AddTeamMemberDialog } from "@/components/teams/add-team-member-dialog";
 import { AddTeamPermissionDialog } from "@/components/teams/add-team-permission-dialog";
+import { TeamStatusMenu } from "@/components/teams/team-status-menu";
 import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
   ArrowUpDown,
-  EllipsisVertical,
   Funnel,
   Search,
 } from "lucide-react";
@@ -236,15 +237,15 @@ function TeamSummary({ team }: { team: TeamDetailTeam }) {
   return (
     <section className="flex w-full flex-col gap-4">
       <div className="flex w-full items-center justify-between px-2">
-        <h1 className="text-base font-medium text-black">{team.name}</h1>
-        <button
-          type="button"
-          aria-label="Azioni team"
-          title="Azioni team"
-          className="rounded-sm text-neutral-700 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          <EllipsisVertical className="size-3" strokeWidth={1.75} />
-        </button>
+        <div className="flex min-w-0 items-center gap-2">
+          <h1 className="truncate text-base font-medium text-black">{team.name}</h1>
+          <Badge
+            variant={team.status === "active" ? "outline-success" : "outline-warning"}
+          >
+            {team.status === "active" ? "Attivo" : "Inattivo"}
+          </Badge>
+        </div>
+        <TeamStatusMenu status={team.status} teamId={team.id} />
       </div>
 
       <dl className="flex w-full flex-col gap-3 px-2">
