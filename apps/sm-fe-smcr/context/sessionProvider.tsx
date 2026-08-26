@@ -90,7 +90,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // Sessione valida: se l'arricchimento del profilo fallisce l'utente resta
       // comunque autenticato, con un profilo minimo. Un errore transitorio (DB
       // a freddo, timeout) non deve essere scambiato per "non autenticato" dal
-      // guard di rotta, che manderebbe l'utente su /unauthorized.
+      // guard di rotta, che avvierebbe nuovamente il flusso di login.
       // userProfile è dichiarato qui fuori per poterne preservare l'id (dal DB,
       // via /api/user/profile) nel fallback quando la fetch è già riuscita;
       // claims.userId (id di sessione) resta solo come ultima risorsa.
@@ -116,7 +116,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         // Autenticato ma arricchimento fallito: degradazione morbida, niente
         // logout. L'utente accede alle rotte senza vincoli di team; quelle
         // team-gated ricadono su "insufficient_permissions" (→ /dashboard),
-        // non su "not_authenticated" (→ /unauthorized).
+        // non su "not_authenticated" (→ login).
         void clientLogger.error(
           { error: enrichError },
           "Errore caricamento profilo: sessione valida, uso profilo minimo dai claim",

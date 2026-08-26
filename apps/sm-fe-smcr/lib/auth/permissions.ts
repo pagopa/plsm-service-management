@@ -1,7 +1,6 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { memberTeams, members, permissions, teamPermissions, teams } from "@/db/schema";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
@@ -41,13 +40,11 @@ export async function hasPermission(permissionCode: string): Promise<boolean> {
   }
 }
 
-export async function requirePermission(
+export async function checkPermission(
   permissionCode: string,
   returnUrl: string,
-): Promise<void> {
+): Promise<boolean> {
   await requireServerSession(returnUrl);
 
-  if (!(await hasPermission(permissionCode))) {
-    redirect("/unauthorized");
-  }
+  return hasPermission(permissionCode);
 }

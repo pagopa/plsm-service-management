@@ -1,9 +1,17 @@
+import { PermissionDenied } from "@/components/auth/permission-denied";
 import SearchInstitution from "@/components/provisioning/search/form";
 import { Card } from "@/components/ui/card";
-import { requirePermission } from "@/lib/auth/permissions";
+import { checkPermission } from "@/lib/auth/permissions";
 
 export default async function Page() {
-  await requirePermission("overview.read", "/dashboard/overview");
+  const canReadOverview = await checkPermission(
+    "overview.read",
+    "/dashboard/overview",
+  );
+
+  if (!canReadOverview) {
+    return <PermissionDenied feature="Overview" />;
+  }
 
   return (
     <div className="w-full h-full flex items-center justify-center">

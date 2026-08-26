@@ -56,7 +56,9 @@ export default function ClientPageGuard({
           { info: { event: "access.denied", metadata: { pathname, reason } } },
           "Accesso negato: utente non autenticato",
         );
-        router.replace("/unauthorized");
+        router.replace(
+          `/api/auth/login?returnUrl=${encodeURIComponent(pathname)}`,
+        );
       } else {
         void clientLogger.warn(
           {
