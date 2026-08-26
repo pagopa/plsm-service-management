@@ -45,7 +45,8 @@ export const protectedRoutes: ProtectedRoute[] = [
   {
     label: "Overview",
     path: "/dashboard/overview",
-    requiredTeams: ["service-management"],
+    // L'accesso effettivo è controllato lato server tramite overview.read.
+    requiredTeams: [],
     icon: UsersIcon,
     sidebar: true,
     teamId: "service-management",
