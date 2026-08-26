@@ -18,6 +18,10 @@ jest.mock("next/link", () => ({
   }) => <a href={href}>{children}</a>,
 }));
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn() }),
+}));
+
 jest.mock("next/image", () => ({
   __esModule: true,
   default: ({ alt, src }: { alt: string; src: string }) => (
