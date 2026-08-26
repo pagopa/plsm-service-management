@@ -17,8 +17,8 @@ type MemberStatus = "active" | "suspended";
 type PermissionStatus = "active" | "archived";
 
 export type TeamsListTeam = {
+  description: string | null;
   id: number | string;
-  description: string;
   memberCount: number;
   name: string;
   status: TeamStatus;
@@ -182,7 +182,7 @@ export function TeamsListView({ teams }: { teams: TeamsListTeam[] }) {
               <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
                 <span className="shrink-0 text-sm text-black">{team.name}</span>
                 <span className="truncate text-xs text-neutral-500">
-                  {team.description}
+                  {team.description || "Nessuna descrizione"}
                 </span>
               </div>
             </div>
@@ -247,6 +247,8 @@ function TeamSummary({ team }: { team: TeamDetailTeam }) {
           </Badge>
         </div>
         <TeamActionsMenu
+          department={team.department}
+          description={team.description}
           status={team.status}
           teamId={team.id}
           teamName={team.name}

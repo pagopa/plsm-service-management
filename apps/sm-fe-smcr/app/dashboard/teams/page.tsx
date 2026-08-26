@@ -20,7 +20,7 @@ export default async function Page() {
       <TeamManagementBreadcrumb />
       <TeamsListView
         teams={teams.data.map((team) => ({
-          description: team.slug,
+          description: team.description,
           id: team.id,
           memberCount: team.memberCount,
           name: team.name,

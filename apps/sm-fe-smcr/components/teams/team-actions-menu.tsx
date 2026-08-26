@@ -3,6 +3,7 @@
 import { EllipsisVertical, LoaderCircleIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { EditTeamDialog } from "@/components/teams/edit-team-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,18 +26,23 @@ import {
 type TeamStatus = "active" | "inactive";
 
 type TeamActionsMenuProps = {
+  department: string | null;
+  description: string | null;
   status: TeamStatus;
   teamId: number;
   teamName: string;
 };
 
 export function TeamActionsMenu({
+  department,
+  description,
   status,
   teamId,
   teamName,
 }: TeamActionsMenuProps) {
   const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -139,6 +145,13 @@ export function TeamActionsMenu({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            disabled={isBusy}
+            onSelect={() => setEditDialogOpen(true)}
+          >
+            Modifica dettagli
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuLabel>Stato team</DropdownMenuLabel>
           <DropdownMenuItem
             disabled={isBusy}
@@ -168,6 +181,15 @@ export function TeamActionsMenu({
           ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <EditTeamDialog
+        department={department}
+        description={description}
+        name={teamName}
+        onOpenChange={setEditDialogOpen}
+        open={editDialogOpen}
+        teamId={teamId}
+      />
 
       <AlertDialog
         open={deleteDialogOpen}

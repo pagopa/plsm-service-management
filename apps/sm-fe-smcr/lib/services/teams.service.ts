@@ -50,6 +50,7 @@ export type TeamWithPermissions = Team & {
 
 const teamListItemSchema = teamSchema
   .pick({
+    description: true,
     id: true,
     name: true,
     slug: true,
@@ -204,6 +205,7 @@ export async function readTeamsList() {
   try {
     const rawTeams = await db
       .select({
+        description: teams.description,
         id: teams.id,
         memberCount: sql<number>`count(${memberTeams.memberId})::int`,
         name: teams.name,
@@ -212,7 +214,13 @@ export async function readTeamsList() {
       })
       .from(teams)
       .leftJoin(memberTeams, eq(teams.id, memberTeams.teamId))
-      .groupBy(teams.id, teams.name, teams.slug, teams.status)
+      .groupBy(
+        teams.id,
+        teams.name,
+        teams.description,
+        teams.slug,
+        teams.status,
+      )
       .orderBy(asc(teams.name));
     const parsedTeams = z.array(teamListItemSchema).safeParse(rawTeams);
 
