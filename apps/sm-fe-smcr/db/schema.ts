@@ -25,8 +25,7 @@ export const permissionStatus = pgEnum("permission_status", [
 ]);
 export const teamStatus = pgEnum("team_status", [
   "active",
-  "draft",
-  "suspended",
+  "inactive",
 ]);
 
 export const amaAccess = pgTable("ama_access", {
@@ -173,7 +172,7 @@ export const teams = pgTable(
     createdByMemberId: integer().references(() => members.id, {
       onDelete: "set null",
     }),
-    status: teamStatus().default("draft").notNull(),
+    status: teamStatus().default("inactive").notNull(),
     createdAt: timestamp()
       .default(sql`now()`)
       .notNull(),

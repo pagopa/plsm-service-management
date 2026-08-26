@@ -20,7 +20,7 @@ export const teamSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().nonempty(),
   slug: z.string().nonempty(),
-  status: z.enum(["active", "draft", "suspended"]),
+  status: z.enum(["active", "inactive"]),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

@@ -1,3 +1,4 @@
+import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 import { cn } from "@/lib/utils";
 import {
   ArrowUpDown,
@@ -8,7 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-type TeamStatus = "active" | "draft" | "suspended";
+type TeamStatus = "active" | "inactive";
 type MemberStatus = "active" | "suspended";
 type PermissionStatus = "active" | "archived";
 
@@ -55,8 +56,7 @@ const teamStatusPresentation: Record<
   { label: string; className: string }
 > = {
   active: { label: "Attivo", className: "bg-[#00c950]" },
-  draft: { label: "Bozza", className: "bg-[#fe9a00]" },
-  suspended: { label: "Sospeso", className: "bg-[#fb2c36]" },
+  inactive: { label: "Inattivo", className: "bg-[#fe9a00]" },
 };
 
 const memberStatusPresentation: Record<
@@ -178,7 +178,7 @@ export function TeamsListView({ teams }: { teams: TeamsListTeam[] }) {
         count={`${teams.length} teams`}
         headingLevel={1}
       />
-      <DashedAction label="Crea team" />
+      <CreateTeamDialog />
 
       <div className="flex w-full flex-col gap-1">
         {teams.map((team) => (

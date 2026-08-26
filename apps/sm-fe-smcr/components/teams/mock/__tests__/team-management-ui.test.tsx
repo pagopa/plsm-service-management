@@ -33,8 +33,7 @@ describe("Team management mock UI", () => {
     expect(html).toContain('href="/dashboard/teams/2"');
     expect(html).toContain('href="/dashboard/teams/3"');
     expect(html).toContain('title="Attivo"');
-    expect(html).toContain('title="Bozza"');
-    expect(html).toContain('title="Sospeso"');
+    expect(html).toContain('title="Inattivo"');
   });
 
   it("renders the selected team summary, members and permissions", () => {

@@ -1,4 +1,4 @@
-export type MockTeamStatus = "active" | "draft" | "suspended";
+export type MockTeamStatus = "active" | "inactive";
 
 export type MockMemberStatus = "active" | "inactive" | "suspended";
 
@@ -124,7 +124,7 @@ export const mockTeams: MockTeam[] = [
       name: "Giacomo Ferrari",
       avatar: "/mock/teams/giacomo-ferrari.png",
     },
-    status: "draft",
+    status: "inactive",
     memberCount: 4,
     permissionCount: 6,
     members: [
@@ -164,7 +164,7 @@ export const mockTeams: MockTeam[] = [
       name: "Giacomo Ferrari",
       avatar: "/mock/teams/giacomo-ferrari.png",
     },
-    status: "suspended",
+    status: "inactive",
     memberCount: 12,
     permissionCount: 5,
     members: [mockMembers.anakin, mockMembers.todd, mockMembers.leia],
