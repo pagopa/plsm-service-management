@@ -1,3 +1,4 @@
+import { AddTeamMemberDialog } from "@/components/teams/add-team-member-dialog";
 import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 import { cn } from "@/lib/utils";
 import {
@@ -303,7 +304,11 @@ function TeamMembers({ team }: { team: TeamDetailTeam }) {
         <SectionHeader title="Utenti" count={`${team.members.length} utenti`} />
       </div>
       <div className="px-0 sm:-mx-2">
-        <DashedAction label="Aggiungi utente" />
+        <AddTeamMemberDialog
+          members={team.members}
+          teamId={team.id}
+          teamName={team.name}
+        />
       </div>
 
       <div className="flex w-full flex-col gap-3">
