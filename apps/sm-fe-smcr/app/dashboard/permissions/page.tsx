@@ -1,7 +1,7 @@
 import {
   PermissionsListView,
   PermissionsManagementBreadcrumb,
-} from "@/components/permissions/mock/permissions-management-ui";
+} from "@/components/permissions/permissions-management-ui";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 import { readPermissions } from "@/lib/services/teams.service";
 

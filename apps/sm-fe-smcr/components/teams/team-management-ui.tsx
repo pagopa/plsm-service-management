@@ -5,11 +5,7 @@ import { TeamActionsMenu } from "@/components/teams/team-actions-menu";
 import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import {
-  ArrowUpDown,
-  Funnel,
-  Search,
-} from "lucide-react";
+import { ArrowUpDown, Funnel, Search } from "lucide-react";
 import Link from "next/link";
 
 type TeamStatus = "active" | "inactive";
@@ -338,7 +334,7 @@ function TeamMembers({ team }: { team: TeamDetailTeam }) {
                 </span>
                 <RemoveTeamAssignmentDialog
                   description={`L'utente ${member.firstname} ${member.lastname} non farà più parte di questo team.`}
-                  endpoint={`/api/teams/${team.id}/remove-user`}
+                  endpoint={`/api/teams/${team.id}/members`}
                   itemName={`${member.firstname} ${member.lastname}`}
                   itemType="utente"
                   payload={{ memberId: member.id }}

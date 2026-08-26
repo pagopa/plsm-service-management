@@ -130,8 +130,8 @@ export function AddTeamMemberDialog({
     setPendingMemberId(memberId);
 
     try {
-      const response = await fetch(`/api/teams/${teamId}/add-user`, {
-        body: JSON.stringify({ userId: parsedMemberId }),
+      const response = await fetch(`/api/teams/${teamId}/members`, {
+        body: JSON.stringify({ memberId: parsedMemberId }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       });

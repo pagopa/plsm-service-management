@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { ArrowUpDown, Funnel, Search } from "lucide-react";
 import Link from "next/link";
 
-type PermissionStatus = "active" | "archived";
+export type PermissionStatus = "active" | "archived";
 
 export type PermissionsListPermission = {
   code: string;

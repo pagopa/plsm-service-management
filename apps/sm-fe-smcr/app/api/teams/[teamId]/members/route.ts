@@ -1,48 +1,129 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { memberTeams, members, teams } from "@/db/schema";
+import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
+import { logServerError } from "@/lib/logger/logger.server.helpers";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> },
-) {
-  const { teamId } = await params;
+function getValidIds(
+  memberId: unknown,
+  teamId: string,
+): { memberId: number; teamId: number } | null {
+  const parsedMemberId = Number(memberId);
   const parsedTeamId = Number(teamId);
 
-  if (!Number.isInteger(parsedTeamId) || parsedTeamId <= 0) {
-    return NextResponse.json({ error: "Invalid teamId" }, { status: 400 });
+  if (
+    !Number.isInteger(parsedMemberId) ||
+    parsedMemberId <= 0 ||
+    !Number.isInteger(parsedTeamId) ||
+    parsedTeamId <= 0
+  ) {
+    return null;
   }
 
-  try {
-    const rows = await db
-      .select({
-        email: members.email,
-        firstname: members.firstname,
-        lastname: members.lastname,
-        teamId: teams.id,
-        teamName: teams.name,
-        userId: members.id,
-      })
-      .from(memberTeams)
-      .innerJoin(members, eq(memberTeams.memberId, members.id))
-      .innerJoin(teams, eq(memberTeams.teamId, teams.id))
-      .where(eq(memberTeams.teamId, parsedTeamId));
+  return { memberId: parsedMemberId, teamId: parsedTeamId };
+}
 
-    return NextResponse.json(
-      rows.map((row) => ({
-        email: row.email,
-        id: String(row.userId),
-        name: `${row.firstname} ${row.lastname}`.trim(),
-        role: "member" as const,
-        teamId: String(row.teamId),
-        teamName: row.teamName,
-        userId: String(row.userId),
-      })),
-      { status: 200 },
-    );
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ teamId: string }> },
+) {
+  try {
+    const body = (await request.json()) as Record<string, unknown>;
+    const { teamId } = await params;
+    const ids = getValidIds(body.memberId, teamId);
+
+    if (!ids) {
+      return NextResponse.json(
+        { error: "Utente o team non valido." },
+        { status: 400 },
+      );
+    }
+
+    const currentUser = await getOrCreateCurrentAppUser();
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const [[team], [member]] = await Promise.all([
+      db.select({ id: teams.id }).from(teams).where(eq(teams.id, ids.teamId)).limit(1),
+      db
+        .select({ id: members.id })
+        .from(members)
+        .where(eq(members.id, ids.memberId))
+        .limit(1),
+    ]);
+
+    if (!team || !member) {
+      return NextResponse.json(
+        { error: "Utente o team non trovato." },
+        { status: 404 },
+      );
+    }
+
+    await db
+      .insert(memberTeams)
+      .values({ memberId: ids.memberId, teamId: ids.teamId })
+      .onConflictDoNothing({
+        target: [memberTeams.memberId, memberTeams.teamId],
+      });
+
+    return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    logServerError(error, "Errore API aggiunta membro al team");
+    return NextResponse.json(
+      { error: "Errore interno del server" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ teamId: string }> },
+) {
+  try {
+    const body = (await request.json()) as Record<string, unknown>;
+    const { teamId } = await params;
+    const ids = getValidIds(body.memberId, teamId);
+
+    if (!ids) {
+      return NextResponse.json(
+        { error: "Utente o team non valido." },
+        { status: 400 },
+      );
+    }
+
+    const currentUser = await getOrCreateCurrentAppUser();
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const deleted = await db
+      .delete(memberTeams)
+      .where(
+        and(
+          eq(memberTeams.memberId, ids.memberId),
+          eq(memberTeams.teamId, ids.teamId),
+        ),
+      )
+      .returning({ memberId: memberTeams.memberId });
+
+    if (deleted.length === 0) {
+      return NextResponse.json(
+        { error: "L'utente non fa parte di questo team." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    logServerError(error, "Errore API rimozione membro dal team");
+    return NextResponse.json(
+      { error: "Errore interno del server" },
+      { status: 500 },
+    );
   }
 }

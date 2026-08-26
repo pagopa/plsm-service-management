@@ -5,7 +5,7 @@ import {
   type TeamDetailTeam,
   TeamDetailView,
   TeamsListView,
-} from "../team-management-ui";
+} from "../../team-management-ui";
 
 jest.mock("next/link", () => ({
   __esModule: true,

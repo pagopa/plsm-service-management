@@ -1,7 +1,7 @@
 import {
   TeamManagementBreadcrumb,
   TeamsListView,
-} from "@/components/teams/mock/team-management-ui";
+} from "@/components/teams/team-management-ui";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 import { readTeamsList } from "@/lib/services/teams.service";
 
