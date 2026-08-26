@@ -4,6 +4,7 @@ import {
   ActivityIcon,
   FileSignature,
   FolderIcon,
+  KeyRound,
   LucideIcon,
   PhoneIcon,
   Search,
@@ -162,6 +163,14 @@ export const protectedRoutes: ProtectedRoute[] = [
     requiredTeams: ["admin"],
     sidebar: true,
     icon: Users,
+    teamId: "admin",
+  },
+  {
+    label: "Permessi",
+    path: "/dashboard/permissions",
+    requiredTeams: ["admin"],
+    sidebar: true,
+    icon: KeyRound,
     teamId: "admin",
   },
   {
