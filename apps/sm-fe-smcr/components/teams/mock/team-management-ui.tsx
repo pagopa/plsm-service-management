@@ -1,7 +1,7 @@
 import { AddTeamMemberDialog } from "@/components/teams/add-team-member-dialog";
 import { AddTeamPermissionDialog } from "@/components/teams/add-team-permission-dialog";
 import { RemoveTeamAssignmentDialog } from "@/components/teams/remove-team-assignment-dialog";
-import { TeamStatusMenu } from "@/components/teams/team-status-menu";
+import { TeamActionsMenu } from "@/components/teams/team-actions-menu";
 import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -246,7 +246,11 @@ function TeamSummary({ team }: { team: TeamDetailTeam }) {
             {team.status === "active" ? "Attivo" : "Inattivo"}
           </Badge>
         </div>
-        <TeamStatusMenu status={team.status} teamId={team.id} />
+        <TeamActionsMenu
+          status={team.status}
+          teamId={team.id}
+          teamName={team.name}
+        />
       </div>
 
       <dl className="flex w-full flex-col gap-3 px-2">

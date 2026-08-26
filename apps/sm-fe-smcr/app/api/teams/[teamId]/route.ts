@@ -83,3 +83,43 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ teamId: string }> },
+) {
+  try {
+    const { teamId } = await params;
+    const parsedTeamId = Number(teamId);
+
+    if (!Number.isInteger(parsedTeamId) || parsedTeamId <= 0) {
+      return NextResponse.json(
+        { error: "Team non valido." },
+        { status: 400 },
+      );
+    }
+
+    const currentUser = await getOrCreateCurrentAppUser();
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const [deletedTeam] = await db
+      .delete(teams)
+      .where(eq(teams.id, parsedTeamId))
+      .returning({ id: teams.id });
+
+    if (!deletedTeam) {
+      return NextResponse.json({ error: "Team non trovato." }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    logServerError(error, "Errore API eliminazione team");
+    return NextResponse.json(
+      { error: "Errore interno del server" },
+      { status: 500 },
+    );
+  }
+}
