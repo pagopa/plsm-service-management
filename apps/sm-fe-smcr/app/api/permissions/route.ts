@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { asc } from "drizzle-orm";
 import { db } from "@/db";
 import { permissions } from "@/db/schema";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
@@ -17,6 +18,29 @@ function isUniqueViolation(error: unknown) {
   };
 
   return databaseError.code === "23505" || databaseError.cause?.code === "23505";
+}
+
+export async function GET() {
+  try {
+    const currentUser = await getOrCreateCurrentAppUser();
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const result = await db.select().from(permissions).orderBy(asc(permissions.code));
+
+    return NextResponse.json(
+      { data: result.map((permission) => ({ ...permission, id: String(permission.id) })) },
+      { status: 200 },
+    );
+  } catch (error) {
+    logServerError(error, "Errore API lista permessi");
+    return NextResponse.json(
+      { error: "Errore interno del server" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {

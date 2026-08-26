@@ -1,11 +1,11 @@
 import { AddTeamMemberDialog } from "@/components/teams/add-team-member-dialog";
+import { AddTeamPermissionDialog } from "@/components/teams/add-team-permission-dialog";
 import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 import { cn } from "@/lib/utils";
 import {
   ArrowUpDown,
   EllipsisVertical,
   Funnel,
-  Plus,
   Search,
 } from "lucide-react";
 import Link from "next/link";
@@ -141,20 +141,6 @@ function SectionHeader({
       </div>
 
       <SectionActions />
-    </div>
-  );
-}
-
-function DashedAction({ label }: { label: string }) {
-  return (
-    <div className="w-full px-2 sm:px-4">
-      <button
-        type="button"
-        className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-neutral-200 py-2 text-xs font-medium text-black transition-colors hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2"
-      >
-        <Plus className="size-3" strokeWidth={1.75} />
-        {label}
-      </button>
     </div>
   );
 }
@@ -365,7 +351,11 @@ function TeamPermissions({ team }: { team: TeamDetailTeam }) {
         />
       </div>
       <div className="px-0 sm:-mx-2">
-        <DashedAction label="Aggiungi permesso" />
+        <AddTeamPermissionDialog
+          permissions={team.permissions}
+          teamId={team.id}
+          teamName={team.name}
+        />
       </div>
 
       <div className="flex w-full flex-col gap-3">
