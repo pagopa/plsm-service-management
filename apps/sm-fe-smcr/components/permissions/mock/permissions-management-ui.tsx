@@ -1,5 +1,6 @@
+import { CreatePermissionDialog } from "@/components/permissions/create-permission-dialog";
 import { cn } from "@/lib/utils";
-import { ArrowUpDown, Funnel, Plus, Search } from "lucide-react";
+import { ArrowUpDown, Funnel, Search } from "lucide-react";
 import Link from "next/link";
 
 type PermissionStatus = "active" | "archived";
@@ -66,20 +67,6 @@ function SectionActions() {
   );
 }
 
-function DashedAction() {
-  return (
-    <div className="w-full px-2 sm:px-4">
-      <button
-        type="button"
-        className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-neutral-200 py-2 text-xs font-medium text-black transition-colors hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2"
-      >
-        <Plus className="size-3" strokeWidth={1.75} />
-        Crea permesso
-      </button>
-    </div>
-  );
-}
-
 export function PermissionsListView({
   permissions,
 }: {
@@ -98,7 +85,7 @@ export function PermissionsListView({
         <SectionActions />
       </div>
 
-      <DashedAction />
+      <CreatePermissionDialog />
 
       <div className="flex w-full flex-col gap-1">
         {permissions.map((permission) => {
