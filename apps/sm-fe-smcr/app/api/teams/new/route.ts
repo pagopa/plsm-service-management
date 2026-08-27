@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import slugify from "slugify";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { memberTeams, teams } from "@/db/schema";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const db = getDb();
     const createdByMemberId = Number(currentUser.user.id);
     const team = await db.transaction(async (transaction) => {
       const [createdTeam] = await transaction

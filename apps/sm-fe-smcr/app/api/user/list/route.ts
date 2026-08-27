@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { members } from "@/db/schema";
 import {
   logServerError,
@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     logServerInfo("CALLING API LIST USERS");
+    const db = getDb();
     const users = await db
       .select({
         email: members.email,

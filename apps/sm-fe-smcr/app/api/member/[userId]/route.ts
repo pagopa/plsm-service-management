@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { memberTeams, teams } from "@/db/schema";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 
@@ -29,6 +29,7 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const db = getDb();
     const memberships = await db
       .select({
         createdAt: memberTeams.createdAt,

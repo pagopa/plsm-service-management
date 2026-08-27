@@ -1,6 +1,6 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import z from "zod";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import {
   memberTeams,
   members,
@@ -163,6 +163,7 @@ export async function submitTeamAccessRequest(
 
 export async function readTeams() {
   try {
+    const db = getDb();
     const [rawTeams, rawTeamPermissions] = await Promise.all([
       db.select().from(teams),
       db
@@ -203,6 +204,7 @@ export async function readTeams() {
 
 export async function readTeamsList() {
   try {
+    const db = getDb();
     const rawTeams = await db
       .select({
         description: teams.description,
@@ -238,6 +240,7 @@ export async function readTeamsList() {
 
 export async function readTeamDetail(teamId: number) {
   try {
+    const db = getDb();
     const [rawTeam] = await db
       .select()
       .from(teams)
@@ -311,6 +314,7 @@ export async function readTeamDetail(teamId: number) {
 
 export async function readPermissions() {
   try {
+    const db = getDb();
     const rawPermissions = await db.select().from(permissions);
     const parsedPermissions = z
       .array(permissionSchema)
@@ -330,6 +334,7 @@ export async function readPermissions() {
 
 export async function readMemberTeams(memberId: number) {
   try {
+    const db = getDb();
     const rawTeams = await db
       .select({
         createdAt: teams.createdAt,
@@ -364,6 +369,7 @@ export async function createMemberTeam(input: {
   teamId: number;
 }) {
   try {
+    const db = getDb();
     await db
       .insert(memberTeams)
       .values(input)
@@ -383,6 +389,7 @@ export async function removeMemberTeam(input: {
   teamId: number;
 }) {
   try {
+    const db = getDb();
     await db
       .delete(memberTeams)
       .where(

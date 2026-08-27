@@ -3,7 +3,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { members } from "@/db/schema";
 import { AUTH_COOKIE_NAME } from "./constants";
 import type { AuthSession } from "./jwt";
@@ -49,6 +49,7 @@ export async function getOrCreateCurrentAppUser(): Promise<CurrentAppUserResult 
     return null;
   }
 
+  const db = getDb();
   const memberSelection = {
     authSubject: members.authSubject,
     email: members.email,

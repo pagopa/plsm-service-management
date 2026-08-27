@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { permissions, teamPermissions, teams } from "@/db/schema";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
@@ -35,6 +35,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const db = getDb();
     const [[team], [permission]] = await Promise.all([
       db.select({ id: teams.id }).from(teams).where(eq(teams.id, parsedTeamId)).limit(1),
       db
@@ -105,6 +106,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const db = getDb();
     const deleted = await db
       .delete(teamPermissions)
       .where(

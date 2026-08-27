@@ -1,7 +1,7 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { memberTeams, members, permissions, teamPermissions, teams } from "@/db/schema";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 import { getOrCreateCurrentAppUser, requireServerSession } from "./server";
@@ -14,6 +14,7 @@ export async function hasPermission(permissionCode: string): Promise<boolean> {
       return false;
     }
 
+    const db = getDb();
     const memberId = Number(currentUser.user.id);
     const [matchingPermission] = await db
       .select({ id: permissions.id })

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { memberTeams, members, teams } from "@/db/schema";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const db = getDb();
     const memberId = Number(currentUser.user.id);
     const rows = await db
       .select({

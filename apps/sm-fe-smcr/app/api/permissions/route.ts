@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { asc } from "drizzle-orm";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { permissions } from "@/db/schema";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
@@ -30,6 +30,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const db = getDb();
     const result = await db.select().from(permissions).orderBy(asc(permissions.code));
 
     return NextResponse.json(
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const db = getDb();
     const [permission] = await db
       .insert(permissions)
       .values({
