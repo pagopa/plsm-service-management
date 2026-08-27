@@ -1,11 +1,11 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { mockTeams } from "../mock-data";
 import {
   type TeamDetailTeam,
+  type TeamsListTeam,
   TeamDetailView,
   TeamsListView,
-} from "../../team-management-ui";
+} from "../team-management-ui";
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -22,16 +22,33 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
-jest.mock("next/image", () => ({
-  __esModule: true,
-  default: ({ alt, src }: { alt: string; src: string }) => (
-    <span aria-label={alt || undefined} data-image-src={src} />
-  ),
-}));
+const teams: TeamsListTeam[] = [
+  {
+    description: "Team dedicato alle operazioni SM.",
+    id: "1",
+    memberCount: 18,
+    name: "Service management",
+    status: "active",
+  },
+  {
+    description: "Team per amministrare SMCR.",
+    id: "2",
+    memberCount: 4,
+    name: "Admin",
+    status: "inactive",
+  },
+  {
+    description: "Team per la gestione del portale fatturazione.",
+    id: "3",
+    memberCount: 12,
+    name: "Portale fatturazione",
+    status: "inactive",
+  },
+];
 
-describe("Team management mock UI", () => {
+describe("Team management UI", () => {
   it("links every team row to its detail route and exposes its status", () => {
-    const html = renderToStaticMarkup(<TeamsListView teams={mockTeams} />);
+    const html = renderToStaticMarkup(<TeamsListView teams={teams} />);
 
     expect(html).toContain('href="/dashboard/teams/1"');
     expect(html).toContain('href="/dashboard/teams/2"');
