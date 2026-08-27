@@ -6,6 +6,8 @@ import {
   logServerInfo,
 } from "@/lib/logger/logger.server.helpers";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     logServerInfo("CALLING API LIST USERS");

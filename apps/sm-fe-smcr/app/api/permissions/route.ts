@@ -5,6 +5,8 @@ import { permissions } from "@/db/schema";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 
+export const dynamic = "force-dynamic";
+
 const permissionCodePattern = /^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)+$/;
 
 function isUniqueViolation(error: unknown) {

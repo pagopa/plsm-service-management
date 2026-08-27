@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { memberTeams, teams } from "@/db/schema";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(
