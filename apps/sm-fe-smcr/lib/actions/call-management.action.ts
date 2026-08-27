@@ -37,6 +37,10 @@ const sendToSlackSchema = z.object({
   members: z.string(),
   link: z.url(),
   target: z.enum(["test", "prod"]),
+  isSelfcare: z
+    .union([z.literal("true"), z.literal("false"), z.boolean()])
+    .default(false)
+    .transform((value) => value === true || value === "true"),
   status: z.enum(["success", "failure"]).default("success"),
   errorReason: z.string().optional(),
 });
@@ -74,6 +78,7 @@ export async function sendToSlackAction(
       members: String(inputEntries.members ?? ""),
       link: String(inputEntries.link ?? ""),
       target: (inputEntries.target as "test" | "prod") ?? "test",
+      isSelfcare: inputEntries.isSelfcare === "true",
     };
 
     logger.warn(
@@ -97,9 +102,12 @@ export async function sendToSlackAction(
     };
   }
 
+  const isSelfcare = validation.data.isSelfcare;
   const webhooks = {
     test: serverEnv.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST,
-    prod: serverEnv.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD,
+    prod: isSelfcare
+      ? serverEnv.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD_SELFCARE
+      : serverEnv.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD,
   };
   const webhook = webhooks[validation.data.target];
 
@@ -108,7 +116,7 @@ export async function sendToSlackAction(
       {
         info: {
           event: "call-management.send-to-slack.missing-webhook",
-          metadata: { target: validation.data.target },
+          metadata: { target: validation.data.target, isSelfcare },
         },
       },
       "sendToSlackAction missing webhook env",
@@ -125,14 +133,16 @@ export async function sendToSlackAction(
   const membersText = membersArray.map((m) => `• ${m}`).join("\n");
   const dateTimeText = formatItalianDateTime(validation.data.date);
   const isFailure = validation.data.status === "failure";
+  const selfcareTag =
+    isSelfcare && validation.data.target === "test" ? "[Call Selfcare] " : "";
 
   const headerBlock = {
     type: "section",
     text: {
       type: "mrkdwn",
       text: isFailure
-        ? `:rotating_light: *Creazione appuntamento non riuscita* :rotating_light:\n*${validation.data.name}*`
-        : `:mega: *${validation.data.name}* :mega:`,
+        ? `:rotating_light: *Creazione appuntamento non riuscita* :rotating_light:\n*${selfcareTag}${validation.data.name}*`
+        : `:mega: *${selfcareTag}${validation.data.name}* :mega:`,
     },
   };
 
@@ -243,7 +253,7 @@ export async function sendToSlackAction(
         },
         info: {
           event: "call-management.send-to-slack.failed",
-          metadata: { target: validation.data.target },
+          metadata: { target: validation.data.target, isSelfcare },
         },
       },
       "sendToSlackAction failed to send Slack message",
@@ -263,6 +273,7 @@ export async function sendToSlackAction(
         event: "call-management.send-to-slack.success",
         metadata: {
           target: validation.data.target,
+          isSelfcare,
           product: validation.data.product,
           membersCount: membersArray.length,
         },
@@ -279,6 +290,7 @@ export async function sendToSlackAction(
       members: validation.data.members,
       link: validation.data.link,
       target: validation.data.target,
+      isSelfcare,
     },
     target: validation.data.target,
     submittedAt: Date.now(),
