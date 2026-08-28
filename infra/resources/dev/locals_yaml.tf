@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-07-14 23:37
+# Generato il: 2026-08-28 10:05
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -61,6 +61,7 @@ locals {
     STORAGE_TOKEN                                         = data.azurerm_key_vault_secret.fe_smcr_storage_token.value
     SLACK_CALL_MANAGEMENT_HOOK_TEST                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value
     SLACK_CALL_MANAGEMENT_HOOK_PROD                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value
+    SLACK_CALL_MANAGEMENT_HOOK_PROD_SELFCARE              = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod_selfcare.value
     ONBOARDING_BASE_PATH_UAT                              = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
     FE_SMCR_CRM_API_URL                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_url.value
     FE_SMCR_CRM_API_KEY                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_key.value
@@ -134,6 +135,7 @@ locals {
     STORAGE_TOKEN                                         = data.azurerm_key_vault_secret.fe_smcr_storage_token.value
     SLACK_CALL_MANAGEMENT_HOOK_TEST                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_test.value
     SLACK_CALL_MANAGEMENT_HOOK_PROD                       = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod.value
+    SLACK_CALL_MANAGEMENT_HOOK_PROD_SELFCARE              = data.azurerm_key_vault_secret.fe_smcr_slack_call_management_hook_prod_selfcare.value
     ONBOARDING_BASE_PATH_UAT                              = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
     FE_SMCR_CRM_API_URL                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_url.value
     FE_SMCR_CRM_API_KEY                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_key.value

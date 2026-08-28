@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-07-14 23:37
+# Generato il: 2026-08-28 10:05
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -66,6 +66,11 @@ data "azurerm_key_vault_secret" "fe_smcr_api_key_subscription_key_billing_portal
 
 data "azurerm_key_vault_secret" "fe_smcr_api_key_utenti_io" {
   name         = "fe-smcr-api-key-utenti-io"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_api_slack_call_management_hook_prod_selfcare" {
+  name         = "fe-smcr-api-slack-call-management-hook-prod-selfcare"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 

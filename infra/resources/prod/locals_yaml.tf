@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-07-14 23:37
+# Generato il: 2026-08-28 10:05
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -125,6 +125,7 @@ locals {
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT                 = data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD_SELFCARE  = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod_selfcare.value
     FE_SMCR_USERS_API_KEY                                 = data.azurerm_key_vault_secret.fe_smcr_users_api_key.value
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY                     = data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value
     FE_SMCR_API_KEY_INSTITUTION                           = data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value
@@ -196,6 +197,7 @@ locals {
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT                 = data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value
+    FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD_SELFCARE  = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod_selfcare.value
     FE_SMCR_USERS_API_KEY                                 = data.azurerm_key_vault_secret.fe_smcr_users_api_key.value
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY                     = data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key.value
     FE_SMCR_API_KEY_INSTITUTION                           = data.azurerm_key_vault_secret.fe_smcr_api_key_institution.value
