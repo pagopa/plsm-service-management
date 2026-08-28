@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-07-14 23:37
+# Generato il: 2026-08-28 10:05
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -201,6 +201,11 @@ data "azurerm_key_vault_secret" "fe_smcr_slack_call_management_hook" {
 
 data "azurerm_key_vault_secret" "fe_smcr_slack_call_management_hook_prod" {
   name         = "fe-smcr-slack-call-management-hook-prod"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fe_smcr_slack_call_management_hook_prod_selfcare" {
+  name         = "fe-smcr-slack-call-management-hook-prod-selfcare"
   key_vault_id = data.azurerm_key_vault.common_kv.id
 }
 
