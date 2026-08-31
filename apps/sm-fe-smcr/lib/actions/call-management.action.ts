@@ -37,6 +37,10 @@ const sendToSlackSchema = z.object({
   members: z.string(),
   link: z.url(),
   target: z.enum(["test", "prod"]),
+  isSelfcare: z
+    .union([z.literal("true"), z.literal("false"), z.boolean()])
+    .default(false)
+    .transform((value) => value === true || value === "true"),
   status: z.enum(["success", "failure"]).default("success"),
   errorReason: z.string().optional(),
 });
@@ -74,6 +78,7 @@ export async function sendToSlackAction(
       members: String(inputEntries.members ?? ""),
       link: String(inputEntries.link ?? ""),
       target: (inputEntries.target as "test" | "prod") ?? "test",
+      isSelfcare: inputEntries.isSelfcare === "true",
     };
 
     logger.warn(
@@ -97,164 +102,231 @@ export async function sendToSlackAction(
     };
   }
 
-  const webhooks = {
-    test: serverEnv.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST,
-    prod: serverEnv.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD,
-  };
-  const webhook = webhooks[validation.data.target];
-
-  if (!webhook) {
-    logger.error(
-      {
-        info: {
-          event: "call-management.send-to-slack.missing-webhook",
-          metadata: { target: validation.data.target },
-        },
-      },
-      "sendToSlackAction missing webhook env",
-    );
-    return {
-      fields: validation.data,
-      errors: { root: "Errore imprevisto durante l'invio del messaggio." },
-      target: validation.data.target,
-      submittedAt: Date.now(),
-    };
-  }
+  const isSelfcare = validation.data.isSelfcare;
+  const isFailure = validation.data.status === "failure";
+  /** Canale Jira-service: log degli errori di creazione appuntamento. */
+  const jiraServiceWebhook =
+    serverEnv.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST;
+  const prodWebhook = isSelfcare
+    ? serverEnv.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD_SELFCARE
+    : serverEnv.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD;
 
   const membersArray = validation.data.members.split(",").map((m) => m.trim());
   const membersText = membersArray.map((m) => `• ${m}`).join("\n");
   const dateTimeText = formatItalianDateTime(validation.data.date);
-  const isFailure = validation.data.status === "failure";
 
-  const headerBlock = {
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: isFailure
-        ? `:rotating_light: *Creazione appuntamento non riuscita* :rotating_light:\n*${validation.data.name}*`
-        : `:mega: *${validation.data.name}* :mega:`,
-    },
-  };
+  const buildPayload = ({
+    withFailure,
+    withTag,
+  }: {
+    withFailure: boolean;
+    withTag: boolean;
+  }) => {
+    const selfcareTag = withTag ? "[Call Selfcare] " : "";
 
-  const failureIntroBlock = {
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: `La creazione dell'appuntamento su CRM non è andata a buon fine. Di seguito il riepilogo dei dati con cui si è provato a crearlo.${
-        validation.data.errorReason
-          ? `\n\n*Errore:* ${validation.data.errorReason}`
-          : ""
-      }`,
-    },
-  };
-
-  const fieldsBlock = {
-    type: "section",
-    fields: [
-      {
+    const headerBlock = {
+      type: "section",
+      text: {
         type: "mrkdwn",
-        text: `*Prodotto:*\n${PRODUCT_MAP[validation.data.product] || validation.data.product}`,
+        text: withFailure
+          ? `:rotating_light: *Creazione appuntamento non riuscita* :rotating_light:\n*${selfcareTag}${validation.data.name}*`
+          : `:mega: *${selfcareTag}${validation.data.name}* :mega:`,
       },
-      {
-        type: "mrkdwn",
-        text: `*Data e Ora 📅:*\n${dateTimeText}`,
-      },
-      {
-        type: "mrkdwn",
-        text: `*Partecipanti del Team SM:*\n${membersText}`,
-      },
-    ],
-  };
+    };
 
-  const actionsBlock = {
-    type: "actions",
-    elements: [
-      {
-        type: "button",
-        text: {
-          type: "plain_text",
-          text: "Diario delle call",
-        },
-        url: validation.data.link,
-        style: "primary",
+    const failureIntroBlock = {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `La creazione dell'appuntamento su CRM non è andata a buon fine. Di seguito il riepilogo dei dati con cui si è provato a crearlo.${
+          validation.data.errorReason
+            ? `\n\n*Errore:* ${validation.data.errorReason}`
+            : ""
+        }`,
       },
-      {
-        type: "button",
-        text: {
-          type: "plain_text",
-          text: "Service Management",
-        },
-        url: "https://pagopa.atlassian.net/wiki/spaces/ISM/overview",
-        style: "danger",
-      },
-    ],
-  };
+    };
 
-  const contextBlocks = [
-    {
-      type: "context",
-      elements: [
+    const fieldsBlock = {
+      type: "section",
+      fields: [
         {
           type: "mrkdwn",
-          text: "IO Service Management :rocket:",
+          text: `*Prodotto:*\n${PRODUCT_MAP[validation.data.product] || validation.data.product}`,
         },
-      ],
-    },
-    {
-      type: "context",
-      elements: [
         {
           type: "mrkdwn",
-          text: ":clap: Service Management transforms customer needs into value-driven solutions.",
+          text: `*Data e Ora 📅:*\n${dateTimeText}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Partecipanti del Team SM:*\n${membersText}`,
         },
       ],
-    },
-  ];
+    };
 
-  const payload = {
-    blocks: [
-      headerBlock,
-      ...(isFailure ? [failureIntroBlock] : []),
-      fieldsBlock,
-      actionsBlock,
-      ...contextBlocks,
-    ],
-  };
+    const actionsBlock = {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Diario delle call",
+          },
+          url: validation.data.link,
+          style: "primary",
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Service Management",
+          },
+          url: "https://pagopa.atlassian.net/wiki/spaces/ISM/overview",
+          style: "danger",
+        },
+      ],
+    };
 
-  const response = await fetch(webhook, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-    keepalive: true,
-  });
-
-  if (!response.ok) {
-    const body = await response.json();
-    logger.error(
+    const contextBlocks = [
       {
-        request: {
-          method: "POST",
-          path: "slack-webhook",
-          statusCode: response.status,
-        },
-        error: {
-          name: "SlackWebhookError",
-          message: typeof body === "string" ? body : JSON.stringify(body ?? {}),
-        },
-        info: {
-          event: "call-management.send-to-slack.failed",
-          metadata: { target: validation.data.target },
-        },
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "IO Service Management :rocket:",
+          },
+        ],
       },
-      "sendToSlackAction failed to send Slack message",
-    );
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: ":clap: Service Management transforms customer needs into value-driven solutions.",
+          },
+        ],
+      },
+    ];
 
     return {
-      fields: validation.data,
-      errors: { root: "Errore imprevisto durante l'invio del messaggio." },
-      target: validation.data.target,
-      submittedAt: Date.now(),
+      blocks: [
+        headerBlock,
+        ...(withFailure ? [failureIntroBlock] : []),
+        fieldsBlock,
+        actionsBlock,
+        ...contextBlocks,
+      ],
     };
+  };
+
+  type SlackDelivery = {
+    channel: string;
+    webhook?: string;
+    payload: ReturnType<typeof buildPayload>;
+  };
+
+  let deliveries: SlackDelivery[];
+  if (validation.data.target === "test") {
+    deliveries = [
+      {
+        channel: "jira-service",
+        webhook: jiraServiceWebhook,
+        payload: buildPayload({ withFailure: isFailure, withTag: isSelfcare }),
+      },
+    ];
+  } else if (isSelfcare && isFailure) {
+    // Call selfcare in PROD con creazione CRM fallita: l'errore viene loggato
+    // sul canale Jira-service, mentre sul canale selfcare va il solo riepilogo.
+    deliveries = [
+      {
+        channel: "jira-service",
+        webhook: jiraServiceWebhook,
+        payload: buildPayload({ withFailure: true, withTag: true }),
+      },
+      {
+        channel: "selfcare",
+        webhook: prodWebhook,
+        payload: buildPayload({ withFailure: false, withTag: false }),
+      },
+    ];
+  } else {
+    deliveries = [
+      {
+        channel: isSelfcare ? "selfcare" : "prod",
+        webhook: prodWebhook,
+        payload: buildPayload({ withFailure: isFailure, withTag: false }),
+      },
+    ];
+  }
+
+  const resolvedDeliveries: (SlackDelivery & { webhook: string })[] = [];
+  for (const delivery of deliveries) {
+    if (!delivery.webhook) {
+      logger.error(
+        {
+          info: {
+            event: "call-management.send-to-slack.missing-webhook",
+            metadata: {
+              target: validation.data.target,
+              isSelfcare,
+              channel: delivery.channel,
+            },
+          },
+        },
+        "sendToSlackAction missing webhook env",
+      );
+      return {
+        fields: validation.data,
+        errors: { root: "Errore imprevisto durante l'invio del messaggio." },
+        target: validation.data.target,
+        submittedAt: Date.now(),
+      };
+    }
+    resolvedDeliveries.push({ ...delivery, webhook: delivery.webhook });
+  }
+
+  for (const delivery of resolvedDeliveries) {
+    const response = await fetch(delivery.webhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(delivery.payload),
+      keepalive: true,
+    });
+
+    if (!response.ok) {
+      const body = await response.json();
+      logger.error(
+        {
+          request: {
+            method: "POST",
+            path: "slack-webhook",
+            statusCode: response.status,
+          },
+          error: {
+            name: "SlackWebhookError",
+            message:
+              typeof body === "string" ? body : JSON.stringify(body ?? {}),
+          },
+          info: {
+            event: "call-management.send-to-slack.failed",
+            metadata: {
+              target: validation.data.target,
+              isSelfcare,
+              channel: delivery.channel,
+            },
+          },
+        },
+        "sendToSlackAction failed to send Slack message",
+      );
+
+      return {
+        fields: validation.data,
+        errors: { root: "Errore imprevisto durante l'invio del messaggio." },
+        target: validation.data.target,
+        submittedAt: Date.now(),
+      };
+    }
   }
 
   logger.info(
@@ -263,6 +335,8 @@ export async function sendToSlackAction(
         event: "call-management.send-to-slack.success",
         metadata: {
           target: validation.data.target,
+          isSelfcare,
+          channels: resolvedDeliveries.map((d) => d.channel),
           product: validation.data.product,
           membersCount: membersArray.length,
         },
@@ -279,6 +353,7 @@ export async function sendToSlackAction(
       members: validation.data.members,
       link: validation.data.link,
       target: validation.data.target,
+      isSelfcare,
     },
     target: validation.data.target,
     submittedAt: Date.now(),
