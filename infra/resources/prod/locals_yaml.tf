@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-08-28 10:05
+# Generato il: 2026-08-31 16:21
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -122,6 +122,7 @@ locals {
 
   yaml_fe_smcr_app_settings = {
     FE_SMCR_LOGS_ENDPOINT                                 = data.azurerm_key_vault_secret.fe_smcr_logs_endpoint.value
+    DATABASE_URL                                          = data.azurerm_key_vault_secret.database_url.value
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT                 = data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value
@@ -194,6 +195,7 @@ locals {
 
   yaml_fe_smcr_slot_app_settings = {
     FE_SMCR_LOGS_ENDPOINT                                 = data.azurerm_key_vault_secret.fe_smcr_logs_endpoint.value
+    DATABASE_URL                                          = data.azurerm_key_vault_secret.database_url.value
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT                 = data.azurerm_key_vault_secret.fe_smcr_ocp_apim_subscription_key_uat.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_test.value
     FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD           = data.azurerm_key_vault_secret.fe_smcr_api_slack_call_management_hook_prod.value
