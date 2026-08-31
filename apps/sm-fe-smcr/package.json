@@ -14,7 +14,8 @@
     "check-types": "tsc --noEmit",
     "test": "jest --config jest.config.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:migrate:prod": "dotenv -e .env.prod drizzle-kit migrate"
   },
   "dependencies": {
     "@azure/msal-browser": "^4.13.2",
@@ -90,6 +91,7 @@
     "@types/pg": "^8.20.3",
     "@types/react": "19.0.2",
     "@types/react-dom": "19.0.2",
+    "dotenv-cli": "^11.0.0",
     "drizzle-kit": "1.0.0-rc.4",
     "eslint": "^9.15.0",
     "jest": "^30.2.0",
