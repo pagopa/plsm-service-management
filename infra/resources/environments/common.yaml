@@ -123,3 +123,4 @@ auth_func:
 fe_smcr:
   __local: yaml_fe_smcr
   FE_SMCR_LOGS_ENDPOINT: "kv:fe_smcr_logs_endpoint"
+  DATABASE_URL: "kv:database_url"
