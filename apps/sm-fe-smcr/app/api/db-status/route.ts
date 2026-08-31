@@ -1,31 +1,40 @@
-// /app/api/db-status/route.ts
+import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import pg from "@/lib/knex";
-import { serverEnv } from "@/config/env";
-import { logServerError } from "@/lib/logger/logger.server.helpers";
+import { getDb } from "@/db";
+import { getServerSession } from "@/lib/auth/server";
+import {
+  logServerError,
+  logServerInfo,
+} from "@/lib/logger/logger.server.helpers";
+
+export const dynamic = "force-dynamic";
+
+const responseInit = (status: number): ResponseInit => ({
+  headers: { "Cache-Control": "no-store" },
+  status,
+});
 
 export async function GET() {
+  const session = await getServerSession();
+
+  if (!session) {
+    return NextResponse.json({ status: "unauthorized" }, responseInit(401));
+  }
+
   try {
-    // Una query semplice per verificare la connessione
-    await pg.raw("SELECT 1+1 as result");
+    const db = getDb();
+    await db.execute(sql`select 1`);
 
-    return NextResponse.json(
-      {
-        status: "online",
-        host: serverEnv.DB_HOST,
-      },
-      { status: 200 },
-    );
-  } catch (error: any) {
-    logServerError(error, "DB connection error");
+    logServerInfo("Database connectivity check succeeded", {
+      event: "database.connectivity.ok",
+    });
 
-    return NextResponse.json(
-      {
-        status: "offline",
-        error: error.message,
-        host: "Errore di connessione",
-      },
-      { status: 500 },
-    );
+    return NextResponse.json({ status: "online" }, responseInit(200));
+  } catch (error) {
+    logServerError(error, "Database connectivity check failed", {
+      event: "database.connectivity.error",
+    });
+
+    return NextResponse.json({ status: "offline" }, responseInit(503));
   }
 }
