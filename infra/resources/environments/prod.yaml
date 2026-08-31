@@ -61,6 +61,7 @@ fe_smcr:
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT: "kv:fe_smcr_ocp_apim_subscription_key_uat"
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_TEST: "kv:fe_smcr_api_slack_call_management_hook_test"
   FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD: "kv:fe_smcr_api_slack_call_management_hook_prod"
+  FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD_SELFCARE: "kv:fe_smcr_api_slack_call_management_hook_prod_selfcare"
   FE_SMCR_USERS_API_KEY: "kv:fe_smcr_users_api_key"
   FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY: "kv:fe_smcr_ocp_apim_subscription_key"
   FE_SMCR_API_KEY_INSTITUTION: "kv:fe_smcr_api_key_institution"

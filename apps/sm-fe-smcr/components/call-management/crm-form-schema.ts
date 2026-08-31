@@ -64,6 +64,7 @@ export const crmFormSchema = z
       .array(partecipanteSchema)
       .min(1, "Aggiungi almeno un partecipante"),
     enableCreateContact: z.boolean(),
+    isSelfcareCall: z.boolean(),
     location: z.enum(["call", "presenza"]),
     description: z.string().optional(),
     category: z.string().optional(),
@@ -113,6 +114,7 @@ export function getCrmFormDefaultValues(): CrmFormSchema {
     institutionIdSelfcare: "",
     partecipanti: [],
     enableCreateContact: true,
+    isSelfcareCall: false,
     location: "call",
     description: "",
     category: "",

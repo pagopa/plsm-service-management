@@ -141,6 +141,7 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
     slackFormData.append("members", membersText);
     slackFormData.append("link", values.link);
     slackFormData.append("target", slackTarget);
+    slackFormData.append("isSelfcare", String(values.isSelfcareCall));
     slackFormData.append("status", crmResult.success ? "success" : "failure");
     if (!crmResult.success) {
       const errorReason = affectedFieldsText
@@ -504,6 +505,30 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
                       className="cursor-pointer"
                     >
                       Abilita Creazione Contatto
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isSelfcareCall"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Switch
+                      id="isSelfcareCall"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-0.5 leading-none">
+                    <FormLabel
+                      htmlFor="isSelfcareCall"
+                      className="cursor-pointer"
+                    >
+                      Call Selfcare
                     </FormLabel>
                   </div>
                 </FormItem>
