@@ -1,7 +1,10 @@
 import "server-only";
 
+import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getDb } from "@/db";
+import { members } from "@/db/schema";
 import { AUTH_COOKIE_NAME } from "./constants";
 import type { AuthSession } from "./jwt";
 import { verifyAuthToken } from "./jwt";
@@ -46,34 +49,113 @@ export async function getOrCreateCurrentAppUser(): Promise<CurrentAppUserResult 
     return null;
   }
 
-  const { randomUUID } = await import("crypto");
-  const { default: pg } = await import("@/lib/knex");
+  const db = getDb();
+  const memberSelection = {
+    authSubject: members.authSubject,
+    email: members.email,
+    firstname: members.firstname,
+    id: members.id,
+    lastname: members.lastname,
+  };
 
-  const existingUser = await pg
-    .select("id", "name", "email")
-    .from<CurrentAppUser>("user")
-    .where("email", session.email)
-    .first();
+  const [memberBySubject] = await db
+    .select(memberSelection)
+    .from(members)
+    .where(eq(members.authSubject, session.userId))
+    .limit(1);
 
-  if (existingUser) {
+  const [memberByEmail] = memberBySubject
+    ? [undefined]
+    : await db
+        .select(memberSelection)
+        .from(members)
+        .where(eq(members.email, session.email))
+        .limit(1);
+
+  if (
+    memberByEmail?.authSubject &&
+    memberByEmail.authSubject !== session.userId
+  ) {
+    throw new Error("The authenticated identity does not match this member");
+  }
+
+  const existingMember = memberBySubject ?? memberByEmail;
+
+  if (existingMember && !existingMember.authSubject) {
+    await db
+      .update(members)
+      .set({ authSubject: session.userId, updatedAt: new Date() })
+      .where(eq(members.id, existingMember.id));
+  }
+
+  if (existingMember) {
     return {
       created: false,
-      user: existingUser,
+      user: {
+        email: existingMember.email,
+        id: String(existingMember.id),
+        name: `${existingMember.firstname} ${existingMember.lastname}`.trim(),
+      },
     };
   }
 
-  const [createdUser] = await pg("user")
-    .insert({
-      createdAt: pg.fn.now(),
+  const [firstname = "Unknown", ...lastnameParts] = session.name
+    .trim()
+    .split(/\s+/);
+  const [createdMember] = await db
+    .insert(members)
+    .values({
+      authSubject: session.userId,
       email: session.email,
-      id: randomUUID(),
-      name: session.name,
-      updatedAt: pg.fn.now(),
+      firstname,
+      lastname: lastnameParts.join(" ") || "User",
     })
-    .returning(["id", "name", "email"]);
+    .onConflictDoNothing()
+    .returning(memberSelection);
+
+  if (!createdMember) {
+    const [concurrentMemberBySubject] = await db
+      .select(memberSelection)
+      .from(members)
+      .where(eq(members.authSubject, session.userId))
+      .limit(1);
+    const [concurrentMemberByEmail] = concurrentMemberBySubject
+      ? [undefined]
+      : await db
+          .select(memberSelection)
+          .from(members)
+          .where(eq(members.email, session.email))
+          .limit(1);
+    const concurrentMember =
+      concurrentMemberBySubject ?? concurrentMemberByEmail;
+
+    if (!concurrentMember) {
+      throw new Error("Unable to create the current application member");
+    }
+
+    if (
+      concurrentMember.authSubject &&
+      concurrentMember.authSubject !== session.userId
+    ) {
+      throw new Error("The authenticated identity does not match this member");
+    }
+
+    return {
+      created: false,
+      user: {
+        email: concurrentMember.email,
+        id: String(concurrentMember.id),
+        name: `${concurrentMember.firstname} ${concurrentMember.lastname}`.trim(),
+      },
+    };
+  }
 
   return {
     created: true,
-    user: createdUser,
+    user: {
+      email: createdMember.email,
+      id: String(createdMember.id),
+      name: `${createdMember.firstname} ${createdMember.lastname}`.trim(),
+    },
   };
 }

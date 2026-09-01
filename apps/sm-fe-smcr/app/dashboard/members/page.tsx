@@ -24,7 +24,7 @@ export default async function Page() {
   return (
     <div className="bg-white h-full w-full p-2">
       <MembersStoreDispatcher members={members.data} />
-      <TeamsStoreDispatcher teams={teams.data} features={[]} />
+      <TeamsStoreDispatcher teams={teams.data} />
 
       <div className="inline-flex items-center justify-between w-full border-b p-2">
         <div className="inline-flex gap-2 items-center">

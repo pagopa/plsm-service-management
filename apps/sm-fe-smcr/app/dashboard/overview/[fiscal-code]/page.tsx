@@ -1,7 +1,9 @@
+import { PermissionDenied } from "@/components/auth/permission-denied";
 import { ErrorBase } from "@/components/error/error-overview";
 import Header from "@/components/provisioning/header";
 import InstitutionInfo from "@/components/provisioning/institution/info";
 import TabsSection from "@/components/provisioning/product/tabs";
+import { checkPermission } from "@/lib/auth/permissions";
 import {
   getInstitutionWithSubunits,
   Institution,
@@ -32,8 +34,17 @@ export default async function Page({
   searchParams: Promise<{ institution: string; product: string }>;
   params: Promise<{ "fiscal-code": string }>;
 }) {
-  const { institution, product } = await searchParams;
   const taxCode = (await params)["fiscal-code"] as string;
+  const canReadOverview = await checkPermission(
+    "overview.read",
+    `/dashboard/overview/${taxCode}`,
+  );
+
+  if (!canReadOverview) {
+    return <PermissionDenied feature="Overview" />;
+  }
+
+  const { institution, product } = await searchParams;
   const institutionsResponse = await getInstitutionWithSubunits(
     taxCode as string,
   );

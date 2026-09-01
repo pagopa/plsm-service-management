@@ -1,51 +1,57 @@
-// app/api/teams/new/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import pg from "@/lib/knex";
-import { randomUUID } from "crypto";
-import sharp from "sharp";
+import { type NextRequest, NextResponse } from "next/server";
+import slugify from "slugify";
+import { getDb } from "@/db";
+import { memberTeams, teams } from "@/db/schema";
+import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const name = formData.get("name") as string;
-    const imageFile = formData.get("image") as File | null;
+    const name = String(formData.get("name") ?? "").trim();
+    const description = String(formData.get("description") ?? "").trim();
+    const department = String(formData.get("department") ?? "").trim();
 
-    let imageUrl: string | null = null;
-
-    if (imageFile) {
-      // Converti l'immagine in buffer
-      const buffer = await imageFile.arrayBuffer();
-
-      // Ridimensiona l'immagine a max 256x256 mantenendo le proporzioni
-      const resizedImage = await sharp(buffer)
-        .resize(256, 256, {
-          fit: "inside",
-          withoutEnlargement: true,
-        })
-        .toBuffer();
-
-      // Converti in base64
-      imageUrl = `data:${imageFile.type};base64,${resizedImage.toString("base64")}`;
+    if (name.length < 2) {
+      return NextResponse.json({ error: "Invalid team name" }, { status: 400 });
     }
 
-    const team = await pg("team")
-      .insert({
-        id: randomUUID(),
-        name,
-        image: imageUrl,
-        createdAt: pg.fn.now(),
-        updatedAt: pg.fn.now(),
-      })
-      .returning("*");
+    const currentUser = await getOrCreateCurrentAppUser();
 
-    return NextResponse.json({ data: team }, { status: 201 });
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const db = getDb();
+    const createdByMemberId = Number(currentUser.user.id);
+    const team = await db.transaction(async (transaction) => {
+      const [createdTeam] = await transaction
+        .insert(teams)
+        .values({
+          createdByMemberId,
+          department: department || null,
+          description: description || null,
+          name,
+          slug: slugify(name, { lower: true, strict: true }),
+        })
+        .returning();
+
+      if (createdTeam) {
+        await transaction.insert(memberTeams).values({
+          memberId: createdByMemberId,
+          teamId: createdTeam.id,
+        });
+      }
+
+      return createdTeam;
+    });
+
+    return NextResponse.json(
+      { data: team ? [{ ...team, id: String(team.id) }] : [] },
+      { status: 201 },
+    );
   } catch (error) {
     logServerError(error, "Errore API team");
     return NextResponse.json(
