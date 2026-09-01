@@ -29,8 +29,8 @@ const OnboardingSchema = z.object({
 const InstitutionSchema = z.object({
   id: z.string(),
   externalId: z.string(),
-  origin: z.string(),
-  originId: z.string(),
+  origin: z.string().optional(),
+  originId: z.string().optional(),
   description: z.string().optional(),
   institutionType: z.string().optional(),
   digitalAddress: z.string().optional(),
