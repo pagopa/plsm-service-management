@@ -15,6 +15,7 @@ import { useLocalStorage } from "@uidotdev/usehooks";
 import {
   ClipboardList,
   ClipboardType,
+  Fingerprint,
   Landmark,
   LoaderCircleIcon,
   Locate,
@@ -112,7 +113,8 @@ export default function InstitutionInfo({
         items: [
           {
             id: currentInstitution.id,
-            name: currentInstitution.description ?? currentInstitution.origin,
+            name:
+              currentInstitution.description ?? currentInstitution.origin ?? "",
             taxCode: currentInstitution.taxCode,
           },
           ...history.items
@@ -263,8 +265,14 @@ export default function InstitutionInfo({
         <InfoItem
           name="origin"
           label="Origin"
-          value={currentInstitution?.origin}
+          value={currentInstitution?.origin || "-"}
           icon={<Locate className="size-4 mr-2 text-muted-foreground" />}
+        />
+        <InfoItem
+          name="originId"
+          label="Origin ID"
+          value={currentInstitution?.originId || "-"}
+          icon={<Fingerprint className="size-4 mr-2 text-muted-foreground" />}
         />
         <InfoItem
           name="product"
