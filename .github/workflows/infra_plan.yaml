@@ -33,7 +33,7 @@ permissions:
 jobs:
   plan_prod:
     if: github.event_name == 'pull_request' || github.event.inputs.target_env == 'prod'
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: Plan Infrastructure - ${{ github.event.inputs.target_env || 'prod' }}
     secrets: inherit
     with:
@@ -45,7 +45,7 @@ jobs:
 
   plan_dev:
     if: github.event.inputs.target_env == 'dev'
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: Plan Infrastructure - dev
     secrets: inherit
     with:
@@ -57,7 +57,7 @@ jobs:
 
   plan_dev_base:
     if: github.event.inputs.target_env == 'dev-base'
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: Plan Infrastructure - dev-base
     secrets: inherit
     with:

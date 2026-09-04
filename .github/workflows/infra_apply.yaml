@@ -58,7 +58,7 @@ jobs:
   apply_prod:
     needs: check_branch
     if: needs.check_branch.outputs.allowed == 'true'
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: Apply Infrastructure - ${{ github.event.inputs.target_env || 'prod' }}
     secrets: inherit
     with:
@@ -70,7 +70,7 @@ jobs:
 
   apply_dev:
     if: github.event.inputs.target_env == 'dev'
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: Apply Infrastructure - dev
     secrets: inherit
     with:
@@ -82,7 +82,7 @@ jobs:
 
   apply_dev_base:
     if: github.event.inputs.target_env == 'dev-base'
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: Apply Infrastructure - dev-base
     secrets: inherit
     with:
