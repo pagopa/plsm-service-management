@@ -55,7 +55,7 @@ jobs:
   deploy:
     needs: resolve-env
     if: github.event_name == 'workflow_dispatch'
-    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@main
+    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     with:
       workspace_name: sm-auth-fn
       environment: ${{ inputs.environment }}
