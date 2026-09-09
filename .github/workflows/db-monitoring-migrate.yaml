@@ -1,0 +1,117 @@
+name: DB Monitoring - Migrate
+
+# Il server PostgreSQL ha publicNetworkAccess disabilitato: le migrazioni devono
+# partire da un runner dentro la VNet, non dal portatile di chi sviluppa.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Ambiente su cui applicare le migrazioni
+        type: choice
+        required: true
+        default: app-dev
+        options:
+          - app-dev
+          - app-prod
+      confirm:
+        description: 'Scrivi "migrate" per confermare'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  DATABASE_NAME: monitoring
+  WORKSPACE_NAME: "@repo/db-monitoring"
+
+jobs:
+  migrate:
+    name: Migrazioni su ${{ inputs.environment }}
+    runs-on: ${{ inputs.environment == 'app-prod' && 'prod' || 'dev' }}
+    environment: ${{ inputs.environment }}-cd
+
+    steps:
+      - name: Verifica la conferma
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [ "$CONFIRM" != "migrate" ]; then
+            echo "::error::Conferma mancante: scrivi esattamente 'migrate' per procedere."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Componi la connection string
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD_B64: ${{ secrets.DB_PASSWORD_B64 }}
+          DB_SSL: ${{ secrets.DB_SSL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DB_HOST:-}" ] || [ -z "${DB_PORT:-}" ] || [ -z "${DB_USER:-}" ] || [ -z "${DB_PASSWORD_B64:-}" ]; then
+            echo "::error::Secret DB_HOST, DB_PORT, DB_USER o DB_PASSWORD_B64 non configurati nell'environment ${{ inputs.environment }}-cd"
+            exit 1
+          fi
+
+          PW="$(printf '%s' "$DB_PASSWORD_B64" | base64 -d)"
+          echo "::add-mask::$PW"
+
+          # La password può contenere @ / : # ? & =, quindi va URL-encodata prima di
+          # finire dentro la connection string. Lo fa Node, non sed.
+          PW_ENC="$(PW="$PW" node -e 'process.stdout.write(encodeURIComponent(process.env.PW))')"
+          echo "::add-mask::$PW_ENC"
+
+          case "$(printf '%s' "${DB_SSL:-true}" | tr '[:upper:]' '[:lower:]')" in
+            "" | true) SSLMODE=require ;;
+            *) SSLMODE=disable ;;
+          esac
+
+          URL="postgresql://${DB_USER}:${PW_ENC}@${DB_HOST}:${DB_PORT}/${DATABASE_NAME}?sslmode=${SSLMODE}"
+          echo "::add-mask::$URL"
+
+          echo "MONITORING_DATABASE_URL=$URL" >> "$GITHUB_ENV"
+          echo "Destinazione: ${DB_USER}@${DB_HOST}:${DB_PORT}/${DATABASE_NAME} (sslmode=${SSLMODE})"
+
+      - name: Anteprima delle migrazioni pendenti
+        id: preview
+        env:
+          TARGET_ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          set -euo pipefail
+          yarn workspace "$WORKSPACE_NAME" db:pending | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Applica le migrazioni
+        if: steps.preview.outputs.pending_count != '0'
+        run: yarn workspace "$WORKSPACE_NAME" db:migrate
+
+      - name: Verifica l'allineamento finale
+        if: steps.preview.outputs.pending_count != '0'
+        env:
+          TARGET_ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          set -euo pipefail
+          {
+            echo ""
+            echo "---"
+            echo ""
+            echo "### Stato dopo l'applicazione"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          yarn workspace "$WORKSPACE_NAME" db:pending --fail-on-pending | tee -a "$GITHUB_STEP_SUMMARY"
