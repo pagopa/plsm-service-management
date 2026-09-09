@@ -1,0 +1,68 @@
+import { drizzle } from "drizzle-orm/node-postgres";
+import { buildUpsertCall, buildListCalls } from "../src/queries/calls";
+
+const db = drizzle("postgresql://localhost:5432/monitoring");
+
+const input = {
+  crmActivityId: "11111111-1111-1111-1111-111111111111",
+  title: "Incontro tecnico",
+  institutionId: "22222222-2222-2222-2222-222222222222",
+  institutionName: "Comune di Roma",
+  productId: "prod-pn" as const,
+  callDate: new Date("2026-01-15T10:00:00Z"),
+  link: "https://meet.example.com/abc",
+};
+
+describe("buildUpsertCall", () => {
+  it("usa crm_activity_id come chiave di conflitto", () => {
+    const { sql } = buildUpsertCall(db, input).toSQL();
+
+    expect(sql).toContain('on conflict ("crm_activity_id") do update');
+  });
+
+  it("aggiorna i campi mutabili e il timestamp di modifica", () => {
+    const { sql } = buildUpsertCall(db, input).toSQL();
+
+    expect(sql).toContain('"title" = excluded.title');
+    expect(sql).toContain('"product_id" = excluded.product_id');
+    expect(sql).toContain('"updated_at" = now()');
+  });
+
+  it("non sovrascrive created_at in caso di conflitto", () => {
+    const { sql } = buildUpsertCall(db, input).toSQL();
+
+    expect(sql).not.toContain('"created_at" = excluded.created_at');
+  });
+
+  it("restituisce l'id della riga", () => {
+    const { sql } = buildUpsertCall(db, input).toSQL();
+
+    expect(sql).toContain('returning "id"');
+  });
+
+  it("passa i valori come parametri, non interpolati nell'SQL", () => {
+    const { params } = buildUpsertCall(db, input).toSQL();
+
+    expect(params).toContain("Incontro tecnico");
+    expect(params).toContain("prod-pn");
+  });
+});
+
+describe("buildListCalls", () => {
+  it("ordina per data discendente e applica un limite", () => {
+    const { sql } = buildListCalls(db, { limit: 20 }).toSQL();
+
+    expect(sql).toContain('order by "calls"."call_date" desc');
+    expect(sql).toContain("limit");
+  });
+
+  it("filtra per prodotto quando richiesto", () => {
+    const { sql, params } = buildListCalls(db, {
+      limit: 20,
+      productId: "prod-io",
+    }).toSQL();
+
+    expect(sql).toContain('"product_id" = ');
+    expect(params).toContain("prod-io");
+  });
+});
