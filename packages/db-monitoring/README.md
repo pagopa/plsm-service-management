@@ -58,12 +58,49 @@ Da eseguire dalla root del monorepo.
 | Comando | Cosa fa | Serve la VPN? |
 |---|---|---|
 | `yarn workspace @repo/db-monitoring db:generate --name <nome>` | Genera la migrazione dal diff dello schema | no |
+| `yarn workspace @repo/db-monitoring db:pending` | Elenca le migrazioni non ancora applicate, senza toccare il database | **sì** |
 | `yarn workspace @repo/db-monitoring db:migrate` | Applica le migrazioni non ancora eseguite | **sì** |
 | `yarn workspace @repo/db-monitoring db:migrate:prod` | Come sopra, con `.env.prod` | **sì** |
 | `yarn workspace @repo/db-monitoring db:studio` | Ispeziona i dati da browser | **sì** |
 | `yarn workspace @repo/db-monitoring test` | Test | no |
 | `yarn workspace @repo/db-monitoring check-types` | Controllo dei tipi | no |
 | `yarn workspace @repo/db-monitoring build` | Compila in `dist/` | no |
+
+I comandi marcati «serve la VPN» valgono per l'esecuzione dal proprio portatile. Per applicare
+le migrazioni la strada normale è la GitHub Action, che non richiede VPN a nessuno.
+
+## Applicare le migrazioni
+
+### Modo consigliato: GitHub Action
+
+Il server PostgreSQL non è raggiungibile da internet, quindi le migrazioni girano su un runner
+dentro la VNet.
+
+1. Vai su **Actions → DB Monitoring - Migrate → Run workflow**
+2. Scegli l'ambiente (`app-dev` o `app-prod`)
+3. Scrivi `migrate` nel campo di conferma
+4. Avvia, poi **leggi il job summary**: mostra l'SQL di ogni migrazione pendente prima di
+   applicarla, e rilegge lo stato del database dopo l'applicazione
+
+Se non c'è nulla da applicare il workflow lo dichiara e non tocca il database.
+
+Prerequisiti: l'environment GitHub (`app-dev-cd` o `app-prod-cd`) deve contenere i secret
+`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD_B64` e `DB_SSL`. Il database di destinazione è
+sempre `monitoring`: il secret `DB_NAME`, che vale `dbsmcr`, non viene letto. Il database deve
+già esistere: lo crea Terraform (`infra/resources/*/database.tf`), non questa Action.
+
+### Anteprima senza applicare
+
+`yarn workspace @repo/db-monitoring db:pending` elenca le migrazioni pendenti senza modificare
+nulla. Funziona sia in CI sia in locale, purché `MONITORING_DATABASE_URL` sia impostata. Esiste
+perché `drizzle-kit migrate` non ha un dry-run, e `drizzle-kit check` verifica gli snapshot
+locali, non lo stato del database remoto.
+
+### Fallback manuale
+
+Da una macchina connessa in VPN, con `.env.prod` valorizzato:
+`yarn workspace @repo/db-monitoring db:migrate:prod`. Da usare solo se l'Action non è
+disponibile.
 
 ## Modificare lo schema
 
@@ -87,7 +124,7 @@ yarn workspace @repo/db-monitoring test
 git add packages/db-monitoring/src/schema.ts packages/db-monitoring/migrations
 ```
 
-In produzione il passo 4 diventa `db:migrate:prod`, da eseguire **prima** del deploy del codice che dipende dalla modifica.
+In produzione il passo 4 si fa lanciando la GitHub Action **DB Monitoring - Migrate** sull'ambiente `app-prod`, **prima** del deploy del codice che dipende dalla modifica.
 
 ### Regole
 
