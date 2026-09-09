@@ -1,4 +1,5 @@
 import { getTableName, getTableColumns } from "drizzle-orm";
+import { getTableConfig, PgDialect } from "drizzle-orm/pg-core";
 import { calls, PRODUCT_IDS } from "../src/schema";
 
 describe("calls schema", () => {
@@ -42,5 +43,17 @@ describe("calls schema", () => {
       "prod-pagopa",
       "prod-io-sign",
     ]);
+  });
+
+  it("vincola product_id esattamente ai valori di PRODUCT_IDS", () => {
+    const constraint = getTableConfig(calls).checks.find(
+      (c) => c.name === "calls_product_id_check",
+    );
+
+    expect(constraint).toBeDefined();
+
+    const { params } = new PgDialect().sqlToQuery(constraint!.value);
+
+    expect(params).toEqual([...PRODUCT_IDS]);
   });
 });

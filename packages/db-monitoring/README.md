@@ -49,6 +49,8 @@ az keyvault secret show \
 
 Non committare mai il `.env` né incollare la connection string in Jira, Slack o nelle PR.
 
+Il pool apre al massimo 5 connessioni per processo (il server ne consente 50 in totale e i consumatori sono serverless). Si può sovrascrivere con `MONITORING_DATABASE_POOL_MAX`.
+
 ## Comandi
 
 Da eseguire dalla root del monorepo.

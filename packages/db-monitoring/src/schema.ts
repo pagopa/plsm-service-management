@@ -40,9 +40,14 @@ export const calls = pgTable(
   },
   (table) => [
     unique("uq_calls_crm_activity_id").on(table.crmActivityId),
+    // La lista è derivata da PRODUCT_IDS: aggiungere un prodotto alla costante
+    // produce automaticamente una migrazione che aggiorna il vincolo.
     check(
       "calls_product_id_check",
-      sql`${table.productId} IN ('prod-io','prod-interop','prod-pn','prod-pagopa','prod-io-sign')`,
+      sql`${table.productId} IN (${sql.join(
+        PRODUCT_IDS.map((productId) => sql`${productId}`),
+        sql`,`,
+      )})`,
     ),
     index("idx_calls_call_date").using("btree", table.callDate.desc()),
     index("idx_calls_institution_id").using("btree", table.institutionId),
