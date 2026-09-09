@@ -46,6 +46,7 @@ resource "azurerm_key_vault_secret" "postgres_password" {
 
   depends_on = [azurerm_role_assignment.kv_group_secrets_officer]
 }
+
 # -----------------------------------------------------------------------------
 # Database "monitoring" — tracciamento call (SMION-830)
 # -----------------------------------------------------------------------------
