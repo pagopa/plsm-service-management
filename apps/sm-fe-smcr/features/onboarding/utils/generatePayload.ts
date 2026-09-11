@@ -1,4 +1,4 @@
-import { Gsp, GspProdPa, Payload } from "../types/payloadTypes";
+import { Gsp, GspProdPa, Gpu, Payload } from "../types/payloadTypes";
 import { OnboardingSchema } from "../types/onboardingSchema";
 
 export function generatePayload(formData: OnboardingSchema): Payload {
@@ -89,11 +89,14 @@ export function generatePayload(formData: OnboardingSchema): Payload {
       return prvData;
     }
     case "GPU": {
-      const gpuData = {
+      const gpuPayload = {
         ...commonData,
+        companyInformations: {
+          rea: formData.rea ?? "",
+        },
         institutionType: "GPU" as const,
       };
-      return gpuData;
+      return gpuPayload satisfies Gpu;
     }
     case "SA": {
       const saData = {
@@ -142,8 +145,11 @@ export function generatePayload(formData: OnboardingSchema): Payload {
     case "SCP":
       return {
         ...commonData,
-        institutionType: "GSP",
-      };
+        companyInformations: {
+          rea: formData.rea ?? "",
+        },
+        institutionType: "GSP" as const,
+      } satisfies Gsp;
     default:
       throw Error(
         `Invalid institutionType: ${formData.institutionType satisfies never}`,

@@ -104,6 +104,7 @@ export type GspProdPa = Common & {
 export type Gsp = Common & {
   institutionType: "GSP";
   originId?: string;
+  companyInformations: CompanyInformations;
 };
 
 export type Scp = Common & {
@@ -118,6 +119,7 @@ export type Prv = Common & {
 export type Gpu = Common & {
   institutionType: "GPU";
   originId?: string;
+  companyInformations: CompanyInformations;
 };
 
 export type Sa = Common & {

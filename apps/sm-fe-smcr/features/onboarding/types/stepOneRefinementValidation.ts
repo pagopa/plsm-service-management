@@ -109,15 +109,6 @@ export const stepOneRefinementValidation = (
       path: ["recipientCode"],
     });
   }
-  if (data.institutionType === "GSP" && data.productId === "prod-pagopa") {
-    if (!data.rea) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Il campo REA è obbligatorio",
-        path: ["rea"],
-      });
-    }
-  }
   if (data.subunit === "AOO") {
     if (data.subunitCode?.length !== AOO_CODE_LENGTH) {
       ctx.addIssue({
