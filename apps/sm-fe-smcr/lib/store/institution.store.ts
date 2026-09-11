@@ -1,21 +1,19 @@
 import { create } from "zustand";
 
-export type InstitutionStoreValues = "address" | "zipCode" | "digitalAddress";
+export type InstitutionStoreValues =
+  | "description"
+  | "address"
+  | "zipCode"
+  | "digitalAddress"
+  | "origin"
+  | "originId";
+
+type Values = Record<InstitutionStoreValues, string>;
 
 type Store = {
-  values: {
-    description: string;
-    address: string;
-    zipCode: string;
-    digitalAddress: string;
-  };
+  values: Values;
   updateValue: (key: string, value: string) => void;
-  resetValues: (values: {
-    description: string;
-    address: string;
-    zipCode: string;
-    digitalAddress: string;
-  }) => void;
+  resetValues: (values: Values) => void;
 };
 
 const useStore = create<Store>((set) => ({
@@ -24,6 +22,8 @@ const useStore = create<Store>((set) => ({
     address: "",
     zipCode: "",
     digitalAddress: "",
+    origin: "",
+    originId: "",
   },
   updateValue: (key, value) =>
     set((state) => ({ values: { ...state.values, [key]: value } })),
