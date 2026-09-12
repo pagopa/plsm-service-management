@@ -7,6 +7,13 @@ import {
   useInstitutionStore,
 } from "@/lib/store/institution.store";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CheckIcon, CopyIcon, PencilIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -19,6 +26,7 @@ type Props = {
   valueClassName?: string;
   isEditable?: boolean;
   isCopyable?: boolean;
+  options?: ReadonlyArray<string>;
   icon?: React.ReactNode;
 } & React.ComponentProps<"div">;
 
@@ -31,6 +39,7 @@ export default function InfoItem({
   className,
   children,
   isCopyable = false,
+  options,
   icon,
   ...props
 }: Props) {
@@ -53,6 +62,7 @@ export default function InfoItem({
           valueClassName={valueClassName}
           isEditable={isEditable}
           isCopyable={isCopyable}
+          options={options}
         />
       )}
     </div>
@@ -65,12 +75,14 @@ function InfoItemContent({
   valueClassName,
   isEditable = false,
   isCopyable = false,
+  options,
 }: {
   name: string;
   value: string;
   valueClassName?: string;
   isEditable?: boolean;
   isCopyable?: boolean;
+  options?: ReadonlyArray<string>;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [mouseDownOnCheck, setMouseDownOnCheck] = useState(false);
@@ -101,6 +113,51 @@ function InfoItemContent({
   function handleFocusLoss() {
     if (mouseDownOnCheck) return;
     setIsEditing(false);
+  }
+
+  if (isEditable && isEditing && options) {
+    const currentValue = values[name as InstitutionStoreValues] || value;
+    const availableOptions = options.includes(currentValue)
+      ? options
+      : [...options, currentValue].filter(Boolean);
+
+    return (
+      <div className="inline-flex items-center">
+        <button ref={buttonRef} type="submit" className="hidden" />
+
+        <Select
+          value={currentValue}
+          onValueChange={(newValue) => {
+            updateValue(name, newValue);
+          }}
+        >
+          <SelectTrigger className="h-8 w-full border-none shadow-none focus-visible:ring-0 px-0">
+            <SelectValue placeholder={name} />
+          </SelectTrigger>
+
+          <SelectContent>
+            {availableOptions.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
+          className="size-8"
+          onClick={() => {
+            setIsEditing(false);
+            buttonRef.current?.click();
+          }}
+        >
+          <CheckIcon className="size-3.5 opacity-60" />
+        </Button>
+      </div>
+    );
   }
 
   if (isEditable && isEditing) {

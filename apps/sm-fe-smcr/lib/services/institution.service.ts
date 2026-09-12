@@ -229,6 +229,12 @@ const UpdateInsitutionInfoSchema = z.object({
       message: "Lo ZIP deve essere un numero di 5 cifre.",
     }),
 
+  // Alcuni enti hanno origin/originId anche a livello top-level per refusi
+  // storici: li accettiamo senza usarli, i valori validi stanno in onboardings.
+  origin: z.string().optional(),
+
+  originId: z.string().optional(),
+
   onboardings: z.array(
     z.object({
       productId: z
@@ -237,6 +243,8 @@ const UpdateInsitutionInfoSchema = z.object({
       vatNumber: z
         .string()
         .nonempty({ message: "La partita IVA è obbligatoria." }),
+      origin: z.string().optional(),
+      originId: z.string().optional(),
     }),
   ),
 });
@@ -255,7 +263,6 @@ export async function updateInstitutionInfo(input: UpdateInsitutionInfoInput) {
         "Si è verificato un errore di validazione, ricontrolla i dati e riprova.",
     };
   }
-
   const { data, error } = await betterFetch(
     `https://api.selfcare.pagopa.it/external/support/v1/institutions/${input.institutionId}`,
     {
@@ -275,7 +282,6 @@ export async function updateInstitutionInfo(input: UpdateInsitutionInfoInput) {
       },
     },
   );
-
   if (error || !data) {
     logServerError(error, "updateInstitutionInfo - fetch error");
     return { error: "Si è verificato un errore, riprova più tardi." };

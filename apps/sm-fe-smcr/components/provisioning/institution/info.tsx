@@ -5,6 +5,7 @@ import { Institution, Product } from "@/lib/services/institution.service";
 import { useInstitutionStore } from "@/lib/store/institution.store";
 import { PRODUCT_MAP } from "@/lib/types/product";
 import { cn } from "@/lib/utils";
+import { apiOriginValues } from "@/features/onboarding/utils/constants";
 import {
   Select,
   SelectContent,
@@ -42,7 +43,11 @@ import { Badge } from "@/components/ui/badge";
 
 type Props = { institutions: Array<Institution>; isPNPG?: boolean };
 
-const editableFields = [
+const editableFields: Array<{
+  field: string;
+  label: string;
+  source?: "product";
+}> = [
   {
     field: "description",
     label: "Ente",
@@ -58,6 +63,16 @@ const editableFields = [
   {
     field: "address",
     label: "Indirizzo",
+  },
+  {
+    field: "origin",
+    label: "Origin",
+    source: "product",
+  },
+  {
+    field: "originId",
+    label: "Origin ID",
+    source: "product",
   },
 ];
 
@@ -158,6 +173,8 @@ export default function InstitutionInfo({
         address: currentInstitution?.address || "",
         digitalAddress: currentInstitution?.digitalAddress || "",
         zipCode: currentInstitution?.zipCode || "",
+        origin: currentProduct?.origin || "",
+        originId: currentProduct?.originId || "",
       });
     }
   }, [state]);
@@ -265,13 +282,16 @@ export default function InstitutionInfo({
         <InfoItem
           name="origin"
           label="Origin"
-          value={currentInstitution?.origin || "-"}
+          value={currentProduct?.origin || ""}
+          isEditable
+          options={apiOriginValues}
           icon={<Locate className="size-4 mr-2 text-muted-foreground" />}
         />
         <InfoItem
           name="originId"
           label="Origin ID"
-          value={currentInstitution?.originId || "-"}
+          value={currentProduct?.originId || ""}
+          isEditable
           icon={<Fingerprint className="size-4 mr-2 text-muted-foreground" />}
         />
         <InfoItem
@@ -361,6 +381,14 @@ export default function InstitutionInfo({
                 currentInstitution?.onboarding.map((item) => ({
                   productId: item.productId as string,
                   vatNumber: item.billing?.vatNumber as string,
+                  origin:
+                    item.productId === currentProduct?.productId
+                      ? (valuesFromStore.origin as string)
+                      : (item.origin as string),
+                  originId:
+                    item.productId === currentProduct?.productId
+                      ? (valuesFromStore.originId as string)
+                      : (item.originId as string),
                 })) || [],
               ),
             );
@@ -369,16 +397,18 @@ export default function InstitutionInfo({
           }}
           changes={editableFields
             .map((item) => {
+              const source =
+                item.source === "product" ? currentProduct : currentInstitution;
               const oldValue =
-                currentInstitution &&
-                (currentInstitution as unknown as Record<string, string>)[
+                (source as unknown as Record<string, string> | null)?.[
                   item.field
-                ];
-              const newValue = (
-                valuesFromStore as unknown as Record<string, string>
-              )[item.field];
+                ] || "";
+              const newValue =
+                (valuesFromStore as unknown as Record<string, string>)[
+                  item.field
+                ] || "";
 
-              if (!oldValue || !newValue) {
+              if (!oldValue && !newValue) {
                 return undefined;
               }
 
