@@ -37,6 +37,7 @@ __queuestorage__
 *.tfstate.*
 *.tfsec
 tfplan
+*.tfplan
 # Crash log files
 crash.log
 override.tf

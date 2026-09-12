@@ -80,7 +80,11 @@ jobs:
 
           case "$(printf '%s' "${DB_SSL:-true}" | tr '[:upper:]' '[:lower:]')" in
             "" | true) SSLMODE=require ;;
-            *) SSLMODE=disable ;;
+            false) SSLMODE=disable ;;
+            *)
+              echo "::error::DB_SSL deve essere 'true' o 'false'." >&2
+              exit 1
+              ;;
           esac
 
           URL="postgresql://${DB_USER}:${PW_ENC}@${DB_HOST}:${DB_PORT}/${DATABASE_NAME}?sslmode=${SSLMODE}"

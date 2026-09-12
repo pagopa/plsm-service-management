@@ -24,7 +24,7 @@ export const calls = pgTable(
   "calls",
   {
     id: uuid().defaultRandom().primaryKey(),
-    crmActivityId: uuid("crm_activity_id"),
+    crmActivityId: uuid("crm_activity_id").notNull(),
     title: text(),
     institutionId: uuid("institution_id"),
     institutionName: text("institution_name"),

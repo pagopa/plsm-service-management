@@ -1,6 +1,6 @@
 CREATE TABLE "calls" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-	"crm_activity_id" uuid CONSTRAINT "uq_calls_crm_activity_id" UNIQUE,
+	"crm_activity_id" uuid NOT NULL CONSTRAINT "uq_calls_crm_activity_id" UNIQUE,
 	"title" text,
 	"institution_id" uuid,
 	"institution_name" text,

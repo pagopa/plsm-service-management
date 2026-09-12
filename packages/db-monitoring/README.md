@@ -85,7 +85,7 @@ dentro la VNet.
 Se non c'è nulla da applicare il workflow lo dichiara e non tocca il database.
 
 Prerequisiti: l'environment GitHub (`app-dev-cd` o `app-prod-cd`) deve contenere i secret
-`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD_B64` e `DB_SSL`. Il database di destinazione è
+`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD_B64` e `DB_SSL` (`true` o `false`). Il database di destinazione è
 sempre `monitoring`: il secret `DB_NAME`, che vale `dbsmcr`, non viene letto. Il database deve
 già esistere: lo crea Terraform (`infra/resources/*/database.tf`), non questa Action.
 

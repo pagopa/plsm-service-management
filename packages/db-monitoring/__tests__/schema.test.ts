@@ -25,14 +25,14 @@ describe("calls schema", () => {
     ]);
   });
 
-  it("rende obbligatorie solo le colonne richieste dal task", () => {
+  it("rende obbligatoria la chiave usata per garantire l'idempotenza", () => {
     const columns = getTableColumns(calls);
     const required = Object.values(columns)
       .filter((c) => c.notNull && !c.hasDefault)
       .map((c) => c.name)
       .sort();
 
-    expect(required).toEqual(["call_date", "product_id"]);
+    expect(required).toEqual(["call_date", "crm_activity_id", "product_id"]);
   });
 
   it("elenca i prodotti supportati", () => {
