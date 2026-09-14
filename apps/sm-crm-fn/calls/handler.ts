@@ -8,7 +8,7 @@ import type {
   InvocationContext,
 } from "@azure/functions";
 import { z } from "zod";
-import { upsertCall, listCalls, PRODUCT_IDS, type Call } from "@repo/db-monitoring";
+import { upsertCall, listCalls, PRODUCT_IDS } from "@repo/db-monitoring";
 import { createLogger } from "../_shared/utils/logger";
 
 // Verifica solo il formato (8-4-4-4-12 esadecimale): zod .uuid() impone anche
@@ -107,10 +107,6 @@ export async function createCallHandler(
 // -----------------------------------------------------------------------------
 
 const DEFAULT_LIST_LIMIT = 50;
-// Cap usato per recuperare un pool sufficiente da filtrare per data lato
-// applicativo (vedi filterByDateRange). Va rimosso quando il filtro per data
-// sarà spostato dentro @repo/db-monitoring.listCalls.
-const DATE_FILTER_FETCH_CAP = 500;
 
 const listCallsQuerySchema = z
   .object({
@@ -124,22 +120,6 @@ const listCallsQuerySchema = z
     message: "dateFrom deve essere precedente o uguale a dateTo",
     path: ["dateFrom"],
   });
-
-/**
- * Filtra le call per range temporale in-memory: @repo/db-monitoring.listCalls
- * non espone ancora un filtro per data (solo productId/institutionId). È una
- * misura interinale, da rimuovere quando il filtro verrà spostato nel package
- * condiviso (query SQL con gte/lte su call_date).
- */
-function filterByDateRange(calls: Call[], dateFrom?: Date, dateTo?: Date): Call[] {
-  if (!dateFrom && !dateTo) return calls;
-
-  return calls.filter((call) => {
-    if (dateFrom && call.callDate < dateFrom) return false;
-    if (dateTo && call.callDate > dateTo) return false;
-    return true;
-  });
-}
 
 export async function listCallsHandler(
   request: HttpRequest,
@@ -176,17 +156,15 @@ export async function listCallsHandler(
   }
 
   const { productId, institutionId, dateFrom, dateTo, limit } = parsed.data;
-  const requestedLimit = limit ?? DEFAULT_LIST_LIMIT;
-  const hasDateFilter = dateFrom !== undefined || dateTo !== undefined;
 
   try {
-    const calls = await listCalls({
-      limit: hasDateFilter ? DATE_FILTER_FETCH_CAP : requestedLimit,
+    const data = await listCalls({
+      limit: limit ?? DEFAULT_LIST_LIMIT,
       productId,
       institutionId,
+      callDateFrom: dateFrom,
+      callDateTo: dateTo,
     });
-
-    const data = filterByDateRange(calls, dateFrom, dateTo).slice(0, requestedLimit);
 
     logger.info("Call recuperate", {
       resultCount: data.length,

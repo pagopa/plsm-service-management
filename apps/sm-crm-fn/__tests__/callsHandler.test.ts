@@ -145,6 +145,8 @@ describe("listCallsHandler", () => {
       limit: 50,
       productId: undefined,
       institutionId: undefined,
+      callDateFrom: undefined,
+      callDateTo: undefined,
     });
   });
 
@@ -161,25 +163,26 @@ describe("listCallsHandler", () => {
     );
   });
 
-  it("applica il range temporale in AND con gli altri filtri, escludendo le call fuori range", async () => {
-    const inRange = makeCall({
-      id: "1",
-      callDate: new Date("2026-01-15T10:00:00Z"),
-    });
-    const outOfRange = makeCall({
-      id: "2",
-      callDate: new Date("2026-03-01T10:00:00Z"),
-    });
-    mockedListCalls.mockResolvedValue([inRange, outOfRange]);
+  it("passa il range temporale a listCalls, delegando il filtro al database", async () => {
+    const inRange = makeCall({ id: "1", callDate: new Date("2026-01-15T10:00:00Z") });
+    mockedListCalls.mockResolvedValue([inRange]);
 
     const response = await listCallsHandler(
       makeRequest({
+        productId: "prod-io",
         dateFrom: "2026-01-01T00:00:00Z",
         dateTo: "2026-01-31T23:59:59Z",
       }) as never,
       makeContext() as never,
     );
 
+    expect(mockedListCalls).toHaveBeenCalledWith({
+      limit: 50,
+      productId: "prod-io",
+      institutionId: undefined,
+      callDateFrom: new Date("2026-01-01T00:00:00Z"),
+      callDateTo: new Date("2026-01-31T23:59:59Z"),
+    });
     expect(response.jsonBody).toMatchObject({ count: 1 });
     expect((response.jsonBody as { data: Call[] }).data).toEqual([inRange]);
   });
