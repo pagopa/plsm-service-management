@@ -23,9 +23,22 @@ describe("buildUpsertCall", () => {
   it("aggiorna i campi mutabili e il timestamp di modifica", () => {
     const { sql } = buildUpsertCall(db, input).toSQL();
 
-    expect(sql).toContain('"title" = excluded.title');
+    expect(sql).toContain('"title" = coalesce(excluded.title,');
     expect(sql).toContain('"product_id" = excluded.product_id');
     expect(sql).toContain('"updated_at" = now()');
+  });
+
+  it("non azzera i campi opzionali su un retry con payload parziale", () => {
+    const { sql } = buildUpsertCall(db, input).toSQL();
+
+    expect(sql).toContain('"title" = coalesce(excluded.title, "calls"."title")');
+    expect(sql).toContain(
+      '"institution_id" = coalesce(excluded.institution_id, "calls"."institution_id")',
+    );
+    expect(sql).toContain(
+      '"institution_name" = coalesce(excluded.institution_name, "calls"."institution_name")',
+    );
+    expect(sql).toContain('"link" = coalesce(excluded.link, "calls"."link")');
   });
 
   it("non sovrascrive created_at in caso di conflitto", () => {

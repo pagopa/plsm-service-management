@@ -9,13 +9,22 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-/** Prodotti PagoPA ammessi. Fonte di verità condivisa con il frontend. */
+/**
+ * Prodotti PagoPA ammessi. Allineato a ProductIdSelfcare in
+ * apps/sm-crm-fn/_shared/types/dynamics.ts, la fonte di verità per i prodotti
+ * che possono comparire su una call CRM.
+ */
 export const PRODUCT_IDS = [
-  "prod-io",
-  "prod-interop",
   "prod-pn",
+  "prod-io",
   "prod-pagopa",
+  "prod-idpay",
+  "prod-idpay-merchant",
+  "prod-checkiban",
+  "prod-interop",
+  "prod-io-premium",
   "prod-io-sign",
+  "prod-rtp",
 ] as const;
 
 export type ProductId = (typeof PRODUCT_IDS)[number];

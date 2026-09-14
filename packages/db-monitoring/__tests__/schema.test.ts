@@ -37,11 +37,16 @@ describe("calls schema", () => {
 
   it("elenca i prodotti supportati", () => {
     expect(PRODUCT_IDS).toEqual([
-      "prod-io",
-      "prod-interop",
       "prod-pn",
+      "prod-io",
       "prod-pagopa",
+      "prod-idpay",
+      "prod-idpay-merchant",
+      "prod-checkiban",
+      "prod-interop",
+      "prod-io-premium",
       "prod-io-sign",
+      "prod-rtp",
     ]);
   });
 

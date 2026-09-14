@@ -14,6 +14,10 @@ export interface ListCallsOptions {
 /**
  * Costruisce la query di upsert senza eseguirla.
  * Isolata per poter essere testata ispezionando l'SQL generato.
+ *
+ * I campi opzionali usano coalesce(excluded.x, calls.x): un retry con un
+ * payload parziale (es. senza title) non deve azzerare un valore già
+ * salvato da una chiamata precedente per lo stesso crm_activity_id.
  */
 export function buildUpsertCall(db: MonitoringDb, input: UpsertCallInput) {
   return db
@@ -22,12 +26,12 @@ export function buildUpsertCall(db: MonitoringDb, input: UpsertCallInput) {
     .onConflictDoUpdate({
       target: calls.crmActivityId,
       set: {
-        title: sql`excluded.title`,
-        institutionId: sql`excluded.institution_id`,
-        institutionName: sql`excluded.institution_name`,
+        title: sql`coalesce(excluded.title, ${calls.title})`,
+        institutionId: sql`coalesce(excluded.institution_id, ${calls.institutionId})`,
+        institutionName: sql`coalesce(excluded.institution_name, ${calls.institutionName})`,
         productId: sql`excluded.product_id`,
         callDate: sql`excluded.call_date`,
-        link: sql`excluded.link`,
+        link: sql`coalesce(excluded.link, ${calls.link})`,
         updatedAt: sql`now()`,
       },
     })
