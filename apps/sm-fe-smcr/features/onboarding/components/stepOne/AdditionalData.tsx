@@ -235,7 +235,7 @@ export const AdditionalData = () => {
             </div>
           </div>
           <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-4">
+            <div className="col-span-6">
               <FormField
                 control={form.control}
                 name="agentOfPublicService"
@@ -271,7 +271,7 @@ export const AdditionalData = () => {
               />
             </div>
 
-            <div className="col-span-4">
+            <div className="col-span-6">
               <FormField
                 control={form.control}
                 name="agentOfPublicServiceNote"
@@ -288,29 +288,6 @@ export const AdditionalData = () => {
                       />
                     </FormControl>
                     <FormDescription>agentOfPublicServiceNote</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="col-span-4">
-              <FormField
-                control={form.control}
-                name="rea"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>rea</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500 disabled:shadow-none"
-                        disabled={isStepThree}
-                        placeholder=""
-                        type="text"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>rea</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

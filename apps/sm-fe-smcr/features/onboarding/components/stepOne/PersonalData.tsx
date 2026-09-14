@@ -39,6 +39,9 @@ export const PersonalData = ({
 }: Props) => {
   const { form } = useStepOneContext();
   const { isStepThree } = useFormContext();
+  const institutionType = form.watch("institutionType");
+  const isReaVisible =
+    institutionType === "GSP" || institutionType === "GPU";
   return (
     <Card className="shadow-xl rounded-none">
       <CardHeader className="font-bold uppercase tracking-wider text-sm">
@@ -237,6 +240,30 @@ export const PersonalData = ({
                 )}
               />
             </div>
+            {isReaVisible && (
+              <div className="col-span-4">
+                <FormField
+                  control={form.control}
+                  name="rea"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>REA</FormLabel>
+                      <FormControl>
+                        <Input
+                          className="disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500 disabled:shadow-none"
+                          disabled={isStepThree}
+                          placeholder=""
+                          type="text"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>rea</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
             {isSubunit && (
               <>
                 <div className="col-span-4">

@@ -213,6 +213,7 @@ export const translations = new Map<string, string>([
   ["country", "Paese"],
   ["recipientCode", "Codice SDI"],
   ["originId", "OriginId"],
+  ["rea", "REA"],
 ]);
 export type Translations = typeof translations;
 
