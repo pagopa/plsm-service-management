@@ -59,3 +59,18 @@ resource "azurerm_key_vault_secret" "db_password_b64" {
   key_vault_id = data.azurerm_key_vault.common_kv.id
   content_type = "password"
 }
+
+# -----------------------------------------------------------------------------
+# Database "monitoring" — tracciamento call (SMION-830)
+# -----------------------------------------------------------------------------
+
+resource "azurerm_postgresql_flexible_server_database" "monitoring" {
+  name      = "monitoring"
+  server_id = module.postgres_apps.postgres.id
+  charset   = "UTF8"
+  collation = "en_US.utf8"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
