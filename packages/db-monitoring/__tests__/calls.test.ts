@@ -78,4 +78,41 @@ describe("buildListCalls", () => {
     expect(sql).toContain('"product_id" = ');
     expect(params).toContain("prod-io");
   });
+
+  it("filtra per range di data quando richiesto", () => {
+    const callDateFrom = new Date("2026-01-01T00:00:00Z");
+    const callDateTo = new Date("2026-01-31T23:59:59Z");
+    const { sql, params } = buildListCalls(db, {
+      limit: 20,
+      callDateFrom,
+      callDateTo,
+    }).toSQL();
+
+    expect(sql).toContain('"call_date" >= ');
+    expect(sql).toContain('"call_date" <= ');
+    expect(params).toContain(callDateFrom.toISOString());
+    expect(params).toContain(callDateTo.toISOString());
+  });
+
+  it("compone il range di data con gli altri filtri in AND", () => {
+    const { sql } = buildListCalls(db, {
+      limit: 20,
+      productId: "prod-io",
+      institutionId: "22222222-2222-2222-2222-222222222222",
+      callDateFrom: new Date("2026-01-01T00:00:00Z"),
+    }).toSQL();
+
+    const whereClause = sql.slice(sql.indexOf("where"));
+    expect(whereClause).toContain("and");
+    expect(whereClause).toContain('"product_id" = ');
+    expect(whereClause).toContain('"institution_id" = ');
+    expect(whereClause).toContain('"call_date" >= ');
+  });
+
+  it("non applica alcun filtro sulla data se dateFrom/dateTo sono assenti", () => {
+    const { sql } = buildListCalls(db, { limit: 20 }).toSQL();
+
+    expect(sql).not.toContain('"call_date" >=');
+    expect(sql).not.toContain('"call_date" <=');
+  });
 });

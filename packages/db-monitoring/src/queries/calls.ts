@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import type { MonitoringDb } from "../client";
 import { getMonitoringDb } from "../client";
 import { calls, type Call, type NewCall, type ProductId } from "../schema";
@@ -9,6 +9,10 @@ export interface ListCallsOptions {
   limit: number;
   productId?: ProductId;
   institutionId?: string;
+  /** Limite inferiore (incluso) su call_date. */
+  callDateFrom?: Date;
+  /** Limite superiore (incluso) su call_date. */
+  callDateTo?: Date;
 }
 
 /**
@@ -65,6 +69,14 @@ export function buildListCalls(db: MonitoringDb, options: ListCallsOptions) {
     filters.push(eq(calls.institutionId, options.institutionId));
   }
 
+  if (options.callDateFrom) {
+    filters.push(gte(calls.callDate, options.callDateFrom));
+  }
+
+  if (options.callDateTo) {
+    filters.push(lte(calls.callDate, options.callDateTo));
+  }
+
   return db
     .select()
     .from(calls)
@@ -73,7 +85,7 @@ export function buildListCalls(db: MonitoringDb, options: ListCallsOptions) {
     .limit(options.limit);
 }
 
-/** Elenca le call più recenti, opzionalmente filtrate per prodotto o ente. */
+/** Elenca le call più recenti, opzionalmente filtrate per prodotto, ente o range di data. */
 export async function listCalls(options: ListCallsOptions): Promise<Call[]> {
   return buildListCalls(getMonitoringDb(), options);
 }

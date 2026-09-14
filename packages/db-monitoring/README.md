@@ -32,6 +32,14 @@ const id = await upsertCall({
 
 // Legge le call più recenti
 const recenti = await listCalls({ limit: 20, productId: "prod-io" });
+
+// Filtri componibili: prodotto, ente e/o range di data (call_date), tutti opzionali
+const gennaio = await listCalls({
+  limit: 20,
+  productId: "prod-io",
+  callDateFrom: new Date("2026-01-01T00:00:00Z"),
+  callDateTo: new Date("2026-01-31T23:59:59Z"),
+});
 ```
 
 ## Configurazione
