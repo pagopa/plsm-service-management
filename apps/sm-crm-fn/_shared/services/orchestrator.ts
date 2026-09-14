@@ -24,6 +24,7 @@ import {
 } from "./diagnosticLogger";
 import { mapCrmError } from "./crmErrorMapper";
 import { resolveEnvironment, getProductGuid } from "../utils/mappings";
+import { upsertCall, type ProductId } from "@repo/db-monitoring";
 
 // =============================================================================
 // ORCHESTRATOR
@@ -580,6 +581,60 @@ export async function createMeetingOrchestrator(
         mapCrmError({ step: "createAppointment", error }),
         diagnosticSession,
       );
+    }
+
+    // =========================================================================
+    // STEP 4: Persisti la call sul DB monitoring (non bloccante)
+    // =========================================================================
+    // L'appuntamento su Dynamics è già stato creato: un fallimento qui non deve
+    // far fallire l'intera richiesta (evita duplicati su retry lato frontend),
+    // ma solo degradare la risposta a 207 tramite `warnings`.
+    if (dryRun) {
+      steps.push({
+        step: "persistCall",
+        success: true,
+        skipped: true,
+        dryRun,
+      });
+    } else {
+      try {
+        await upsertCall({
+          crmActivityId: appointment.activityid,
+          productId: request.productIdSelfcare as ProductId,
+          callDate: new Date(request.scheduledstart),
+          institutionId: request.institutionIdSelfcare,
+          institutionName: accountResult.account.name ?? request.nomeEnte,
+          title: request.subject,
+        });
+
+        steps.push({
+          step: "persistCall",
+          success: true,
+          dryRun,
+        });
+
+        logger.info("✅ STEP 4 COMPLETED: Call persisted to monitoring DB", {
+          activityId: appointment.activityid,
+        });
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        logger.error(
+          "⚠️ STEP 4 FAILED: Call persistence to monitoring DB failed",
+          error,
+          { activityId: appointment.activityid },
+        );
+
+        steps.push({
+          step: "persistCall",
+          success: false,
+          error: "Errore durante la registrazione della call sul DB monitoring",
+          dryRun,
+        });
+
+        warnings.push(
+          `Appuntamento creato su Dynamics ma non registrato sul DB monitoring: ${msg}`,
+        );
+      }
     }
 
     // =========================================================================
