@@ -1,0 +1,1 @@
+ALTER TABLE "calls" DROP CONSTRAINT "calls_product_id_check", ADD CONSTRAINT "calls_product_id_check" CHECK ("product_id" IN ('prod-pn','prod-io','prod-pagopa','prod-idpay','prod-idpay-merchant','prod-checkiban','prod-interop','prod-io-premium','prod-io-sign','prod-rtp'));
