@@ -46,7 +46,7 @@ permissions:
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch'
-    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@main
+    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@a18d71062ddaaa09f8e145835a05aefd7701935e # main
     with:
       workspace_name: sm-signature-fn
       environment: ${{ inputs.environment }}
