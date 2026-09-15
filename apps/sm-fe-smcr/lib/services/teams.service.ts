@@ -315,7 +315,11 @@ export async function readTeamDetail(teamId: number) {
 export async function readPermissions() {
   try {
     const db = getDb();
-    const rawPermissions = await db.select().from(permissions);
+    const rawPermissions = await db
+      .select()
+      .from(permissions)
+      .where(eq(permissions.status, "active"))
+      .orderBy(asc(permissions.code));
     const parsedPermissions = z
       .array(permissionSchema)
       .safeParse(rawPermissions);
