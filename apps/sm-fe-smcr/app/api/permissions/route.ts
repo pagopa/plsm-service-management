@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { permissions } from "@/db/schema";
+import { hasPermission } from "@/lib/auth/permissions";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 
@@ -85,6 +86,10 @@ export async function POST(request: NextRequest) {
 
     if (!currentUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!(await hasPermission("permissions.manage"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const db = getDb();

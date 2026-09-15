@@ -69,8 +69,10 @@ function SectionActions() {
 }
 
 export function PermissionsListView({
+  canManage,
   permissions,
 }: {
+  canManage: boolean;
   permissions: PermissionsListPermission[];
 }) {
   return (
@@ -86,7 +88,7 @@ export function PermissionsListView({
         <SectionActions />
       </div>
 
-      <CreatePermissionDialog />
+      {canManage ? <CreatePermissionDialog /> : null}
 
       <div className="flex w-full flex-col gap-1">
         {permissions.map((permission) => {
@@ -115,10 +117,12 @@ export function PermissionsListView({
                 </span>
               </div>
 
-              <ArchivePermissionDialog
-                permissionId={permission.id}
-                permissionName={permission.name}
-              />
+              {canManage ? (
+                <ArchivePermissionDialog
+                  permissionId={permission.id}
+                  permissionName={permission.name}
+                />
+              ) : null}
             </div>
           );
         })}
