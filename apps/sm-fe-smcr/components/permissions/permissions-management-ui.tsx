@@ -1,3 +1,4 @@
+import { ArchivePermissionDialog } from "@/components/permissions/archive-permission-dialog";
 import { CreatePermissionDialog } from "@/components/permissions/create-permission-dialog";
 import { cn } from "@/lib/utils";
 import { ArrowUpDown, Funnel, Search } from "lucide-react";
@@ -68,8 +69,10 @@ function SectionActions() {
 }
 
 export function PermissionsListView({
+  canManage,
   permissions,
 }: {
+  canManage: boolean;
   permissions: PermissionsListPermission[];
 }) {
   return (
@@ -85,7 +88,7 @@ export function PermissionsListView({
         <SectionActions />
       </div>
 
-      <CreatePermissionDialog />
+      {canManage ? <CreatePermissionDialog /> : null}
 
       <div className="flex w-full flex-col gap-1">
         {permissions.map((permission) => {
@@ -102,7 +105,7 @@ export function PermissionsListView({
                 className={cn("h-3 w-0.5 shrink-0 rounded-sm", status.className)}
               />
 
-              <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
                 <span className="shrink-0 text-sm text-black">
                   {permission.name}
                 </span>
@@ -113,6 +116,13 @@ export function PermissionsListView({
                   {permission.description}
                 </span>
               </div>
+
+              {canManage ? (
+                <ArchivePermissionDialog
+                  permissionId={permission.id}
+                  permissionName={permission.name}
+                />
+              ) : null}
             </div>
           );
         })}
