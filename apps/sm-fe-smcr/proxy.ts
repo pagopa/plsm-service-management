@@ -11,7 +11,7 @@ function buildLoginRedirect(request: NextRequest) {
   return loginUrl;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
   const session = await verifyAuthToken(token);
 
