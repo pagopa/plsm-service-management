@@ -44,7 +44,7 @@ permissions:
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch'
-    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@main
+    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@bb7abcc5354751fc2e23608fd406effda931b1b9 # main
     with:
       workspace_name: sm-pf-fn
       environment: ${{ inputs.environment }}
