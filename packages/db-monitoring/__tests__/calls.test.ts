@@ -1,5 +1,9 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import { buildUpsertCall, buildListCalls } from "../src/queries/calls";
+import {
+  buildUpsertCall,
+  buildListCalls,
+  buildCallsSummary,
+} from "../src/queries/calls";
 
 const db = drizzle("postgresql://localhost:5432/monitoring");
 
@@ -114,5 +118,30 @@ describe("buildListCalls", () => {
 
     expect(sql).not.toContain('"call_date" >=');
     expect(sql).not.toContain('"call_date" <=');
+  });
+});
+
+describe("buildCallsSummary", () => {
+  it("filtra sull'intero anno richiesto (limite superiore escluso)", () => {
+    const { sql, params } = buildCallsSummary(db, 2026).toSQL();
+
+    expect(sql).toContain('"call_date" >= ');
+    expect(sql).toContain('"call_date" < ');
+    expect(params).toContain(new Date(Date.UTC(2026, 0, 1)).toISOString());
+    expect(params).toContain(new Date(Date.UTC(2027, 0, 1)).toISOString());
+  });
+
+  it("raggruppa per prodotto e ordina per conteggio discendente, a parità per productId", () => {
+    const { sql } = buildCallsSummary(db, 2026).toSQL();
+
+    expect(sql).toContain('group by "calls"."product_id"');
+    expect(sql).toContain("order by count(*) desc");
+    expect(sql).toContain('"calls"."product_id" asc');
+  });
+
+  it("restituisce productId e conteggio per riga", () => {
+    const { sql } = buildCallsSummary(db, 2026).toSQL();
+
+    expect(sql).toContain('select "product_id", count(*)');
   });
 });
