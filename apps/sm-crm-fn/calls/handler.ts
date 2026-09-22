@@ -8,7 +8,12 @@ import type {
   InvocationContext,
 } from "@azure/functions";
 import { z } from "zod";
-import { upsertCall, listCalls, PRODUCT_IDS } from "@repo/db-monitoring";
+import {
+  upsertCall,
+  listCalls,
+  getCallsSummary,
+  PRODUCT_IDS,
+} from "@repo/db-monitoring";
 import { createLogger } from "../_shared/utils/logger";
 
 // Verifica solo il formato (8-4-4-4-12 esadecimale): zod .uuid() impone anche
@@ -188,6 +193,82 @@ export async function listCallsHandler(
       jsonBody: {
         success: false,
         message: "Errore durante il recupero delle call",
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+}
+
+// -----------------------------------------------------------------------------
+// GET /calls/summary - Totale call e top 3 prodotti per numero di call, per anno
+// -----------------------------------------------------------------------------
+
+const CURRENT_YEAR = new Date().getUTCFullYear();
+
+const callsSummaryQuerySchema = z.object({
+  year: z.coerce
+    .number()
+    .int()
+    .min(2000)
+    // Margine di un anno oltre il corrente: evita input palesemente errati
+    // senza dover ridistribuire la Function ogni capodanno.
+    .max(CURRENT_YEAR + 1)
+    .optional(),
+});
+
+export async function callsSummaryHandler(
+  request: HttpRequest,
+  context: InvocationContext,
+): Promise<HttpResponseInit> {
+  const logger = createLogger(context);
+
+  const parsed = callsSummaryQuerySchema.safeParse({
+    year: request.query.get("year") ?? undefined,
+  });
+
+  if (!parsed.success) {
+    logger.warn("Validation errors", { issues: parsed.error.issues });
+    return {
+      status: 400,
+      jsonBody: {
+        success: false,
+        message: "Errore di validazione",
+        error: {
+          code: "VALIDATION_ERROR",
+          fields: parsed.error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  try {
+    const data = await getCallsSummary(parsed.data.year);
+
+    logger.info("Sintesi call recuperata", {
+      year: parsed.data.year ?? CURRENT_YEAR,
+      totalCalls: data.totalCalls,
+      rosterSize: data.roster.length,
+    });
+
+    return {
+      status: 200,
+      jsonBody: {
+        success: true,
+        data,
+        timestamp: new Date().toISOString(),
+      },
+    };
+  } catch (error) {
+    logger.error("Errore durante il recupero della sintesi delle call", error);
+    return {
+      status: 500,
+      jsonBody: {
+        success: false,
+        message: "Errore durante il recupero della sintesi delle call",
         timestamp: new Date().toISOString(),
       },
     };
