@@ -201,24 +201,80 @@ export async function listCallsHandler(
 
 // -----------------------------------------------------------------------------
 // GET /calls/summary - Totale call e top 3 prodotti per numero di call, per
-// anno oppure per range libero (dateFrom/dateTo)
+// anno oppure per range libero (dateFrom/dateTo, formato italiano GG/MM/AAAA)
 // -----------------------------------------------------------------------------
 
-const CURRENT_YEAR = new Date().getUTCFullYear();
+const ITALIAN_DATE_PATTERN = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const MIN_SUMMARY_YEAR = 2000;
+
+/**
+ * Interpreta una data in formato italiano GG/MM/AAAA come istante UTC.
+ * A differenza di `new Date(stringa)`, non è ambiguo: JS interpreterebbe
+ * "01/03/2026" alla americana (mese/giorno/anno, cioè 3 gennaio) invece che
+ * come 1 marzo 2026.
+ */
+function parseItalianDate(value: string): Date | undefined {
+  const match = ITALIAN_DATE_PATTERN.exec(value);
+  if (!match) {
+    return undefined;
+  }
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  // Date.UTC normalizza le date di calendario inesistenti (es. 31/02)
+  // rollando al mese successivo: il round-trip le scarta.
+  const isValidCalendarDate =
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day;
+
+  return isValidCalendarDate ? date : undefined;
+}
+
+/**
+ * Schema per un parametro data in formato GG/MM/AAAA (solo giorno, senza ora).
+ * `boundary: "end"` sposta l'istante alla fine della giornata (23:59:59.999)
+ * perché dateTo è inclusivo: senza questo, una call delle 14:00 del giorno
+ * stesso verrebbe esclusa dal confronto `<=` lato query.
+ */
+function italianDateSchema(boundary: "start" | "end") {
+  return z
+    .string()
+    .transform((value, ctx) => {
+      const date = parseItalianDate(value);
+      if (!date) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Formato data non valido: atteso GG/MM/AAAA (es. 01/03/2026)",
+        });
+        return z.NEVER;
+      }
+
+      return boundary === "end" ? new Date(date.getTime() + ONE_DAY_MS - 1) : date;
+    })
+    .optional();
+}
 
 const callsSummaryQuerySchema = z
   .object({
-    year: z.coerce
-      .number()
-      .int()
-      .min(2000)
-      // Margine di un anno oltre il corrente: evita input palesemente errati
-      // senza dover ridistribuire la Function ogni capodanno.
-      .max(CURRENT_YEAR + 1)
-      .optional(),
-    dateFrom: z.coerce.date().optional(),
-    dateTo: z.coerce.date().optional(),
+    year: z.coerce.number().int().min(MIN_SUMMARY_YEAR).optional(),
+    dateFrom: italianDateSchema("start"),
+    dateTo: italianDateSchema("end"),
   })
+  .refine(
+    // Calcolato ad ogni richiesta (non in una costante di modulo): su
+    // un'istanza Azure Functions "warm" a cavallo di Capodanno, un bound
+    // fissato al cold-start resterebbe stantio.
+    (data) => data.year === undefined || data.year <= new Date().getUTCFullYear() + 1,
+    {
+      message: "year non può superare l'anno corrente + 1",
+      path: ["year"],
+    },
+  )
   .refine(
     (data) =>
       data.year === undefined ||
