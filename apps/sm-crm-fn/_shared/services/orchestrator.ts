@@ -899,6 +899,18 @@ export function validateOrchestratorRequest(
     }
   }
 
+  if (req.link !== undefined) {
+    if (typeof req.link !== "string") {
+      addFieldError("link", "invalid_type", "link deve essere una stringa");
+    } else {
+      try {
+        new URL(req.link);
+      } catch {
+        addFieldError("link", "invalid_value", "link deve essere un URL valido");
+      }
+    }
+  }
+
   if (fields.length > 0) {
     return { valid: false, fields };
   }
