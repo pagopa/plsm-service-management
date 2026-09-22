@@ -50,6 +50,7 @@ import { upsertCall, type ProductId } from "@repo/db-monitoring";
  * @param request.enableFallback - Abilita ricerca ente per nome se ID non trovato
  * @param request.enableCreateContact - Abilita creazione automatica contatti
  * @param request.dryRun - Modalità dry-run (no modifiche a Dynamics)
+ * @param request.link - Link al diario/verbale, salvato sulla riga calls del DB monitoring
  * @param request.frontendPayload - Payload originale del frontend (per diagnostic logging)
  * @returns Risultato dell'orchestrazione con dettaglio di ogni step
  *
@@ -605,6 +606,7 @@ export async function createMeetingOrchestrator(
           institutionId: request.institutionIdSelfcare,
           institutionName: accountResult.account.name ?? request.nomeEnte,
           title: request.subject,
+          link: request.link,
         });
 
         steps.push({
