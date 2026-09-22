@@ -46,3 +46,19 @@ resource "azurerm_key_vault_secret" "postgres_password" {
 
   depends_on = [azurerm_role_assignment.kv_group_secrets_officer]
 }
+
+# -----------------------------------------------------------------------------
+# Database "monitoring" — tracciamento call (SMION-830)
+# -----------------------------------------------------------------------------
+
+resource "azurerm_postgresql_flexible_server_database" "monitoring" {
+  name      = "monitoring"
+  server_id = module.postgres_apps.postgres.id
+  charset   = "UTF8"
+  collation = "en_US.utf8"
+
+  # `name` è ForceNew: senza questo, una rinomina distruggerebbe il database.
+  lifecycle {
+    prevent_destroy = true
+  }
+}

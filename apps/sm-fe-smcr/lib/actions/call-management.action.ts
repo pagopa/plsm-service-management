@@ -483,6 +483,9 @@ export async function createMeetingAction(
       ? { enableGrantAccess: input.enableGrantAccess }
       : {}),
     ...(input.dryRun !== undefined ? { dryRun: input.dryRun } : {}),
+    ...(input.link !== undefined && input.link !== ""
+      ? { link: input.link }
+      : {}),
   };
 
   const loggedPayload = {

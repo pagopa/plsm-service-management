@@ -19,11 +19,11 @@ export const additionalInformationsSchema = z.object({
   agentOfPublicService: z.boolean().optional(),
   agentOfPublicServiceNote: z.string().optional(),
   otherNote: z.string().optional(),
-  rea: z.string().optional(),
 });
 
 export const baseSchemaStepOne = z.object({
   institutionType: z.enum(institutionValues),
+  rea: z.string().optional(),
   businessName: z.string().min(1),
   digitalAddress: z.string().min(1),
   recipientCode: z.string().optional(),
@@ -92,6 +92,7 @@ export const defaultValues: StepOneSchema = {
   id: "",
   externalId: "",
   supportEmail: "",
+  rea: "",
   // institutionType === "GSP" && productId === "prod-pagopa"
   belongRegulatedMarket: false,
   regulatedMarketNote: "",
@@ -102,7 +103,6 @@ export const defaultValues: StepOneSchema = {
   agentOfPublicService: false,
   agentOfPublicServiceNote: "",
   otherNote: "",
-  rea: "",
   // institutionType === "PSP"
   abiCode: "",
   businessRegisterNumber: "",

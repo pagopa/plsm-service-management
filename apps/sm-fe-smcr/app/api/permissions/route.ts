@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { permissions } from "@/db/schema";
+import { hasPermission } from "@/lib/auth/permissions";
 import { getOrCreateCurrentAppUser } from "@/lib/auth/server";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 
@@ -31,7 +32,11 @@ export async function GET() {
     }
 
     const db = getDb();
-    const result = await db.select().from(permissions).orderBy(asc(permissions.code));
+    const result = await db
+      .select()
+      .from(permissions)
+      .where(eq(permissions.status, "active"))
+      .orderBy(asc(permissions.code));
 
     return NextResponse.json(
       { data: result.map((permission) => ({ ...permission, id: String(permission.id) })) },
@@ -81,6 +86,10 @@ export async function POST(request: NextRequest) {
 
     if (!currentUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!(await hasPermission("permissions.manage"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const db = getDb();
