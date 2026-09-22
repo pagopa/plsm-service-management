@@ -285,21 +285,18 @@ describe("callsSummaryHandler", () => {
     );
   });
 
-  it("passa dateFrom/dateTo come Date quando presenti", async () => {
+  it("passa dateFrom/dateTo in formato italiano, dateTo esteso a fine giornata", async () => {
     mockedGetCallsSummary.mockResolvedValue({ totalCalls: 0, roster: [] });
 
     await callsSummaryHandler(
-      makeRequest({
-        dateFrom: "2026-03-01T00:00:00Z",
-        dateTo: "2026-03-31T23:59:59Z",
-      }) as never,
+      makeRequest({ dateFrom: "01/03/2026", dateTo: "31/03/2026" }) as never,
       makeContext() as never,
     );
 
     expect(mockedGetCallsSummary).toHaveBeenCalledWith(
       expect.objectContaining({
-        dateFrom: new Date("2026-03-01T00:00:00Z"),
-        dateTo: new Date("2026-03-31T23:59:59Z"),
+        dateFrom: new Date("2026-03-01T00:00:00.000Z"),
+        dateTo: new Date("2026-03-31T23:59:59.999Z"),
       }),
     );
   });
@@ -308,14 +305,47 @@ describe("callsSummaryHandler", () => {
     mockedGetCallsSummary.mockResolvedValue({ totalCalls: 0, roster: [] });
 
     const response = await callsSummaryHandler(
-      makeRequest({ dateFrom: "2026-03-01T00:00:00Z" }) as never,
+      makeRequest({ dateFrom: "01/03/2026" }) as never,
       makeContext() as never,
     );
 
     expect(response.status).toBe(200);
     expect(mockedGetCallsSummary).toHaveBeenCalledWith(
-      expect.objectContaining({ dateFrom: new Date("2026-03-01T00:00:00Z") }),
+      expect.objectContaining({ dateFrom: new Date("2026-03-01T00:00:00.000Z") }),
     );
+  });
+
+  it("interpreta 01/03/2026 come 1 marzo, non alla americana come 3 gennaio", async () => {
+    mockedGetCallsSummary.mockResolvedValue({ totalCalls: 0, roster: [] });
+
+    await callsSummaryHandler(
+      makeRequest({ dateFrom: "01/03/2026" }) as never,
+      makeContext() as never,
+    );
+
+    const calledWith = mockedGetCallsSummary.mock.calls[0]?.[0];
+    expect(calledWith?.dateFrom?.getUTCMonth()).toBe(2); // marzo (0-indexed)
+    expect(calledWith?.dateFrom?.getUTCDate()).toBe(1);
+  });
+
+  it("risponde 400 se dateFrom non è in formato GG/MM/AAAA", async () => {
+    const response = await callsSummaryHandler(
+      makeRequest({ dateFrom: "2026-03-01" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetCallsSummary).not.toHaveBeenCalled();
+  });
+
+  it("risponde 400 se la data GG/MM/AAAA non esiste nel calendario", async () => {
+    const response = await callsSummaryHandler(
+      makeRequest({ dateFrom: "31/02/2026" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetCallsSummary).not.toHaveBeenCalled();
   });
 
   it("risponde 400 se year non è un intero valido", async () => {
@@ -340,7 +370,7 @@ describe("callsSummaryHandler", () => {
 
   it("risponde 400 se vengono passati sia year sia dateFrom/dateTo", async () => {
     const response = await callsSummaryHandler(
-      makeRequest({ year: "2026", dateFrom: "2026-03-01T00:00:00Z" }) as never,
+      makeRequest({ year: "2026", dateFrom: "01/03/2026" }) as never,
       makeContext() as never,
     );
 
@@ -350,10 +380,7 @@ describe("callsSummaryHandler", () => {
 
   it("risponde 400 se dateFrom è successivo a dateTo", async () => {
     const response = await callsSummaryHandler(
-      makeRequest({
-        dateFrom: "2026-03-31T00:00:00Z",
-        dateTo: "2026-03-01T00:00:00Z",
-      }) as never,
+      makeRequest({ dateFrom: "31/03/2026", dateTo: "01/03/2026" }) as never,
       makeContext() as never,
     );
 

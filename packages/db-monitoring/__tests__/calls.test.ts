@@ -4,6 +4,7 @@ import {
   buildListCalls,
   buildCallsSummary,
   resolveCallsSummaryRange,
+  summarizeCallCounts,
 } from "../src/queries/calls";
 
 const db = drizzle("postgresql://localhost:5432/monitoring");
@@ -200,5 +201,53 @@ describe("resolveCallsSummaryRange", () => {
     const range = resolveCallsSummaryRange({ year: 2020, dateFrom });
 
     expect(range).toEqual({ from: dateFrom, to: undefined });
+  });
+});
+
+describe("summarizeCallCounts", () => {
+  it("somma tutti i prodotti nel totale, non solo quelli in classifica", () => {
+    const rows = [
+      { productId: "prod-io" as const, calls: 20 },
+      { productId: "prod-pagopa" as const, calls: 15 },
+      { productId: "prod-interop" as const, calls: 10 },
+      { productId: "prod-pn" as const, calls: 10 },
+      { productId: "prod-rtp" as const, calls: 5 },
+    ];
+
+    const summary = summarizeCallCounts(rows);
+
+    expect(summary.totalCalls).toBe(60);
+  });
+
+  it("limita il roster ai primi 3, assegnando la posizione nell'ordine ricevuto (a parità già risolta a monte)", () => {
+    const rows = [
+      { productId: "prod-io" as const, calls: 20 },
+      { productId: "prod-pagopa" as const, calls: 15 },
+      { productId: "prod-interop" as const, calls: 10 },
+      { productId: "prod-pn" as const, calls: 10 },
+    ];
+
+    const summary = summarizeCallCounts(rows);
+
+    expect(summary.roster).toEqual([
+      { productId: "prod-io", calls: 20, position: 1 },
+      { productId: "prod-pagopa", calls: 15, position: 2 },
+      { productId: "prod-interop", calls: 10, position: 3 },
+    ]);
+  });
+
+  it("gestisce meno di 3 prodotti senza errori", () => {
+    const rows = [{ productId: "prod-io" as const, calls: 5 }];
+
+    const summary = summarizeCallCounts(rows);
+
+    expect(summary).toEqual({
+      totalCalls: 5,
+      roster: [{ productId: "prod-io", calls: 5, position: 1 }],
+    });
+  });
+
+  it("gestisce un array vuoto", () => {
+    expect(summarizeCallCounts([])).toEqual({ totalCalls: 0, roster: [] });
   });
 });

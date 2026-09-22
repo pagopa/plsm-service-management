@@ -12,6 +12,7 @@ describe("superficie pubblica del package", () => {
       "getMonitoringDb",
       "listCalls",
       "resolveCallsSummaryRange",
+      "summarizeCallCounts",
       "upsertCall",
     ]);
   });
