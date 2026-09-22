@@ -7,10 +7,14 @@ export {
   type ProductId,
 } from "./schema";
 export {
+  buildCallsSummary,
   buildListCalls,
   buildUpsertCall,
+  getCallsSummary,
   listCalls,
   upsertCall,
+  type CallsSummary,
+  type CallsSummaryProductCount,
   type ListCallsOptions,
   type UpsertCallInput,
 } from "./queries/calls";
