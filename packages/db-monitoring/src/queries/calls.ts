@@ -175,6 +175,22 @@ export function buildCallsSummary(db: MonitoringDb, range: CallsSummaryRange) {
 }
 
 /**
+ * Aggrega le righe per-prodotto (già ordinate per conteggio) in una sintesi:
+ * il totale somma *tutte* le righe, il roster prende solo le prime 3.
+ * Isolata dall'esecuzione della query per essere testabile senza database.
+ */
+export function summarizeCallCounts(
+  rows: CallsSummaryProductCount[],
+): CallsSummary {
+  const totalCalls = rows.reduce((sum, row) => sum + row.calls, 0);
+  const roster = rows
+    .slice(0, SUMMARY_ROSTER_SIZE)
+    .map((row, index) => ({ ...row, position: index + 1 }));
+
+  return { totalCalls, roster };
+}
+
+/**
  * Sintesi delle call per l'anno o il range richiesto (default: anno corrente
  * UTC): totale complessivo e i primi 3 prodotti per numero di call, con
  * posizione in classifica (a parità di conteggio, ordine alfabetico di
@@ -186,10 +202,5 @@ export async function getCallsSummary(
   const range = resolveCallsSummaryRange(options);
   const rows = await buildCallsSummary(getMonitoringDb(), range);
 
-  const totalCalls = rows.reduce((sum, row) => sum + row.calls, 0);
-  const roster = rows
-    .slice(0, SUMMARY_ROSTER_SIZE)
-    .map((row, index) => ({ ...row, position: index + 1 }));
-
-  return { totalCalls, roster };
+  return summarizeCallCounts(rows);
 }

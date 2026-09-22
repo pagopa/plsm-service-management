@@ -13,6 +13,7 @@ export {
   getCallsSummary,
   listCalls,
   resolveCallsSummaryRange,
+  summarizeCallCounts,
   upsertCall,
   type CallsSummary,
   type CallsSummaryOptions,
