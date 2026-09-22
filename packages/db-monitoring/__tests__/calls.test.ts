@@ -3,6 +3,7 @@ import {
   buildUpsertCall,
   buildListCalls,
   buildCallsSummary,
+  resolveCallsSummaryRange,
 } from "../src/queries/calls";
 
 const db = drizzle("postgresql://localhost:5432/monitoring");
@@ -122,17 +123,40 @@ describe("buildListCalls", () => {
 });
 
 describe("buildCallsSummary", () => {
-  it("filtra sull'intero anno richiesto (limite superiore escluso)", () => {
-    const { sql, params } = buildCallsSummary(db, 2026).toSQL();
+  const range = {
+    from: new Date("2026-01-01T00:00:00.000Z"),
+    to: new Date("2026-12-31T23:59:59.999Z"),
+  };
+
+  it("filtra sul range richiesto, entrambi i limiti inclusi", () => {
+    const { sql, params } = buildCallsSummary(db, range).toSQL();
 
     expect(sql).toContain('"call_date" >= ');
-    expect(sql).toContain('"call_date" < ');
-    expect(params).toContain(new Date(Date.UTC(2026, 0, 1)).toISOString());
-    expect(params).toContain(new Date(Date.UTC(2027, 0, 1)).toISOString());
+    expect(sql).toContain('"call_date" <= ');
+    expect(params).toContain(range.from.toISOString());
+    expect(params).toContain(range.to.toISOString());
+  });
+
+  it("applica solo il filtro presente se from o to sono assenti", () => {
+    const { sql: sqlFromOnly } = buildCallsSummary(db, {
+      from: range.from,
+    }).toSQL();
+    expect(sqlFromOnly).toContain('"call_date" >= ');
+    expect(sqlFromOnly).not.toContain('"call_date" <= ');
+
+    const { sql: sqlToOnly } = buildCallsSummary(db, { to: range.to }).toSQL();
+    expect(sqlToOnly).not.toContain('"call_date" >= ');
+    expect(sqlToOnly).toContain('"call_date" <= ');
+  });
+
+  it("non applica alcun filtro se from e to sono entrambi assenti", () => {
+    const { sql } = buildCallsSummary(db, {}).toSQL();
+
+    expect(sql).not.toContain("where");
   });
 
   it("raggruppa per prodotto e ordina per conteggio discendente, a parità per productId", () => {
-    const { sql } = buildCallsSummary(db, 2026).toSQL();
+    const { sql } = buildCallsSummary(db, range).toSQL();
 
     expect(sql).toContain('group by "calls"."product_id"');
     expect(sql).toContain("order by count(*) desc");
@@ -140,8 +164,41 @@ describe("buildCallsSummary", () => {
   });
 
   it("restituisce productId e conteggio per riga", () => {
-    const { sql } = buildCallsSummary(db, 2026).toSQL();
+    const { sql } = buildCallsSummary(db, range).toSQL();
 
     expect(sql).toContain('select "product_id", count(*)');
+  });
+});
+
+describe("resolveCallsSummaryRange", () => {
+  it("converte year nell'intero anno solare, entrambi i limiti inclusi", () => {
+    const range = resolveCallsSummaryRange({ year: 2026 });
+
+    expect(range.from).toEqual(new Date("2026-01-01T00:00:00.000Z"));
+    expect(range.to).toEqual(new Date("2026-12-31T23:59:59.999Z"));
+  });
+
+  it("usa l'anno corrente UTC se non è specificato nulla", () => {
+    const range = resolveCallsSummaryRange({});
+    const currentYear = new Date().getUTCFullYear();
+
+    expect(range.from).toEqual(new Date(Date.UTC(currentYear, 0, 1)));
+  });
+
+  it("dateFrom/dateTo hanno precedenza su year se specificati insieme", () => {
+    const dateFrom = new Date("2026-03-01T00:00:00.000Z");
+    const dateTo = new Date("2026-03-31T23:59:59.999Z");
+
+    const range = resolveCallsSummaryRange({ year: 2020, dateFrom, dateTo });
+
+    expect(range).toEqual({ from: dateFrom, to: dateTo });
+  });
+
+  it("accetta anche solo uno tra dateFrom e dateTo, ignorando year", () => {
+    const dateFrom = new Date("2026-03-01T00:00:00.000Z");
+
+    const range = resolveCallsSummaryRange({ year: 2020, dateFrom });
+
+    expect(range).toEqual({ from: dateFrom, to: undefined });
   });
 });
