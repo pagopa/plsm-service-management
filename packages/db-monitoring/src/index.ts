@@ -12,9 +12,12 @@ export {
   buildUpsertCall,
   getCallsSummary,
   listCalls,
+  resolveCallsSummaryRange,
   upsertCall,
   type CallsSummary,
+  type CallsSummaryOptions,
   type CallsSummaryProductCount,
+  type CallsSummaryRange,
   type ListCallsOptions,
   type UpsertCallInput,
 } from "./queries/calls";
