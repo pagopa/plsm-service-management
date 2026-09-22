@@ -200,21 +200,38 @@ export async function listCallsHandler(
 }
 
 // -----------------------------------------------------------------------------
-// GET /calls/summary - Totale call e top 3 prodotti per numero di call, per anno
+// GET /calls/summary - Totale call e top 3 prodotti per numero di call, per
+// anno oppure per range libero (dateFrom/dateTo)
 // -----------------------------------------------------------------------------
 
 const CURRENT_YEAR = new Date().getUTCFullYear();
 
-const callsSummaryQuerySchema = z.object({
-  year: z.coerce
-    .number()
-    .int()
-    .min(2000)
-    // Margine di un anno oltre il corrente: evita input palesemente errati
-    // senza dover ridistribuire la Function ogni capodanno.
-    .max(CURRENT_YEAR + 1)
-    .optional(),
-});
+const callsSummaryQuerySchema = z
+  .object({
+    year: z.coerce
+      .number()
+      .int()
+      .min(2000)
+      // Margine di un anno oltre il corrente: evita input palesemente errati
+      // senza dover ridistribuire la Function ogni capodanno.
+      .max(CURRENT_YEAR + 1)
+      .optional(),
+    dateFrom: z.coerce.date().optional(),
+    dateTo: z.coerce.date().optional(),
+  })
+  .refine(
+    (data) =>
+      data.year === undefined ||
+      (data.dateFrom === undefined && data.dateTo === undefined),
+    {
+      message: "Specificare year oppure dateFrom/dateTo, non entrambi",
+      path: ["year"],
+    },
+  )
+  .refine((data) => !data.dateFrom || !data.dateTo || data.dateFrom <= data.dateTo, {
+    message: "dateFrom deve essere precedente o uguale a dateTo",
+    path: ["dateFrom"],
+  });
 
 export async function callsSummaryHandler(
   request: HttpRequest,
@@ -224,6 +241,8 @@ export async function callsSummaryHandler(
 
   const parsed = callsSummaryQuerySchema.safeParse({
     year: request.query.get("year") ?? undefined,
+    dateFrom: request.query.get("dateFrom") ?? undefined,
+    dateTo: request.query.get("dateTo") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -246,10 +265,12 @@ export async function callsSummaryHandler(
   }
 
   try {
-    const data = await getCallsSummary(parsed.data.year);
+    const data = await getCallsSummary(parsed.data);
 
     logger.info("Sintesi call recuperata", {
-      year: parsed.data.year ?? CURRENT_YEAR,
+      year: parsed.data.year,
+      dateFrom: parsed.data.dateFrom?.toISOString(),
+      dateTo: parsed.data.dateTo?.toISOString(),
       totalCalls: data.totalCalls,
       rosterSize: data.roster.length,
     });
