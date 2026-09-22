@@ -263,7 +263,13 @@ describe("callsSummaryHandler", () => {
         roster: [{ productId: "prod-io", calls: 30, position: 1 }],
       },
     });
-    expect(mockedGetCallsSummary).toHaveBeenCalledWith(undefined);
+    expect(mockedGetCallsSummary).toHaveBeenCalledWith(
+      expect.objectContaining({
+        year: undefined,
+        dateFrom: undefined,
+        dateTo: undefined,
+      }),
+    );
   });
 
   it("passa l'anno richiesto come numero", async () => {
@@ -274,7 +280,42 @@ describe("callsSummaryHandler", () => {
       makeContext() as never,
     );
 
-    expect(mockedGetCallsSummary).toHaveBeenCalledWith(2025);
+    expect(mockedGetCallsSummary).toHaveBeenCalledWith(
+      expect.objectContaining({ year: 2025 }),
+    );
+  });
+
+  it("passa dateFrom/dateTo come Date quando presenti", async () => {
+    mockedGetCallsSummary.mockResolvedValue({ totalCalls: 0, roster: [] });
+
+    await callsSummaryHandler(
+      makeRequest({
+        dateFrom: "2026-03-01T00:00:00Z",
+        dateTo: "2026-03-31T23:59:59Z",
+      }) as never,
+      makeContext() as never,
+    );
+
+    expect(mockedGetCallsSummary).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dateFrom: new Date("2026-03-01T00:00:00Z"),
+        dateTo: new Date("2026-03-31T23:59:59Z"),
+      }),
+    );
+  });
+
+  it("accetta anche solo dateFrom senza dateTo", async () => {
+    mockedGetCallsSummary.mockResolvedValue({ totalCalls: 0, roster: [] });
+
+    const response = await callsSummaryHandler(
+      makeRequest({ dateFrom: "2026-03-01T00:00:00Z" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockedGetCallsSummary).toHaveBeenCalledWith(
+      expect.objectContaining({ dateFrom: new Date("2026-03-01T00:00:00Z") }),
+    );
   });
 
   it("risponde 400 se year non è un intero valido", async () => {
@@ -290,6 +331,29 @@ describe("callsSummaryHandler", () => {
   it("risponde 400 se year è fuori range", async () => {
     const response = await callsSummaryHandler(
       makeRequest({ year: "1999" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetCallsSummary).not.toHaveBeenCalled();
+  });
+
+  it("risponde 400 se vengono passati sia year sia dateFrom/dateTo", async () => {
+    const response = await callsSummaryHandler(
+      makeRequest({ year: "2026", dateFrom: "2026-03-01T00:00:00Z" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetCallsSummary).not.toHaveBeenCalled();
+  });
+
+  it("risponde 400 se dateFrom è successivo a dateTo", async () => {
+    const response = await callsSummaryHandler(
+      makeRequest({
+        dateFrom: "2026-03-31T00:00:00Z",
+        dateTo: "2026-03-01T00:00:00Z",
+      }) as never,
       makeContext() as never,
     );
 
