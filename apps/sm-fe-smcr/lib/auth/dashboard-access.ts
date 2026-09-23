@@ -1,7 +1,6 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import { getDb } from "@/db";
 import {
   memberTeams,
@@ -15,7 +14,7 @@ import type {
   DashboardNavigationSection,
 } from "@/lib/dashboard-navigation";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
-import { getOrCreateCurrentAppUser, requireServerSession } from "./server";
+import { getOrCreateCurrentAppUser } from "./server";
 
 export async function getCurrentPermissionCodes(): Promise<Set<string>> {
   try {
@@ -54,17 +53,6 @@ export async function hasCurrentPermission(
 ): Promise<boolean> {
   const permissionCodes = await getCurrentPermissionCodes();
   return permissionCodes.has(permissionCode);
-}
-
-export async function requireDashboardPermission(
-  permissionCode: string,
-  returnUrl: string,
-): Promise<void> {
-  await requireServerSession(returnUrl);
-
-  if (!(await hasCurrentPermission(permissionCode))) {
-    redirect("/dashboard");
-  }
 }
 
 function filterNavigationItems(
