@@ -92,6 +92,32 @@ jobs:
               echo "AVVISO: Node_modules standalone non trovato in $NODE_MODULES_SRC."
           fi
 
+      - name: Materialize Turbopack External Package Links
+        run: |
+          LINKS_DIR="$BUILD_DIR/.next/node_modules"
+          if [ -d "$LINKS_DIR" ]; then
+            while IFS= read -r -d '' LINK; do
+              TARGET=$(readlink "$LINK")
+              PKG=${TARGET##*node_modules/}
+              PKG=${PKG%/}
+              case "$PKG" in
+                ""|/*|*..*)
+                  echo "::error::Link non valido $LINK -> $TARGET"
+                  exit 1
+                  ;;
+              esac
+              SRC="$BUILD_DIR/node_modules/$PKG"
+              rm "$LINK"
+              if [ -d "$SRC" ]; then
+                cp -R "$SRC" "$LINK"
+                echo "Materializzato $PKG -> $LINK"
+              else
+                echo "::error::Pacchetto $PKG non trovato in $SRC (richiesto dagli external Turbopack)"
+                exit 1
+              fi
+            done < <(find "$LINKS_DIR" -type l -print0)
+          fi
+
       - name: Copy Static Assets (.next/static)
         run: |
           STATIC_SRC="$NEXT_APP_PATH/.next/static"
@@ -110,6 +136,12 @@ jobs:
 
       - name: Create Deployment ZIP
         run: |
+          BROKEN=$(find "$BUILD_DIR" -type l ! -exec test -e {} \; -print)
+          if [ -n "$BROKEN" ]; then
+            echo "::error::Symlink rotti residui nel bundle:"
+            echo "$BROKEN"
+            exit 1
+          fi
           cd $BUILD_DIR
           zip -r ../${BUNDLE_NAME}.zip .
 
