@@ -4,65 +4,24 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { protectedRoutes } from "@/lib/protectedRoutes";
-import { NavMain } from "../nav-main";
-import { TeamSwitcher } from "./sidebar-header";
-import { SidebarUser } from "./sidebar-user";
-import Link from "next/link";
+import type { DashboardNavigationSection } from "@/lib/dashboard-navigation";
 import { FileText } from "lucide-react";
-import useAuthStore from "@/lib/store/auth.store";
-import { MemberWithTeams } from "@/lib/services/members.service";
+import Link from "next/link";
+import { NavMain } from "../nav-main";
+import { SidebarUser } from "./sidebar-user";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const user = useAuthStore((state) => state.user);
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  sections: DashboardNavigationSection[];
+};
 
-  if (!user) {
-    return null;
-  }
-
-  // Crea una mappa slug -> nome team per lookup veloce
-  const teamNameMap = new Map<string, string>();
-  user.teams?.forEach((team) => {
-    teamNameMap.set(team.slug, team.name);
-  });
-  // Aggiungi il gruppo "core" con un nome custom
-  teamNameMap.set("core", "Core");
-
-  const accessibleRoutes = protectedRoutes.filter(
-    (route) => route.sidebar && hasAccess(user, route),
-  );
-
-  // Raggruppa le route per teamId
-  const groupedRoutes = accessibleRoutes.reduce(
-    (acc, route) => {
-      const teamId = route.teamId || "ungrouped";
-      if (!acc[teamId]) {
-        acc[teamId] = [];
-      }
-      acc[teamId].push(route);
-      return acc;
-    },
-    {} as Record<string, typeof accessibleRoutes>,
-  );
-
-  // Ordine preferito dei gruppi
-  const groupOrder = ["core", "service-management", "admin"];
-  const sortedGroups = groupOrder
-    .filter((groupId) => groupedRoutes[groupId])
-    .map((groupId) => ({
-      teamId: groupId,
-      teamName: teamNameMap.get(groupId) || groupId,
-      routes: groupedRoutes[groupId] ?? [],
-    }));
-
+export function AppSidebar({ sections, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarContent className="relative">
-        <NavMain groups={sortedGroups} />
+        <NavMain sections={sections} />
 
         <SidebarMenuItem className="mt-auto">
           <Link
@@ -81,25 +40,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarUser />
       </SidebarFooter>
     </Sidebar>
-  );
-}
-
-function hasAccess(
-  user: MemberWithTeams,
-  route: {
-    requiredTeams?: Array<string>;
-    children?: Array<{ requiredTeams?: Array<string> }>;
-  },
-): boolean {
-  if (route.children?.length) {
-    return route.children.some((child) => hasAccess(user, child));
-  }
-
-  if (!route.requiredTeams || route.requiredTeams.length === 0) return true;
-  if (!user.teams || user.teams.length === 0) return false;
-
-  const userTeamSlugs = user.teams.map((team) => team.slug);
-  return route.requiredTeams.some((requiredSlug) =>
-    userTeamSlugs.includes(requiredSlug),
   );
 }
