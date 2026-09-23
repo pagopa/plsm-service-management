@@ -6,6 +6,7 @@ import {
   FolderIcon,
   KeyRound,
   LucideIcon,
+  Monitor,
   PhoneIcon,
   Search,
   ShieldCheck,
@@ -141,6 +142,20 @@ export const protectedRoutes: ProtectedRoute[] = [
     sidebar: true,
     icon: PhoneIcon,
     teamId: "service-management",
+  },
+  {
+    label: "Monitoring",
+    requiredTeams: ["service-management"],
+    icon: Monitor,
+    sidebar: true,
+    teamId: "service-management",
+    children: [
+      {
+        label: "Calls",
+        path: "/dashboard/monitoring/calls",
+        requiredTeams: ["service-management"],
+      },
+    ],
   },
   {
     label: "Portale Fatturazione",
