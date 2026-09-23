@@ -2,12 +2,14 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 jest.mock("@/lib/auth/server", () => ({
-  requireServerSession: jest.fn().mockResolvedValue({ email: "test@test.com", name: "Test User" }),
+  requireServerSession: jest
+    .fn()
+    .mockResolvedValue({ email: "test@test.com", name: "Test User" }),
 }));
 
-jest.mock("@/components/auth/clientPageGuard", () => ({
-  __esModule: true,
-  default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+jest.mock("@/lib/auth/dashboard-access", () => ({
+  filterDashboardNavigation: jest.fn().mockReturnValue([]),
+  getCurrentPermissionCodes: jest.fn().mockResolvedValue(new Set()),
 }));
 
 jest.mock("@/components/layout/sidebar/app-sidebar", () => ({
@@ -46,7 +48,7 @@ beforeAll(async () => {
 });
 
 describe("DashboardLayout", () => {
-  it("keeps the shared sidebar shell without extra bottom padding now that the footer is in document flow", async () => {
+  it("loads the server-filtered sidebar shell without extra bottom padding", async () => {
     const element = await DashboardLayout({
       children: <section>dashboard content</section>,
     });

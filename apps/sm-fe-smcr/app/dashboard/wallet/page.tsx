@@ -12,9 +12,18 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { PermissionGate } from "@/components/auth/permission-gate";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-export default async function WalletPage() {
+export default function WalletPage() {
+  return (
+    <PermissionGate permission="wallet.read" returnUrl="/dashboard/wallet">
+      <WalletContent />
+    </PermissionGate>
+  );
+}
+
+async function WalletContent() {
   const { data, error } = await getWalletReport();
 
   return (
