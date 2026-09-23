@@ -12,9 +12,21 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { PermissionGate } from "@/components/auth/permission-gate";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-export default async function EserviceTemplatesPage() {
+export default function EserviceTemplatesPage() {
+  return (
+    <PermissionGate
+      permission="wallet.templates.read"
+      returnUrl="/dashboard/wallet/eservice-templates"
+    >
+      <EserviceTemplatesContent />
+    </PermissionGate>
+  );
+}
+
+async function EserviceTemplatesContent() {
   const { data, error } = await getEserviceTemplates();
 
   return (
