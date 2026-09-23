@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:package": "cp -r .next/static .next/standalone/apps/sm-fe-smcr/.next && cp -r public .next/standalone/apps/sm-fe-smcr",
+    "build:package": "cp -r .next/static .next/standalone/apps/web/.next && cp -r public .next/standalone/apps/web",
     "package": "node scripts/package.js",
     "start": "./node_modules/next/dist/bin/next start",
     "lint": "eslint .",
