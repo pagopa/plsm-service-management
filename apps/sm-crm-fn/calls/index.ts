@@ -3,7 +3,11 @@
 // =============================================================================
 
 import { HttpRequest, InvocationContext, app } from "@azure/functions";
-import { createCallHandler, listCallsHandler } from "./handler";
+import {
+  createCallHandler,
+  listCallsHandler,
+  callsSummaryHandler,
+} from "./handler";
 
 /**
  * GET|POST /api/v1/calls
@@ -24,4 +28,17 @@ app.http("calls", {
     request.method === "POST"
       ? createCallHandler(request, context)
       : listCallsHandler(request, context),
+});
+
+/**
+ * GET /api/v1/calls/summary
+ *
+ * Route letterale distinta da "calls": nessuna collisione con la registrazione
+ * sopra, quindi qui basta una singola app.http senza dispatch per metodo.
+ */
+app.http("callsSummary", {
+  methods: ["GET"],
+  authLevel: "function",
+  route: "calls/summary",
+  handler: callsSummaryHandler,
 });
