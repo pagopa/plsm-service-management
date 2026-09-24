@@ -1,8 +1,10 @@
 export { getMonitoringDb, type MonitoringDb } from "./client";
 export {
   calls,
+  ENVIRONMENTS,
   PRODUCT_IDS,
   type Call,
+  type Environment,
   type NewCall,
   type ProductId,
 } from "./schema";
