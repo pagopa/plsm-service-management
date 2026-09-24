@@ -54,6 +54,11 @@ tags:
     description: Gestione Contatti CRM
   - name: Meetings
     description: Gestione appuntamenti CRM
+  - name: Calls
+    description: |
+      Call registrate sul DB monitoring (tabella `calls`). Le call UAT e PROD
+      sono tenute separate: l'header `x-dynamics-environment` sceglie l'ambiente
+      sia in scrittura sia in lettura (default PROD).
   - name: Diagnostics
     description: Endpoint diagnostici per verifica configurazione e metadati Dynamics
 
@@ -489,6 +494,188 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateMeetingResponse"
+
+  /calls:
+    get:
+      tags:
+        - Calls
+      summary: Lista call registrate
+      description: |
+        Restituisce le call dell'ambiente indicato dall'header
+        `x-dynamics-environment` (default PROD), ordinate per data discendente.
+        I filtri sono facoltativi e si combinano in AND.
+      operationId: listCalls
+      parameters:
+        - $ref: "#/components/parameters/DynamicsEnvironment"
+        - name: productId
+          in: query
+          description: Filtra per prodotto
+          schema:
+            $ref: "#/components/schemas/ProductIdSelfcare"
+        - name: institutionId
+          in: query
+          description: Filtra per ID Selfcare dell'ente
+          schema:
+            type: string
+            format: uuid
+            example: "22222222-2222-2222-2222-222222222222"
+        - name: dateFrom
+          in: query
+          description: Limite inferiore (incluso) su `callDate`, ISO 8601
+          schema:
+            type: string
+            format: date-time
+            example: "2026-01-01T00:00:00Z"
+        - name: dateTo
+          in: query
+          description: |
+            Limite superiore (incluso) su `callDate`, ISO 8601. Deve essere
+            successivo o uguale a `dateFrom`.
+          schema:
+            type: string
+            format: date-time
+            example: "2026-01-31T23:59:59Z"
+        - name: limit
+          in: query
+          description: Numero massimo di call restituite
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Call trovate (lista vuota se nessuna corrisponde)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListCallsResponse"
+        "400":
+          description: Parametri non validi (anche header x-dynamics-environment non valido)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallsValidationErrorResponse"
+        "500":
+          description: Errore durante la lettura dal DB monitoring
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - Calls
+      summary: Registra una call
+      description: |
+        Registra una call sul DB monitoring nell'ambiente indicato dall'header
+        `x-dynamics-environment` (default PROD).
+
+        L'operazione è idempotente su `crmActivityId`: un retry aggiorna la riga
+        esistente invece di duplicarla, senza azzerare i campi facoltativi
+        omessi e senza cambiarne l'ambiente.
+
+        Nota: `POST /meetings` registra già la call in automatico dopo aver
+        creato l'appuntamento su Dynamics.
+      operationId: createCall
+      parameters:
+        - $ref: "#/components/parameters/DynamicsEnvironment"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCallRequest"
+      responses:
+        "201":
+          description: Call registrata (o aggiornata, se già presente)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateCallResponse"
+        "400":
+          description: |
+            Body non valido: JSON malformato (`ErrorResponse`) oppure errori di
+            validazione, anche sull'header x-dynamics-environment
+            (`CallsValidationErrorResponse`)
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/CallsValidationErrorResponse"
+                  - $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Errore durante la scrittura sul DB monitoring
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /calls/summary:
+    get:
+      tags:
+        - Calls
+      summary: Sintesi delle call
+      description: |
+        Totale delle call e classifica dei primi 3 prodotti per numero di call,
+        calcolati sulle call dell'ambiente indicato dall'header
+        `x-dynamics-environment` (default PROD).
+
+        Il periodo si indica con `year` **oppure** con `dateFrom`/`dateTo`, non
+        entrambi. Senza parametri si usa l'anno corrente (UTC).
+
+        - `totalCalls` somma tutti i prodotti del periodo, non solo i primi 3.
+        - A parità di numero di call, il roster è ordinato per `productId`
+          alfabetico.
+      operationId: getCallsSummary
+      parameters:
+        - $ref: "#/components/parameters/DynamicsEnvironment"
+        - name: year
+          in: query
+          description: |
+            Anno solare. Compreso tra 2000 e l'anno corrente + 1.
+            Non combinabile con `dateFrom`/`dateTo`.
+          schema:
+            type: integer
+            minimum: 2000
+            example: 2026
+        - name: dateFrom
+          in: query
+          description: Inizio del periodo (incluso), formato GG/MM/AAAA
+          schema:
+            type: string
+            pattern: '^\d{2}/\d{2}/\d{4}$'
+            example: "01/03/2026"
+        - name: dateTo
+          in: query
+          description: |
+            Fine del periodo, formato GG/MM/AAAA. Inclusa fino a fine giornata
+            (23:59:59.999 UTC). Deve essere successiva o uguale a `dateFrom`.
+          schema:
+            type: string
+            pattern: '^\d{2}/\d{2}/\d{4}$'
+            example: "31/03/2026"
+      responses:
+        "200":
+          description: Sintesi calcolata (totale 0 e roster vuoto se non ci sono call)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallsSummaryResponse"
+        "400":
+          description: |
+            Parametri non validi: formato data errato, data inesistente, year fuori
+            range, year insieme a dateFrom/dateTo, dateFrom successivo a dateTo,
+            header x-dynamics-environment non valido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallsValidationErrorResponse"
+        "500":
+          description: Errore durante la lettura dal DB monitoring
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /diagnostics/probe:
     get:
@@ -970,6 +1157,186 @@ components:
           type: string
           format: date-time
           description: Data prossimo contatto previsto (campo standard Dynamics)
+
+    # ==========================================================================
+    # Calls (DB monitoring)
+    # ==========================================================================
+
+    CreateCallRequest:
+      type: object
+      required:
+        - crmActivityId
+        - productId
+        - callDate
+      properties:
+        crmActivityId:
+          type: string
+          format: uuid
+          description: ID dell'appuntamento su Dynamics (activityid). Chiave di idempotenza.
+          example: "11111111-1111-1111-1111-111111111111"
+        title:
+          type: string
+          minLength: 1
+          example: "Incontro tecnico"
+        institutionId:
+          type: string
+          format: uuid
+          description: ID Selfcare dell'ente
+          example: "22222222-2222-2222-2222-222222222222"
+        institutionName:
+          type: string
+          minLength: 1
+          example: "Comune di Roma"
+        productId:
+          $ref: "#/components/schemas/ProductIdSelfcare"
+        callDate:
+          type: string
+          format: date-time
+          example: "2026-01-15T10:00:00Z"
+        link:
+          type: string
+          format: uri
+          example: "https://meet.example.com/abc"
+
+    CreateCallResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: ID della riga sul DB monitoring
+        timestamp:
+          type: string
+          format: date-time
+
+    Call:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        crmActivityId:
+          type: string
+          format: uuid
+        title:
+          type: string
+          nullable: true
+        institutionId:
+          type: string
+          format: uuid
+          nullable: true
+        institutionName:
+          type: string
+          nullable: true
+        productId:
+          $ref: "#/components/schemas/ProductIdSelfcare"
+        callDate:
+          type: string
+          format: date-time
+        link:
+          type: string
+          nullable: true
+        environment:
+          type: string
+          enum: [UAT, PROD]
+          description: Ambiente Dynamics da cui proviene la call
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ListCallsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Call"
+        count:
+          type: integer
+          example: 1
+        timestamp:
+          type: string
+          format: date-time
+
+    CallsSummaryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            totalCalls:
+              type: integer
+              description: Totale delle call del periodo, su tutti i prodotti
+              example: 18
+            roster:
+              type: array
+              description: Primi 3 prodotti per numero di call
+              maxItems: 3
+              items:
+                type: object
+                properties:
+                  productId:
+                    $ref: "#/components/schemas/ProductIdSelfcare"
+                  calls:
+                    type: integer
+                    example: 9
+                  position:
+                    type: integer
+                    minimum: 1
+                    maximum: 3
+                    example: 1
+        timestamp:
+          type: string
+          format: date-time
+
+    CallsValidationErrorResponse:
+      type: object
+      description: |
+        Errore di validazione degli endpoint `/calls`. A differenza di
+        `ValidationErrorResponse`, i campi riportano solo `field` e `message`.
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Errore di validazione"
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            fields:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    description: Parametro, campo del body o header non valido
+                    example: "x-dynamics-environment"
+                  message:
+                    type: string
+                    example: 'Invalid x-dynamics-environment header value: "DEV". Must be "UAT" or "PROD".'
+        timestamp:
+          type: string
+          format: date-time
 
     ErrorResponse:
       type: object
