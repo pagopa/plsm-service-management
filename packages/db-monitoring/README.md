@@ -55,6 +55,16 @@ quindi le call dei due ambienti stanno nella stessa tabella, distinte dalla colo
 `environment`. Tutte le query richiedono l'ambiente in modo esplicito: le call UAT,
 create dal frontend di dev, non compaiono mai nelle letture PROD e viceversa.
 
+### Dati di test UAT
+
+La migrazione `*_seed_uat_calls` inserisce 60 call fittizie con `environment = 'UAT'`, così il
+frontend di dev (che chiama con `x-dynamics-environment: UAT`) ha dati su cui lavorare. Le call
+vanno dal 06/10/2025 al 28/07/2026 (18 nel 2025, 42 nel 2026), su 6 enti fittizi e 6 prodotti.
+
+È una migrazione come le altre: la applica la Action **DB Monitoring - Migrate** e drizzle la
+esegue una sola volta per database. Tocca solo righe UAT ed è idempotente (`ON CONFLICT DO
+NOTHING` su `crm_activity_id` deterministici), quindi non altera le call di produzione.
+
 ## Configurazione
 
 Copia `.env.example` in `.env` e valorizza `MONITORING_DATABASE_URL`:
