@@ -22,9 +22,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
+import { useSession } from "@/context/sessionProvider";
 import { deleteMemberAction } from "@/lib/actions/members.action";
 import { MemberWithTeams } from "@/lib/services/members.service";
-import useAuthStore from "@/lib/store/auth.store";
 import useTeamsStore from "@/lib/store/teams.store";
 import {
   CalendarIcon,
@@ -45,12 +45,12 @@ type Props = {
 
 export function MemberSheet({ children, member }: Props) {
   const teams = useTeamsStore((state) => state.teams);
-  const authUser = useAuthStore((state) => state.user);
+  const { user } = useSession();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeletePending, startDeleteTransition] = useTransition();
-  const isCurrentUser = authUser?.id === member.id;
+  const isCurrentUser = String(user?.id) === String(member.id);
 
   const handleSheetOpenChange = useCallback(
     (nextOpen: boolean) => {
