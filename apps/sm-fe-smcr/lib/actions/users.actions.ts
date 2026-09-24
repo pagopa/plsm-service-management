@@ -103,7 +103,7 @@ export async function createUserAction(
     };
   }
 
-  revalidateTag("users");
+  revalidateTag("users", "max");
 
   return {
     fields: { ...validation.data },
@@ -175,7 +175,7 @@ export async function updateUserEmailAction(
     };
   }
 
-  revalidateTag("users");
+  revalidateTag("users", "max");
 
   return {
     fields: { ...validation.data },
@@ -231,7 +231,7 @@ export async function updateUserAction(
     };
   }
 
-  revalidateTag("users");
+  revalidateTag("users", "max");
 
   return { fields: { ...input } };
 }

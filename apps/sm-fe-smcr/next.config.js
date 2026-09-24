@@ -5,13 +5,13 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
-    turbo: {
-      resolveAlias: {
-        canvas: "./empty-module.ts",
-      },
-    },
   },
   serverExternalPackages: ["knex"],
+  turbopack: {
+    resolveAlias: {
+      canvas: "./empty-module.ts",
+    },
+  },
 };
 
 export default nextConfig;
