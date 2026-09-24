@@ -228,6 +228,7 @@ export async function sendToSlackAction(
 
   let deliveries: SlackDelivery[];
   if (validation.data.target === "test") {
+    // UAT: un solo messaggio sul canale di test (successo o fallimento).
     deliveries = [
       {
         channel: "jira-service",
@@ -235,27 +236,28 @@ export async function sendToSlackAction(
         payload: buildPayload({ withFailure: isFailure, withTag: isSelfcare }),
       },
     ];
-  } else if (isSelfcare && isFailure) {
-    // Call selfcare in PROD con creazione CRM fallita: l'errore viene loggato
-    // sul canale Jira-service, mentre sul canale selfcare va il solo riepilogo.
+  } else if (isFailure) {
+    // PROD con creazione CRM fallita: errore sul canale Jira-service (test),
+    // riepilogo creazione sul canale prod/selfcare.
     deliveries = [
       {
         channel: "jira-service",
         webhook: jiraServiceWebhook,
-        payload: buildPayload({ withFailure: true, withTag: true }),
+        payload: buildPayload({ withFailure: true, withTag: isSelfcare }),
       },
       {
-        channel: "selfcare",
+        channel: isSelfcare ? "selfcare" : "prod",
         webhook: prodWebhook,
         payload: buildPayload({ withFailure: false, withTag: false }),
       },
     ];
   } else {
+    // PROD con successo: un solo messaggio sul canale prod/selfcare.
     deliveries = [
       {
         channel: isSelfcare ? "selfcare" : "prod",
         webhook: prodWebhook,
-        payload: buildPayload({ withFailure: isFailure, withTag: false }),
+        payload: buildPayload({ withFailure: false, withTag: false }),
       },
     ];
   }
