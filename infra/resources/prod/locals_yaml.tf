@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-08-31 16:21
+# Generato il: 2026-09-24 15:36
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -316,6 +316,7 @@ locals {
     CRM_PRODUCTS_MAP_PROD                = data.azurerm_key_vault_secret.crm_products_map_prod.value
     CRM_TIPOLOGIA_REFERENTE_MAP_UAT      = data.azurerm_key_vault_secret.crm_tipologia_referente_map_uat.value
     CRM_TIPOLOGIA_REFERENTE_MAP_PROD     = data.azurerm_key_vault_secret.crm_tipologia_referente_map_prod.value
+    MONITORING_DATABASE_URL              = data.azurerm_key_vault_secret.monitoring_database_url.value
     NODE_ENV                             = "production"
     WEBSITE_RUN_FROM_PACKAGE             = "1"
     DEBUG                                = "true"
