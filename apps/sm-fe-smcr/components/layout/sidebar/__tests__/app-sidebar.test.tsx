@@ -1,60 +1,16 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-jest.mock("@/lib/store/auth.store", () => ({
-  __esModule: true,
-  default: jest.fn((selector: (state: { user: unknown }) => unknown) =>
-    selector({
-      user: {
-        teams: [{ slug: "core", name: "Core Team" }],
-      },
-    }),
-  ),
-}));
-
-jest.mock("@/lib/protectedRoutes", () => ({
-  protectedRoutes: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      sidebar: true,
-      teamId: "core",
-      requiredTeams: ["core"],
-    },
-  ],
-}));
-
 jest.mock("@/components/layout/nav-main", () => ({
-  NavMain: ({ groups }: { groups: Array<{ teamId: string }> }) => (
-    <div data-testid="nav-main">{JSON.stringify(groups)}</div>
+  NavMain: ({ sections }: { sections: Array<{ label: string }> }) => (
+    <div data-testid="nav-main">{sections.map((section) => section.label).join(",")}</div>
   ),
 }));
 
 jest.mock("@/components/ui/sidebar", () => ({
-  Sidebar: ({
-    children,
-    className,
-  }: {
-    children: React.ReactNode;
-    className?: string;
-  }) => <aside className={className}>{children}</aside>,
-  SidebarContent: ({
-    children,
-    className,
-  }: {
-    children: React.ReactNode;
-    className?: string;
-  }) => <div className={className}>{children}</div>,
-  SidebarFooter: ({
-    children,
-    className,
-  }: {
-    children: React.ReactNode;
-    className?: string;
-  }) => <div className={className}>{children}</div>,
-  SidebarHeader: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
+  Sidebar: ({ children }: { children: React.ReactNode }) => <aside>{children}</aside>,
+  SidebarContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SidebarMenuButton: ({ children }: { children: React.ReactNode }) => (
     <button type="button">{children}</button>
   ),
@@ -82,16 +38,16 @@ jest.mock("../sidebar-user", () => ({
   SidebarUser: () => <div>sidebar user</div>,
 }));
 
-jest.mock("../sidebar-header", () => ({
-  TeamSwitcher: () => <div>team switcher</div>,
-}));
-
 import { AppSidebar } from "../app-sidebar";
 
 describe("AppSidebar", () => {
-  it("pins documentation to the bottom of the scrollable sidebar content with mt-auto", () => {
-    const html = renderToStaticMarkup(<AppSidebar />);
+  it("renders only the server-filtered navigation passed through props", () => {
+    const html = renderToStaticMarkup(
+      <AppSidebar sections={[{ label: "Core", items: [] }]} />,
+    );
 
+    expect(html).toContain("Core");
+    expect(html).not.toContain("Admin");
     expect(html).toContain("mt-auto");
     expect(html).toContain("Documentation");
   });
