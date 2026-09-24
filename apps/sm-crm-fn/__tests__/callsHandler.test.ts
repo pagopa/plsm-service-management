@@ -46,7 +46,32 @@ function makeCall(overrides: Partial<Call> = {}): Call {
     link: "https://meet.example.com/abc",
     createdAt: new Date("2026-01-15T10:00:00Z"),
     updatedAt: new Date("2026-01-15T10:00:00Z"),
+    environment: "PROD",
     ...overrides,
+  };
+}
+
+/** Header della richiesta: `environment` valorizza x-dynamics-environment. */
+function makeHeaders(environment?: string) {
+  return new Headers(
+    environment === undefined ? {} : { "x-dynamics-environment": environment },
+  );
+}
+
+/** Richiesta GET con i parametri in query string. */
+function makeRequest(params: Record<string, string> = {}, environment?: string) {
+  const query = new URLSearchParams(params);
+  return {
+    query: { get: (key: string) => query.get(key) },
+    headers: makeHeaders(environment),
+  };
+}
+
+/** Richiesta POST con il body JSON. */
+function makePostRequest(body: unknown, environment?: string) {
+  return {
+    json: jest.fn().mockResolvedValue(body),
+    headers: makeHeaders(environment),
   };
 }
 
@@ -68,7 +93,7 @@ describe("createCallHandler", () => {
   it("registra la call e restituisce 201 con l'id", async () => {
     mockedUpsertCall.mockResolvedValue("33333333-3333-3333-3333-333333333333");
 
-    const request = { json: jest.fn().mockResolvedValue(validBody) };
+    const request = makePostRequest(validBody);
     const response = await createCallHandler(
       request as never,
       makeContext() as never,
@@ -84,16 +109,47 @@ describe("createCallHandler", () => {
         crmActivityId: validBody.crmActivityId,
         productId: "prod-pn",
         callDate: new Date(validBody.callDate),
+        environment: "PROD",
       }),
     );
   });
 
+  it("registra la call come UAT se l'header x-dynamics-environment è UAT", async () => {
+    mockedUpsertCall.mockResolvedValue("33333333-3333-3333-3333-333333333333");
+
+    const response = await createCallHandler(
+      makePostRequest(validBody, "uat") as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(201);
+    expect(mockedUpsertCall).toHaveBeenCalledWith(
+      expect.objectContaining({ environment: "UAT" }),
+    );
+  });
+
+  it("risponde 400 se l'header x-dynamics-environment non è valido", async () => {
+    const response = await createCallHandler(
+      makePostRequest(validBody, "DEV") as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.jsonBody).toMatchObject({
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        fields: [expect.objectContaining({ field: "x-dynamics-environment" })],
+      },
+    });
+    expect(mockedUpsertCall).not.toHaveBeenCalled();
+  });
+
   it("risponde 400 se productId non è tra i valori ammessi", async () => {
-    const request = {
-      json: jest
-        .fn()
-        .mockResolvedValue({ ...validBody, productId: "prod-inesistente" }),
-    };
+    const request = makePostRequest({
+      ...validBody,
+      productId: "prod-inesistente",
+    });
 
     const response = await createCallHandler(
       request as never,
@@ -110,7 +166,7 @@ describe("createCallHandler", () => {
 
   it("risponde 400 se crmActivityId manca", async () => {
     const { crmActivityId, ...bodyWithoutId } = validBody;
-    const request = { json: jest.fn().mockResolvedValue(bodyWithoutId) };
+    const request = makePostRequest(bodyWithoutId);
 
     const response = await createCallHandler(
       request as never,
@@ -123,7 +179,7 @@ describe("createCallHandler", () => {
 
   it("risponde 500 senza dettaglio grezzo se la scrittura fallisce", async () => {
     mockedUpsertCall.mockRejectedValue(new Error("connection refused"));
-    const request = { json: jest.fn().mockResolvedValue(validBody) };
+    const request = makePostRequest(validBody);
 
     const response = await createCallHandler(
       request as never,
@@ -138,11 +194,6 @@ describe("createCallHandler", () => {
 });
 
 describe("listCallsHandler", () => {
-  function makeRequest(params: Record<string, string> = {}) {
-    const query = new URLSearchParams(params);
-    return { query: { get: (key: string) => query.get(key) } };
-  }
-
   it("restituisce tutte le call quando nessun filtro è valorizzato", async () => {
     const calls = [makeCall()];
     mockedListCalls.mockResolvedValue(calls);
@@ -155,12 +206,36 @@ describe("listCallsHandler", () => {
     expect(response.status).toBe(200);
     expect(response.jsonBody).toMatchObject({ success: true, count: 1 });
     expect(mockedListCalls).toHaveBeenCalledWith({
+      environment: "PROD",
       limit: 50,
       productId: undefined,
       institutionId: undefined,
       callDateFrom: undefined,
       callDateTo: undefined,
     });
+  });
+
+  it("legge solo le call UAT se l'header x-dynamics-environment è UAT", async () => {
+    mockedListCalls.mockResolvedValue([]);
+
+    await listCallsHandler(
+      makeRequest({}, "UAT") as never,
+      makeContext() as never,
+    );
+
+    expect(mockedListCalls).toHaveBeenCalledWith(
+      expect.objectContaining({ environment: "UAT" }),
+    );
+  });
+
+  it("risponde 400 se l'header x-dynamics-environment non è valido", async () => {
+    const response = await listCallsHandler(
+      makeRequest({}, "DEV") as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedListCalls).not.toHaveBeenCalled();
   });
 
   it("applica il filtro prodotto", async () => {
@@ -190,6 +265,7 @@ describe("listCallsHandler", () => {
     );
 
     expect(mockedListCalls).toHaveBeenCalledWith({
+      environment: "PROD",
       limit: 50,
       productId: "prod-io",
       institutionId: undefined,
@@ -239,11 +315,6 @@ describe("listCallsHandler", () => {
 });
 
 describe("callsSummaryHandler", () => {
-  function makeRequest(params: Record<string, string> = {}) {
-    const query = new URLSearchParams(params);
-    return { query: { get: (key: string) => query.get(key) } };
-  }
-
   it("restituisce la sintesi delegando l'anno di default al layer db", async () => {
     mockedGetCallsSummary.mockResolvedValue({
       totalCalls: 42,
@@ -265,11 +336,35 @@ describe("callsSummaryHandler", () => {
     });
     expect(mockedGetCallsSummary).toHaveBeenCalledWith(
       expect.objectContaining({
+        environment: "PROD",
         year: undefined,
         dateFrom: undefined,
         dateTo: undefined,
       }),
     );
+  });
+
+  it("calcola la sintesi sulle sole call UAT se l'header x-dynamics-environment è UAT", async () => {
+    mockedGetCallsSummary.mockResolvedValue({ totalCalls: 0, roster: [] });
+
+    await callsSummaryHandler(
+      makeRequest({ year: "2026" }, "UAT") as never,
+      makeContext() as never,
+    );
+
+    expect(mockedGetCallsSummary).toHaveBeenCalledWith(
+      expect.objectContaining({ environment: "UAT", year: 2026 }),
+    );
+  });
+
+  it("risponde 400 se l'header x-dynamics-environment non è valido", async () => {
+    const response = await callsSummaryHandler(
+      makeRequest({}, "DEV") as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetCallsSummary).not.toHaveBeenCalled();
   });
 
   it("passa l'anno richiesto come numero", async () => {

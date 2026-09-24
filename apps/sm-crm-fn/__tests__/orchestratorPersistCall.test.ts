@@ -71,6 +71,7 @@ describe("createMeetingOrchestrator — persistenza automatica su db-monitoring"
       institutionId: "22222222-2222-2222-2222-222222222222",
       institutionName: "Comune di Roma",
       title: "Incontro tecnico",
+      environment: "PROD",
     });
     expect(result.steps).toContainEqual(
       expect.objectContaining({ step: "persistCall", success: true }),
@@ -87,6 +88,19 @@ describe("createMeetingOrchestrator — persistenza automatica su db-monitoring"
     expect(result.success).toBe(true);
     expect(mockedUpsertCall).toHaveBeenCalledWith(
       expect.objectContaining({ link: "https://example.com/diario" }),
+    );
+  });
+
+  it("registra la call come UAT quando la richiesta è instradata su Dynamics UAT", async () => {
+    mockedUpsertCall.mockResolvedValue("call-id-1");
+
+    const result = await createMeetingOrchestrator(
+      baseRequest({ baseUrl: "https://uat-pagopa.crm4.dynamics.com" }) as never,
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockedUpsertCall).toHaveBeenCalledWith(
+      expect.objectContaining({ environment: "UAT" }),
     );
   });
 
