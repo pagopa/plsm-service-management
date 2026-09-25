@@ -3,6 +3,7 @@ export type NavigationIcon =
   | "file-signature"
   | "folder"
   | "key"
+  | "monitor"
   | "phone"
   | "search"
   | "shield-check"
@@ -117,6 +118,17 @@ export const dashboardNavigation: DashboardNavigationSection[] = [
         href: "/dashboard/call-management",
         icon: "phone",
         permission: "call.management.read",
+      },
+      {
+        label: "Monitoring",
+        icon: "monitor",
+        children: [
+          {
+            label: "Calls",
+            href: "/dashboard/monitoring/calls",
+            permission: "call.management.read",
+          },
+        ],
       },
       {
         label: "Portale Fatturazione",
