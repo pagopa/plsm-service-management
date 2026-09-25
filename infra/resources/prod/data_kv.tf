@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-08-31 16:21
+# Generato il: 2026-09-24 15:36
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -171,6 +171,11 @@ data "azurerm_key_vault_secret" "fe_smcr_pdnd_token_refresh_margin_seconds" {
 
 data "azurerm_key_vault_secret" "fe_smcr_signature_fn_key" {
   name         = "fe-smcr-signature-fn-key"
+  key_vault_id = module.azure_core_infra.common_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "monitoring_database_url" {
+  name         = "monitoring-database-url"
   key_vault_id = module.azure_core_infra.common_key_vault.id
 }
 

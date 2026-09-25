@@ -1,5 +1,14 @@
-import { createCallHandler, listCallsHandler } from "../calls/handler";
-import { upsertCall, listCalls, type Call } from "@repo/db-monitoring";
+import {
+  createCallHandler,
+  listCallsHandler,
+  callsSummaryHandler,
+} from "../calls/handler";
+import {
+  upsertCall,
+  listCalls,
+  getCallsSummary,
+  type Call,
+} from "@repo/db-monitoring";
 
 jest.mock("@repo/db-monitoring", () => {
   const actual = jest.requireActual("@repo/db-monitoring");
@@ -7,11 +16,15 @@ jest.mock("@repo/db-monitoring", () => {
     ...actual,
     upsertCall: jest.fn(),
     listCalls: jest.fn(),
+    getCallsSummary: jest.fn(),
   };
 });
 
 const mockedUpsertCall = upsertCall as jest.MockedFunction<typeof upsertCall>;
 const mockedListCalls = listCalls as jest.MockedFunction<typeof listCalls>;
+const mockedGetCallsSummary = getCallsSummary as jest.MockedFunction<
+  typeof getCallsSummary
+>;
 
 function makeContext() {
   return {
@@ -214,6 +227,171 @@ describe("listCallsHandler", () => {
     mockedListCalls.mockRejectedValue(new Error("connection refused"));
 
     const response = await listCallsHandler(
+      makeRequest() as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(500);
+    expect(JSON.stringify(response.jsonBody)).not.toContain(
+      "connection refused",
+    );
+  });
+});
+
+describe("callsSummaryHandler", () => {
+  function makeRequest(params: Record<string, string> = {}) {
+    const query = new URLSearchParams(params);
+    return { query: { get: (key: string) => query.get(key) } };
+  }
+
+  it("restituisce la sintesi delegando l'anno di default al layer db", async () => {
+    mockedGetCallsSummary.mockResolvedValue({
+      totalCalls: 42,
+      roster: [{ productId: "prod-io", calls: 30, position: 1 }],
+    });
+
+    const response = await callsSummaryHandler(
+      makeRequest() as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.jsonBody).toMatchObject({
+      success: true,
+      data: {
+        totalCalls: 42,
+        roster: [{ productId: "prod-io", calls: 30, position: 1 }],
+      },
+    });
+    expect(mockedGetCallsSummary).toHaveBeenCalledWith(
+      expect.objectContaining({
+        year: undefined,
+        dateFrom: undefined,
+        dateTo: undefined,
+      }),
+    );
+  });
+
+  it("passa l'anno richiesto come numero", async () => {
+    mockedGetCallsSummary.mockResolvedValue({ totalCalls: 0, roster: [] });
+
+    await callsSummaryHandler(
+      makeRequest({ year: "2025" }) as never,
+      makeContext() as never,
+    );
+
+    expect(mockedGetCallsSummary).toHaveBeenCalledWith(
+      expect.objectContaining({ year: 2025 }),
+    );
+  });
+
+  it("passa dateFrom/dateTo in formato italiano, dateTo esteso a fine giornata", async () => {
+    mockedGetCallsSummary.mockResolvedValue({ totalCalls: 0, roster: [] });
+
+    await callsSummaryHandler(
+      makeRequest({ dateFrom: "01/03/2026", dateTo: "31/03/2026" }) as never,
+      makeContext() as never,
+    );
+
+    expect(mockedGetCallsSummary).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dateFrom: new Date("2026-03-01T00:00:00.000Z"),
+        dateTo: new Date("2026-03-31T23:59:59.999Z"),
+      }),
+    );
+  });
+
+  it("accetta anche solo dateFrom senza dateTo", async () => {
+    mockedGetCallsSummary.mockResolvedValue({ totalCalls: 0, roster: [] });
+
+    const response = await callsSummaryHandler(
+      makeRequest({ dateFrom: "01/03/2026" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockedGetCallsSummary).toHaveBeenCalledWith(
+      expect.objectContaining({ dateFrom: new Date("2026-03-01T00:00:00.000Z") }),
+    );
+  });
+
+  it("interpreta 01/03/2026 come 1 marzo, non alla americana come 3 gennaio", async () => {
+    mockedGetCallsSummary.mockResolvedValue({ totalCalls: 0, roster: [] });
+
+    await callsSummaryHandler(
+      makeRequest({ dateFrom: "01/03/2026" }) as never,
+      makeContext() as never,
+    );
+
+    const calledWith = mockedGetCallsSummary.mock.calls[0]?.[0];
+    expect(calledWith?.dateFrom?.getUTCMonth()).toBe(2); // marzo (0-indexed)
+    expect(calledWith?.dateFrom?.getUTCDate()).toBe(1);
+  });
+
+  it("risponde 400 se dateFrom non è in formato GG/MM/AAAA", async () => {
+    const response = await callsSummaryHandler(
+      makeRequest({ dateFrom: "2026-03-01" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetCallsSummary).not.toHaveBeenCalled();
+  });
+
+  it("risponde 400 se la data GG/MM/AAAA non esiste nel calendario", async () => {
+    const response = await callsSummaryHandler(
+      makeRequest({ dateFrom: "31/02/2026" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetCallsSummary).not.toHaveBeenCalled();
+  });
+
+  it("risponde 400 se year non è un intero valido", async () => {
+    const response = await callsSummaryHandler(
+      makeRequest({ year: "abc" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetCallsSummary).not.toHaveBeenCalled();
+  });
+
+  it("risponde 400 se year è fuori range", async () => {
+    const response = await callsSummaryHandler(
+      makeRequest({ year: "1999" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetCallsSummary).not.toHaveBeenCalled();
+  });
+
+  it("risponde 400 se vengono passati sia year sia dateFrom/dateTo", async () => {
+    const response = await callsSummaryHandler(
+      makeRequest({ year: "2026", dateFrom: "01/03/2026" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetCallsSummary).not.toHaveBeenCalled();
+  });
+
+  it("risponde 400 se dateFrom è successivo a dateTo", async () => {
+    const response = await callsSummaryHandler(
+      makeRequest({ dateFrom: "31/03/2026", dateTo: "01/03/2026" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedGetCallsSummary).not.toHaveBeenCalled();
+  });
+
+  it("risponde 500 senza dettaglio grezzo se la lettura fallisce", async () => {
+    mockedGetCallsSummary.mockRejectedValue(new Error("connection refused"));
+
+    const response = await callsSummaryHandler(
       makeRequest() as never,
       makeContext() as never,
     );

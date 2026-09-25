@@ -1,11 +1,30 @@
 import { randomUUID } from "crypto";
+import { createRequire } from "node:module";
 import pino from "pino";
-import pinoPretty from "pino-pretty";
 import { serverEnv } from "@/config/env";
 
-const streams: pino.StreamEntry[] = [
-  { stream: pinoPretty({ colorize: true, translateTime: "HH:MM:ss" }) },
-];
+export function createLocalStream(): pino.DestinationStream {
+  if (
+    process.env.NODE_ENV !== "development" &&
+    process.env.NODE_ENV !== "test"
+  ) {
+    return process.stdout;
+  }
+
+  try {
+    const requireFromHere = createRequire(
+      typeof __filename === "string"
+        ? __filename
+        : `${process.cwd()}/logger.server.ts`,
+    );
+    const pinoPretty = requireFromHere("pino-pretty") as typeof import("pino-pretty");
+    return pinoPretty({ colorize: true, translateTime: "HH:MM:ss" });
+  } catch {
+    return process.stdout;
+  }
+}
+
+const streams: pino.StreamEntry[] = [{ stream: createLocalStream() }];
 
 const remoteStream = {
   write: async (input: string) => {
