@@ -28,19 +28,32 @@ const id = await upsertCall({
   productId: "prod-pn",
   callDate: new Date("2026-01-15T10:00:00Z"),
   link: "https://meet.example.com/abc",
+  environment: "PROD",
 });
 
-// Legge le call più recenti
-const recenti = await listCalls({ limit: 20, productId: "prod-io" });
+// Legge le call più recenti dell'ambiente
+const recenti = await listCalls({
+  environment: "PROD",
+  limit: 20,
+  productId: "prod-io",
+});
 
 // Filtri componibili: prodotto, ente e/o range di data (call_date), tutti opzionali
 const gennaio = await listCalls({
+  environment: "PROD",
   limit: 20,
   productId: "prod-io",
   callDateFrom: new Date("2026-01-01T00:00:00Z"),
   callDateTo: new Date("2026-01-31T23:59:59Z"),
 });
 ```
+
+### Ambienti
+
+L'unica CRM Function serve sia Dynamics UAT sia PROD (header `x-dynamics-environment`),
+quindi le call dei due ambienti stanno nella stessa tabella, distinte dalla colonna
+`environment`. Tutte le query richiedono l'ambiente in modo esplicito: le call UAT,
+create dal frontend di dev, non compaiono mai nelle letture PROD e viceversa.
 
 ## Configurazione
 
