@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Construction } from "lucide-react";
 
+import { CallsView } from "@/features/monitoring/calls/calls-view";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -38,14 +38,8 @@ export default function MonitoringCallsPage() {
         </Breadcrumb>
       </div>
 
-      <div className="mt-4 flex min-h-[320px] items-center justify-center md:mt-6">
-        <div className="flex max-w-md flex-col items-center gap-3 rounded-xl border bg-white px-8 py-10 text-center shadow-sm">
-          <Construction className="text-muted-foreground size-8" />
-          <h1 className="text-lg font-medium">Work in progress</h1>
-          <p className="text-muted-foreground text-sm">
-            La pagina Calls è in lavorazione.
-          </p>
-        </div>
+      <div className="mt-4 md:mt-6">
+        <CallsView />
       </div>
     </div>
   );
