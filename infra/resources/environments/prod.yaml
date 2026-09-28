@@ -166,6 +166,8 @@ crm_function:
   CRM_PRODUCTS_MAP_PROD: "kv:crm_products_map_prod"
   CRM_TIPOLOGIA_REFERENTE_MAP_UAT: "kv:crm_tipologia_referente_map_uat"
   CRM_TIPOLOGIA_REFERENTE_MAP_PROD: "kv:crm_tipologia_referente_map_prod"
+  # DB monitoring (tabella calls) — letto da @repo/db-monitoring
+  MONITORING_DATABASE_URL: "kv:monitoring_database_url"
   NODE_ENV: "production"
   WEBSITE_RUN_FROM_PACKAGE: "1"
   DEBUG: "true"

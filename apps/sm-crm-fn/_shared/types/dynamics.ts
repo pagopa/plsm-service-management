@@ -163,6 +163,8 @@ export interface CreateMeetingOrchestratorRequest {
   categoria?: string;
   /** Data prossimo contatto previsto (campo standard Dynamics, formato ISO 8601) */
   dataProssimoContatto?: string;
+  /** Link al diario/verbale, salvato sulla riga calls del DB monitoring */
+  link?: string;
 
   // Opzioni
   dryRun?: boolean;

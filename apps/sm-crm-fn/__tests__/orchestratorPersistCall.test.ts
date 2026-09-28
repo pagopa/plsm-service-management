@@ -77,6 +77,19 @@ describe("createMeetingOrchestrator — persistenza automatica su db-monitoring"
     );
   });
 
+  it("registra la call con il link quando presente nel payload frontend", async () => {
+    mockedUpsertCall.mockResolvedValue("call-id-1");
+
+    const result = await createMeetingOrchestrator(
+      baseRequest({ link: "https://example.com/diario" }) as never,
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockedUpsertCall).toHaveBeenCalledWith(
+      expect.objectContaining({ link: "https://example.com/diario" }),
+    );
+  });
+
   it("non blocca la risposta se la scrittura sul DB monitoring fallisce, ma aggiunge un warning", async () => {
     mockedUpsertCall.mockRejectedValue(new Error("connection refused"));
 
