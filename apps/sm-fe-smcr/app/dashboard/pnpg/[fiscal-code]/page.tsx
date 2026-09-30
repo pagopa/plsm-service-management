@@ -2,6 +2,7 @@ import { ErrorBase } from "@/components/error/error-overview";
 import Header from "@/components/provisioning/header";
 import InstitutionInfo from "@/components/provisioning/institution/info";
 import TabsSection from "@/components/provisioning/product/tabs";
+import { hasPermission } from "@/lib/auth/permissions";
 import {
   getInstitutionPNPG,
   Institution,
@@ -41,7 +42,6 @@ export default async function Page({
     (item) => item.id === institution,
   );
 
-
   if (institutionsResponse.error || !institutionsResponse.data) {
     return (
       <ErrorBase
@@ -61,12 +61,17 @@ export default async function Page({
     );
   }
 
+  const canEditInstitution = await hasPermission("pnpg.read");
 
   return (
     <div className="w-full h-full p-4 flex flex-col space-y-8 overflow-hidden">
       <Header route="pnpg" />
 
-      <InstitutionInfo institutions={institutionsResponse.data} isPNPG />
+      <InstitutionInfo
+        institutions={institutionsResponse.data}
+        canEditInstitution={canEditInstitution}
+        isPNPG
+      />
 
       {taxCode && institution && product && (
         <TabsSection

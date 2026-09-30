@@ -2,6 +2,7 @@ import { ErrorBase } from "@/components/error/error-overview";
 import Header from "@/components/provisioning/header";
 import InstitutionInfo from "@/components/provisioning/institution/info";
 import TabsSection from "@/components/provisioning/product/tabs";
+import { hasPermission } from "@/lib/auth/permissions";
 import {
   getInstitutionWithSubunits,
   Institution,
@@ -61,11 +62,16 @@ export default async function Page({
     );
   }
 
+  const canEditInstitution = await hasPermission("overview.write");
+
   return (
     <div className="w-full h-full p-4 flex flex-col space-y-8 overflow-hidden">
       <Header route="overview" />
 
-      <InstitutionInfo institutions={institutionsResponse.data} />
+      <InstitutionInfo
+        institutions={institutionsResponse.data}
+        canEditInstitution={canEditInstitution}
+      />
 
       {taxCode && institution && product && (
         <TabsSection
