@@ -1,6 +1,9 @@
 "use client";
 
-import { updateInstitutionAction } from "@/lib/actions/institution.action";
+import {
+  updateOverviewInstitutionAction,
+  updatePnpgInstitutionAction,
+} from "@/lib/actions/institution.action";
 import { Institution, Product } from "@/lib/services/institution.service";
 import { useInstitutionStore } from "@/lib/store/institution.store";
 import { PRODUCT_MAP } from "@/lib/types/product";
@@ -41,7 +44,11 @@ import ConfirmChanges from "./confirm-changes";
 import InfoItem from "./info-item";
 import { Badge } from "@/components/ui/badge";
 
-type Props = { institutions: Array<Institution>; isPNPG?: boolean };
+type Props = {
+  institutions: Array<Institution>;
+  canEditInstitution: boolean;
+  isPNPG?: boolean;
+};
 
 const editableFields: Array<{
   field: string;
@@ -78,6 +85,7 @@ const editableFields: Array<{
 
 export default function InstitutionInfo({
   institutions,
+  canEditInstitution,
   isPNPG = false,
 }: Props) {
   const router = useRouter();
@@ -90,7 +98,6 @@ export default function InstitutionInfo({
   });
 
   const valuesFromStore = useInstitutionStore((state) => state.values);
-  const resetValues = useInstitutionStore((state) => state.resetValues);
 
   const [currentInstitution, setCurrentInstitution] = useState(
     institutions.at(0) || null,
@@ -101,13 +108,18 @@ export default function InstitutionInfo({
   const [confirmChangesDialogOpen, setConfigChangesDialogOpen] =
     useState(false);
 
-  const [state, action] = useActionState(updateInstitutionAction, {});
+  const [state, action] = useActionState(
+    isPNPG ? updatePnpgInstitutionAction : updateOverviewInstitutionAction,
+    {},
+  );
   const [isPending, startTransition] = useTransition();
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    setConfigChangesDialogOpen(true);
+    if (canEditInstitution) {
+      setConfigChangesDialogOpen(true);
+    }
   }
 
   const createQueryString = useCallback(
@@ -152,30 +164,8 @@ export default function InstitutionInfo({
   }, [pathname, router, createQueryString, currentInstitution, currentProduct]);
 
   useEffect(() => {
-    if (state.fields) {
-      if (state?.errors?.root) {
-        toast.success("Errore imprevisto.", {
-          description:
-            "Si è verificato un errore imprevisto, riprova più tardi.",
-        });
-      } else {
-        toast.success("Informazioni aggiornate.", {
-          description: `Le informazioni dell'ente sono state aggiornate con successo.`,
-        });
-
-        router.refresh();
-
-        setConfigChangesDialogOpen(false);
-      }
-
-      resetValues({
-        description: currentInstitution?.description || "",
-        address: currentInstitution?.address || "",
-        digitalAddress: currentInstitution?.digitalAddress || "",
-        zipCode: currentInstitution?.zipCode || "",
-        origin: currentProduct?.origin || "",
-        originId: currentProduct?.originId || "",
-      });
+    if (state.errors) {
+      toast.error(state.errors.root ?? "Controlla i dati inseriti e riprova.");
     }
   }, [state]);
 
@@ -231,20 +221,20 @@ export default function InstitutionInfo({
         onSubmit={onSubmit}
         className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 grid grid-cols-5 gap-4"
       >
-        <input type="submit" hidden />
+        {canEditInstitution && <input type="submit" hidden />}
         <InfoItem
           name="description"
           label="Ente"
           value={currentInstitution?.description}
           className="col-span-2"
-          isEditable
+          isEditable={canEditInstitution}
           icon={<Landmark className="size-4 mr-2 text-muted-foreground" />}
         />
         <InfoItem
           name="zipCode"
           label="ZIP"
           value={currentInstitution?.zipCode}
-          isEditable
+          isEditable={canEditInstitution}
           icon={<ClipboardList className="size-4 mr-2 text-muted-foreground" />}
         />
 
@@ -269,21 +259,21 @@ export default function InstitutionInfo({
           label="PEC"
           value={currentInstitution?.digitalAddress}
           className="col-span-2"
-          isEditable
+          isEditable={canEditInstitution}
           icon={<Mail className="size-4 mr-2 text-muted-foreground" />}
         />
         <InfoItem
           name="address"
           label="Indirizzo"
           value={currentInstitution?.address}
-          isEditable
+          isEditable={canEditInstitution}
           icon={<MapPin className="size-4 mr-2 text-muted-foreground" />}
         />
         <InfoItem
           name="origin"
           label="Origin"
           value={currentProduct?.origin || ""}
-          isEditable
+          isEditable={canEditInstitution}
           options={apiOriginValues}
           icon={<Locate className="size-4 mr-2 text-muted-foreground" />}
         />
@@ -291,7 +281,7 @@ export default function InstitutionInfo({
           name="originId"
           label="Origin ID"
           value={currentProduct?.originId || ""}
-          isEditable
+          isEditable={canEditInstitution}
           icon={<Fingerprint className="size-4 mr-2 text-muted-foreground" />}
         />
         <InfoItem
@@ -357,72 +347,75 @@ export default function InstitutionInfo({
           </Badge>
         )}
 
-        <ConfirmChanges
-          open={confirmChangesDialogOpen}
-          onOpenChange={setConfigChangesDialogOpen}
-          isPending={isPending}
-          onConfirm={(sendToQueue) => {
-            const redirectUrl = isPNPG
-              ? `/dashboard/pnpg/${currentInstitution?.taxCode}?institution=${currentInstitution?.id}&product=${currentProduct?.productId}`
-              : `/dashboard/overview/${currentInstitution?.taxCode}?institution=${currentInstitution?.id}&product=${currentProduct?.productId}`;
-            const formData = new FormData();
-            formData.append("redirect", redirectUrl);
-            formData.append("institutionId", currentInstitution?.id || "");
-            formData.append("address", valuesFromStore.address);
-            formData.append("description", valuesFromStore.description);
-            formData.append("digitalAddress", valuesFromStore.digitalAddress);
-            formData.append("zipCode", valuesFromStore.zipCode);
-            formData.append("sendToQueue", String(sendToQueue));
-            formData.append("onboarding", currentProduct?.tokenId || "");
-            formData.append("isPNPG", String(isPNPG));
-            formData.append(
-              "onboardings",
-              JSON.stringify(
-                currentInstitution?.onboarding.map((item) => ({
-                  productId: item.productId as string,
-                  vatNumber: item.billing?.vatNumber as string,
-                  origin:
-                    item.productId === currentProduct?.productId
-                      ? (valuesFromStore.origin as string)
-                      : (item.origin as string),
-                  originId:
-                    item.productId === currentProduct?.productId
-                      ? (valuesFromStore.originId as string)
-                      : (item.originId as string),
-                })) || [],
-              ),
-            );
+        {canEditInstitution && (
+          <ConfirmChanges
+            open={confirmChangesDialogOpen}
+            onOpenChange={setConfigChangesDialogOpen}
+            isPending={isPending}
+            onConfirm={(sendToQueue) => {
+              const redirectUrl = isPNPG
+                ? `/dashboard/pnpg/${currentInstitution?.taxCode}?institution=${currentInstitution?.id}&product=${currentProduct?.productId}`
+                : `/dashboard/overview/${currentInstitution?.taxCode}?institution=${currentInstitution?.id}&product=${currentProduct?.productId}`;
+              const formData = new FormData();
+              formData.append("redirect", redirectUrl);
+              formData.append("institutionId", currentInstitution?.id || "");
+              formData.append("address", valuesFromStore.address);
+              formData.append("description", valuesFromStore.description);
+              formData.append("digitalAddress", valuesFromStore.digitalAddress);
+              formData.append("zipCode", valuesFromStore.zipCode);
+              formData.append("sendToQueue", String(sendToQueue));
+              formData.append("onboarding", currentProduct?.tokenId || "");
+              formData.append(
+                "onboardings",
+                JSON.stringify(
+                  currentInstitution?.onboarding.map((item) => ({
+                    productId: item.productId as string,
+                    vatNumber: item.billing?.vatNumber as string,
+                    origin:
+                      item.productId === currentProduct?.productId
+                        ? (valuesFromStore.origin as string)
+                        : (item.origin as string),
+                    originId:
+                      item.productId === currentProduct?.productId
+                        ? (valuesFromStore.originId as string)
+                        : (item.originId as string),
+                  })) || [],
+                ),
+              );
 
-            startTransition(() => action(formData));
-          }}
-          changes={editableFields
-            .map((item) => {
-              const source =
-                item.source === "product" ? currentProduct : currentInstitution;
-              const oldValue =
-                (source as unknown as Record<string, string> | null)?.[
-                  item.field
-                ] || "";
-              const newValue =
-                (valuesFromStore as unknown as Record<string, string>)[
-                  item.field
-                ] || "";
+              startTransition(() => action(formData));
+            }}
+            changes={editableFields
+              .map((item) => {
+                const source =
+                  item.source === "product"
+                    ? currentProduct
+                    : currentInstitution;
+                const oldValue =
+                  (source as unknown as Record<string, string> | null)?.[
+                    item.field
+                  ] || "";
+                const newValue =
+                  (valuesFromStore as unknown as Record<string, string>)[
+                    item.field
+                  ] || "";
 
-              if (!oldValue && !newValue) {
-                return undefined;
-              }
+                if (!oldValue && !newValue) {
+                  return undefined;
+                }
 
-              if (oldValue !== newValue) {
-                return {
-                  field: item.field,
-                  label: item.label,
-                  oldValue,
-                  newValue,
-                };
-              }
-            })
-            .filter((item) => !!item)}
-        />
+                if (oldValue !== newValue) {
+                  return {
+                    field: item.field,
+                    label: item.label,
+                    oldValue,
+                    newValue,
+                  };
+                }
+              })
+              .filter((item) => !!item)}
+          />
+        )}
       </form>
     </section>
   );

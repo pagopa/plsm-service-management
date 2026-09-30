@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 import z from "zod";
+import { getCurrentPermissionCodes } from "@/lib/auth/dashboard-access";
+import { requireServerSession } from "@/lib/auth/server";
 import {
   updateInstitutionInfo,
   updateInstitutionInfoPNPG,
@@ -21,12 +23,16 @@ const updateInstitutionSchema = z.object({
   originId: z.string().optional(),
   sendToQueue: z.string().transform((v) => v === "true"),
   onboarding: z.string().optional().nullable(),
-  isPNPG: z
-    .string()
-    .transform((v) => v === "true")
-    .optional(),
   onboardings: z.preprocess(
-    (value) => JSON.parse(value as string),
+    (value) => {
+      if (typeof value !== "string") return value;
+
+      try {
+        return JSON.parse(value);
+      } catch {
+        return undefined;
+      }
+    },
     z.array(
       z.object({
         productId: z.string().nonempty(),
@@ -38,21 +44,52 @@ const updateInstitutionSchema = z.object({
   ),
 });
 
-type UpdateInstitutionInput = z.infer<typeof updateInstitutionSchema>;
-
 export type UpdateInstitutionFormState = {
-  fields: Partial<UpdateInstitutionInput>;
-  errors?: { root?: string };
+  errors?: Record<string, string>;
 };
 
-export async function updateInstitutionAction(
-  prevState: UpdateInstitutionFormState,
+type InstitutionScope = "overview" | "pnpg";
+
+function getSafeReturnUrl(value: string, scope: InstitutionScope) {
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+
+  try {
+    const url = new URL(value, "https://app.invalid");
+
+    if (
+      url.origin !== "https://app.invalid" ||
+      !url.pathname.startsWith(`/dashboard/${scope}/`)
+    ) {
+      return null;
+    }
+
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return null;
+  }
+}
+
+async function updateInstitutionFor(
+  scope: InstitutionScope,
   formData: FormData,
-): Promise<any> {
+): Promise<UpdateInstitutionFormState> {
+  await requireServerSession(`/dashboard/${scope}`);
+
+  const permissionCodes = await getCurrentPermissionCodes();
+  const canUpdate =
+    scope === "overview"
+      ? permissionCodes.has("overview.read") &&
+        permissionCodes.has("overview.write")
+      : permissionCodes.has("pnpg.read");
+
+  if (!canUpdate) {
+    return {
+      errors: { root: "Non hai il permesso di modificare l'ente." },
+    };
+  }
+
   const input = Object.fromEntries(formData.entries());
   const validation = updateInstitutionSchema.safeParse(input);
-
-  const isPNPG = validation.success && validation.data.isPNPG ? true : false;
 
   if (!validation.success) {
     const errors: Record<string, string> = {};
@@ -64,30 +101,42 @@ export async function updateInstitutionAction(
       }
     }
 
-    return { fields: input, errors };
+    return {
+      errors: {
+        ...errors,
+        root: validation.error.issues[0]?.message ?? "Dati non validi.",
+      },
+    };
   }
-  const { error } = isPNPG
-    ? await updateInstitutionInfoPNPG({
-        institutionId: validation.data?.institutionId,
-        address: validation.data.address,
-        description: validation.data.description,
-        digitalAddress: validation.data.digitalAddress,
-        zipCode: validation.data.zipCode,
-        onboardings: validation.data?.onboardings,
-      })
-    : await updateInstitutionInfo({
-        institutionId: validation.data?.institutionId,
-        address: validation.data.address,
-        description: validation.data.description,
-        digitalAddress: validation.data.digitalAddress,
-        zipCode: validation.data.zipCode,
-        onboardings: validation.data?.onboardings,
-      });
+
+  const returnUrl = getSafeReturnUrl(validation.data.redirect, scope);
+
+  if (!returnUrl) {
+    return { errors: { root: "Percorso di ritorno non valido." } };
+  }
+
+  const { error } =
+    scope === "pnpg"
+      ? await updateInstitutionInfoPNPG({
+          institutionId: validation.data?.institutionId,
+          address: validation.data.address,
+          description: validation.data.description,
+          digitalAddress: validation.data.digitalAddress,
+          zipCode: validation.data.zipCode,
+          onboardings: validation.data?.onboardings,
+        })
+      : await updateInstitutionInfo({
+          institutionId: validation.data?.institutionId,
+          address: validation.data.address,
+          description: validation.data.description,
+          digitalAddress: validation.data.digitalAddress,
+          zipCode: validation.data.zipCode,
+          onboardings: validation.data?.onboardings,
+        });
 
   if (error) {
     return {
-      fields: { ...input },
-      errors: { root: "An error occurred, please try again later." },
+      errors: { root: error },
     };
   }
 
@@ -95,5 +144,19 @@ export async function updateInstitutionAction(
     await sendQueueMessage(validation.data.onboarding);
   }
 
-  redirect(validation.data.redirect);
+  redirect(returnUrl);
+}
+
+export async function updateOverviewInstitutionAction(
+  _prevState: UpdateInstitutionFormState,
+  formData: FormData,
+): Promise<UpdateInstitutionFormState> {
+  return updateInstitutionFor("overview", formData);
+}
+
+export async function updatePnpgInstitutionAction(
+  _prevState: UpdateInstitutionFormState,
+  formData: FormData,
+): Promise<UpdateInstitutionFormState> {
+  return updateInstitutionFor("pnpg", formData);
 }
