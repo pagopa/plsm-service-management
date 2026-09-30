@@ -17,6 +17,7 @@ const input = {
   productId: "prod-pn" as const,
   callDate: new Date("2026-01-15T10:00:00Z"),
   link: "https://meet.example.com/abc",
+  environment: "PROD" as const,
 };
 
 describe("buildUpsertCall", () => {
@@ -53,6 +54,23 @@ describe("buildUpsertCall", () => {
     expect(sql).not.toContain('"created_at" = excluded.created_at');
   });
 
+  it("salva l'ambiente come parametro", () => {
+    const { sql, params } = buildUpsertCall(db, {
+      ...input,
+      environment: "UAT",
+    }).toSQL();
+
+    expect(sql).toContain('"environment"');
+    expect(params).toContain("UAT");
+  });
+
+  it("non cambia l'ambiente di una call già registrata", () => {
+    const { sql } = buildUpsertCall(db, input).toSQL();
+    const updateClause = sql.slice(sql.indexOf("do update"));
+
+    expect(updateClause).not.toContain('"environment"');
+  });
+
   it("restituisce l'id della riga", () => {
     const { sql } = buildUpsertCall(db, input).toSQL();
 
@@ -68,8 +86,18 @@ describe("buildUpsertCall", () => {
 });
 
 describe("buildListCalls", () => {
+  it("filtra sempre per ambiente", () => {
+    const { sql, params } = buildListCalls(db, {
+      environment: "UAT",
+      limit: 20,
+    }).toSQL();
+
+    expect(sql).toContain('where "calls"."environment" = ');
+    expect(params).toContain("UAT");
+  });
+
   it("ordina per data discendente e applica un limite", () => {
-    const { sql } = buildListCalls(db, { limit: 20 }).toSQL();
+    const { sql } = buildListCalls(db, { environment: "PROD", limit: 20 }).toSQL();
 
     expect(sql).toContain('order by "calls"."call_date" desc');
     expect(sql).toContain("limit");
@@ -77,6 +105,7 @@ describe("buildListCalls", () => {
 
   it("filtra per prodotto quando richiesto", () => {
     const { sql, params } = buildListCalls(db, {
+      environment: "PROD",
       limit: 20,
       productId: "prod-io",
     }).toSQL();
@@ -89,6 +118,7 @@ describe("buildListCalls", () => {
     const callDateFrom = new Date("2026-01-01T00:00:00Z");
     const callDateTo = new Date("2026-01-31T23:59:59Z");
     const { sql, params } = buildListCalls(db, {
+      environment: "PROD",
       limit: 20,
       callDateFrom,
       callDateTo,
@@ -102,6 +132,7 @@ describe("buildListCalls", () => {
 
   it("compone il range di data con gli altri filtri in AND", () => {
     const { sql } = buildListCalls(db, {
+      environment: "PROD",
       limit: 20,
       productId: "prod-io",
       institutionId: "22222222-2222-2222-2222-222222222222",
@@ -116,7 +147,7 @@ describe("buildListCalls", () => {
   });
 
   it("non applica alcun filtro sulla data se dateFrom/dateTo sono assenti", () => {
-    const { sql } = buildListCalls(db, { limit: 20 }).toSQL();
+    const { sql } = buildListCalls(db, { environment: "PROD", limit: 20 }).toSQL();
 
     expect(sql).not.toContain('"call_date" >=');
     expect(sql).not.toContain('"call_date" <=');
@@ -130,7 +161,7 @@ describe("buildCallsSummary", () => {
   };
 
   it("filtra sul range richiesto, entrambi i limiti inclusi", () => {
-    const { sql, params } = buildCallsSummary(db, range).toSQL();
+    const { sql, params } = buildCallsSummary(db, "PROD", range).toSQL();
 
     expect(sql).toContain('"call_date" >= ');
     expect(sql).toContain('"call_date" <= ');
@@ -139,25 +170,33 @@ describe("buildCallsSummary", () => {
   });
 
   it("applica solo il filtro presente se from o to sono assenti", () => {
-    const { sql: sqlFromOnly } = buildCallsSummary(db, {
+    const { sql: sqlFromOnly } = buildCallsSummary(db, "PROD", {
       from: range.from,
     }).toSQL();
     expect(sqlFromOnly).toContain('"call_date" >= ');
     expect(sqlFromOnly).not.toContain('"call_date" <= ');
 
-    const { sql: sqlToOnly } = buildCallsSummary(db, { to: range.to }).toSQL();
+    const { sql: sqlToOnly } = buildCallsSummary(db, "PROD", { to: range.to }).toSQL();
     expect(sqlToOnly).not.toContain('"call_date" >= ');
     expect(sqlToOnly).toContain('"call_date" <= ');
   });
 
-  it("non applica alcun filtro se from e to sono entrambi assenti", () => {
-    const { sql } = buildCallsSummary(db, {}).toSQL();
+  it("filtra sempre per ambiente", () => {
+    const { sql, params } = buildCallsSummary(db, "UAT", range).toSQL();
 
-    expect(sql).not.toContain("where");
+    expect(sql).toContain('"calls"."environment" = ');
+    expect(params).toContain("UAT");
+  });
+
+  it("filtra solo per ambiente se from e to sono entrambi assenti", () => {
+    const { sql } = buildCallsSummary(db, "PROD", {}).toSQL();
+
+    expect(sql).toContain('where "calls"."environment" = ');
+    expect(sql).not.toContain('"call_date"');
   });
 
   it("raggruppa per prodotto e ordina per conteggio discendente, a parità per productId", () => {
-    const { sql } = buildCallsSummary(db, range).toSQL();
+    const { sql } = buildCallsSummary(db, "PROD", range).toSQL();
 
     expect(sql).toContain('group by "calls"."product_id"');
     expect(sql).toContain("order by count(*) desc");
@@ -165,7 +204,7 @@ describe("buildCallsSummary", () => {
   });
 
   it("restituisce productId e conteggio per riga", () => {
-    const { sql } = buildCallsSummary(db, range).toSQL();
+    const { sql } = buildCallsSummary(db, "PROD", range).toSQL();
 
     expect(sql).toContain('select "product_id", count(*)');
   });

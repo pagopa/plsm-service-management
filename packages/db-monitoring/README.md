@@ -28,19 +28,42 @@ const id = await upsertCall({
   productId: "prod-pn",
   callDate: new Date("2026-01-15T10:00:00Z"),
   link: "https://meet.example.com/abc",
+  environment: "PROD",
 });
 
-// Legge le call più recenti
-const recenti = await listCalls({ limit: 20, productId: "prod-io" });
+// Legge le call più recenti dell'ambiente
+const recenti = await listCalls({
+  environment: "PROD",
+  limit: 20,
+  productId: "prod-io",
+});
 
 // Filtri componibili: prodotto, ente e/o range di data (call_date), tutti opzionali
 const gennaio = await listCalls({
+  environment: "PROD",
   limit: 20,
   productId: "prod-io",
   callDateFrom: new Date("2026-01-01T00:00:00Z"),
   callDateTo: new Date("2026-01-31T23:59:59Z"),
 });
 ```
+
+### Ambienti
+
+L'unica CRM Function serve sia Dynamics UAT sia PROD (header `x-dynamics-environment`),
+quindi le call dei due ambienti stanno nella stessa tabella, distinte dalla colonna
+`environment`. Tutte le query richiedono l'ambiente in modo esplicito: le call UAT,
+create dal frontend di dev, non compaiono mai nelle letture PROD e viceversa.
+
+### Dati di test UAT
+
+La migrazione `*_seed_uat_calls` inserisce 60 call fittizie con `environment = 'UAT'`, così il
+frontend di dev (che chiama con `x-dynamics-environment: UAT`) ha dati su cui lavorare. Le call
+vanno dal 06/10/2025 al 28/07/2026 (18 nel 2025, 42 nel 2026), su 6 enti fittizi e 6 prodotti.
+
+È una migrazione come le altre: la applica la Action **DB Monitoring - Migrate** e drizzle la
+esegue una sola volta per database. Tocca solo righe UAT ed è idempotente (`ON CONFLICT DO
+NOTHING` su `crm_activity_id` deterministici), quindi non altera le call di produzione.
 
 ## Configurazione
 

@@ -1,6 +1,6 @@
 import { getTableName, getTableColumns } from "drizzle-orm";
 import { getTableConfig, PgDialect } from "drizzle-orm/pg-core";
-import { calls, PRODUCT_IDS } from "../src/schema";
+import { calls, ENVIRONMENTS, PRODUCT_IDS } from "../src/schema";
 
 describe("calls schema", () => {
   it("mappa sulla tabella calls", () => {
@@ -15,6 +15,7 @@ describe("calls schema", () => {
       "call_date",
       "created_at",
       "crm_activity_id",
+      "environment",
       "id",
       "institution_id",
       "institution_name",
@@ -60,5 +61,28 @@ describe("calls schema", () => {
     const { params } = new PgDialect().sqlToQuery(constraint!.value);
 
     expect(params).toEqual([...PRODUCT_IDS]);
+  });
+
+  it("elenca gli ambienti supportati", () => {
+    expect(ENVIRONMENTS).toEqual(["UAT", "PROD"]);
+  });
+
+  it("assegna PROD come ambiente di default", () => {
+    const { environment } = getTableColumns(calls);
+
+    expect(environment.notNull).toBe(true);
+    expect(environment.default).toBe("PROD");
+  });
+
+  it("vincola environment esattamente ai valori di ENVIRONMENTS", () => {
+    const constraint = getTableConfig(calls).checks.find(
+      (c) => c.name === "calls_environment_check",
+    );
+
+    expect(constraint).toBeDefined();
+
+    const { params } = new PgDialect().sqlToQuery(constraint!.value);
+
+    expect(params).toEqual([...ENVIRONMENTS]);
   });
 });
