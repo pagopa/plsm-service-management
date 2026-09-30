@@ -607,6 +607,7 @@ export async function createMeetingOrchestrator(
           institutionName: accountResult.account.name ?? request.nomeEnte,
           title: request.subject,
           link: request.link,
+          environment,
         });
 
         steps.push({

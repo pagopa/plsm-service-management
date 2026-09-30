@@ -1,11 +1,27 @@
 import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 import type { MonitoringDb } from "../client";
 import { getMonitoringDb } from "../client";
-import { calls, type Call, type NewCall, type ProductId } from "../schema";
+import {
+  calls,
+  type Call,
+  type Environment,
+  type NewCall,
+  type ProductId,
+} from "../schema";
 
-export type UpsertCallInput = Omit<NewCall, "id" | "createdAt" | "updatedAt">;
+/**
+ * `environment` è obbligatorio anche se la colonna ha default PROD: chi scrive
+ * deve dichiarare l'ambiente, così una call UAT non finisce tra quelle di
+ * produzione per dimenticanza.
+ */
+export type UpsertCallInput = Omit<
+  NewCall,
+  "id" | "createdAt" | "updatedAt" | "environment"
+> & { environment: Environment };
 
 export interface ListCallsOptions {
+  /** Ambiente Dynamics da cui provengono le call (UAT o PROD). */
+  environment: Environment;
   limit: number;
   productId?: ProductId;
   institutionId?: string;
@@ -22,6 +38,9 @@ export interface ListCallsOptions {
  * I campi opzionali usano coalesce(excluded.x, calls.x): un retry con un
  * payload parziale (es. senza title) non deve azzerare un valore già
  * salvato da una chiamata precedente per lo stesso crm_activity_id.
+ *
+ * `environment` non è nel set: l'ambiente di una call è fissato alla prima
+ * registrazione e un retry non può spostarla da UAT a PROD o viceversa.
  */
 export function buildUpsertCall(db: MonitoringDb, input: UpsertCallInput) {
   return db
@@ -59,7 +78,7 @@ export async function upsertCall(input: UpsertCallInput): Promise<string> {
 
 /** Costruisce la query di lettura senza eseguirla. */
 export function buildListCalls(db: MonitoringDb, options: ListCallsOptions) {
-  const filters = [];
+  const filters = [eq(calls.environment, options.environment)];
 
   if (options.productId) {
     filters.push(eq(calls.productId, options.productId));
@@ -80,12 +99,12 @@ export function buildListCalls(db: MonitoringDb, options: ListCallsOptions) {
   return db
     .select()
     .from(calls)
-    .where(filters.length > 0 ? and(...filters) : undefined)
+    .where(and(...filters))
     .orderBy(desc(calls.callDate))
     .limit(options.limit);
 }
 
-/** Elenca le call più recenti, opzionalmente filtrate per prodotto, ente o range di data. */
+/** Elenca le call più recenti dell'ambiente, opzionalmente filtrate per prodotto, ente o range di data. */
 export async function listCalls(options: ListCallsOptions): Promise<Call[]> {
   return buildListCalls(getMonitoringDb(), options);
 }
@@ -110,6 +129,8 @@ export interface CallsSummaryRange {
 }
 
 export interface CallsSummaryOptions {
+  /** Ambiente Dynamics da cui provengono le call (UAT o PROD). */
+  environment: Environment;
   /** Anno solare; usato solo se `dateFrom`/`dateTo` non sono specificati. */
   year?: number;
   /** Limite inferiore (incluso) su call_date. Se presente (da solo o con `dateTo`), ha precedenza su `year`. */
@@ -127,7 +148,7 @@ export interface CallsSummaryOptions {
  * Isolata dal resto per essere testabile senza database.
  */
 export function resolveCallsSummaryRange(
-  options: CallsSummaryOptions,
+  options: Omit<CallsSummaryOptions, "environment">,
 ): CallsSummaryRange {
   if (options.dateFrom !== undefined || options.dateTo !== undefined) {
     return { from: options.dateFrom, to: options.dateTo };
@@ -152,8 +173,12 @@ export function resolveCallsSummaryRange(
  * il totale del roster (`getCallsSummary`) deve sommare l'intero range, non
  * solo i prodotti in classifica.
  */
-export function buildCallsSummary(db: MonitoringDb, range: CallsSummaryRange) {
-  const filters = [];
+export function buildCallsSummary(
+  db: MonitoringDb,
+  environment: Environment,
+  range: CallsSummaryRange,
+) {
+  const filters = [eq(calls.environment, environment)];
 
   if (range.from) {
     filters.push(gte(calls.callDate, range.from));
@@ -169,7 +194,7 @@ export function buildCallsSummary(db: MonitoringDb, range: CallsSummaryRange) {
       calls: sql<number>`count(*)`.mapWith(Number),
     })
     .from(calls)
-    .where(filters.length > 0 ? and(...filters) : undefined)
+    .where(and(...filters))
     .groupBy(calls.productId)
     .orderBy(desc(sql`count(*)`), asc(calls.productId));
 }
@@ -191,16 +216,20 @@ export function summarizeCallCounts(
 }
 
 /**
- * Sintesi delle call per l'anno o il range richiesto (default: anno corrente
- * UTC): totale complessivo e i primi 3 prodotti per numero di call, con
+ * Sintesi delle call dell'ambiente per l'anno o il range richiesto (default:
+ * anno corrente UTC): totale complessivo e i primi 3 prodotti per numero di call, con
  * posizione in classifica (a parità di conteggio, ordine alfabetico di
  * productId).
  */
 export async function getCallsSummary(
-  options: CallsSummaryOptions = {},
+  options: CallsSummaryOptions,
 ): Promise<CallsSummary> {
   const range = resolveCallsSummaryRange(options);
-  const rows = await buildCallsSummary(getMonitoringDb(), range);
+  const rows = await buildCallsSummary(
+    getMonitoringDb(),
+    options.environment,
+    range,
+  );
 
   return summarizeCallCounts(rows);
 }

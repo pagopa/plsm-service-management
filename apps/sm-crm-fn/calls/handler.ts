@@ -15,6 +15,12 @@ import {
   PRODUCT_IDS,
 } from "@repo/db-monitoring";
 import { createLogger } from "../_shared/utils/logger";
+import {
+  DYNAMICS_ENVIRONMENT_HEADER,
+  type DynamicsEnvironment,
+  isInvalidDynamicsEnvironmentError,
+  resolveDynamicsEnvironment,
+} from "../_shared/utils/requestEnvironment";
 
 // Verifica solo il formato (8-4-4-4-12 esadecimale): zod .uuid() impone anche
 // i nibble di versione/variante RFC 4122, che Postgres non richiede e che
@@ -25,6 +31,42 @@ const uuidSchema = z
     /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
     "UUID non valido",
   );
+
+/**
+ * Ambiente delle call letto dall'header x-dynamics-environment (default PROD),
+ * lo stesso che instrada le richieste verso Dynamics UAT o PROD: il frontend
+ * di dev manda UAT e vede solo le call UAT.
+ *
+ * @returns L'ambiente, oppure la risposta 400 da restituire se l'header non è valido.
+ */
+function resolveCallsEnvironment(
+  request: HttpRequest,
+): { environment: DynamicsEnvironment } | { response: HttpResponseInit } {
+  try {
+    return { environment: resolveDynamicsEnvironment(request) };
+  } catch (error) {
+    if (!isInvalidDynamicsEnvironmentError(error)) {
+      throw error;
+    }
+
+    return {
+      response: {
+        status: 400,
+        jsonBody: {
+          success: false,
+          message: "Errore di validazione",
+          error: {
+            code: "VALIDATION_ERROR",
+            fields: [
+              { field: DYNAMICS_ENVIRONMENT_HEADER, message: error.message },
+            ],
+          },
+          timestamp: new Date().toISOString(),
+        },
+      },
+    };
+  }
+}
 
 // -----------------------------------------------------------------------------
 // POST /calls - Registra una call
@@ -45,6 +87,12 @@ export async function createCallHandler(
   context: InvocationContext,
 ): Promise<HttpResponseInit> {
   const logger = createLogger(context);
+
+  const resolved = resolveCallsEnvironment(request);
+  if ("response" in resolved) {
+    return resolved.response;
+  }
+  const { environment } = resolved;
 
   let body: unknown;
   try {
@@ -81,9 +129,10 @@ export async function createCallHandler(
   }
 
   try {
-    const id = await upsertCall(parsed.data);
+    const id = await upsertCall({ ...parsed.data, environment });
     logger.info("Call registrata", {
       crmActivityId: parsed.data.crmActivityId,
+      environment,
     });
 
     return {
@@ -132,6 +181,12 @@ export async function listCallsHandler(
 ): Promise<HttpResponseInit> {
   const logger = createLogger(context);
 
+  const resolved = resolveCallsEnvironment(request);
+  if ("response" in resolved) {
+    return resolved.response;
+  }
+  const { environment } = resolved;
+
   const rawQuery = {
     productId: request.query.get("productId") ?? undefined,
     institutionId: request.query.get("institutionId") ?? undefined,
@@ -164,6 +219,7 @@ export async function listCallsHandler(
 
   try {
     const data = await listCalls({
+      environment,
       limit: limit ?? DEFAULT_LIST_LIMIT,
       productId,
       institutionId,
@@ -173,6 +229,7 @@ export async function listCallsHandler(
 
     logger.info("Call recuperate", {
       resultCount: data.length,
+      environment,
       productId,
       institutionId,
     });
@@ -295,6 +352,12 @@ export async function callsSummaryHandler(
 ): Promise<HttpResponseInit> {
   const logger = createLogger(context);
 
+  const resolved = resolveCallsEnvironment(request);
+  if ("response" in resolved) {
+    return resolved.response;
+  }
+  const { environment } = resolved;
+
   const parsed = callsSummaryQuerySchema.safeParse({
     year: request.query.get("year") ?? undefined,
     dateFrom: request.query.get("dateFrom") ?? undefined,
@@ -321,9 +384,10 @@ export async function callsSummaryHandler(
   }
 
   try {
-    const data = await getCallsSummary(parsed.data);
+    const data = await getCallsSummary({ ...parsed.data, environment });
 
     logger.info("Sintesi call recuperata", {
+      environment,
       year: parsed.data.year,
       dateFrom: parsed.data.dateFrom?.toISOString(),
       dateTo: parsed.data.dateTo?.toISOString(),

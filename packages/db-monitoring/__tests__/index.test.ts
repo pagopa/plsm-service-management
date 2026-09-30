@@ -3,6 +3,7 @@ import * as api from "../src/index";
 describe("superficie pubblica del package", () => {
   it("esporta quello che i consumatori devono usare", () => {
     expect(Object.keys(api).sort()).toEqual([
+      "ENVIRONMENTS",
       "PRODUCT_IDS",
       "buildCallsSummary",
       "buildListCalls",
