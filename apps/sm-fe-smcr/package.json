@@ -15,7 +15,8 @@
     "test": "jest --config jest.config.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:migrate:prod": "dotenv -e .env.prod drizzle-kit migrate"
+    "db:migrate:prod": "dotenv -e .env.prod drizzle-kit migrate",
+    "db:seed": "tsx scripts/seed-permissions.ts"
   },
   "dependencies": {
     "@azure/msal-browser": "^4.13.2",
