@@ -1,6 +1,6 @@
 "use client";
 
-import { Phone, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import {
   FormEvent,
   useCallback,
@@ -40,7 +40,7 @@ import { listCalls } from "@/lib/services/calls.service";
 import { cn } from "@/lib/utils";
 
 import { DateTimeFilter } from "./date-time-filter";
-import { CallsTable, callsColumns } from "./table";
+import { callsColumns, CallsTable } from "./table";
 
 const ALL_PRODUCTS = "all";
 const fmtNum = new Intl.NumberFormat("it-IT");

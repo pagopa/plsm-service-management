@@ -1,6 +1,7 @@
 "use server";
 
 import { serverEnv } from "@/config/env";
+import { hasPermission } from "@/lib/auth/permissions";
 import logger from "@/lib/logger/logger.server";
 
 import {
@@ -59,6 +60,22 @@ function readMessage(payload: unknown) {
 export async function listCalls(
   input: ListCallsInput = {},
 ): Promise<ListCallsResult> {
+  let allowed = false;
+  try {
+    allowed = await hasPermission("call.management.read");
+  } catch {
+    return {
+      success: false,
+      message: "Errore durante la verifica dei permessi.",
+    };
+  }
+  if (!allowed) {
+    return {
+      success: false,
+      message: "Non hai i permessi per consultare le call.",
+    };
+  }
+
   const parsed = listCallsQuerySchema.safeParse(input);
   if (!parsed.success) {
     return {
