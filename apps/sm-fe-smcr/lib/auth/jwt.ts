@@ -123,8 +123,20 @@ export async function verifyAuthToken(
     return null;
   }
 
+  let headerBytes: Uint8Array;
+  let payloadBytes: Uint8Array;
+  let actualSignature: Uint8Array;
+
+  try {
+    headerBytes = decodeBase64Url(encodedHeader);
+    payloadBytes = decodeBase64Url(encodedPayload);
+    actualSignature = decodeBase64Url(encodedSignature);
+  } catch {
+    return null;
+  }
+
   const header = parseJson<Record<string, unknown>>(
-    decoder.decode(decodeBase64Url(encodedHeader)),
+    decoder.decode(headerBytes),
   );
 
   if (!header || header.alg !== "HS256") {
@@ -136,14 +148,12 @@ export async function verifyAuthToken(
     `${encodedHeader}.${encodedPayload}`,
     config.secret,
   );
-  const actualSignature = decodeBase64Url(encodedSignature);
-
   if (!constantTimeEqual(expectedSignature, actualSignature)) {
     return null;
   }
 
   const payload = parseJson<unknown>(
-    decoder.decode(decodeBase64Url(encodedPayload)),
+    decoder.decode(payloadBytes),
   );
 
   if (!isValidSession(payload)) {

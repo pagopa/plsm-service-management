@@ -63,9 +63,10 @@ export async function handler(
     if (error) {
       context.error("Azure AD returned error:", error, errorDescription);
       return {
-        status: 302,
-        headers: {
-          Location: `/auth/error?error=${error}&description=${encodeURIComponent(errorDescription || "")}`,
+        status: 400,
+        jsonBody: {
+          success: false,
+          message: "Authentication failed. Please try logging in again.",
         },
       };
     }

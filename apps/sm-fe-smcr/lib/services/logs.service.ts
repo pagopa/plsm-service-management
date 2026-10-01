@@ -1,7 +1,7 @@
 import database from "@/lib/knex";
 import z from "zod";
 import EventEmitter from "events";
-import dayjs from "dayjs";
+import { addDays, format, startOfDay, subDays } from "date-fns";
 
 const logsEventBus = new EventEmitter();
 const LOGS_EVENT_BUS = "logs" as const;
@@ -175,10 +175,10 @@ function normalizeLogLimit(limit?: number | null): number {
 
 function buildEmptyLogVolume(days: number): Array<LogVolume> {
   const safeDays = Math.max(Math.trunc(days), 1);
-  const startDate = dayjs().startOf("day").subtract(safeDays - 1, "day");
+  const startDate = subDays(startOfDay(new Date()), safeDays - 1);
 
   return Array.from({ length: safeDays }, (_, index) => ({
-    date: startDate.add(index, "day").format("YYYY-MM-DD"),
+    date: format(addDays(startDate, index), "yyyy-MM-dd"),
     debug: 0,
     info: 0,
     warn: 0,
@@ -265,10 +265,7 @@ export async function readLogVolume(options: { days?: number } = {}): Promise<
 > {
   try {
     const days = Math.max(Math.trunc(options.days ?? 30), 1);
-    const startDate = dayjs()
-      .startOf("day")
-      .subtract(days - 1, "day")
-      .toISOString();
+    const startDate = subDays(startOfDay(new Date()), days - 1).toISOString();
     const volume = buildEmptyLogVolume(days);
     const volumeByDate = new Map(volume.map((item) => [item.date, item]));
     const rows = await database

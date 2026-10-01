@@ -37,7 +37,13 @@ export function DatePicker({ value, setValue }: Props) {
       </PopoverTrigger>
 
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar mode="single" selected={value} onSelect={setValue} required />
+        <Calendar
+          mode="single"
+          locale={it}
+          selected={value}
+          onSelect={setValue}
+          required
+        />
       </PopoverContent>
     </Popover>
   );

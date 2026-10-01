@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-08-31 16:21
+# Generato il: 2026-10-01 16:03
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -186,16 +186,6 @@ data "azurerm_key_vault_secret" "fe_smcr_pdnd_request_timeout_ms" {
 
 data "azurerm_key_vault_secret" "fe_smcr_pdnd_token_refresh_margin_seconds" {
   name         = "fe-smcr-pdnd-token-refresh-margin-seconds"
-  key_vault_id = data.azurerm_key_vault.common_kv.id
-}
-
-data "azurerm_key_vault_secret" "fe_smcr_plsm_d_platformsm_client_id" {
-  name         = "fe-smcr-plsm-d-platformsm-client-id"
-  key_vault_id = data.azurerm_key_vault.common_kv.id
-}
-
-data "azurerm_key_vault_secret" "fe_smcr_plsm_d_platformsm_tenant_id" {
-  name         = "fe-smcr-plsm-d-platformsm-tenant-id"
   key_vault_id = data.azurerm_key_vault.common_kv.id
 }
 
