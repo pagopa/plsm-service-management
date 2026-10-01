@@ -33,15 +33,6 @@ export interface InternalJwtPayload {
 }
 
 /**
- * Token validation result
- */
-export interface TokenValidationResult {
-  valid: boolean;
-  payload?: AzureAdTokenPayload;
-  error?: string;
-}
-
-/**
  * Environment configuration
  */
 export interface AuthConfig {
@@ -57,22 +48,6 @@ export interface AuthConfig {
 /**
  * Auth endpoints response types
  */
-export interface AuthValidateResponse {
-  success: boolean;
-  message: string;
-  user?: {
-    userId: string;
-    email: string;
-    name?: string;
-    roles?: string[];
-  };
-}
-
-export interface AuthRefreshResponse {
-  success: boolean;
-  message: string;
-}
-
 export interface AuthLogoutResponse {
   success: boolean;
   message: string;

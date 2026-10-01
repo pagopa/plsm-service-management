@@ -29,7 +29,3 @@ async function getCurrentProfileResponse() {
 export async function GET() {
   return getCurrentProfileResponse();
 }
-
-export async function POST() {
-  return getCurrentProfileResponse();
-}
