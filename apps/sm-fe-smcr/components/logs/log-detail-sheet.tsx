@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
+import { formatLogTimestamp } from "@/lib/log-dates";
 import type { Log, LogDetail, LogLevel } from "@/lib/services/logs.service";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,21 +33,11 @@ import {
   TimerIcon,
 } from "lucide-react";
 
-dayjs.extend(customParseFormat);
-
 type Props = {
   log: Log | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
-
-function formatTimestamp(value: string | number): string {
-  const date = dayjs(value);
-  if (date.isValid()) {
-    return date.format("HH:mm:ss DD-MM-YYYY");
-  }
-  return String(value);
-}
 
 function getPillowVariant(level: LogLevel) {
   switch (level) {
@@ -200,7 +189,7 @@ export function LogDetailSheet({ log, open, onOpenChange }: Props) {
             </span>
           </SheetTitle>
           <SheetDescription className="font-mono text-xs">
-            {formatTimestamp(log.timestamp)} - {log.id}
+            {formatLogTimestamp(log.timestamp)} - {log.id}
           </SheetDescription>
           <div className="flex flex-wrap items-center gap-2 pt-1">
             {getLevelBadge(log.level)}
@@ -243,7 +232,7 @@ export function LogDetailSheet({ log, open, onOpenChange }: Props) {
               </CardRow>
               <CardRow
                 label="Data e ora"
-                value={formatTimestamp(log.timestamp)}
+                value={formatLogTimestamp(log.timestamp)}
               >
                 <CalendarIcon />
               </CardRow>

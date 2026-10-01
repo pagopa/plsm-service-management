@@ -75,6 +75,7 @@ export function DatePicker({
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             mode="single"
+            locale={it}
             selected={date}
             onSelect={handleDaySelect}
             required
