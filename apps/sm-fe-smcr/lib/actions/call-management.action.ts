@@ -1,8 +1,6 @@
 "use server";
 
 import { randomUUID } from "crypto";
-import { format as formatDate } from "date-fns";
-import { it } from "date-fns/locale";
 import z from "zod";
 import { PRODUCT_MAP } from "../types/product";
 import logger from "@/lib/logger/logger.server";
@@ -14,8 +12,9 @@ import {
 } from "@/lib/crm-error-messages";
 
 const formatItalianDateTime = (value: string) => {
+  // Values from the standalone Slack form already contain local date and time.
   const isoMatch =
-    /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/.exec(value);
+    /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?$/.exec(value);
 
   if (isoMatch) {
     const [, year, month, day, hours, minutes] = isoMatch;
@@ -24,7 +23,19 @@ const formatItalianDateTime = (value: string) => {
 
   const parsed = new Date(value);
   if (!Number.isNaN(parsed.getTime())) {
-    return formatDate(parsed, "dd/MM/yyyy HH:mm", { locale: it });
+    const parts = new Intl.DateTimeFormat("it-IT", {
+      timeZone: "Europe/Rome",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(parsed);
+    const { day, month, year, hour, minute } = Object.fromEntries(
+      parts.map(({ type, value }) => [type, value]),
+    );
+    return `${day}/${month}/${year} ${hour}:${minute}`;
   }
 
   return value;

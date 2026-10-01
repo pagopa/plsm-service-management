@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { z } from "zod";
 
 const productIds = [
@@ -97,7 +98,7 @@ function toTimeString(date: Date): string {
 }
 
 function toDateString(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  return format(date, "yyyy-MM-dd");
 }
 
 export function getCrmFormDefaultValues(): CrmFormSchema {
@@ -108,7 +109,7 @@ export function getCrmFormDefaultValues(): CrmFormSchema {
     subject: "",
     startDate: toDateString(now),
     startTime: toTimeString(now),
-    endDate: toDateString(now),
+    endDate: toDateString(end),
     endTime: toTimeString(end),
     productId: "prod-pn",
     institutionIdSelfcare: "",
