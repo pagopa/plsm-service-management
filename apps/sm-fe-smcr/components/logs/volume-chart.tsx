@@ -1,6 +1,7 @@
 "use client";
 
-import dayjs from "dayjs";
+import { format, isValid } from "date-fns";
+import { parseLogTimestamp } from "@/lib/log-dates";
 import { Bar, BarChart, CartesianGrid, Rectangle, XAxis } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,7 +74,8 @@ export default function VolumeChart({ data }: Props) {
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                return dayjs(String(value)).format("MMM D");
+                const date = parseLogTimestamp(String(value));
+                return isValid(date) ? format(date, "MMM d") : "Invalid Date";
               }}
             />
             <ChartTooltip
