@@ -36,7 +36,7 @@ const updateInstitutionSchema = z.object({
     z.array(
       z.object({
         productId: z.string().nonempty(),
-        vatNumber: z.string().nonempty(),
+        vatNumber: z.string().optional(),
         origin: z.string().optional(),
         originId: z.string().optional(),
       }),

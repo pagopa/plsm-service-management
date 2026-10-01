@@ -50,6 +50,34 @@ type Props = {
   isPNPG?: boolean;
 };
 
+function resolveInstitution(
+  institutions: Array<Institution>,
+  institutionId: string | null,
+) {
+  if (institutionId) {
+    const match = institutions.find((item) => item.id === institutionId);
+    if (match) return match;
+  }
+
+  return institutions.at(0) ?? null;
+}
+
+function resolveProduct(
+  institution: Institution | null,
+  productId: string | null,
+) {
+  if (!institution) return null;
+
+  if (productId) {
+    const match = institution.onboarding.find(
+      (item) => item.productId === productId,
+    );
+    if (match) return match;
+  }
+
+  return institution.onboarding.at(0) ?? null;
+}
+
 const editableFields: Array<{
   field: string;
   label: string;
@@ -99,11 +127,16 @@ export default function InstitutionInfo({
 
   const valuesFromStore = useInstitutionStore((state) => state.values);
 
-  const [currentInstitution, setCurrentInstitution] = useState(
-    institutions.at(0) || null,
+  const institutionFromQuery = searchParams.get("institution");
+  const productFromQuery = searchParams.get("product");
+  const [currentInstitution, setCurrentInstitution] = useState(() =>
+    resolveInstitution(institutions, institutionFromQuery),
   );
-  const [currentProduct, setCurrentProduct] = useState(
-    institutions.at(0)?.onboarding.at(0) || null,
+  const [currentProduct, setCurrentProduct] = useState(() =>
+    resolveProduct(
+      resolveInstitution(institutions, institutionFromQuery),
+      productFromQuery,
+    ),
   );
   const [confirmChangesDialogOpen, setConfigChangesDialogOpen] =
     useState(false);
@@ -153,20 +186,38 @@ export default function InstitutionInfo({
   }, []);
 
   useEffect(() => {
-    if (currentInstitution?.id && currentProduct?.productId) {
-      const query = createQueryString([
-        { key: "institution", value: currentInstitution.id },
-        { key: "product", value: currentProduct.productId },
-      ]);
-
-      router.push(`${pathname}?${query}`);
+    if (!currentInstitution?.id || !currentProduct?.productId) {
+      return;
     }
-  }, [pathname, router, createQueryString, currentInstitution, currentProduct]);
+
+    // Same-URL push refreshes the dynamic page in Next.js and retriggers this
+    // effect, so skip the navigation when the query already matches.
+    if (
+      searchParams.get("institution") === currentInstitution.id &&
+      searchParams.get("product") === currentProduct.productId
+    ) {
+      return;
+    }
+
+    const query = createQueryString([
+      { key: "institution", value: currentInstitution.id },
+      { key: "product", value: currentProduct.productId },
+    ]);
+
+    router.push(`${pathname}?${query}`);
+  }, [
+    pathname,
+    router,
+    createQueryString,
+    currentInstitution,
+    currentProduct,
+    searchParams,
+  ]);
 
   useEffect(() => {
-    if (state.errors) {
-      toast.error(state.errors.root ?? "Controlla i dati inseriti e riprova.");
-    }
+    if (!state.errors) return;
+
+    toast.error(state.errors.root ?? "Controlla i dati inseriti e riprova.");
   }, [state]);
 
   if (!institutions || institutions.length < 1) {
