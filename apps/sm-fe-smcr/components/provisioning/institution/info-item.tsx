@@ -19,6 +19,19 @@ import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+const EMPTY_FIELD_PLACEHOLDER = "—";
+const NON_VALUES = new Set(["non presente", EMPTY_FIELD_PLACEHOLDER]);
+
+export function editableFieldValue(value?: string | null) {
+  if (value == null) return "";
+  if (NON_VALUES.has(value.trim().toLowerCase())) return "";
+  return value;
+}
+
+function displayedFieldValue(value?: string | null) {
+  return editableFieldValue(value) || EMPTY_FIELD_PLACEHOLDER;
+}
+
 type Props = {
   name: string;
   label: string;
@@ -33,7 +46,7 @@ type Props = {
 export default function InfoItem({
   name,
   label,
-  value = "Non presente",
+  value,
   valueClassName,
   isEditable = false,
   className,
@@ -78,7 +91,7 @@ function InfoItemContent({
   options,
 }: {
   name: string;
-  value: string;
+  value?: string;
   valueClassName?: string;
   isEditable?: boolean;
   isCopyable?: boolean;
@@ -101,7 +114,7 @@ function InfoItemContent({
   }, [isCopyConfirmed]);
 
   useEffect(() => {
-    updateValue(name, value);
+    updateValue(name, editableFieldValue(value));
   }, [updateValue, name, value]);
 
   useEffect(() => {
@@ -115,8 +128,12 @@ function InfoItemContent({
     setIsEditing(false);
   }
 
+  const storedValue = editableFieldValue(
+    values[name as InstitutionStoreValues] ?? value,
+  );
+
   if (isEditable && isEditing && options) {
-    const currentValue = values[name as InstitutionStoreValues] || value;
+    const currentValue = storedValue;
     const availableOptions = options.includes(currentValue)
       ? options
       : [...options, currentValue].filter(Boolean);
@@ -168,9 +185,9 @@ function InfoItemContent({
         <Input
           ref={inputRef}
           onBlur={() => handleFocusLoss()}
-          defaultValue={value}
+          defaultValue={storedValue}
           className="h-fit text-base! p-0 *:ring-0 focus-visible:border-none focus-visible:ring-0 border-none! w-full rounded-none shadow-none"
-          placeholder={name}
+          placeholder={EMPTY_FIELD_PLACEHOLDER}
           onChange={(event) => {
             updateValue(name, event.target.value);
           }}
@@ -199,8 +216,13 @@ function InfoItemContent({
 
   return (
     <div className={cn("inline-flex items-center gap-2 group min-h-8 h-fit")}>
-      <span className={cn("w-full", valueClassName)}>
-        {values[name as InstitutionStoreValues] || value}
+      <span
+        className={cn(
+          "w-full",
+          storedValue ? valueClassName : "text-muted-foreground",
+        )}
+      >
+        {displayedFieldValue(storedValue)}
       </span>
 
       {isEditable && (
@@ -224,9 +246,7 @@ function InfoItemContent({
           className="size-8"
           type="button"
           onClick={() => {
-            navigator.clipboard.writeText(
-              values[name as InstitutionStoreValues] || value,
-            );
+            navigator.clipboard.writeText(storedValue);
             setIsCopyConfirmed(true);
             toast.success("Copiato negli appunti");
           }}

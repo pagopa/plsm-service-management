@@ -41,7 +41,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import ConfirmChanges from "./confirm-changes";
-import InfoItem from "./info-item";
+import InfoItem, { editableFieldValue } from "./info-item";
 import { Badge } from "@/components/ui/badge";
 
 type Props = {
@@ -410,10 +410,22 @@ export default function InstitutionInfo({
               const formData = new FormData();
               formData.append("redirect", redirectUrl);
               formData.append("institutionId", currentInstitution?.id || "");
-              formData.append("address", valuesFromStore.address);
-              formData.append("description", valuesFromStore.description);
-              formData.append("digitalAddress", valuesFromStore.digitalAddress);
-              formData.append("zipCode", valuesFromStore.zipCode);
+              formData.append(
+                "address",
+                editableFieldValue(valuesFromStore.address),
+              );
+              formData.append(
+                "description",
+                editableFieldValue(valuesFromStore.description),
+              );
+              formData.append(
+                "digitalAddress",
+                editableFieldValue(valuesFromStore.digitalAddress),
+              );
+              formData.append(
+                "zipCode",
+                editableFieldValue(valuesFromStore.zipCode),
+              );
               formData.append("sendToQueue", String(sendToQueue));
               formData.append("onboarding", currentProduct?.tokenId || "");
               formData.append(
@@ -424,11 +436,11 @@ export default function InstitutionInfo({
                     vatNumber: item.billing?.vatNumber as string,
                     origin:
                       item.productId === currentProduct?.productId
-                        ? (valuesFromStore.origin as string)
+                        ? editableFieldValue(valuesFromStore.origin)
                         : (item.origin as string),
                     originId:
                       item.productId === currentProduct?.productId
-                        ? (valuesFromStore.originId as string)
+                        ? editableFieldValue(valuesFromStore.originId)
                         : (item.originId as string),
                   })) || [],
                 ),
@@ -442,14 +454,16 @@ export default function InstitutionInfo({
                   item.source === "product"
                     ? currentProduct
                     : currentInstitution;
-                const oldValue =
+                const oldValue = editableFieldValue(
                   (source as unknown as Record<string, string> | null)?.[
                     item.field
-                  ] || "";
-                const newValue =
+                  ],
+                );
+                const newValue = editableFieldValue(
                   (valuesFromStore as unknown as Record<string, string>)[
                     item.field
-                  ] || "";
+                  ],
+                );
 
                 if (!oldValue && !newValue) {
                   return undefined;

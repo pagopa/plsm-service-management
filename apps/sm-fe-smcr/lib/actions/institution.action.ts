@@ -15,7 +15,7 @@ const updateInstitutionSchema = z.object({
   institutionId: z.string().nonempty(),
   address: z.string().nonempty(),
   description: z.string().nonempty(),
-  digitalAddress: z.string().nonempty(),
+  digitalAddress: z.string(),
   zipCode: z.string().nonempty(),
   // Alcuni enti hanno origin/originId anche a livello top-level per refusi
   // storici: li accettiamo senza usarli, i valori validi stanno in onboardings.
