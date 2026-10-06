@@ -5,7 +5,7 @@
 
 module "azure_core_infra" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "2.2.1"
+  version = "~> 4.4"
 
   environment = merge(local.environment, {
     app_name        = "smcr"
