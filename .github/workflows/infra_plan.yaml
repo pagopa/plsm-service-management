@@ -67,3 +67,5 @@ jobs:
       use_labels: true
       # dev-base shares the infra-dev GitHub Environment (no dedicated infra-dev-base exists)
       override_github_environment: infra-dev
+      # ...and the dev runner: without this the job waits for a "dev-base" runner that doesn't exist
+      override_labels: dev
