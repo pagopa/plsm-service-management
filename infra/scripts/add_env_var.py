@@ -208,7 +208,12 @@ def kv_refs(docs: dict) -> dict:
 # ─── Interazione ─────────────────────────────────────────────────────────────
 
 
+INTERACTIVE = True  # False nella UI web: un dato mancante è un errore, non una domanda
+
+
 def ask(question: str, default: str | None = None, sep: str = ": ") -> str:
+    if not INTERACTIVE:
+        raise Abort(f"Dato mancante: {question.strip()}")
     suffix = f" [{default}]" if default else ""
     try:
         answer = input(f"{question}{suffix}{sep}").strip()
@@ -479,11 +484,96 @@ def secret_exists(env: str, kv_name: str) -> bool | None:
     return out.stdout.strip() == kv_name
 
 
+# ─── Preparazione e scrittura (condivise da terminale e UI) ──────────────────
+
+
+class Prepared:
+    """Esito di una richiesta già validata e verificata in memoria, pronta da scrivere."""
+
+    def __init__(self, y, docs, envs, app, slot, name, notes, diffs, secrets, regenerate):
+        self.y, self.docs = y, docs
+        self.envs, self.app, self.slot, self.name = envs, app, slot, name
+        self.notes = notes            # note per il riepilogo
+        self.diffs = diffs            # { file: unified diff }
+        self.secrets = secrets        # [(env, vault, kv_name, esiste: True/False/None)]
+        self.regenerate = regenerate  # ambienti per cui rilanciare generate_locals.py
+
+    @property
+    def missing_secrets(self):
+        return [(env, kv) for env, _, kv, ok in self.secrets if ok is not True]
+
+
+def prepare(args, kv_check: bool = True) -> Prepared:
+    y = make_yaml()
+    docs, sources = load_docs(y)
+    before, _ = load_docs(y)
+
+    envs = pick_envs(args)
+    app = pick_app(args, docs, envs)
+    slot = pick_slot(args)
+    name = pick_name(args, docs, envs, app, slot)
+    values, secrets = pick_values(args, docs, envs, name)
+
+    notes = plan_and_apply(docs, envs, app, slot, name, values)
+    verify(docs, before, envs, app, slot, name, values)
+
+    diffs = {}
+    for f in FILES:
+        new = dump(y, docs[f])
+        if new != sources[f]:
+            path = f"environments/{f}.yaml"
+            diffs[f] = "".join(difflib.unified_diff(sources[f].splitlines(True), new.splitlines(True), path, path, n=2))
+
+    secret_rows = [
+        (env, KEY_VAULTS[env][0], kv_name, secret_exists(env, kv_name) if kv_check else None)
+        for env, kv_name in secrets.items()
+    ]
+    regenerate = sorted({e for f in diffs for e in (ENVS if f == "common" else (f,))})
+    return Prepared(y, docs, envs, app, slot, name, notes, diffs, secret_rows, regenerate)
+
+
+def write_and_generate(p: Prepared) -> list[str]:
+    """Scrive i YAML e rilancia generate_locals.py. Restituisce il log delle operazioni."""
+    log = []
+    for f in p.diffs:
+        (ENV_DIR / f"{f}.yaml").write_text(dump(p.y, p.docs[f]))
+        log.append(f"✔ scritto environments/{f}.yaml")
+    for env in p.regenerate:
+        result = subprocess.run([sys.executable, str(GENERATOR), "--env", env], capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Abort(f"generate_locals.py --env {env} è fallito:\n{result.stdout}{result.stderr}")
+        log.append(f"✔ rigenerati locals_yaml.tf e data_kv.tf di {env}")
+    stat = subprocess.run(
+        ["git", "-C", str(REPO), "--no-pager", "diff", "--stat", "--", "infra/resources"],
+        capture_output=True, text=True,
+    )
+    log.append(stat.stdout.rstrip())
+    return log
+
+
+SLOT_LABELS = {"all": "production e staging", "production": "solo production", "staging": "solo staging"}
+SECRET_LABELS = {True: "✔ esiste", False: "✖ NON esiste", None: "? non verificato"}
+
+
+def next_steps(p: Prepared) -> list[str]:
+    lines, step = [], 1
+    if p.missing_secrets:
+        lines.append(f"{step}) Crea i segreti mancanti con il workflow Set Key Vault Secret (il valore non passa dal terminale):")
+        lines.append(f"   {KV_WORKFLOW_URL}")
+        lines += [f"   - secret_name={kv}  environment={env}" for env, kv in p.missing_secrets]
+        step += 1
+    lines.append(f"{step}) Controlla il diff, poi commit e PR del branch infra (vedi la pagina Confluence).")
+    return lines
+
+
 # ─── Main ────────────────────────────────────────────────────────────────────
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Aggiunge una variabile d'ambiente ai YAML di infra senza modificarli a mano.")
+    p.add_argument("--ui", action="store_true", help="apre la pagina web locale invece delle domande nel terminale")
+    p.add_argument("--port", type=int, default=0, help="porta della UI (default: una libera)")
+    p.add_argument("--no-browser", action="store_true", help="con --ui, non aprire il browser")
     p.add_argument("--env", choices=["dev", "prod", "both"])
     p.add_argument("--app", help="sezione YAML (es. fe_smcr)")
     p.add_argument("--name", help="nome della variabile (UPPER_SNAKE_CASE)")
@@ -501,58 +591,28 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def main() -> int:
-    args = parse_args()
-    y = make_yaml()
-    docs, sources = load_docs(y)
-    before, _ = load_docs(y)
-
+def run_terminal(args) -> int:
     print("Aggiunta guidata di una variabile d'ambiente (Ctrl+C per uscire)")
     if args.dry_run:
         print("DRY-RUN: mostro solo il riepilogo, nessun file viene scritto e generate_locals.py non parte.")
         if not args.no_kv_check:
             print("         (i segreti vengono cercati nel Key Vault in sola lettura: aggiungi --no-kv-check per evitarlo)")
-    envs = pick_envs(args)
-    app = pick_app(args, docs, envs)
-    slot = pick_slot(args)
-    name = pick_name(args, docs, envs, app, slot)
-    values, secrets = pick_values(args, docs, envs, name)
 
-    notes = plan_and_apply(docs, envs, app, slot, name, values)
-    verify(docs, before, envs, app, slot, name, values)
+    p = prepare(args, kv_check=not args.no_kv_check)
 
-    # ── Riepilogo ────────────────────────────────────────────────────────────
-    slot_label = {"all": "production e staging", "production": "solo production", "staging": "solo staging"}[slot]
     print("\n" + "─" * 70)
-    print(f"RIEPILOGO  {name} → {app}  ({', '.join(envs)}; {slot_label})")
+    print(f"RIEPILOGO  {p.name} → {p.app}  ({', '.join(p.envs)}; {SLOT_LABELS[p.slot]})")
     print("─" * 70)
-    changed = []
-    for f in FILES:
-        new = dump(y, docs[f])
-        if new != sources[f]:
-            changed.append(f)
-            diff = difflib.unified_diff(
-                sources[f].splitlines(True), new.splitlines(True),
-                f"environments/{f}.yaml", f"environments/{f}.yaml", n=2,
-            )
-            print("".join(diff))
-    for note in notes:
+    for diff in p.diffs.values():
+        print(diff)
+    for note in p.notes:
         print(f"• {note}")
-
-    missing = []
-    if secrets:
+    if p.secrets:
         print("\nSegreti Key Vault attesi:")
-        for env, kv_name in secrets.items():
-            vault = KEY_VAULTS[env][0]
-            status = None if args.no_kv_check else secret_exists(env, kv_name)
-            label = {True: "✔ esiste", False: "✖ NON esiste", None: "? non verificato"}[status]
-            print(f"  {env:5} {vault}  {kv_name}  {label}")
-            if status is not True:
-                missing.append((env, kv_name))
-
-    regenerate = sorted({e for f in changed for e in (ENVS if f == "common" else (f,))})
+        for env, vault, kv_name, ok in p.secrets:
+            print(f"  {env:5} {vault}  {kv_name}  {SECRET_LABELS[ok]}")
     when = "Senza --dry-run verrebbe" if args.dry_run else "Poi verrà"
-    print(f"\n{when} rilanciato generate_locals.py per: {', '.join(regenerate)}")
+    print(f"\n{when} rilanciato generate_locals.py per: {', '.join(p.regenerate)}")
 
     if args.dry_run:
         print("\nDry-run: nessun file scritto.")
@@ -561,30 +621,22 @@ def main() -> int:
         print("Annullato: nessun file scritto.")
         return 1
 
-    # ── Scrittura e generazione ──────────────────────────────────────────────
-    for f in changed:
-        (ENV_DIR / f"{f}.yaml").write_text(dump(y, docs[f]))
-        print(f"✔ scritto environments/{f}.yaml")
-    for env in regenerate:
-        result = subprocess.run([sys.executable, str(GENERATOR), "--env", env], capture_output=True, text=True)
-        if result.returncode != 0:
-            print(result.stdout + result.stderr, file=sys.stderr)
-            raise Abort(f"generate_locals.py --env {env} è fallito: controlla l'output qui sopra.")
-        print(f"✔ rigenerati locals_yaml.tf e data_kv.tf di {env}")
-
-    sys.stdout.flush()
-    subprocess.run(["git", "-C", str(REPO), "--no-pager", "diff", "--stat", "--", "infra/resources"])
-
+    for line in write_and_generate(p):
+        print(line)
     print("\nProssimi passi:")
-    step = 1
-    if missing:
-        print(f"  {step}) Crea i segreti mancanti con il workflow Set Key Vault Secret (il valore non passa dal terminale):")
-        print(f"     {KV_WORKFLOW_URL}")
-        for env, kv_name in missing:
-            print(f"     - secret_name={kv_name}  environment={env}")
-        step += 1
-    print(f"  {step}) Controlla il diff, poi commit e PR del branch infra (vedi la pagina Confluence).")
+    for line in next_steps(p):
+        print(f"  {line}")
     return 0
+
+
+def main() -> int:
+    args = parse_args()
+    if args.ui:
+        from add_env_var_ui import serve  # import qui: il terminale non ne ha bisogno
+
+        # Passo questo modulo così com'è: reimportarlo creerebbe una seconda copia di INTERACTIVE.
+        return serve(sys.modules[__name__], args.port, open_browser=not args.no_browser)
+    return run_terminal(args)
 
 
 if __name__ == "__main__":
