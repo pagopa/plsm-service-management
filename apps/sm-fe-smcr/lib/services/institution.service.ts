@@ -240,9 +240,7 @@ const UpdateInsitutionInfoSchema = z.object({
       productId: z
         .string()
         .nonempty({ message: "Il productId è obbligatorio." }),
-      vatNumber: z
-        .string()
-        .nonempty({ message: "La partita IVA è obbligatoria." }),
+      vatNumber: z.string().optional(),
       origin: z.string().optional(),
       originId: z.string().optional(),
     }),
