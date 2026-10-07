@@ -47,7 +47,13 @@ export default function ConfirmChanges({
     if (typeof value === "boolean") {
       return value ? "Sì" : "No";
     }
-    if (value === "" || value === null || value === undefined) {
+    if (
+      value === "" ||
+      value === null ||
+      value === undefined ||
+      value === "Non presente" ||
+      value === "—"
+    ) {
       return "(vuoto)";
     }
     return String(value);
