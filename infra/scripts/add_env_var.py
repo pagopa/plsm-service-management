@@ -68,14 +68,14 @@ ENVS = ("dev", "prod")
 FILES = ("common", "dev", "prod")
 SLOTS = ("production", "staging")
 
-KEY_VAULTS = {
+VAULTS = {
     "dev": ("plsm-d-itn-common-kv-01", "DEV-PLATFORM-SM"),
     "prod": ("plsm-p-itn-common-kv-01", "PROD-PLATFORM-SM"),
 }
 KV_WORKFLOW_URL = "https://github.com/pagopa/plsm-service-management/actions/workflows/kv-set-secret.yaml"
 
 VAR_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
-SECRET_NAME_RE = re.compile(r"^[a-z][a-z0-9-]*[a-z0-9]$")  # come kv-set-secret.yaml, ma minuscolo
+KV_NAME_RE = re.compile(r"^[a-z][a-z0-9-]*[a-z0-9]$")  # come kv-set-secret.yaml, ma minuscolo
 FORBIDDEN_IN_VALUE = ('"', "\\", "${", "%{", "\n")  # romperebbero la stringa HCL generata
 
 
@@ -324,12 +324,12 @@ def ask_value(prompt: str, preset: str | None) -> str:
         print(f"  ✖ {problem}")
 
 
-def ask_secret(prompt: str, default: str, preset: str | None, refs: dict, tf_default: str) -> tuple[str, str]:
+def ask_kv_name(prompt: str, default: str, preset: str | None, refs: dict, tf_default: str) -> tuple[str, str]:
     """Restituisce (tf_name, kv_name)."""
     while True:
         kv_name = preset or ask(prompt, default)
         problem = None
-        if not SECRET_NAME_RE.match(kv_name) or "--" in kv_name:
+        if not KV_NAME_RE.match(kv_name) or "--" in kv_name:
             problem = "usa minuscole, cifre e trattini singoli (es. fe-smcr-my-key)"
         tf_name = kv_name.replace("-", "_") if kv_name != default else tf_default
         if not problem and tf_name in refs and refs[tf_name] != kv_name:
@@ -355,9 +355,9 @@ def pick_values(args, docs: dict, envs: list[str], name: str) -> tuple[dict, dic
 
     same = True
     if len(envs) == 2:
-        if args.dev_value or args.prod_value or args.dev_secret or args.prod_secret:
+        if args.dev_value or args.prod_value or args.dev_kv_name or args.prod_kv_name:
             same = False
-        elif args.value or args.secret_name:
+        elif args.value or args.kv_name:
             same = True
         else:
             question = "Il valore è uguale in dev e prod?" if kind == "value" else "Stesso segreto (stesso nome) in dev e prod?"
@@ -373,17 +373,17 @@ def pick_values(args, docs: dict, envs: list[str], name: str) -> tuple[dict, dic
     refs = kv_refs(docs)
     base = name.lower()
     if same:
-        tf_name, kv_name = ask_secret("Nome del segreto nel Key Vault", base.replace("_", "-"), args.secret_name, refs, base)
+        tf_name, kv_name = ask_kv_name("Nome del segreto nel Key Vault", base.replace("_", "-"), args.kv_name, refs, base)
         ref = kv_reference(tf_name, kv_name)
         return {e: ref for e in envs}, {e: kv_name for e in envs}
-    values, secrets = {}, {}
-    presets = {"dev": args.dev_secret, "prod": args.prod_secret}
+    values, kv_names = {}, {}
+    presets = {"dev": args.dev_kv_name, "prod": args.prod_kv_name}
     for e in envs:
         tf_default = f"{base}_{e}"
-        tf_name, kv_name = ask_secret(f"Nome del segreto per {e}", tf_default.replace("_", "-"), presets[e], refs, tf_default)
-        values[e], secrets[e] = kv_reference(tf_name, kv_name), kv_name
+        tf_name, kv_name = ask_kv_name(f"Nome del segreto per {e}", tf_default.replace("_", "-"), presets[e], refs, tf_default)
+        values[e], kv_names[e] = kv_reference(tf_name, kv_name), kv_name
         refs[tf_name] = kv_name
-    return values, secrets
+    return values, kv_names
 
 
 # ─── Piano delle modifiche ───────────────────────────────────────────────────
@@ -468,9 +468,9 @@ def verify(docs: dict, before: dict, envs: list[str], app: str, slot: str, name:
 # ─── Key Vault ───────────────────────────────────────────────────────────────
 
 
-def secret_exists(env: str, kv_name: str) -> bool | None:
+def kv_name_exists(env: str, kv_name: str) -> bool | None:
     """True/False se verificabile; None se az non è disponibile o non ha accesso. Legge solo i nomi."""
-    vault, subscription = KEY_VAULTS[env]
+    vault, subscription = VAULTS[env]
     try:
         out = subprocess.run(
             ["az", "keyvault", "secret", "list", "--vault-name", vault, "--subscription", subscription,
@@ -490,17 +490,17 @@ def secret_exists(env: str, kv_name: str) -> bool | None:
 class Prepared:
     """Esito di una richiesta già validata e verificata in memoria, pronta da scrivere."""
 
-    def __init__(self, y, docs, envs, app, slot, name, notes, diffs, secrets, regenerate):
+    def __init__(self, y, docs, envs, app, slot, name, notes, diffs, kv_rows, regenerate):
         self.y, self.docs = y, docs
         self.envs, self.app, self.slot, self.name = envs, app, slot, name
         self.notes = notes            # note per il riepilogo
         self.diffs = diffs            # { file: unified diff }
-        self.secrets = secrets        # [(env, vault, kv_name, esiste: True/False/None)]
+        self.kv_rows = kv_rows        # [(env, vault, kv_name, esiste: True/False/None)]
         self.regenerate = regenerate  # ambienti per cui rilanciare generate_locals.py
 
     @property
-    def missing_secrets(self):
-        return [(env, kv) for env, _, kv, ok in self.secrets if ok is not True]
+    def missing_kv_names(self):
+        return [(env, kv) for env, _, kv, ok in self.kv_rows if ok is not True]
 
 
 def prepare(args, kv_check: bool = True) -> Prepared:
@@ -512,7 +512,7 @@ def prepare(args, kv_check: bool = True) -> Prepared:
     app = pick_app(args, docs, envs)
     slot = pick_slot(args)
     name = pick_name(args, docs, envs, app, slot)
-    values, secrets = pick_values(args, docs, envs, name)
+    values, kv_names = pick_values(args, docs, envs, name)
 
     notes = plan_and_apply(docs, envs, app, slot, name, values)
     verify(docs, before, envs, app, slot, name, values)
@@ -524,12 +524,12 @@ def prepare(args, kv_check: bool = True) -> Prepared:
             path = f"environments/{f}.yaml"
             diffs[f] = "".join(difflib.unified_diff(sources[f].splitlines(True), new.splitlines(True), path, path, n=2))
 
-    secret_rows = [
-        (env, KEY_VAULTS[env][0], kv_name, secret_exists(env, kv_name) if kv_check else None)
-        for env, kv_name in secrets.items()
+    kv_rows = [
+        (env, VAULTS[env][0], kv_name, kv_name_exists(env, kv_name) if kv_check else None)
+        for env, kv_name in kv_names.items()
     ]
     regenerate = sorted({e for f in diffs for e in (ENVS if f == "common" else (f,))})
-    return Prepared(y, docs, envs, app, slot, name, notes, diffs, secret_rows, regenerate)
+    return Prepared(y, docs, envs, app, slot, name, notes, diffs, kv_rows, regenerate)
 
 
 def write_and_generate(p: Prepared) -> list[str]:
@@ -552,15 +552,15 @@ def write_and_generate(p: Prepared) -> list[str]:
 
 
 SLOT_LABELS = {"all": "production e staging", "production": "solo production", "staging": "solo staging"}
-SECRET_LABELS = {True: "✔ esiste", False: "✖ NON esiste", None: "? non verificato"}
+KV_STATUS_LABELS = {True: "✔ esiste", False: "✖ NON esiste", None: "? non verificato"}
 
 
 def next_steps(p: Prepared) -> list[str]:
     lines, step = [], 1
-    if p.missing_secrets:
+    if p.missing_kv_names:
         lines.append(f"{step}) Crea i segreti mancanti con il workflow Set Key Vault Secret (il valore non passa dal terminale):")
         lines.append(f"   {KV_WORKFLOW_URL}")
-        lines += [f"   - secret_name={kv}  environment={env}" for env, kv in p.missing_secrets]
+        lines += [f"   - secret_name={kv}  environment={env}" for env, kv in p.missing_kv_names]
         step += 1
     lines.append(f"{step}) Controlla il diff, poi commit e PR del branch infra (vedi la pagina Confluence).")
     return lines
@@ -581,9 +581,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--value", help="valore uguale in tutti gli ambienti scelti")
     p.add_argument("--dev-value")
     p.add_argument("--prod-value")
-    p.add_argument("--secret-name", help="nome del segreto nel Key Vault, uguale in tutti gli ambienti")
-    p.add_argument("--dev-secret")
-    p.add_argument("--prod-secret")
+    p.add_argument("--kv-name", help="nome del segreto nel Key Vault, uguale in tutti gli ambienti")
+    p.add_argument("--dev-kv-name")
+    p.add_argument("--prod-kv-name")
     p.add_argument("--slot", choices=["all", "production", "staging"])
     p.add_argument("--yes", action="store_true", help="non chiedere conferma")
     p.add_argument("--dry-run", action="store_true", help="mostra il riepilogo senza scrivere")
@@ -607,10 +607,10 @@ def run_terminal(args) -> int:
         print(diff)
     for note in p.notes:
         print(f"• {note}")
-    if p.secrets:
+    if p.kv_rows:
         print("\nSegreti Key Vault attesi:")
-        for env, vault, kv_name, ok in p.secrets:
-            print(f"  {env:5} {vault}  {kv_name}  {SECRET_LABELS[ok]}")
+        for env, vault, kv_name, ok in p.kv_rows:
+            print(f"  {env:5} {vault}  {kv_name}  {KV_STATUS_LABELS[ok]}")
     when = "Senza --dry-run verrebbe" if args.dry_run else "Poi verrà"
     print(f"\n{when} rilanciato generate_locals.py per: {', '.join(p.regenerate)}")
 

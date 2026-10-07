@@ -216,16 +216,16 @@ function field(id, label, placeholder, hint) {
 
 function renderValues() {
   const both = val("env") === "both";
-  const secret = val("kind") === "secret";
+  const isKv = val("kind") === "secret";
   $("#same-wrap").classList.toggle("hidden", !both);
-  $("#same-label").textContent = secret ? "Stesso segreto (stesso nome) in dev e prod" : "Uguale in dev e prod";
+  $("#same-label").textContent = isKv ? "Stesso segreto (stesso nome) in dev e prod" : "Uguale in dev e prod";
   const same = !both || $("#same").checked;
   const box = $("#values");
-  if (secret) {
+  if (isKv) {
     const kvHint = "Minuscole, cifre e trattini. Il segreto va creato con il workflow Set Key Vault Secret.";
     box.innerHTML = same
-      ? field("secret_name", "Nome del segreto nel Key Vault", "my-api-key", kvHint)
-      : `<div class="row"><div>${field("dev_secret", "Segreto per dev", "my-api-key-dev")}</div><div>${field("prod_secret", "Segreto per prod", "my-api-key-prod")}</div></div><div class="hint">${kvHint}</div>`;
+      ? field("kv_name", "Nome del segreto nel Key Vault", "my-api-key", kvHint)
+      : `<div class="row"><div>${field("dev_kv_name", "Segreto per dev", "my-api-key-dev")}</div><div>${field("prod_kv_name", "Segreto per prod", "my-api-key-prod")}</div></div><div class="hint">${kvHint}</div>`;
   } else {
     box.innerHTML = same
       ? field("value", "Valore", "https://…")
@@ -237,7 +237,7 @@ function renderValues() {
 
 function fillSecretDefaults() {
   const base = $("#name").value.trim().toLowerCase().replace(/_/g, "-");
-  const defaults = { secret_name: base, dev_secret: base && `${base}-dev`, prod_secret: base && `${base}-prod` };
+  const defaults = { kv_name: base, dev_kv_name: base && `${base}-dev`, prod_kv_name: base && `${base}-prod` };
   for (const [id, v] of Object.entries(defaults)) {
     const el = document.getElementById(id);
     if (el && !edited.has(id)) el.value = v;
@@ -250,7 +250,7 @@ function body() {
     env: val("env"), app: $("#app").value, slot: val("slot"), name: $("#name").value.trim(), kind: val("kind"),
     same: val("env") !== "both" || $("#same").checked,
     value: get("value"), dev_value: get("dev_value"), prod_value: get("prod_value"),
-    secret_name: get("secret_name"), dev_secret: get("dev_secret"), prod_secret: get("prod_secret"),
+    kv_name: get("kv_name"), dev_kv_name: get("dev_kv_name"), prod_kv_name: get("prod_kv_name"),
     kv_check: $("#kv_check").checked,
   };
 }
@@ -272,9 +272,9 @@ function renderResult(data, applied) {
   html += `<div class="summary">${esc(data.summary)}</div>`;
   for (const diff of Object.values(data.diffs)) html += `<pre>${renderDiff(diff)}</pre>`;
   if (data.notes.length) html += `<ul>${data.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>`;
-  if (data.secrets.length) {
+  if (data.kv_rows.length) {
     html += `<table><tr><th>Ambiente</th><th>Key Vault</th><th>Segreto</th><th>Stato</th></tr>`;
-    html += data.secrets.map((s) => `<tr><td>${esc(s.env)}</td><td><code>${esc(s.vault)}</code></td><td><code>${esc(s.name)}</code></td><td class="s-${s.ok}">${esc(s.status)}</td></tr>`).join("");
+    html += data.kv_rows.map((s) => `<tr><td>${esc(s.env)}</td><td><code>${esc(s.vault)}</code></td><td><code>${esc(s.name)}</code></td><td class="s-${s.ok}">${esc(s.status)}</td></tr>`).join("");
     html += `</table>`;
   }
   html += `<p class="hint">${applied ? "Rilanciato" : "Con \"Applica\" verrà rilanciato"} generate_locals.py per: ${esc(data.regenerate.join(", "))}</p>`;

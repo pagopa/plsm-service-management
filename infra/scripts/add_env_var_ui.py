@@ -27,7 +27,7 @@ PAGE = Path(__file__).resolve().parent / "add_env_var_ui.html"
 MAX_BODY = 64 * 1024
 
 # Campi del form → opzioni di add_env_var.py (stessi nomi di argparse).
-FIELDS = ("env", "app", "slot", "name", "kind", "value", "dev_value", "prod_value", "secret_name", "dev_secret", "prod_secret")
+FIELDS = ("env", "app", "slot", "name", "kind", "value", "dev_value", "prod_value", "kv_name", "dev_kv_name", "prod_kv_name")
 
 
 CHOICES = {"env": ("dev", "prod", "both"), "slot": ("all", "production", "staging"), "kind": ("value", "secret")}
@@ -46,10 +46,10 @@ def to_args(body: dict) -> argparse.Namespace:
         values["name"] = values["name"].upper()
     # Con "entrambi" il form manda o il valore unico o quelli per ambiente, mai tutti e due.
     if values["env"] == "both" and body.get("same", True):
-        for f in ("dev_value", "prod_value", "dev_secret", "prod_secret"):
+        for f in ("dev_value", "prod_value", "dev_kv_name", "prod_kv_name"):
             values[f] = None
     elif values["env"] == "both":
-        values["value"] = values["secret_name"] = None
+        values["value"] = values["kv_name"] = None
     return argparse.Namespace(**values)
 
 
@@ -72,9 +72,9 @@ def preview_payload(core, p) -> dict:
         "summary": f"{p.name} → {p.app}  ({', '.join(p.envs)}; {core.SLOT_LABELS[p.slot]})",
         "diffs": p.diffs,
         "notes": p.notes,
-        "secrets": [
-            {"env": env, "vault": vault, "name": kv, "status": core.SECRET_LABELS[ok], "ok": ok}
-            for env, vault, kv, ok in p.secrets
+        "kv_rows": [
+            {"env": env, "vault": vault, "name": kv, "status": core.KV_STATUS_LABELS[ok], "ok": ok}
+            for env, vault, kv, ok in p.kv_rows
         ],
         "regenerate": p.regenerate,
     }
