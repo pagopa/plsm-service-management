@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-08-31 16:21
+# Generato il: 2026-10-01 16:03
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -66,8 +66,6 @@ locals {
     ONBOARDING_BASE_PATH_UAT                              = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
     FE_SMCR_CRM_API_URL                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_url.value
     FE_SMCR_CRM_API_KEY                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_key.value
-    NEXT_PUBLIC_MSAL_CLIENT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_d_platformsm_client_id.value
-    NEXT_PUBLIC_MSAL_TENANT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_d_platformsm_tenant_id.value
     DB_HOST                                               = azurerm_key_vault_secret.db_host.value
     DB_USER                                               = azurerm_key_vault_secret.postgres_username.value
     DB_PASSWORD_B64                                       = azurerm_key_vault_secret.db_password_b64.value
@@ -107,7 +105,6 @@ locals {
     UPLOAD                                                = "external/internal/v1/onboarding/"
     TEST_ENDPOINT                                         = "mytestendpoint"
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-d-itn-fe-smcr-app-01.azurewebsites.net"
-    NEXT_PUBLIC_MSAL_REDIRECT_URI                         = "https://plsm-d-itn-fe-smcr-app-01.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-d-itn-fe-smcr-app-01.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL                                = "https://plsm-d-itn-auth-func-01.azurewebsites.net"
     AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret_dev.value
@@ -141,8 +138,6 @@ locals {
     ONBOARDING_BASE_PATH_UAT                              = data.azurerm_key_vault_secret.fe_smcr_onboarding_base_path_uat.value
     FE_SMCR_CRM_API_URL                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_url.value
     FE_SMCR_CRM_API_KEY                                   = data.azurerm_key_vault_secret.fe_smcr_crm_api_key.value
-    NEXT_PUBLIC_MSAL_CLIENT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_d_platformsm_client_id.value
-    NEXT_PUBLIC_MSAL_TENANT_ID                            = data.azurerm_key_vault_secret.fe_smcr_plsm_d_platformsm_tenant_id.value
     DB_HOST                                               = azurerm_key_vault_secret.db_host.value
     DB_USER                                               = azurerm_key_vault_secret.postgres_username.value
     DB_PASSWORD_B64                                       = azurerm_key_vault_secret.db_password_b64.value
@@ -182,7 +177,6 @@ locals {
     UPLOAD                                                = "external/internal/v1/onboarding/"
     TEST_ENDPOINT                                         = "mytestendpoint"
     NEXT_PUBLIC_APP_URL                                   = "https://plsm-d-itn-fe-smcr-app-01-staging.azurewebsites.net"
-    NEXT_PUBLIC_MSAL_REDIRECT_URI                         = "https://plsm-d-itn-fe-smcr-app-01-staging.azurewebsites.net/api/auth/callback/microsoft"
     NEXT_PUBLIC_POST_LOGIN_REDIRECT                       = "https://plsm-d-itn-fe-smcr-app-01-staging.azurewebsites.net"
     AUTH_FUNCTION_BASE_URL                                = "https://plsm-d-itn-auth-func-01-staging.azurewebsites.net"
     AUTH_JWT_SECRET                                       = data.azurerm_key_vault_secret.auth_jwt_secret_dev.value
