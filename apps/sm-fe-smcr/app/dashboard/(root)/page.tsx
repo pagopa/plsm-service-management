@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { format, parseISO, subDays } from "date-fns";
+import { it } from "date-fns/locale";
 
 import { ChartPie } from "@/components/dashboard/chart";
 import TextAnalytics from "@/components/dashboard/text-analytics";
@@ -48,7 +49,7 @@ export default async function DashboardPage() {
 
       <section className="w-full">
         <ChartPie
-          period={`${format(parseISO(dateRanges.current.from), "MMMM")} - ${format(parseISO(dateRanges.current.to), "MMMM")}`}
+          period={`${format(parseISO(dateRanges.current.from), "MMMM", { locale: it })} - ${format(parseISO(dateRanges.current.to), "MMMM", { locale: it })}`}
           chartData={(() => {
             const total =
               analytics.reduce(

@@ -99,7 +99,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       try {
         userProfile = await fetchUserProfile();
 
-        // const userTeams = await getUserTeams(userProfile.id);
         const userMember = await getUserMember(userProfile.id);
         setUser({
           ...userProfile,

@@ -91,9 +91,6 @@ const serverEnvSchema = z.object({
 });
 
 const clientEnvSchema = z.object({
-  NEXT_PUBLIC_MSAL_CLIENT_ID: z.string().default(""),
-  NEXT_PUBLIC_MSAL_TENANT_ID: optionalString,
-  NEXT_PUBLIC_MSAL_REDIRECT_URI: optionalString,
   NEXT_PUBLIC_APP_URL: optionalString,
 });
 
@@ -181,9 +178,6 @@ const rawServerEnv = {
 };
 
 const rawClientEnv = {
-  NEXT_PUBLIC_MSAL_CLIENT_ID: process.env.NEXT_PUBLIC_MSAL_CLIENT_ID,
-  NEXT_PUBLIC_MSAL_TENANT_ID: process.env.NEXT_PUBLIC_MSAL_TENANT_ID,
-  NEXT_PUBLIC_MSAL_REDIRECT_URI: process.env.NEXT_PUBLIC_MSAL_REDIRECT_URI,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
 };
 
