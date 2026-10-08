@@ -5,21 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Pillow } from "@/components/ui/pillow";
 import { ColumnDef } from "@tanstack/react-table";
 import { LayoutDashboardIcon } from "lucide-react";
-import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
-
-dayjs.extend(customParseFormat);
-
-function formatTimestamp(value: unknown): string {
-  if (typeof value === "string" || typeof value === "number") {
-    const date = dayjs(value);
-    if (date.isValid()) {
-      return date.format("HH:mm:ss DD-MM-YYYY");
-    }
-    return String(value);
-  }
-  return "";
-}
+import { formatLogTimestamp } from "@/lib/log-dates";
 
 import type { FilterFn } from "@tanstack/react-table";
 
@@ -80,7 +66,7 @@ export const columns: ColumnDef<Log>[] = [
           {getLevelPillow(level)}
 
           <span className="font-mono text-neutral-700">
-            {formatTimestamp(String(getValue()))}
+            {formatLogTimestamp(String(getValue()))}
           </span>
         </div>
       );
