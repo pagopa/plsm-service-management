@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Variabili d'ambiente</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1d2330; --muted: #5d6676; --border: #d9dde4;
+    --accent: #0b5cad; --accent-text: #ffffff; --ok: #1a7f37; --warn: #9a6700; --err: #b42318;
+    --add-bg: #e6f4ea; --add-text: #1a5c2e; --del-bg: #fdecea; --del-text: #8a1f1a; --code-bg: #f0f2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --panel: #1b1f27; --text: #e4e7ec; --muted: #9aa3b2; --border: #2e3440;
+      --accent: #4c9bf0; --accent-text: #0b1220; --ok: #4ac26b; --warn: #d4a72c; --err: #f47067;
+      --add-bg: #12301c; --add-text: #8fe3a6; --del-bg: #3a1614; --del-text: #f8a39c; --code-bg: #151920;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+  fieldset { border: 0; padding: 0; margin: 0 0 18px; }
+  legend, label.title { display: block; font-weight: 600; margin-bottom: 6px; }
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+  .choices label { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--border);
+                   border-radius: 8px; cursor: pointer; background: var(--bg); }
+  .choices input { accent-color: var(--accent); }
+  input[type=text], select { width: 100%; padding: 8px 10px; font: inherit; color: var(--text);
+                             background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+  input[type=text]:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .hint.err { color: var(--err); }
+  .check { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  button { font: inherit; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border);
+           background: var(--bg); color: var(--text); cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .hidden { display: none !important; }
+  .msg { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 12px; white-space: pre-wrap; }
+  .msg.err { border-color: var(--err); color: var(--err); }
+  .msg.ok { border-color: var(--ok); color: var(--ok); }
+  .summary { font-weight: 600; margin-bottom: 10px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+        overflow-x: auto; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; margin: 8px 0; }
+  pre .add { background: var(--add-bg); color: var(--add-text); display: block; }
+  pre .del { background: var(--del-bg); color: var(--del-text); display: block; }
+  pre .meta { color: var(--muted); display: block; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td, th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .s-true { color: var(--ok); } .s-false { color: var(--err); } .s-null { color: var(--warn); }
+  ul { margin: 6px 0; padding-left: 20px; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Aggiungi una variabile d'ambiente</h1>
+  <p class="sub">Scrive i YAML in <code>infra/resources/environments</code> e rilancia <code>generate_locals.py</code>.
+     I valori dei segreti non passano da qui: nei YAML finisce solo il riferimento <code>kv:</code>.</p>
+
+  <form id="form" class="panel" autocomplete="off">
+    <fieldset>
+      <legend>Ambiente</legend>
+      <div class="choices">
+        <label><input type="radio" name="env" value="dev"> dev</label>
+        <label><input type="radio" name="env" value="prod"> prod</label>
+        <label><input type="radio" name="env" value="both"> entrambi</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <label class="title" for="app">App</label>
+      <select id="app" name="app" disabled><option value="">Scegli prima l'ambiente</option></select>
+      <div id="app-hint" class="hint"></div>
+      <details id="existing" class="hidden"><summary>Variabili già presenti in questa app</summary><div id="existing-list" class="hint"></div></details>
+    </fieldset>
+
+    <fieldset>
+      <legend>Slot</legend>
+      <div class="choices">
+        <label><input type="radio" name="slot" value="all" checked> production e staging</label>
+        <label><input type="radio" name="slot" value="production"> solo production</label>
+        <label><input type="radio" name="slot" value="staging"> solo staging</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <label class="title" for="name">Nome della variabile</label>
+      <input type="text" id="name" name="name" placeholder="MY_API_URL" spellcheck="false">
+      <div id="name-hint" class="hint">Solo maiuscole, cifre e _</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Tipo</legend>
+      <div class="choices">
+        <label><input type="radio" name="kind" value="value" checked> valore semplice</label>
+        <label><input type="radio" name="kind" value="secret"> segreto nel Key Vault</label>
+      </div>
+      <label id="same-wrap" class="check hidden"><input type="checkbox" id="same" checked> <span id="same-label">Uguale in dev e prod</span></label>
+    </fieldset>
+
+    <fieldset id="values"></fieldset>
+
+    <label class="check"><input type="checkbox" id="kv_check" checked> Verifica i segreti nel Key Vault (sola lettura, solo i nomi)</label>
+
+    <div class="actions">
+      <button type="button" id="preview">Anteprima (dry-run)</button>
+      <button type="button" id="apply" class="primary" disabled>Applica</button>
+    </div>
+    <div class="hint">"Applica" si attiva dopo un'anteprima riuscita e si disattiva se cambi un campo.</div>
+  </form>
+
+  <section id="result" class="panel hidden"></section>
+</main>
+
+<script>
+const TOKEN = "__TOKEN__";
+const NAME_RE = /^[A-Z][A-Z0-9_]*$/;
+const $ = (s) => document.querySelector(s);
+const form = $("#form");
+let options = null;
+let lastPreview = null;
+const edited = new Set(); // campi segreto modificati a mano: non li riempio più in automatico
+
+function val(name) { const el = form.querySelector(`[name=${name}]:checked`); return el ? el.value : null; }
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+async function api(path, body) {
+  const res = await fetch(path, {
+    method: body ? "POST" : "GET",
+    headers: { "X-Token": TOKEN, "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({ error: `risposta non valida (${res.status})` }));
+  if (!res.ok) throw new Error(data.error || `errore ${res.status}`);
+  return data;
+}
+
+function envList() { const e = val("env"); return e === "both" ? ["dev", "prod"] : e ? [e] : []; }
+
+function appsFor(envs) {
+  if (!options || !envs.length) return [];
+  const sets = envs.map((e) => Object.keys(options[e]));
+  return sets.reduce((a, b) => a.filter((x) => b.includes(x))).sort();
+}
+
+function renderApps() {
+  const envs = envList();
+  const select = $("#app");
+  const previous = select.value;
+  const apps = appsFor(envs);
+  select.disabled = !apps.length;
+  select.innerHTML = apps.length
+    ? '<option value="">Scegli…</option>' + apps.map((a) => `<option value="${esc(a)}">${esc(a)} (${esc(options[envs[0]][a].local)})</option>`).join("")
+    : '<option value="">Scegli prima l\'ambiente</option>';
+  if (apps.includes(previous)) select.value = previous;
+  const hint = $("#app-hint");
+  if (envs.length === 2) {
+    const only = [...new Set([...Object.keys(options.dev), ...Object.keys(options.prod)])].filter((a) => !apps.includes(a)).sort();
+    hint.textContent = only.length ? `Attive in un solo ambiente, quindi non elencate: ${only.join(", ")}` : "";
+  } else hint.textContent = "";
+  renderExisting();
+}
+
+function existingNames() {
+  const app = $("#app").value;
+  const slot = val("slot");
+  const names = new Set();
+  for (const e of envList()) {
+    const cfg = options && options[e][app];
+    if (!cfg) continue;
+    if (slot !== "staging") cfg.production.forEach((n) => names.add(n));
+    if (slot !== "production") cfg.staging.forEach((n) => names.add(n));
+  }
+  return names;
+}
+
+function renderExisting() {
+  const app = $("#app").value;
+  const box = $("#existing");
+  if (!app) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  $("#existing-list").textContent = [...existingNames()].sort().join(", ") || "nessuna";
+  checkName();
+}
+
+function checkName() {
+  const input = $("#name");
+  const pos = input.selectionStart;
+  input.value = input.value.toUpperCase();
+  input.setSelectionRange(pos, pos);
+  const name = input.value.trim();
+  const hint = $("#name-hint");
+  hint.classList.remove("err");
+  if (!name) hint.textContent = "Solo maiuscole, cifre e _";
+  else if (!NAME_RE.test(name)) { hint.textContent = "Solo maiuscole, cifre e _ (deve iniziare con una lettera)"; hint.classList.add("err"); }
+  else if (existingNames().has(name)) { hint.textContent = "Esiste già in questa app per gli ambienti/slot scelti"; hint.classList.add("err"); }
+  else hint.textContent = "Nome libero";
+  fillSecretDefaults();
+}
+
+function field(id, label, placeholder, hint) {
+  return `<label class="title" for="${id}">${label}</label>
+          <input type="text" id="${id}" name="${id}" placeholder="${esc(placeholder)}" spellcheck="false">
+          ${hint ? `<div class="hint">${hint}</div>` : ""}`;
+}
+
+function renderValues() {
+  const both = val("env") === "both";
+  const isKv = val("kind") === "secret";
+  $("#same-wrap").classList.toggle("hidden", !both);
+  $("#same-label").textContent = isKv ? "Stesso segreto (stesso nome) in dev e prod" : "Uguale in dev e prod";
+  const same = !both || $("#same").checked;
+  const box = $("#values");
+  if (isKv) {
+    const kvHint = "Minuscole, cifre e trattini. Il segreto va creato con il workflow Set Key Vault Secret.";
+    box.innerHTML = same
+      ? field("kv_name", "Nome del segreto nel Key Vault", "my-api-key", kvHint)
+      : `<div class="row"><div>${field("dev_kv_name", "Segreto per dev", "my-api-key-dev")}</div><div>${field("prod_kv_name", "Segreto per prod", "my-api-key-prod")}</div></div><div class="hint">${kvHint}</div>`;
+  } else {
+    box.innerHTML = same
+      ? field("value", "Valore", "https://…")
+      : `<div class="row"><div>${field("dev_value", "Valore per dev", "")}</div><div>${field("prod_value", "Valore per prod", "")}</div></div>`;
+  }
+  box.querySelectorAll("input").forEach((el) => el.addEventListener("input", () => edited.add(el.id)));
+  fillSecretDefaults();
+}
+
+function fillSecretDefaults() {
+  const base = $("#name").value.trim().toLowerCase().replace(/_/g, "-");
+  const defaults = { kv_name: base, dev_kv_name: base && `${base}-dev`, prod_kv_name: base && `${base}-prod` };
+  for (const [id, v] of Object.entries(defaults)) {
+    const el = document.getElementById(id);
+    if (el && !edited.has(id)) el.value = v;
+  }
+}
+
+function body() {
+  const get = (id) => { const el = document.getElementById(id); return el ? el.value : null; };
+  return {
+    env: val("env"), app: $("#app").value, slot: val("slot"), name: $("#name").value.trim(), kind: val("kind"),
+    same: val("env") !== "both" || $("#same").checked,
+    value: get("value"), dev_value: get("dev_value"), prod_value: get("prod_value"),
+    kv_name: get("kv_name"), dev_kv_name: get("dev_kv_name"), prod_kv_name: get("prod_kv_name"),
+    kv_check: $("#kv_check").checked,
+  };
+}
+
+function renderDiff(text) {
+  return text.split("\n").map((line) => {
+    const cls = line.startsWith("+++") || line.startsWith("---") || line.startsWith("@@") ? "meta"
+              : line.startsWith("+") ? "add" : line.startsWith("-") ? "del" : "";
+    return cls ? `<span class="${cls}">${esc(line)}</span>` : esc(line) + "\n";
+  }).join("");
+}
+
+function renderResult(data, applied) {
+  const r = $("#result");
+  r.classList.remove("hidden");
+  let html = applied
+    ? `<div class="msg ok">Fatto. Controlla il diff con git, poi commit e PR.</div>`
+    : `<div class="msg">Anteprima: nessun file è stato scritto.</div>`;
+  html += `<div class="summary">${esc(data.summary)}</div>`;
+  for (const diff of Object.values(data.diffs)) html += `<pre>${renderDiff(diff)}</pre>`;
+  if (data.notes.length) html += `<ul>${data.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>`;
+  if (data.kv_rows.length) {
+    html += `<table><tr><th>Ambiente</th><th>Key Vault</th><th>Segreto</th><th>Stato</th></tr>`;
+    html += data.kv_rows.map((s) => `<tr><td>${esc(s.env)}</td><td><code>${esc(s.vault)}</code></td><td><code>${esc(s.name)}</code></td><td class="s-${s.ok}">${esc(s.status)}</td></tr>`).join("");
+    html += `</table>`;
+  }
+  html += `<p class="hint">${applied ? "Rilanciato" : "Con \"Applica\" verrà rilanciato"} generate_locals.py per: ${esc(data.regenerate.join(", "))}</p>`;
+  if (applied) {
+    html += `<pre>${esc(data.log.join("\n"))}</pre>`;
+    html += `<div class="summary">Prossimi passi</div><pre>${esc(data.next_steps.join("\n"))}</pre>`;
+  }
+  r.innerHTML = html;
+  r.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function showError(err) {
+  const r = $("#result");
+  r.classList.remove("hidden");
+  r.innerHTML = `<div class="msg err">✖ ${esc(err.message)}</div>`;
+}
+
+function invalidate() { lastPreview = null; $("#apply").disabled = true; }
+
+$("#preview").addEventListener("click", async () => {
+  invalidate();
+  $("#preview").disabled = true;
+  try {
+    const data = await api("/api/preview", body());
+    lastPreview = data.fingerprint;
+    $("#apply").disabled = false;
+    renderResult(data, false);
+  } catch (err) { showError(err); }
+  finally { $("#preview").disabled = false; }
+});
+
+$("#apply").addEventListener("click", async () => {
+  if (!lastPreview || !confirm("Scrivo i file YAML e rilancio generate_locals.py?")) return;
+  $("#apply").disabled = true;
+  try {
+    const data = await api("/api/apply", { ...body(), fingerprint: lastPreview });
+    renderResult(data, true);
+    options = await api("/api/options"); // la variabile ora esiste: aggiorno gli elenchi
+    invalidate();
+    renderExisting();
+  } catch (err) { showError(err); invalidate(); }
+});
+
+form.addEventListener("input", invalidate);
+form.addEventListener("change", (e) => {
+  if (e.target.name === "env") { renderApps(); renderValues(); }
+  if (e.target.name === "kind" || e.target.id === "same") { edited.clear(); renderValues(); }
+  if (e.target.id === "app" || e.target.name === "slot") renderExisting();
+});
+$("#name").addEventListener("input", checkName);
+
+(async () => {
+  try { options = await api("/api/options"); renderValues(); }
+  catch (err) { showError(err); }
+})();
+</script>
+</body>
+</html>
