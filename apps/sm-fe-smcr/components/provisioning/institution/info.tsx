@@ -25,7 +25,6 @@ import {
   Locate,
   Mail,
   MapPin,
-  ScanLine,
   Settings,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -334,16 +333,6 @@ export default function InstitutionInfo({
           value={currentProduct?.originId || ""}
           isEditable={canEditInstitution}
           icon={<Fingerprint className="size-4 mr-2 text-muted-foreground" />}
-        />
-        <InfoItem
-          name="product"
-          label="Prodotto"
-          value={
-            currentProduct?.productId
-              ? PRODUCT_MAP[currentProduct?.productId]
-              : currentProduct?.productId
-          }
-          icon={<ScanLine className="size-4 mr-2 text-muted-foreground" />}
         />
         {currentInstitution?.paymentServiceProvider && (
           <>
