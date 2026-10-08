@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import dayjs from "dayjs";
+import { format, parseISO, subDays } from "date-fns";
 
 import { ChartPie } from "@/components/dashboard/chart";
 import TextAnalytics from "@/components/dashboard/text-analytics";
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
 
       <section className="w-full">
         <ChartPie
-          period={`${dayjs(dateRanges.current.from).format("MMMM")} - ${dayjs(dateRanges.current.to).format("MMMM")}`}
+          period={`${format(parseISO(dateRanges.current.from), "MMMM")} - ${format(parseISO(dateRanges.current.to), "MMMM")}`}
           chartData={(() => {
             const total =
               analytics.reduce(
@@ -80,15 +80,15 @@ export default async function DashboardPage() {
 }
 
 function buildDateRanges() {
-  const now = dayjs(Date.now());
+  const now = new Date();
   return {
     current: {
-      from: now.subtract(30, "days").format("YYYY-MM-DD"),
-      to: now.format("YYYY-MM-DD"),
+      from: format(subDays(now, 30), "yyyy-MM-dd"),
+      to: format(now, "yyyy-MM-dd"),
     },
     previous: {
-      from: now.subtract(60, "days").format("YYYY-MM-DD"),
-      to: now.subtract(30, "days").format("YYYY-MM-DD"),
+      from: format(subDays(now, 60), "yyyy-MM-dd"),
+      to: format(subDays(now, 30), "yyyy-MM-dd"),
     },
   };
 }

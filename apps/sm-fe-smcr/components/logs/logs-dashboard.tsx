@@ -1,6 +1,7 @@
 "use client";
 
-import dayjs from "dayjs";
+import { format, isValid } from "date-fns";
+import { parseLogTimestamp } from "@/lib/log-dates";
 import React from "react";
 import VolumeChart from "@/components/logs/volume-chart";
 import { columns } from "@/components/logs/logs-table/columns";
@@ -36,12 +37,12 @@ function incrementLogVolume(
   currentVolume: Array<LogVolume>,
   log: Log,
 ): Array<LogVolume> {
-  const timestamp = dayjs(log.timestamp);
-  if (!timestamp.isValid()) {
+  const timestamp = parseLogTimestamp(log.timestamp);
+  if (!isValid(timestamp)) {
     return currentVolume;
   }
 
-  const day = timestamp.format("YYYY-MM-DD");
+  const day = format(timestamp, "yyyy-MM-dd");
   const levelKey = LOG_VOLUME_LEVEL_KEYS[log.level];
   let updated = false;
   const nextVolume = currentVolume.map((item) => {
