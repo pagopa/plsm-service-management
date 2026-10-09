@@ -44,7 +44,7 @@ permissions:
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch'
-    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@main
+    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@8ec64257f46bb8c03509d317b42fbf6a2da2c63a # main
     with:
       workspace_name: sm-onboarding-fn
       environment: ${{ inputs.environment }}
