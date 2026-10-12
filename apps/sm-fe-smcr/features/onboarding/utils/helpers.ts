@@ -13,7 +13,7 @@ export function isIpaAOOData(
     | GetIpaSchemaAOO
     | GetIpaSchemaUO
     | null,
-  subunit: SubunitOption
+  subunit: SubunitOption,
 ): data is GetIpaSchemaAOO {
   return subunit === "AOO" && data !== null;
 }
@@ -25,9 +25,14 @@ export function isIpaUOData(
     | GetIpaSchemaAOO
     | GetIpaSchemaUO
     | null,
-  subunit: SubunitOption
+  subunit: SubunitOption,
 ): data is GetIpaSchemaUO {
   return subunit === "UO" && data !== null;
+}
+export function getParentOriginId(
+  data: GetIpaSchemaAOO | GetIpaSchemaUO,
+): string {
+  return data.codiceIpa || data.cod_amm || "";
 }
 export function isApicaleSelfCareData(
   data:
@@ -37,19 +42,19 @@ export function isApicaleSelfCareData(
     | GetIpaSchemaAOO
     | GetIpaSchemaUO
     | null,
-  endpoint: string | undefined
+  endpoint: string | undefined,
 ): data is GetSelfCareSchema {
   return endpoint === "selfcare" && data !== null;
 }
 export function isApicaleIpaData(
   data: GetSelfCareSchema | GetIpaSchema | GetInfocamereSchema | null,
-  endpoint: string | undefined
+  endpoint: string | undefined,
 ): data is GetIpaSchema {
   return endpoint === "ipa" && data !== null;
 }
 export function isApicaleInfoCamereData(
   data: GetSelfCareSchema | GetIpaSchema | GetInfocamereSchema | null,
-  endpoint: string | undefined
+  endpoint: string | undefined,
 ): data is GetInfocamereSchema {
   return endpoint === "infocamere" && data !== null;
 }

@@ -34,6 +34,7 @@ import {
 import {
   isApicaleInfoCamereData,
   isApicaleIpaData,
+  getParentOriginId,
   isApicaleSelfCareData,
   isIpaAOOData,
   isIpaUOData,
@@ -137,10 +138,16 @@ function StepOne({ children, ...props }: Props) {
     if (!isStepThree) {
       updateFormData(values);
       handleStepOneSubmit();
+      // Per AOO/UO la verifica SDI va fatta sull'originId dell'ente padre
+      const isSubunitValue =
+        values.subunit === "AOO" || values.subunit === "UO";
       const result = await nextStep({
         productId: values.productId,
         origin: values.origin,
-        originId: values.originId,
+        originId:
+          isSubunitValue && values.parentOriginId
+            ? values.parentOriginId
+            : values.originId,
         recipientCode: values.recipientCode ?? "",
       });
       if (!result.advanced) {
@@ -226,6 +233,7 @@ function StepOne({ children, ...props }: Props) {
           }
           form.setValue("subunit", "AOO");
           form.setValue("subunitType", "AOO");
+          form.setValue("parentOriginId", getParentOriginId(data));
 
           if (dataStatus.length > 0) {
             const nonActiveContracts = allowedProducts(dataStatus);
@@ -255,6 +263,7 @@ function StepOne({ children, ...props }: Props) {
           }
           form.setValue("subunit", "UO");
           form.setValue("subunitType", "UO");
+          form.setValue("parentOriginId", getParentOriginId(data));
 
           if (dataStatus.length > 0) {
             const nonActiveContracts = allowedProducts(dataStatus);
@@ -271,6 +280,7 @@ function StepOne({ children, ...props }: Props) {
         }
         break;
       case "Apicale":
+        form.setValue("parentOriginId", "");
         if (isApicaleSelfCareData(data, endpoint)) {
           if (data.institutions.length === 0) {
             toast.error("Ente non trovato");
