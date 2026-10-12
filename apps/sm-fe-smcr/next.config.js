@@ -6,7 +6,6 @@ const nextConfig = {
       bodySizeLimit: "10mb",
     },
   },
-  serverExternalPackages: ["knex"],
   turbopack: {
     resolveAlias: {
       canvas: "./empty-module.ts",
