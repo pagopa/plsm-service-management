@@ -7,7 +7,7 @@ import {
   updateUserEmail,
   updateUser,
 } from "../services/users.service";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, updateTag } from "next/cache";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 
 const createUserSchema = z.object({
@@ -194,7 +194,8 @@ type UpdateUserInput = z.infer<typeof updateUserSchema>;
 
 export type UpdateUseFormState = {
   fields: Partial<UpdateUserInput>;
-  errors?: { root?: string };
+  errors?: Partial<Record<keyof UpdateUserInput, string>> & { root?: string };
+  success?: boolean;
 };
 
 export async function updateUserAction(
@@ -214,24 +215,47 @@ export async function updateUserAction(
       }
     }
 
-    return { fields: input, errors };
-  }
-
-  const { error } = await updateUser({
-    status: validation.data.status,
-    product: validation.data.product,
-    institution: validation.data.institutionId,
-    user: validation.data.userId,
-  });
-
-  if (error) {
     return {
-      fields: { ...input },
-      errors: { root: "An error occurred, please try again later." },
+      fields: input,
+      errors: { ...errors, root: "Dati dell'utente incompleti o non validi." },
+      success: false,
     };
   }
 
-  revalidateTag("users", "max");
+  try {
+    const { error } = await updateUser({
+      status: validation.data.status,
+      product: validation.data.product,
+      institution: validation.data.institutionId,
+      user: validation.data.userId,
+    });
 
-  return { fields: { ...input } };
+    if (error) {
+      logServerError(
+        error,
+        "updateUserAction - update user status error",
+        validation.data,
+      );
+      return {
+        fields: { ...validation.data },
+        errors: { root: "An error occurred, please try again later." },
+        success: false,
+      };
+    }
+  } catch (error) {
+    logServerError(
+      error,
+      "updateUserAction - update user status request failed",
+      validation.data,
+    );
+    return {
+      fields: { ...validation.data },
+      errors: { root: "An error occurred, please try again later." },
+      success: false,
+    };
+  }
+
+  updateTag("users");
+
+  return { fields: { ...validation.data }, success: true };
 }
