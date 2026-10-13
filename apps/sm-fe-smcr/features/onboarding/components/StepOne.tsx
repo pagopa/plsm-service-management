@@ -71,10 +71,11 @@ function StepOne({ children, ...props }: Props) {
     isStepOneSubmitted,
     handleStepOneSubmit,
     isVerifying,
+    productOptionsToDisplay,
+    handleProductOptions,
+    resetProductOptions,
   } = useFormContext();
 
-  const [productOptionsToDisplay, setProductOptionsToDisplay] =
-    useState<ProductOptions>(productOptions);
   const [dataTable, setDataTable] = useState<ProductStatus[] | undefined>(
     undefined,
   );
@@ -114,12 +115,6 @@ function StepOne({ children, ...props }: Props) {
       : defaultValues,
   });
   setupZodErrors();
-  function handleProductOptions(data: ProductOptions) {
-    setProductOptionsToDisplay(data);
-  }
-  function resetProductOptions() {
-    setProductOptionsToDisplay(productOptions);
-  }
 
   const institutionType = form.watch("institutionType");
   const productId = form.watch("productId");
@@ -395,7 +390,7 @@ function StepOne({ children, ...props }: Props) {
 
     form.trigger();
     toast.success("Dati caricati!");
-  }, [state, isPending, form]);
+  }, [state, isPending, form, handleProductOptions]);
 
   return (
     <StepOneContext
