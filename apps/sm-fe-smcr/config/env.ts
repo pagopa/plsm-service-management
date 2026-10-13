@@ -33,12 +33,7 @@ const serverEnvSchema = z.object({
   FE_SMCR_CRM_API_KEY: optionalString,
 
   // Database
-  DB_HOST: optionalString,
-  DB_NAME: optionalString,
-  DB_USER: optionalString,
-  DB_PASSWORD_B64: optionalString,
-  DB_PORT: optionalString,
-  DB_SSL: optionalString,
+  DATABASE_URL: optionalString,
 
   // Onboarding paths
   UPLOAD: z.string().default(""),
@@ -123,12 +118,7 @@ const rawServerEnv = {
     process.env.FE_SMCR_API_SLACK_CALL_MANAGEMENT_HOOK_PROD_SELFCARE,
   FE_SMCR_CRM_API_URL: process.env.FE_SMCR_CRM_API_URL,
   FE_SMCR_CRM_API_KEY: process.env.FE_SMCR_CRM_API_KEY,
-  DB_HOST: process.env.DB_HOST,
-  DB_NAME: process.env.DB_NAME,
-  DB_USER: process.env.DB_USER,
-  DB_PASSWORD_B64: process.env.DB_PASSWORD_B64,
-  DB_PORT: process.env.DB_PORT,
-  DB_SSL: process.env.DB_SSL,
+  DATABASE_URL: process.env.DATABASE_URL,
   UPLOAD: process.env.UPLOAD,
   ONBOARDING_BASE_PATH: process.env.ONBOARDING_BASE_PATH,
   ONBOARDING_BASE_PATH_UAT: process.env.ONBOARDING_BASE_PATH_UAT,
