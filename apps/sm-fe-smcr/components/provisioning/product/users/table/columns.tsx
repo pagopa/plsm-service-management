@@ -3,6 +3,7 @@
 import {
   updateUserAction,
   updateUserEmailAction,
+  type UpdateUseFormState,
 } from "@/lib/actions/users.actions";
 import {
   Dialog,
@@ -358,31 +359,10 @@ function DropdownMenuItemForm({
   product: string;
   children: React.ReactNode;
 }) {
-  const id = useId();
-  const [inputValue, setInputValue] = useState("");
-  const [state, action, isPending] = useActionState(updateUserAction, {
-    fields: {
-      institutionId,
-      product,
-      userId,
-      status,
-    },
-  });
-
-  useEffect(() => {
-    if (!isPending && state.errors?.root) {
-      toast.error("Unexpected error!", { description: state.errors.root });
-    }
-  }, [isPending, state]);
-
-  useEffect(() => {
-    if (!isPending && state.errors?.root) {
-      toast.error("Unexpected error!", { description: state.errors.root });
-    }
-  }, [isPending, state]);
+  const [open, setOpen] = useState(false);
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild className="flex flex-col">
         <Button
           variant="ghost"
@@ -393,70 +373,139 @@ function DropdownMenuItemForm({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="w-sm">
-        <div className="flex flex-col items-center gap-2">
-          <div
-            className="flex size-9 shrink-0 items-center justify-center rounded-full border"
-            aria-hidden="true"
-          >
-            <CircleAlertIcon className="opacity-80" size={16} />
-          </div>
-          <DialogHeader>
-            <DialogTitle className="sm:text-center">
-              Conferma finale
-            </DialogTitle>
-            <DialogDescription className="sm:text-center">
-              Questa azione non puo&apos; essere annullata. Per confermare,
-              digita <span className="text-foreground">CONFIRM</span> nel
-              campo sottostante e fai clic su{" "}
-              <span className="text-foreground">
-                {status === "SUSPENDED" ? "Sospendi" : "Elimina"}
-              </span>
-              .
-            </DialogDescription>
-          </DialogHeader>
+      {open ? (
+        <UserStatusDialogContent
+          status={status}
+          userId={userId}
+          institutionId={institutionId}
+          product={product}
+          onSuccess={() => setOpen(false)}
+        />
+      ) : null}
+    </Dialog>
+  );
+}
+
+function UserStatusDialogContent({
+  status,
+  userId,
+  institutionId,
+  product,
+  onSuccess,
+}: {
+  status: "SUSPENDED" | "DELETED";
+  userId: string;
+  institutionId: string;
+  product: string;
+  onSuccess: () => void;
+}) {
+  const id = useId();
+  const [inputValue, setInputValue] = useState("");
+  const [state, action, isPending] = useActionState(
+    async (prevState: UpdateUseFormState, formData: FormData) => {
+      const nextState = await updateUserAction(prevState, formData);
+
+      // Revalidation can remove this row; report the result before it unmounts.
+      if (nextState.errors?.root) {
+        toast.error("Operazione non riuscita", {
+          description: nextState.errors.root,
+        });
+      } else if (nextState.success) {
+        toast.success(
+          status === "DELETED" ? "Utente eliminato" : "Utente sospeso",
+        );
+        onSuccess();
+      }
+
+      return nextState;
+    },
+    {
+      fields: { institutionId, product, userId, status },
+      success: false,
+    },
+  );
+
+  return (
+    <DialogContent
+      className="w-sm"
+      showCloseButton={!isPending}
+      onEscapeKeyDown={(event) => {
+        if (isPending) event.preventDefault();
+      }}
+      onInteractOutside={(event) => {
+        if (isPending) event.preventDefault();
+      }}
+    >
+      <div className="flex flex-col items-center gap-2">
+        <div
+          className="flex size-9 shrink-0 items-center justify-center rounded-full border"
+          aria-hidden="true"
+        >
+          <CircleAlertIcon className="opacity-80" size={16} />
+        </div>
+        <DialogHeader>
+          <DialogTitle className="sm:text-center">Conferma finale</DialogTitle>
+          <DialogDescription className="sm:text-center">
+            Questa azione non puo&apos; essere annullata. Per confermare, digita{" "}
+            <span className="text-foreground">CONFIRM</span> nel campo
+            sottostante e fai clic su{" "}
+            <span className="text-foreground">
+              {status === "SUSPENDED" ? "Sospendi" : "Elimina"}
+            </span>
+            .
+          </DialogDescription>
+        </DialogHeader>
+      </div>
+
+      <form action={action} className="space-y-5">
+        <div className="*:not-first:mt-2">
+          <Label htmlFor={id}>Verifica</Label>
+          <Input
+            id={id}
+            type="text"
+            placeholder="Digita CONFIRM per continuare"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            disabled={isPending}
+          />
         </div>
 
-        <form action={action} className="space-y-5">
-          <div className="*:not-first:mt-2">
-            <Label htmlFor={id}>Verifica</Label>
-            <Input
-              id={id}
-              type="text"
-              placeholder="Digita CONFIRM per continuare"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-            />
-          </div>
+        {state.errors?.root ? (
+          <p className="text-xs text-destructive">{state.errors.root}</p>
+        ) : null}
 
-          <input type="hidden" name="status" value={status} />
-          <input type="hidden" name="userId" value={userId} />
-          <input type="hidden" name="institutionId" value={institutionId} />
-          <input type="hidden" name="product" value={product} />
+        <input type="hidden" name="status" value={status} />
+        <input type="hidden" name="userId" value={userId} />
+        <input type="hidden" name="institutionId" value={institutionId} />
+        <input type="hidden" name="product" value={product} />
 
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline" className="flex-1">
-                Annulla
-              </Button>
-            </DialogClose>
-
+        <DialogFooter>
+          <DialogClose asChild>
             <Button
-              type="submit"
+              type="button"
+              variant="outline"
               className="flex-1"
-              disabled={inputValue !== "CONFIRM" || isPending}
+              disabled={isPending}
             >
-              {isPending ? (
-                <LoaderCircleIcon className="size-3.5 animate-spin" />
-              ) : status === "SUSPENDED" ? (
-                "Sospendi"
-              ) : (
-                "Elimina"
-              )}
+              Annulla
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </DialogClose>
+
+          <Button
+            type="submit"
+            className="flex-1"
+            disabled={inputValue !== "CONFIRM" || isPending}
+          >
+            {isPending ? (
+              <LoaderCircleIcon className="size-3.5 animate-spin" />
+            ) : status === "SUSPENDED" ? (
+              "Sospendi"
+            ) : (
+              "Elimina"
+            )}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
   );
 }
