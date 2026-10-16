@@ -1,10 +1,8 @@
 terraform {
   required_providers {
     azurerm = {
-      # < 4.66: dalla 4.66 il provider riaccende local_authentication_enabled sul
-      # Log Analytics di core-infra. Vedi SMION-890.
       source  = "hashicorp/azurerm"
-      version = ">= 4.62, < 4.66"
+      version = "~> 4.62"
     }
 
     azapi = {
