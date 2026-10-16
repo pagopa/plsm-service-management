@@ -20,8 +20,9 @@ on:
       - ready_for_review
     paths:
       - "infra/resources/prod/**"
+      - "infra/resources/dev/**"
+      - "infra/resources/dev-base/**"
       - "infra/resources/_modules/**"
-      - "infra/resources/environments/**"
       - ".github/workflows/infra_plan.yaml"
       - ".github/workflows/infra_apply.yaml"
 
@@ -31,20 +32,69 @@ permissions:
   pull-requests: write
 
 jobs:
+  # Decide quali ambienti pianificare: sul dispatch quello scelto,
+  # sulla PR quelli toccati dai file modificati
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      prod: ${{ steps.filter.outputs.prod }}
+      dev: ${{ steps.filter.outputs.dev }}
+      dev_base: ${{ steps.filter.outputs.dev_base }}
+    steps:
+      - name: Checkout
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detect environments to plan
+        id: filter
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          TARGET_ENV: ${{ github.event.inputs.target_env }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            [[ "$TARGET_ENV" == "prod" ]] && echo "prod=true" >> $GITHUB_OUTPUT
+            [[ "$TARGET_ENV" == "dev" ]] && echo "dev=true" >> $GITHUB_OUTPUT
+            [[ "$TARGET_ENV" == "dev-base" ]] && echo "dev_base=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          WORKFLOWS='^\.github/workflows/infra_(plan|apply)\.yaml$'
+          MODULES='^infra/resources/_modules/'
+
+          if grep -qE "^infra/resources/prod/|$MODULES|$WORKFLOWS" <<< "$CHANGED"; then
+            echo "prod=true" >> $GITHUB_OUTPUT
+          fi
+          if grep -qE "^infra/resources/dev/|$MODULES|$WORKFLOWS" <<< "$CHANGED"; then
+            echo "dev=true" >> $GITHUB_OUTPUT
+          fi
+          if grep -qE "^infra/resources/dev-base/|$WORKFLOWS" <<< "$CHANGED"; then
+            echo "dev_base=true" >> $GITHUB_OUTPUT
+          fi
+
   plan_prod:
-    if: github.event_name == 'pull_request' || github.event.inputs.target_env == 'prod'
+    needs: changes
+    if: needs.changes.outputs.prod == 'true'
     uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
-    name: Plan Infrastructure - ${{ github.event.inputs.target_env || 'prod' }}
+    name: Plan Infrastructure - prod
     secrets: inherit
     with:
-      environment: ${{ github.event.inputs.target_env || 'prod' }}
+      environment: prod
       base_path: infra/resources
       use_private_agent: true
       use_labels: true
-      override_github_environment: infra-${{ github.event.inputs.target_env || 'prod' }}
+      override_github_environment: infra-prod
 
   plan_dev:
-    if: github.event.inputs.target_env == 'dev'
+    needs: changes
+    if: needs.changes.outputs.dev == 'true'
     uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
     name: Plan Infrastructure - dev
     secrets: inherit
@@ -56,7 +106,8 @@ jobs:
       override_github_environment: infra-dev
 
   plan_dev_base:
-    if: github.event.inputs.target_env == 'dev-base'
+    needs: changes
+    if: needs.changes.outputs.dev_base == 'true'
     uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
     name: Plan Infrastructure - dev-base
     secrets: inherit
