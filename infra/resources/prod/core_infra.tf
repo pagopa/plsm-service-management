@@ -13,8 +13,7 @@ module "azure_core_infra" {
 
   nat_enabled = false
 
-  # Spenta per ricreare il gateway come VpnGw2AZ Gen2 (SMION-903): si riaccende nell'apply successivo
-  vpn_enabled = false
+  vpn_enabled = true
 
   test_enabled = false
 
