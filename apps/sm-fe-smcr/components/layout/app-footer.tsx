@@ -6,7 +6,7 @@ export function AppFooter() {
           <strong className="font-semibold text-foreground">
             PagoPA S.p.A.
           </strong>{" "}
-          - Società per azioni con socio unico - Capitale sociale di euro
+          - Società per azioni - Capitale sociale di euro
           1,000,000 interamente versato - Sede legale in Roma, Piazza Colonna
           370,
           <br className="hidden md:block" />

@@ -5,6 +5,8 @@ export const getIpaSchemaAOO = z.object({
   id: z.string().optional(),
   denominazioneAoo: z.string().optional(),
   codiceFiscaleEnte: z.string().optional(),
+  codiceIpa: z.string().optional(),
+  cod_amm: z.string().optional(),
   mail1: z.string().optional(),
   origin: z.enum(apiOriginValues).optional(),
   CAP: z.string().optional(),

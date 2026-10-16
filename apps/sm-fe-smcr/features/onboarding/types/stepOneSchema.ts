@@ -62,6 +62,7 @@ export const pspSchema = z.object({
 export const subunitSchema = z.object({
   subunitCode: z.string().optional(),
   subunitType: z.string().optional(),
+  parentOriginId: z.string().optional(),
 });
 
 export const stepOneSchema = baseSchemaStepOne
@@ -116,6 +117,7 @@ export const defaultValues: StepOneSchema = {
   desc: "",
   subunitCode: "",
   subunitType: "",
+  parentOriginId: "",
   isPIVANull: false,
   isPIVAequalToTaxcode: false,
 };
