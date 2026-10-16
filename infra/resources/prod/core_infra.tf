@@ -4,7 +4,7 @@
 
 module "azure_core_infra" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "2.2.1"
+  version = "~> 4.4"
 
   environment = merge(local.environment, {
     app_name        = "smcr",
@@ -13,7 +13,8 @@ module "azure_core_infra" {
 
   nat_enabled = false
 
-  vpn_enabled = true
+  # Spenta per ricreare il gateway come VpnGw2AZ Gen2 (SMION-903): si riaccende nell'apply successivo
+  vpn_enabled = false
 
   test_enabled = false
 

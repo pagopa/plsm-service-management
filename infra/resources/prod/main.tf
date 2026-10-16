@@ -5,8 +5,9 @@
 terraform {
   required_providers {
     azurerm = {
+      # core-infra 4.4 richiede ~> 4.62; fissato per evitare salti a 4.8x (SMION-903)
       source  = "hashicorp/azurerm"
-      version = "~>4"
+      version = "~> 4.62.0"
     }
 
     azuread = {
@@ -21,8 +22,9 @@ terraform {
 
 
     dx = {
+      # core-infra 4.4 richiede ~> 0.8; la 0.12 arriva con l'epica moduli DX
       source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
+      version = "~> 0.8.0"
     }
   }
 
