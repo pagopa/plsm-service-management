@@ -107,6 +107,20 @@ export const institutionOptionsByProduct = new Map([
     ],
   ],
   [
+    "prod-ced",
+    [
+      institutionMap.get("psp"),
+      institutionMap.get("pa"),
+      institutionMap.get("gsp"),
+      institutionMap.get("pt"),
+      institutionMap.get("scp"),
+      institutionMap.get("prv"),
+      institutionMap.get("gpu"),
+      institutionMap.get("sa"),
+      institutionMap.get("as"),
+    ],
+  ],
+  [
     "", // Generic/default
     [
       institutionMap.get("psp"),
@@ -135,6 +149,7 @@ export const productKeys = [
   "prod-io",
   "prod-io-sign",
   "prod-io-premium",
+  "prod-ced",
   "",
 ] as const;
 export type ProductKeys = (typeof productKeys)[number];
@@ -146,6 +161,7 @@ export const productValues = [
   "IO",
   "FIRMA con IO",
   "IO Premium",
+  "Carta Europea della Disabilità",
 ] as const;
 
 export const productsMap = new Map<string, string>([
@@ -155,6 +171,7 @@ export const productsMap = new Map<string, string>([
   [productKeys[3], productValues[3]],
   [productKeys[4], productValues[4]],
   [productKeys[5], productValues[5]],
+  [productKeys[6], productValues[6]],
 ]);
 
 export const productOptions: ProductOptions = [];
