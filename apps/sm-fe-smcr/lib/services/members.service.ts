@@ -1,6 +1,8 @@
 "use server";
 
-import database from "@/lib/knex";
+import { eq } from "drizzle-orm";
+import { getDb } from "@/db";
+import { members as membersTable, memberTeams } from "@/db/schema";
 import z from "zod";
 import { readMemberTeams, teamSchema } from "./teams.service";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
@@ -23,7 +25,7 @@ export type MemberWithTeams = z.infer<typeof memberWithTeamsSchema>;
 type MemberDeleteError = "not found" | "database error";
 
 export async function readMembers() {
-  const rawMembers = await database.from("members").select("*");
+  const rawMembers = await getDb().select().from(membersTable);
   const members = z.array(memberSchema).safeParse(rawMembers);
   if (!members.success) {
     logServerError(members.error, "readMembers - validation error");
@@ -46,13 +48,11 @@ export async function readMemberByEmail(
 ): Promise<
   { data: MemberWithTeams; error: null } | { data: null; error: string }
 > {
-  const rawMember = await database
-    .from("members")
-    .select("*")
-    .where({
-      email,
-    })
-    .first();
+  const [rawMember] = await getDb()
+    .select()
+    .from(membersTable)
+    .where(eq(membersTable.email, email))
+    .limit(1);
 
   const member = memberSchema.safeParse(rawMember);
   if (!member.success) {
@@ -74,14 +74,14 @@ export async function createMember(input: {
   lastname: string;
 }): Promise<{ data: Member; error: null } | { data: null; error: string }> {
   try {
-    const [rawMember] = await database
-      .from("members")
-      .insert({
+    const [rawMember] = await getDb()
+      .insert(membersTable)
+      .values({
         email: input.email,
         firstname: input.firstname,
         lastname: input.lastname,
       })
-      .returning("*");
+      .returning();
 
     const member = memberSchema.safeParse(rawMember);
     if (!member.success) {
@@ -103,19 +103,23 @@ export async function deleteMemberById(input: {
   | { data: null; error: MemberDeleteError }
 > {
   try {
-    const deletedMemberId = await database.transaction(async (trx) => {
-      const existingMember = await trx
-        .from("members")
-        .select("id")
-        .where({ id: input.memberId })
-        .first();
+    const deletedMemberId = await getDb().transaction(async (trx) => {
+      const [existingMember] = await trx
+        .select({ id: membersTable.id })
+        .from(membersTable)
+        .where(eq(membersTable.id, input.memberId))
+        .limit(1);
 
       if (!existingMember) {
         return null;
       }
 
-      await trx.from("member_teams").where({ memberId: input.memberId }).del();
-      await trx.from("members").where({ id: input.memberId }).del();
+      await trx
+        .delete(memberTeams)
+        .where(eq(memberTeams.memberId, input.memberId));
+      await trx
+        .delete(membersTable)
+        .where(eq(membersTable.id, input.memberId));
 
       return input.memberId;
     });

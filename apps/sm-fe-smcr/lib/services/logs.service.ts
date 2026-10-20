@@ -1,13 +1,23 @@
-import database from "@/lib/knex";
+import { asc, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { getDb } from "@/db";
+import { logs } from "@/db/schema";
 import z from "zod";
 import EventEmitter from "events";
 import { addDays, format, startOfDay, subDays } from "date-fns";
 
 const logsEventBus = new EventEmitter();
 const LOGS_EVENT_BUS = "logs" as const;
-const LOGS_TABLE = "logs" as const;
 const DEFAULT_LOGS_LIMIT = 100;
 const MAX_LOGS_LIMIT = 500;
+
+const logFields = {
+  id: logs.id,
+  timestamp: logs.timestamp,
+  message: logs.message,
+  level: logs.level,
+  service: logs.service,
+  requestId: logs.request,
+};
 
 function writeInternalLogError(message: string, error: unknown) {
   process.stderr.write(`${message}: ${formatInternalLogError(error)}\n`);
@@ -141,24 +151,26 @@ function parseLogContext(raw: unknown): LogContext | null {
   return parsed.data;
 }
 
-function mapLogDetail(row: {
-  id: string;
-  timestamp: string;
-  level: LogLevel;
-  service: LogService;
-  message: string;
-  requestId?: string | null;
-  context?: unknown;
-}): LogDetail {
+type LogRow = Omit<typeof logs.$inferSelect, "request" | "context"> & {
+  requestId: string | null;
+};
+
+function mapLog(row: LogRow): Log {
+  return {
+    id: row.id,
+    timestamp: row.timestamp.toISOString(),
+    level: logLevelSchema.parse(row.level),
+    service: logServiceSchema.parse(row.service),
+    message: row.message,
+    requestId: row.requestId,
+  };
+}
+
+function mapLogDetail(row: LogRow & { context?: unknown }): LogDetail {
   const context = parseLogContext(row.context);
 
   return {
-    id: row.id,
-    timestamp: row.timestamp,
-    level: row.level,
-    service: row.service,
-    message: row.message,
-    requestId: row.requestId ?? null,
+    ...mapLog(row),
     request: context?.request ?? null,
     error: context?.error ?? null,
     info: context?.info ?? null,
@@ -198,25 +210,24 @@ export async function saveLog(
 ): Promise<{ data: LogDetail; error: null } | { data: null; error: string }> {
   try {
     const context = buildLogContext(input);
-    const [log] = await database
-      .from(LOGS_TABLE)
-      .insert({
-        timestamp: input.timestamp,
+    const [log] = await getDb()
+      .insert(logs)
+      .values({
+        timestamp: new Date(input.timestamp),
         level: input.level,
         service: input.service,
         message: input.message,
         request: input.requestId,
         context,
       })
-      .returning("*");
+      .returning({ ...logFields, context: logs.context });
+
+    if (!log) {
+      throw new Error("Log insert returned no row");
+    }
 
     const mappedLog = mapLogDetail({
-      id: log.id,
-      timestamp: log.timestamp,
-      level: log.level,
-      service: log.service,
-      message: log.message,
-      requestId: log.request ?? log.requestId ?? null,
+      ...log,
       context: log.context ?? context ?? null,
     });
 
@@ -229,69 +240,55 @@ export async function saveLog(
   }
 }
 
-export async function readLogs(options: { limit?: number; before?: string | null } = {}): Promise<
-  { data: Array<Log>; error: null } | { data: null; error: string }
-> {
+export async function readLogs(
+  options: { limit?: number; before?: string | null } = {},
+): Promise<{ data: Array<Log>; error: null } | { data: null; error: string }> {
   try {
     const limit = normalizeLogLimit(options.limit);
-    const query = database
-      .from(LOGS_TABLE)
-      .select([
-        "id",
-        "timestamp",
-        "message",
-        "level",
-        "service",
-        "request as requestId",
-      ])
-      .orderBy("timestamp", "desc")
+    const rows = await getDb()
+      .select(logFields)
+      .from(logs)
+      .where(
+        options.before
+          ? lt(logs.timestamp, new Date(options.before))
+          : undefined,
+      )
+      .orderBy(desc(logs.timestamp))
       .limit(limit);
 
-    if (options.before) {
-      query.where("timestamp", "<", options.before);
-    }
-
-    const logs = await query;
-
-    return { data: logs, error: null };
+    return { data: rows.map(mapLog), error: null };
   } catch (error) {
     writeInternalLogError("readLogs - database error", error);
     return { data: null, error: "Error reading log." };
   }
 }
 
-export async function readLogVolume(options: { days?: number } = {}): Promise<
+export async function readLogVolume(
+  options: { days?: number } = {},
+): Promise<
   { data: Array<LogVolume>; error: null } | { data: null; error: string }
 > {
   try {
     const days = Math.max(Math.trunc(options.days ?? 30), 1);
-    const startDate = subDays(startOfDay(new Date()), days - 1).toISOString();
+    const startDate = subDays(startOfDay(new Date()), days - 1);
     const volume = buildEmptyLogVolume(days);
     const volumeByDate = new Map(volume.map((item) => [item.date, item]));
-    const rows = await database
-      .from(LOGS_TABLE)
-      .select(
-        database.raw(
-          `to_char(date_trunc('day', "timestamp"::timestamptz), 'YYYY-MM-DD') as date`,
-        ),
-        "level",
-      )
-      .count({ count: "*" })
-      .where("timestamp", ">=", startDate)
-      .groupByRaw(`date_trunc('day', "timestamp"::timestamptz), "level"`)
-      .orderBy("date", "asc");
+    const day = sql`date_trunc('day', ${logs.timestamp}::timestamptz)`;
+    const date = sql<string>`to_char(${day}, 'YYYY-MM-DD')`.as("date");
+    const rows = await getDb()
+      .select({ date, level: logs.level, count: sql`count(*)`.mapWith(Number) })
+      .from(logs)
+      .where(gte(logs.timestamp, startDate))
+      .groupBy(day, logs.level)
+      .orderBy(asc(date));
 
-    for (const row of rows as Array<{
-      date: string;
-      level: LogLevel;
-      count: string | number;
-    }>) {
+    for (const row of rows) {
       const item = volumeByDate.get(row.date);
       if (!item) {
         continue;
       }
 
-      item[LOG_VOLUME_LEVEL_KEYS[row.level]] = Number(row.count);
+      item[LOG_VOLUME_LEVEL_KEYS[logLevelSchema.parse(row.level)]] = row.count;
     }
 
     return { data: volume, error: null };
@@ -305,19 +302,11 @@ export async function readLogDetail(
   logId: string,
 ): Promise<{ data: LogDetail; error: null } | { data: null; error: string }> {
   try {
-    const log = await database
-      .from(LOGS_TABLE)
-      .select([
-        "id",
-        "timestamp",
-        "message",
-        "level",
-        "service",
-        "request as requestId",
-        "context",
-      ])
-      .where({ id: logId })
-      .first();
+    const [log] = await getDb()
+      .select({ ...logFields, context: logs.context })
+      .from(logs)
+      .where(eq(logs.id, logId))
+      .limit(1);
 
     if (!log) {
       return { data: null, error: "Log not found." };

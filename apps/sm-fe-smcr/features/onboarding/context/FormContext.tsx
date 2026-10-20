@@ -12,7 +12,8 @@ import {
   defaultValues as defaultValuesStepTwo,
 } from "../types/stepTwoSchema";
 import { Step, Steps, useStep, StepOneVerificationData, NextStepResult } from "../hooks/useStep";
-import { Environment } from "../utils/constants";
+import { Environment, productOptions } from "../utils/constants";
+import { ProductOptions } from "../types/productType";
 
 type FormContextType = {
   currentStep: Step;
@@ -38,6 +39,9 @@ type FormContextType = {
   handleStepTwoSubmit: () => void;
   resetStepOneIsSubmitted: () => void;
   resetStepTwoIsSubmitted: () => void;
+  productOptionsToDisplay: ProductOptions;
+  handleProductOptions: (data: ProductOptions) => void;
+  resetProductOptions: () => void;
 };
 
 type Props = {
@@ -81,6 +85,17 @@ export const FormProvider = ({ children }: Props) => {
 
   const [environment, setEnvironment] = useState<Environment>("prod");
 
+  const [productOptionsToDisplay, setProductOptionsToDisplay] =
+    useState<ProductOptions>(productOptions);
+
+  const handleProductOptions = useCallback((data: ProductOptions) => {
+    setProductOptionsToDisplay(data);
+  }, []);
+
+  const resetProductOptions = useCallback(() => {
+    setProductOptionsToDisplay(productOptions);
+  }, []);
+
   const handleEnvironmentChange = useCallback((value: Environment): void => {
     setEnvironment(value);
   }, []);
@@ -106,6 +121,7 @@ export const FormProvider = ({ children }: Props) => {
 
   const resetStepOneIsSubmitted = useCallback(() => {
     setIsStepOneSubmitted(false);
+    setProductOptionsToDisplay(productOptions);
   }, []);
 
   const resetStepTwoIsSubmitted = useCallback(() => {
@@ -142,6 +158,9 @@ export const FormProvider = ({ children }: Props) => {
         resetStepOneIsSubmitted,
         resetStepTwoIsSubmitted,
         isVerifying,
+        productOptionsToDisplay,
+        handleProductOptions,
+        resetProductOptions,
       }}
     >
       {children}
