@@ -93,3 +93,14 @@ resource "azurerm_role_assignment" "app_ci_website_contributor" {
   principal_id = module.azure-github-environment-bootstrap.identities.app.ci.principal_id
 
 }
+
+# L'identità CD infra deve poter aggiornare le risorse di core-infra nel common rg
+# (Log Analytics, Key Vault, VNet...). Assegnazione puntuale e non tramite
+# additional_resource_group_ids, che darebbe ruoli anche a devs, externals e identità app.
+resource "azurerm_role_assignment" "infra_cd_common_contributor" {
+  scope = data.azurerm_resource_group.common_rg.id
+
+  role_definition_name = "Contributor"
+
+  principal_id = module.azure-github-environment-bootstrap.identities.infra.cd.principal_id
+}
