@@ -1,0 +1,32 @@
+name: PR Title
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  validate:
+    name: Conventional PR title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Only inspect event metadata: never check out or execute PR code here.
+      - name: Validate title
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const title = context.payload.pull_request.title;
+            const pattern = /^(feat|fix|perf|deps|revert|docs|style|refactor|test|build|ci|chore)(\([a-zA-Z0-9][a-zA-Z0-9._/-]*\))?!?: \S.*$/;
+
+            if (!pattern.test(title)) {
+              core.setFailed(
+                'Use a Conventional Commit title, e.g. ' +
+                'feat(sm-fe-smcr): [SMION-906] add environment variable management. ' +
+                'See docs/RELEASING.md.'
+              );
+            }
