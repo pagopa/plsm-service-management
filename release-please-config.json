@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "56e8f241a59b7ef932e794b91f844747fee0a3d8",
+  "release-type": "node",
+  "include-component-in-tag": true,
+  "include-v-in-tag": true,
+  "tag-separator": "-",
+  "separate-pull-requests": false,
+  "changelog-sections": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance Improvements" },
+    { "type": "deps", "section": "Dependencies" }
+  ],
+  "plugins": ["node-workspace"],
+  "packages": {
+    "apps/sm-auth-fn": {
+      "component": "sm-auth-fn"
+    },
+    "apps/sm-certification-fn": {
+      "component": "sm-certification-fn"
+    },
+    "apps/sm-crm-fn": {
+      "component": "sm-crm-fn"
+    },
+    "apps/sm-fe-smcr": {
+      "component": "sm-fe-smcr"
+    },
+    "apps/sm-onboarding-fn": {
+      "component": "sm-onboarding-fn"
+    },
+    "apps/sm-pf-fn": {
+      "component": "sm-pf-fn"
+    },
+    "apps/sm-signature-fn": {
+      "component": "sm-signature-fn"
+    },
+    "packages/db-monitoring": {
+      "component": "db-monitoring",
+      "initial-version": "0.1.0"
+    }
+  }
+}
