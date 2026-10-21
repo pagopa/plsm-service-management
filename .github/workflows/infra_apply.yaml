@@ -19,10 +19,11 @@ on:
   push:
     branches:
       - main
+    # Solo ciò che finisce davvero nel root prod. Gli yaml di environments/ arrivano
+    # al Terraform tramite i locals_yaml.tf generati, quindi sono già coperti da prod/**.
     paths:
       - "infra/resources/prod/**"
       - "infra/resources/_modules/**"
-      - "infra/resources/environments/**"
 
 permissions:
   contents: read
@@ -30,8 +31,25 @@ permissions:
   pull-requests: write
 
 jobs:
-  # Check if branch is allowed to apply
+  # Il dispatch parte solo se è stato scritto "apply"
+  check_confirm:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check confirmation
+        env:
+          CONFIRM: ${{ github.event.inputs.confirm }}
+        run: |
+          if [[ "$CONFIRM" != "apply" ]]; then
+            echo "❌ Scrivi \"apply\" nel campo di conferma per procedere"
+            exit 1
+          fi
+
+  # Prod si applica solo da main o da infra/*; dev e dev-base da qualunque branch
+  # (sono il banco di prova). L'environment infra-prod-cd ha comunque branch policy
+  # e required reviewers.
   check_branch:
+    if: github.event_name == 'push' || github.event.inputs.target_env == 'prod'
     runs-on: ubuntu-latest
     outputs:
       allowed: ${{ steps.check.outputs.allowed }}
@@ -42,33 +60,35 @@ jobs:
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
           echo "Current branch: $BRANCH_NAME"
 
-          # Allow apply only from:
-          # - main branch (auto-apply on merge)
-          # - infra/* branches (manual workflow_dispatch)
           if [[ "$BRANCH_NAME" == "main" ]] || [[ "$BRANCH_NAME" == infra/* ]]; then
             echo "✅ Branch allowed to apply infrastructure"
             echo "allowed=true" >> $GITHUB_OUTPUT
           else
             echo "❌ Branch NOT allowed to apply infrastructure"
-            echo "⚠️  Only 'main' or 'infra/*' branches can apply changes"
+            echo "⚠️  Only 'main' or 'infra/*' branches can apply prod"
             echo "allowed=false" >> $GITHUB_OUTPUT
             exit 1
           fi
 
   apply_prod:
-    needs: check_branch
-    if: needs.check_branch.outputs.allowed == 'true'
+    needs: [check_confirm, check_branch]
+    # always() serve perché check_confirm è skipped sui push
+    if: >-
+      always() &&
+      needs.check_branch.outputs.allowed == 'true' &&
+      (github.event_name == 'push' || needs.check_confirm.result == 'success')
     uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
-    name: Apply Infrastructure - ${{ github.event.inputs.target_env || 'prod' }}
+    name: Apply Infrastructure - prod
     secrets: inherit
     with:
-      environment: ${{ github.event.inputs.target_env || 'prod' }}
+      environment: prod
       base_path: infra/resources
       use_private_agent: true
       use_labels: true
-      override_github_environment: infra-${{ github.event.inputs.target_env || 'prod' }}
+      override_github_environment: infra-prod
 
   apply_dev:
+    needs: check_confirm
     if: github.event.inputs.target_env == 'dev'
     uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
     name: Apply Infrastructure - dev
@@ -81,6 +101,7 @@ jobs:
       override_github_environment: infra-dev
 
   apply_dev_base:
+    needs: check_confirm
     if: github.event.inputs.target_env == 'dev-base'
     uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
     name: Apply Infrastructure - dev-base
