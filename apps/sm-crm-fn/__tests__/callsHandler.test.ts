@@ -6,6 +6,7 @@ import {
 import {
   upsertCall,
   listCalls,
+  countCalls,
   getCallsSummary,
   type Call,
 } from "@repo/db-monitoring";
@@ -16,12 +17,14 @@ jest.mock("@repo/db-monitoring", () => {
     ...actual,
     upsertCall: jest.fn(),
     listCalls: jest.fn(),
+    countCalls: jest.fn(),
     getCallsSummary: jest.fn(),
   };
 });
 
 const mockedUpsertCall = upsertCall as jest.MockedFunction<typeof upsertCall>;
 const mockedListCalls = listCalls as jest.MockedFunction<typeof listCalls>;
+const mockedCountCalls = countCalls as jest.MockedFunction<typeof countCalls>;
 const mockedGetCallsSummary = getCallsSummary as jest.MockedFunction<
   typeof getCallsSummary
 >;
@@ -194,9 +197,14 @@ describe("createCallHandler", () => {
 });
 
 describe("listCallsHandler", () => {
-  it("restituisce tutte le call quando nessun filtro è valorizzato", async () => {
+  beforeEach(() => {
+    mockedCountCalls.mockResolvedValue(0);
+  });
+
+  it("restituisce la prima pagina, dalla più recente, quando nessun parametro è valorizzato", async () => {
     const calls = [makeCall()];
     mockedListCalls.mockResolvedValue(calls);
+    mockedCountCalls.mockResolvedValue(1);
 
     const response = await listCallsHandler(
       makeRequest() as never,
@@ -204,15 +212,137 @@ describe("listCallsHandler", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(response.jsonBody).toMatchObject({ success: true, count: 1 });
+    expect(response.jsonBody).toMatchObject({
+      success: true,
+      count: 1,
+      pagination: { page: 1, size: 50, order: "desc", total: 1, totalPages: 1 },
+    });
     expect(mockedListCalls).toHaveBeenCalledWith({
       environment: "PROD",
       limit: 50,
+      offset: 0,
+      order: "desc",
       productId: undefined,
       institutionId: undefined,
       callDateFrom: undefined,
       callDateTo: undefined,
     });
+  });
+
+  it("calcola l'offset dalla pagina: page=3 e size=20 partono dalla 41ª call", async () => {
+    mockedListCalls.mockResolvedValue([]);
+    mockedCountCalls.mockResolvedValue(45);
+
+    const response = await listCallsHandler(
+      makeRequest({ page: "3", size: "20" }) as never,
+      makeContext() as never,
+    );
+
+    expect(mockedListCalls).toHaveBeenCalledWith(
+      expect.objectContaining({ limit: 20, offset: 40 }),
+    );
+    expect(response.jsonBody).toMatchObject({
+      pagination: { page: 3, size: 20, total: 45, totalPages: 3 },
+    });
+  });
+
+  it("passa l'ordinamento ascendente se richiesto", async () => {
+    mockedListCalls.mockResolvedValue([]);
+
+    const response = await listCallsHandler(
+      makeRequest({ order: "asc" }) as never,
+      makeContext() as never,
+    );
+
+    expect(mockedListCalls).toHaveBeenCalledWith(
+      expect.objectContaining({ order: "asc" }),
+    );
+    expect(response.jsonBody).toMatchObject({ pagination: { order: "asc" } });
+  });
+
+  it("conta il totale con gli stessi filtri della pagina, senza paginazione", async () => {
+    mockedListCalls.mockResolvedValue([]);
+
+    await listCallsHandler(
+      makeRequest({
+        productId: "prod-io",
+        dateFrom: "2026-01-01T00:00:00Z",
+        page: "2",
+      }) as never,
+      makeContext() as never,
+    );
+
+    expect(mockedCountCalls).toHaveBeenCalledWith({
+      environment: "PROD",
+      productId: "prod-io",
+      institutionId: undefined,
+      callDateFrom: new Date("2026-01-01T00:00:00Z"),
+      callDateTo: undefined,
+    });
+  });
+
+  it("restituisce una pagina vuota, non un errore, oltre l'ultima pagina", async () => {
+    mockedListCalls.mockResolvedValue([]);
+    mockedCountCalls.mockResolvedValue(5);
+
+    const response = await listCallsHandler(
+      makeRequest({ page: "10", size: "20" }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.jsonBody).toMatchObject({
+      count: 0,
+      pagination: { page: 10, total: 5, totalPages: 1 },
+    });
+  });
+
+  it("accetta ancora limit come sinonimo di size", async () => {
+    mockedListCalls.mockResolvedValue([]);
+
+    await listCallsHandler(
+      makeRequest({ limit: "30" }) as never,
+      makeContext() as never,
+    );
+
+    expect(mockedListCalls).toHaveBeenCalledWith(
+      expect.objectContaining({ limit: 30, offset: 0 }),
+    );
+  });
+
+  it("usa size se arrivano sia size sia limit", async () => {
+    mockedListCalls.mockResolvedValue([]);
+
+    await listCallsHandler(
+      makeRequest({ size: "10", limit: "30" }) as never,
+      makeContext() as never,
+    );
+
+    expect(mockedListCalls).toHaveBeenCalledWith(
+      expect.objectContaining({ limit: 10 }),
+    );
+  });
+
+  it.each([
+    ["page", "0"],
+    ["page", "-1"],
+    ["page", "1.5"],
+    ["size", "0"],
+    ["size", "201"],
+    ["limit", "201"],
+    ["order", "random"],
+  ])("risponde 400 se %s=%s non è valido", async (param, value) => {
+    const response = await listCallsHandler(
+      makeRequest({ [param]: value }) as never,
+      makeContext() as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.jsonBody).toMatchObject({
+      error: { fields: [expect.objectContaining({ field: param })] },
+    });
+    expect(mockedListCalls).not.toHaveBeenCalled();
+    expect(mockedCountCalls).not.toHaveBeenCalled();
   });
 
   it("legge solo le call UAT se l'header x-dynamics-environment è UAT", async () => {
@@ -267,6 +397,8 @@ describe("listCallsHandler", () => {
     expect(mockedListCalls).toHaveBeenCalledWith({
       environment: "PROD",
       limit: 50,
+      offset: 0,
+      order: "desc",
       productId: "prod-io",
       institutionId: undefined,
       callDateFrom: new Date("2026-01-01T00:00:00Z"),
@@ -299,19 +431,34 @@ describe("listCallsHandler", () => {
     expect(mockedListCalls).not.toHaveBeenCalled();
   });
 
-  it("risponde 500 senza dettaglio grezzo se la lettura fallisce", async () => {
-    mockedListCalls.mockRejectedValue(new Error("connection refused"));
+  it.each([
+    [
+      "la lettura della pagina",
+      () => mockedListCalls.mockRejectedValue(new Error("connection refused")),
+    ],
+    [
+      "il conteggio",
+      () => {
+        mockedListCalls.mockResolvedValue([]);
+        mockedCountCalls.mockRejectedValue(new Error("connection refused"));
+      },
+    ],
+  ])(
+    "risponde 500 senza dettaglio grezzo se fallisce %s",
+    async (_label, arrange) => {
+      arrange();
 
-    const response = await listCallsHandler(
-      makeRequest() as never,
-      makeContext() as never,
-    );
+      const response = await listCallsHandler(
+        makeRequest() as never,
+        makeContext() as never,
+      );
 
-    expect(response.status).toBe(500);
-    expect(JSON.stringify(response.jsonBody)).not.toContain(
-      "connection refused",
-    );
-  });
+      expect(response.status).toBe(500);
+      expect(JSON.stringify(response.jsonBody)).not.toContain(
+        "connection refused",
+      );
+    },
+  );
 });
 
 describe("callsSummaryHandler", () => {

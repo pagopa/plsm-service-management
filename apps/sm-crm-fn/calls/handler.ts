@@ -11,7 +11,9 @@ import { z } from "zod";
 import {
   upsertCall,
   listCalls,
+  countCalls,
   getCallsSummary,
+  LIST_CALLS_ORDERS,
   PRODUCT_IDS,
 } from "@repo/db-monitoring";
 import { createLogger } from "../_shared/utils/logger";
@@ -157,18 +159,29 @@ export async function createCallHandler(
 }
 
 // -----------------------------------------------------------------------------
-// GET /calls - Lista call, con filtri facoltativi e componibili
+// GET /calls - Lista call paginata, con filtri facoltativi e componibili
 // -----------------------------------------------------------------------------
 
-const DEFAULT_LIST_LIMIT = 50;
+const DEFAULT_PAGE_SIZE = 50;
+const MAX_PAGE_SIZE = 200;
 
+const pageSizeSchema = z.coerce.number().int().positive().max(MAX_PAGE_SIZE);
+
+/**
+ * `page` parte da 1: con size=20, page=3 restituisce le call dalla 41ª alla 60ª.
+ * `limit` è il vecchio nome di `size`, accettato per compatibilità con i client
+ * già in uso; se arrivano entrambi vale `size`.
+ */
 const listCallsQuerySchema = z
   .object({
     productId: z.enum(PRODUCT_IDS).optional(),
     institutionId: uuidSchema.optional(),
     dateFrom: z.coerce.date().optional(),
     dateTo: z.coerce.date().optional(),
-    limit: z.coerce.number().int().positive().max(200).optional(),
+    page: z.coerce.number().int().positive().optional(),
+    size: pageSizeSchema.optional(),
+    limit: pageSizeSchema.optional(),
+    order: z.enum(LIST_CALLS_ORDERS).optional(),
   })
   .refine((data) => !data.dateFrom || !data.dateTo || data.dateFrom <= data.dateTo, {
     message: "dateFrom deve essere precedente o uguale a dateTo",
@@ -192,7 +205,10 @@ export async function listCallsHandler(
     institutionId: request.query.get("institutionId") ?? undefined,
     dateFrom: request.query.get("dateFrom") ?? undefined,
     dateTo: request.query.get("dateTo") ?? undefined,
+    page: request.query.get("page") ?? undefined,
+    size: request.query.get("size") ?? undefined,
     limit: request.query.get("limit") ?? undefined,
+    order: request.query.get("order") ?? undefined,
   };
 
   const parsed = listCallsQuerySchema.safeParse(rawQuery);
@@ -215,20 +231,32 @@ export async function listCallsHandler(
     };
   }
 
-  const { productId, institutionId, dateFrom, dateTo, limit } = parsed.data;
+  const { productId, institutionId, dateFrom, dateTo } = parsed.data;
+  const page = parsed.data.page ?? 1;
+  const size = parsed.data.size ?? parsed.data.limit ?? DEFAULT_PAGE_SIZE;
+  const order = parsed.data.order ?? "desc";
+  const filters = {
+    environment,
+    productId,
+    institutionId,
+    callDateFrom: dateFrom,
+    callDateTo: dateTo,
+  };
 
   try {
-    const data = await listCalls({
-      environment,
-      limit: limit ?? DEFAULT_LIST_LIMIT,
-      productId,
-      institutionId,
-      callDateFrom: dateFrom,
-      callDateTo: dateTo,
-    });
+    // Pagina e totale con gli stessi filtri: il totale serve al client per
+    // calcolare il numero di pagine senza dover scorrere tutta la lista.
+    const [data, total] = await Promise.all([
+      listCalls({ ...filters, limit: size, offset: (page - 1) * size, order }),
+      countCalls(filters),
+    ]);
 
     logger.info("Call recuperate", {
       resultCount: data.length,
+      total,
+      page,
+      size,
+      order,
       environment,
       productId,
       institutionId,
@@ -240,6 +268,13 @@ export async function listCallsHandler(
         success: true,
         data,
         count: data.length,
+        pagination: {
+          page,
+          size,
+          order,
+          total,
+          totalPages: Math.ceil(total / size),
+        },
         timestamp: new Date().toISOString(),
       },
     };

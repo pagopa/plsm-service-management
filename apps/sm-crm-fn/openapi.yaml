@@ -501,9 +501,15 @@ paths:
         - Calls
       summary: Lista call registrate
       description: |
-        Restituisce le call dell'ambiente indicato dall'header
-        `x-dynamics-environment` (default PROD), ordinate per data discendente.
-        I filtri sono facoltativi e si combinano in AND.
+        Restituisce una pagina di call dell'ambiente indicato dall'header
+        `x-dynamics-environment` (default PROD), ordinate per `callDate`
+        (default discendente, dalla più recente). I filtri sono facoltativi e
+        si combinano in AND.
+
+        La paginazione parte da 1: con `size=20`, `page=3` restituisce le call
+        dalla 41ª alla 60ª. Una pagina oltre l'ultima restituisce una lista
+        vuota (200), non un errore. `pagination.total` conta tutte le call che
+        soddisfano i filtri, indipendentemente dalla pagina.
       operationId: listCalls
       parameters:
         - $ref: "#/components/parameters/DynamicsEnvironment"
@@ -535,9 +541,36 @@ paths:
             type: string
             format: date-time
             example: "2026-01-31T23:59:59Z"
+        - name: page
+          in: query
+          description: Numero di pagina, a partire da 1
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: size
+          in: query
+          description: Numero di call per pagina
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: order
+          in: query
+          description: |
+            Verso di ordinamento su `callDate`: `desc` dalla più recente,
+            `asc` dalla più vecchia
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
         - name: limit
           in: query
-          description: Numero massimo di call restituite
+          deprecated: true
+          description: |
+            Vecchio nome di `size`, mantenuto per compatibilità. Se sono
+            presenti entrambi vale `size`.
           schema:
             type: integer
             minimum: 1
@@ -1265,10 +1298,35 @@ components:
             $ref: "#/components/schemas/Call"
         count:
           type: integer
+          description: Numero di call nella pagina restituita
           example: 1
+        pagination:
+          $ref: "#/components/schemas/CallsPagination"
         timestamp:
           type: string
           format: date-time
+
+    CallsPagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 3
+        size:
+          type: integer
+          example: 20
+        order:
+          type: string
+          enum: [asc, desc]
+          example: desc
+        total:
+          type: integer
+          description: Call che soddisfano i filtri, su tutte le pagine
+          example: 45
+        totalPages:
+          type: integer
+          description: Numero di pagine con la `size` richiesta (0 se non ci sono call)
+          example: 3
 
     CallsSummaryResponse:
       type: object
