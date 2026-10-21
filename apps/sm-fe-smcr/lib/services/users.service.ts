@@ -14,22 +14,7 @@ const UserSchema = z.object({
   surname: z.string().optional(),
   email: z.string().email().optional(),
   lastActiveOnboardingUserEmail: z.string().email().optional(),
-  roles: z
-    .array(
-      z.enum([
-        "admin",
-        "operator",
-        "api",
-        "security",
-        "admin-psp",
-        "operator-psp",
-        "ORG_ADMIN",
-        "pagopa_admin",
-        "ope_base",
-        "admin_aggregator",
-      ]),
-    )
-    .optional(),
+  roles: z.array(z.string()).optional(),
   role: z
     .enum(["SUB_DELEGATE", "DELEGATE", "OPERATOR", "MANAGER", "ADMIN_EA"])
     .optional(),
