@@ -399,6 +399,7 @@ function UserStatusDialogContent({
   product: string;
   onSuccess: () => void;
 }) {
+  const router = useRouter();
   const id = useId();
   const [inputValue, setInputValue] = useState("");
   const [state, action, isPending] = useActionState(
@@ -415,6 +416,7 @@ function UserStatusDialogContent({
           status === "DELETED" ? "Utente eliminato" : "Utente sospeso",
         );
         onSuccess();
+        router.refresh();
       }
 
       return nextState;
