@@ -4,21 +4,11 @@ Release Please gestisce versioni, changelog e GitHub Releases a partire dai comm
 
 ## Configurazione iniziale su GitHub
 
-Prima di integrare il workflow su `main`, configurare una GitHub App installata su `pagopa/plsm-service-management`, con questi repository permissions:
+Il workflow usa `googleapis/release-please-action` con il `GITHUB_TOKEN` fornito automaticamente da GitHub Actions. Non occorre creare App, PAT, variabili o secret aggiuntivi.
 
-- **Contents: Read and write** per branch, commit, tag e release.
-- **Pull requests: Read and write** per creare e aggiornare la PR di release.
-- **Issues: Read and write** per le etichette di release.
-- **Metadata: Read-only**, assegnato automaticamente da GitHub.
+In **Settings → Actions → General → Workflow permissions**, abilitare **Allow GitHub Actions to create and approve pull requests**. Il workflow richiede esplicitamente `contents: write`, `pull-requests: write` e `issues: write` per aggiornare branch, commit, tag, release ed etichette. Se l'opzione è bloccata dalle policy dell'organizzazione, serve l'intervento di un amministratore.
 
-Nelle impostazioni Actions del repository configurare:
-
-| Tipo     | Nome                             | Valore                              |
-| -------- | -------------------------------- | ----------------------------------- |
-| Variable | `RELEASE_PLEASE_APP_ID`          | ID numerico della GitHub App        |
-| Secret   | `RELEASE_PLEASE_APP_PRIVATE_KEY` | Chiave privata PEM della GitHub App |
-
-Il token generato è limitato al repository corrente. Il workflow usa una GitHub App perché le PR e i push creati con `GITHUB_TOKEN` non avviano automaticamente le CI. Se mancano le credenziali, il workflow termina con un errore esplicito.
+Per le PR create o aggiornate con `GITHUB_TOKEN`, GitHub può mettere le CI su evento `pull_request` in attesa di approvazione: un utente con accesso in scrittura deve selezionare **Approve workflows to run** nella PR. Prima del merge verificare che i check richiesti siano completati sul commit corrente. I push e i tag creati dal token non avviano altri workflow; i deploy si avviano manualmente dai workflow CD.
 
 Nelle regole di `main`:
 
@@ -28,7 +18,7 @@ Nelle regole di `main`:
 
 Per i deploy da tag, verificare che le eventuali deployment branch/tag policies degli environment `app-dev-ci`, `app-dev-cd`, `app-prod-ci` e `app-prod-cd` ammettano i tag dei componenti interessati, ad esempio `sm-fe-smcr-v*` per il frontend. Le protezioni e le approvazioni degli environment continuano ad applicarsi.
 
-Il workflow di controllo dei titoli usa `pull_request_target` per poter validare anche le PR da fork con i soli metadati dell'evento. Non esegue checkout, codice della PR o operazioni di scrittura.
+Il workflow di controllo dei titoli usa `pull_request`, come le CI applicative, per gestire anche le PR create dal token integrato. Legge solo i metadati dell'evento, senza checkout, esecuzione di codice della PR o operazioni di scrittura.
 
 ## Titoli delle PR
 
@@ -80,7 +70,7 @@ Il plugin `node-workspace` propaga gli aggiornamenti delle dipendenze interne: u
 
 1. Integrare le PR funzionali su `main` con un titolo conforme e squash merge.
 2. Il workflow **Release Please** apre o aggiorna una PR aggregata, normalmente `chore(main): release main`. Se non esistono cambiamenti rilasciabili, non viene aperta alcuna PR.
-3. Revisionare versioni, changelog per componente e risultati CI nella PR di release. Verificare anche le eventuali migrazioni database.
+3. Approvare l'esecuzione dei workflow se GitHub lo richiede. Revisionare versioni, changelog per componente e risultati CI nella PR di release. Verificare anche le eventuali migrazioni database.
 4. Integrare la PR di release mantenendo titolo, corpo e metadati generati dal bot.
 5. Il successivo workflow crea un tag e una GitHub Release per ciascun componente incluso, sul commit della PR di release. Questo passaggio non distribuisce applicazioni e non esegue migrazioni.
 
@@ -106,4 +96,4 @@ Per ridistribuire una versione precedente, avviare nuovamente il workflow CD sul
 - [Release Please e Conventional Commits](https://github.com/googleapis/release-please)
 - [Manifest e plugin node-workspace](https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md)
 - [Release Please Action e autenticazione](https://github.com/googleapis/release-please-action)
-- [Creazione di un token GitHub App](https://github.com/actions/create-github-app-token)
+- [Eventi generati dal GITHUB_TOKEN](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow)
