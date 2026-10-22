@@ -4,16 +4,29 @@ on:
   workflow_dispatch:
   push:
     branches:
-      # - develop
-      # - feature/**
       - "**"
     paths:
       - "apps/sm-crm-fn/**"
+      - ".github/workflows/crm-fn-ci.yaml"
+      - "package.json"
+      - "yarn.lock"
+      - "turbo.json"
+      - ".yarnrc.yml"
+      - ".yarn/releases/**"
+      - "packages/db-monitoring/**"
   pull_request:
     branches:
+      - main
       - develop
     paths:
       - "apps/sm-crm-fn/**"
+      - ".github/workflows/crm-fn-ci.yaml"
+      - "package.json"
+      - "yarn.lock"
+      - "turbo.json"
+      - ".yarnrc.yml"
+      - ".yarn/releases/**"
+      - "packages/db-monitoring/**"
 
 permissions:
   contents: read

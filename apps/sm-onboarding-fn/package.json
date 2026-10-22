@@ -21,9 +21,7 @@
     "lint": "eslint '**/*.{ts,tsx}' --fix",
     "lint-api": "oval validate -p openapi/index.yaml",
     "dist:modules": "modclean -r -n default:safe && yarn install --production",
-    "predeploy": "npm-run-all build dist:*",
-    "preversion": "auto-changelog  --config .auto-changelog.json --unreleased --commit-limit false --stdout --template preview.hbs",
-    "version": "auto-changelog -p --config .auto-changelog.json --unreleased && git add CHANGELOG.md"
+    "predeploy": "npm-run-all build dist:*"
   },
   "devDependencies": {
     "@azure/functions": "^3.5.0",
@@ -35,7 +33,6 @@
     "@types/vfile-message": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
-    "auto-changelog": "2.2.1",
     "danger": "^10.3.0",
     "dependency-check": "^4.1.0",
     "dotenv-cli": "^3.1.0",
