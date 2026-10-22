@@ -327,6 +327,8 @@ describe("listCallsHandler", () => {
     ["page", "0"],
     ["page", "-1"],
     ["page", "1.5"],
+    ["page", "1e308"],
+    ["page", "45035996273705"],
     ["size", "0"],
     ["size", "201"],
     ["limit", "201"],
@@ -339,7 +341,11 @@ describe("listCallsHandler", () => {
 
     expect(response.status).toBe(400);
     expect(response.jsonBody).toMatchObject({
-      error: { fields: [expect.objectContaining({ field: param })] },
+      error: {
+        fields: expect.arrayContaining([
+          expect.objectContaining({ field: param }),
+        ]),
+      },
     });
     expect(mockedListCalls).not.toHaveBeenCalled();
     expect(mockedCountCalls).not.toHaveBeenCalled();

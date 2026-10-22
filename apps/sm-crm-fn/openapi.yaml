@@ -547,6 +547,7 @@ paths:
           schema:
             type: integer
             minimum: 1
+            maximum: 45035996273704
             default: 1
         - name: size
           in: query

@@ -165,6 +165,10 @@ export async function createCallHandler(
 const DEFAULT_PAGE_SIZE = 50;
 const MAX_PAGE_SIZE = 200;
 
+// Pagina più alta per cui (page - 1) * size resta un intero sicuro anche con
+// la size massima: oltre, l'offset perderebbe precisione prima di arrivare al DB.
+const MAX_PAGE = Math.floor(Number.MAX_SAFE_INTEGER / MAX_PAGE_SIZE);
+
 const pageSizeSchema = z.coerce.number().int().positive().max(MAX_PAGE_SIZE);
 
 /**
@@ -178,7 +182,7 @@ const listCallsQuerySchema = z
     institutionId: uuidSchema.optional(),
     dateFrom: z.coerce.date().optional(),
     dateTo: z.coerce.date().optional(),
-    page: z.coerce.number().int().positive().optional(),
+    page: z.coerce.number().int().positive().max(MAX_PAGE).optional(),
     size: pageSizeSchema.optional(),
     limit: pageSizeSchema.optional(),
     order: z.enum(LIST_CALLS_ORDERS).optional(),
