@@ -59,7 +59,7 @@ jobs:
   deploy:
     needs: resolve-env
     if: github.event_name == 'workflow_dispatch'
-    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@main
+    uses: pagopa/dx/.github/workflows/function_app_deploy.yaml@dea3cc35e4d6a26cc8aa3b08ab22d48c0f958f77 # main
     with:
       workspace_name: sm-crm-fn
       environment: ${{ inputs.environment }}
