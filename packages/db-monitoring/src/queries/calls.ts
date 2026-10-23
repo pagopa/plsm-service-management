@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lte, sql, type SQL } from "drizzle-orm";
 import type { MonitoringDb } from "../client";
 import { getMonitoringDb } from "../client";
 import {
@@ -19,16 +19,28 @@ export type UpsertCallInput = Omit<
   "id" | "createdAt" | "updatedAt" | "environment"
 > & { environment: Environment };
 
-export interface ListCallsOptions {
+/** Verso di ordinamento su call_date: `desc` parte dalla call più recente. */
+export const LIST_CALLS_ORDERS = ["asc", "desc"] as const;
+export type ListCallsOrder = (typeof LIST_CALLS_ORDERS)[number];
+
+/** Filtri della lista call, condivisi tra la lettura della pagina e il conteggio. */
+export interface ListCallsFilters {
   /** Ambiente Dynamics da cui provengono le call (UAT o PROD). */
   environment: Environment;
-  limit: number;
   productId?: ProductId;
   institutionId?: string;
   /** Limite inferiore (incluso) su call_date. */
   callDateFrom?: Date;
   /** Limite superiore (incluso) su call_date. */
   callDateTo?: Date;
+}
+
+export interface ListCallsOptions extends ListCallsFilters {
+  limit: number;
+  /** Numero di call da saltare prima della pagina richiesta (default 0). */
+  offset?: number;
+  /** Verso di ordinamento su call_date (default `desc`). */
+  order?: ListCallsOrder;
 }
 
 /**
@@ -76,37 +88,66 @@ export async function upsertCall(input: UpsertCallInput): Promise<string> {
   return row.id;
 }
 
-/** Costruisce la query di lettura senza eseguirla. */
+/** Condizioni WHERE della lista call: l'ambiente sempre, gli altri filtri se presenti. */
+function buildListCallsWhere(filters: ListCallsFilters): SQL | undefined {
+  const conditions = [eq(calls.environment, filters.environment)];
+
+  if (filters.productId) {
+    conditions.push(eq(calls.productId, filters.productId));
+  }
+
+  if (filters.institutionId) {
+    conditions.push(eq(calls.institutionId, filters.institutionId));
+  }
+
+  if (filters.callDateFrom) {
+    conditions.push(gte(calls.callDate, filters.callDateFrom));
+  }
+
+  if (filters.callDateTo) {
+    conditions.push(lte(calls.callDate, filters.callDateTo));
+  }
+
+  return and(...conditions);
+}
+
+/**
+ * Costruisce la query di lettura senza eseguirla.
+ *
+ * A parità di call_date ordina anche per id, nello stesso verso: senza un
+ * ordinamento totale Postgres può restituire le righe con la stessa data in
+ * ordine diverso tra una pagina e l'altra, duplicandole o saltandole.
+ */
 export function buildListCalls(db: MonitoringDb, options: ListCallsOptions) {
-  const filters = [eq(calls.environment, options.environment)];
-
-  if (options.productId) {
-    filters.push(eq(calls.productId, options.productId));
-  }
-
-  if (options.institutionId) {
-    filters.push(eq(calls.institutionId, options.institutionId));
-  }
-
-  if (options.callDateFrom) {
-    filters.push(gte(calls.callDate, options.callDateFrom));
-  }
-
-  if (options.callDateTo) {
-    filters.push(lte(calls.callDate, options.callDateTo));
-  }
+  const direction = options.order === "asc" ? asc : desc;
 
   return db
     .select()
     .from(calls)
-    .where(and(...filters))
-    .orderBy(desc(calls.callDate))
-    .limit(options.limit);
+    .where(buildListCallsWhere(options))
+    .orderBy(direction(calls.callDate), direction(calls.id))
+    .limit(options.limit)
+    .offset(options.offset ?? 0);
 }
 
-/** Elenca le call più recenti dell'ambiente, opzionalmente filtrate per prodotto, ente o range di data. */
+/** Elenca una pagina di call dell'ambiente, opzionalmente filtrate per prodotto, ente o range di data. */
 export async function listCalls(options: ListCallsOptions): Promise<Call[]> {
   return buildListCalls(getMonitoringDb(), options);
+}
+
+/** Costruisce la query di conteggio con gli stessi filtri della lista, senza eseguirla. */
+export function buildCountCalls(db: MonitoringDb, filters: ListCallsFilters) {
+  return db
+    .select({ total: sql<number>`count(*)`.mapWith(Number) })
+    .from(calls)
+    .where(buildListCallsWhere(filters));
+}
+
+/** Numero totale di call che soddisfano i filtri, indipendente dalla pagina richiesta. */
+export async function countCalls(filters: ListCallsFilters): Promise<number> {
+  const rows = await buildCountCalls(getMonitoringDb(), filters);
+
+  return rows[0]?.total ?? 0;
 }
 
 const SUMMARY_ROSTER_SIZE = 3;

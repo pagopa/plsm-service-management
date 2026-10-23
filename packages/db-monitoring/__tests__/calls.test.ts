@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import {
   buildUpsertCall,
   buildListCalls,
+  buildCountCalls,
   buildCallsSummary,
   resolveCallsSummaryRange,
   summarizeCallCounts,
@@ -96,11 +97,39 @@ describe("buildListCalls", () => {
     expect(params).toContain("UAT");
   });
 
-  it("ordina per data discendente e applica un limite", () => {
+  it("ordina per data discendente di default, con id come spareggio", () => {
     const { sql } = buildListCalls(db, { environment: "PROD", limit: 20 }).toSQL();
 
-    expect(sql).toContain('order by "calls"."call_date" desc');
-    expect(sql).toContain("limit");
+    expect(sql).toContain('order by "calls"."call_date" desc, "calls"."id" desc');
+  });
+
+  it("ordina per data ascendente se richiesto, spareggio nello stesso verso", () => {
+    const { sql } = buildListCalls(db, {
+      environment: "PROD",
+      limit: 20,
+      order: "asc",
+    }).toSQL();
+
+    expect(sql).toContain('order by "calls"."call_date" asc, "calls"."id" asc');
+  });
+
+  it("applica limite e offset come parametri", () => {
+    const { sql, params } = buildListCalls(db, {
+      environment: "PROD",
+      limit: 20,
+      offset: 40,
+    }).toSQL();
+
+    expect(sql).toMatch(/limit \$\d+ offset \$\d+$/);
+    expect(params.slice(-2)).toEqual([20, 40]);
+  });
+
+  it("parte dalla prima riga se l'offset non è indicato", () => {
+    const { sql, params } = buildListCalls(db, { environment: "PROD", limit: 20 }).toSQL();
+
+    // Con offset 0 drizzle omette la clausola: stesso risultato, query più semplice.
+    expect(sql).not.toContain("offset");
+    expect(params.at(-1)).toBe(20);
   });
 
   it("filtra per prodotto quando richiesto", () => {
@@ -151,6 +180,32 @@ describe("buildListCalls", () => {
 
     expect(sql).not.toContain('"call_date" >=');
     expect(sql).not.toContain('"call_date" <=');
+  });
+});
+
+describe("buildCountCalls", () => {
+  it("conta le righe con gli stessi filtri della lista", () => {
+    const { sql, params } = buildCountCalls(db, {
+      environment: "UAT",
+      productId: "prod-io",
+      callDateFrom: new Date("2026-01-01T00:00:00Z"),
+    }).toSQL();
+
+    expect(sql).toContain("count(*)");
+    expect(sql).toContain('"calls"."environment" = ');
+    expect(sql).toContain('"product_id" = ');
+    expect(sql).toContain('"call_date" >= ');
+    expect(params).toEqual(
+      expect.arrayContaining(["UAT", "prod-io", "2026-01-01T00:00:00.000Z"]),
+    );
+  });
+
+  it("non applica ordinamento né paginazione", () => {
+    const { sql } = buildCountCalls(db, { environment: "PROD" }).toSQL();
+
+    expect(sql).not.toContain("order by");
+    expect(sql).not.toContain("limit");
+    expect(sql).not.toContain("offset");
   });
 });
 
