@@ -1,6 +1,6 @@
 {
   "name": "sm-fe-smcr",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "packageManager": "yarn@4.10.3",
   "type": "module",
   "private": true,
@@ -40,7 +40,6 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tanstack/react-table": "^8.21.3",
-    "@types/knex": "^0.16.1",
     "@uidotdev/usehooks": "^2.4.1",
     "archiver": "^7.0.1",
     "class-variance-authority": "^0.7.1",
@@ -49,7 +48,6 @@
     "date-fns": "4.1.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "1.0.0-rc.4",
-    "knex": "^3.1.0",
     "lucide-react": "^0.544.0",
     "next": "16.3.4",
     "nuqs": "^2.8.5",

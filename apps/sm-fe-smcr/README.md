@@ -21,6 +21,27 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Inter, a custom Google Font.
 
+## Database
+
+Database access uses Drizzle with a shared `pg` pool, created lazily by `getDb()`
+in `db/index.ts`. The schema and relations live in `db/schema.ts` and
+`db/relations.ts`.
+
+Set `DATABASE_URL` in `apps/sm-fe-smcr/.env` (see `env.example`). The application,
+Drizzle migrations, and permission seed all use this URL. Percent-encode special
+characters in the username and password and configure SSL through the URL.
+The application no longer reads the legacy `DB_*` connection variables.
+
+From the repository root:
+
+```bash
+yarn workspace sm-fe-smcr db:generate
+yarn workspace sm-fe-smcr db:migrate
+yarn workspace sm-fe-smcr db:seed
+```
+
+Database migrations are run manually; the deploy workflow does not execute them.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

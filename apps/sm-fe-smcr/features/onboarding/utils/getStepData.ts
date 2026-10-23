@@ -8,6 +8,7 @@ export function getStepOneData(data: OnboardingSchema): StepOneSchema {
     subunit: data.subunit,
     subunitCode: data.subunitCode,
     subunitType: data.subunitType,
+    parentOriginId: data.parentOriginId,
     businessName: data.businessName,
     digitalAddress: data.digitalAddress,
     recipientCode: data.recipientCode,

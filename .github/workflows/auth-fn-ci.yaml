@@ -7,11 +7,24 @@ on:
       - "**"
     paths:
       - "apps/sm-auth-fn/**"
+      - ".github/workflows/auth-fn-ci.yaml"
+      - "package.json"
+      - "yarn.lock"
+      - "turbo.json"
+      - ".yarnrc.yml"
+      - ".yarn/releases/**"
   pull_request:
     branches:
+      - main
       - develop
     paths:
       - "apps/sm-auth-fn/**"
+      - ".github/workflows/auth-fn-ci.yaml"
+      - "package.json"
+      - "yarn.lock"
+      - "turbo.json"
+      - ".yarnrc.yml"
+      - ".yarn/releases/**"
 
 permissions:
   contents: read
