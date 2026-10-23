@@ -28,11 +28,6 @@ data "azurerm_container_app_environment" "runner" {
   resource_group_name = "plsm-p-itn-github-runner-rg-01"
 }
 
-data "azurerm_virtual_network" "vnet" {
-  name                = "plsm-p-itn-common-vnet-01"
-  resource_group_name = "plsm-p-itn-network-rg-01"
-}
-
 data "azurerm_resource_group" "network_rg" {
   name = "plsm-p-itn-network-rg-01"
 }

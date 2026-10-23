@@ -38,13 +38,18 @@ provider "github" {
   owner = "pagopa"
 }
 
+# Dalla v6 il modulo federa anche automation-prod-ci/cd e ci scrive i secret, ma non crea
+# gli environment GitHub. automation-prod-cd lo crea infra/repository (github-environment-bootstrap
+# 3.x), automation-prod-ci no: lo creiamo qui.
+resource "github_repository_environment" "automation_ci" {
+  repository  = local.repository.name
+  environment = "automation-prod-ci"
+}
+
 module "azure-github-environment-bootstrap" {
   source      = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version     = "3.0.1"
+  version     = "6.2.3"
   environment = local.environment
-
-  subscription_id = data.azurerm_subscription.current.id
-  tenant_id       = data.azurerm_client_config.current.tenant_id
 
   terraform_storage_account = {
     name                = "plsmpitntfst001"
@@ -54,8 +59,7 @@ module "azure-github-environment-bootstrap" {
 
 
   github_private_runner = {
-    container_app_environment_id       = data.azurerm_container_app_environment.runner.id
-    container_app_environment_location = data.azurerm_container_app_environment.runner.location
+    container_app_environment_id = data.azurerm_container_app_environment.runner.id
 
     key_vault = {
       name                = data.azurerm_key_vault.common_kv.name
@@ -72,7 +76,6 @@ module "azure-github-environment-bootstrap" {
     externals_object_id = data.azuread_group.externals.object_id
   }
 
-  pep_vnet_id                        = data.azurerm_virtual_network.vnet.id
   private_dns_zone_resource_group_id = data.azurerm_resource_group.network_rg.id
   opex_resource_group_id             = data.azurerm_resource_group.opex_rg.id
   repository                         = local.repository
@@ -82,6 +85,8 @@ module "azure-github-environment-bootstrap" {
   ]
 
   tags = local.tags
+
+  depends_on = [github_repository_environment.automation_ci]
 }
 
 
