@@ -1,10 +1,10 @@
 {
   "apps/sm-auth-fn": "1.0.0",
   "apps/sm-certification-fn": "1.0.0",
-  "apps/sm-crm-fn": "1.0.0",
+  "apps/sm-crm-fn": "1.1.0",
   "apps/sm-fe-smcr": "0.9.1",
   "apps/sm-onboarding-fn": "4.1.1",
   "apps/sm-pf-fn": "1.0.0",
   "apps/sm-signature-fn": "1.0.0",
-  "packages/db-monitoring": "0.0.0"
+  "packages/db-monitoring": "0.1.0"
 }
