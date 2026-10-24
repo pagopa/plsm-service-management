@@ -40,8 +40,9 @@ provider "github" {
   owner = "pagopa"
 }
 
-# Il modulo v3.0.1 non crea i github_repository_environment — li assume già esistenti.
-# Li creiamo esplicitamente e usiamo depends_on per garantire l'ordine.
+# Il modulo non crea i github_repository_environment: li assume già esistenti
+# (in prod li crea infra/repository). Li creiamo qui e usiamo depends_on per garantire l'ordine.
+# Dalla v6 il modulo federa anche automation-dev-ci/cd e ci scrive i secret.
 resource "github_repository_environment" "envs" {
   for_each = toset([
     "app-dev-ci",
@@ -50,6 +51,8 @@ resource "github_repository_environment" "envs" {
     "infra-dev-cd",
     "opex-dev-ci",
     "opex-dev-cd",
+    "automation-dev-ci",
+    "automation-dev-cd",
   ])
 
   repository  = local.repository.name
@@ -58,11 +61,8 @@ resource "github_repository_environment" "envs" {
 
 module "azure-github-environment-bootstrap" {
   source      = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version     = "3.0.1"
+  version     = "6.2.3"
   environment = local.environment
-
-  subscription_id = data.azurerm_subscription.current.id
-  tenant_id       = data.azurerm_client_config.current.tenant_id
 
   terraform_storage_account = {
     name                = "plsmditntfst001"
@@ -70,8 +70,7 @@ module "azure-github-environment-bootstrap" {
   }
 
   github_private_runner = {
-    container_app_environment_id       = data.azurerm_container_app_environment.runner.id
-    container_app_environment_location = data.azurerm_container_app_environment.runner.location
+    container_app_environment_id = data.azurerm_container_app_environment.runner.id
 
     key_vault = {
       name                = data.azurerm_key_vault.common_kv.name
@@ -88,7 +87,6 @@ module "azure-github-environment-bootstrap" {
     externals_object_id = data.azuread_group.externals.object_id
   }
 
-  pep_vnet_id                        = data.azurerm_virtual_network.vnet.id
   private_dns_zone_resource_group_id = data.azurerm_resource_group.network_rg.id
   opex_resource_group_id             = data.azurerm_resource_group.opex_rg.id
   repository                         = local.repository
