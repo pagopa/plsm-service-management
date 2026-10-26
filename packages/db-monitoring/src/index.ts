@@ -10,9 +10,12 @@ export {
 } from "./schema";
 export {
   buildCallsSummary,
+  buildCountCalls,
   buildListCalls,
   buildUpsertCall,
+  countCalls,
   getCallsSummary,
+  LIST_CALLS_ORDERS,
   listCalls,
   resolveCallsSummaryRange,
   summarizeCallCounts,
@@ -21,6 +24,8 @@ export {
   type CallsSummaryOptions,
   type CallsSummaryProductCount,
   type CallsSummaryRange,
+  type ListCallsFilters,
   type ListCallsOptions,
+  type ListCallsOrder,
   type UpsertCallInput,
 } from "./queries/calls";

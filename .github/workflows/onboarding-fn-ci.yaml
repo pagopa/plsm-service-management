@@ -4,16 +4,27 @@ on:
   workflow_dispatch:
   push:
     branches:
-      # - develop
-      # - feature/**
       - '**'
     paths:
       - "apps/sm-onboarding-fn/**"
+      - ".github/workflows/onboarding-fn-ci.yaml"
+      - "package.json"
+      - "yarn.lock"
+      - "turbo.json"
+      - ".yarnrc.yml"
+      - ".yarn/releases/**"
   pull_request:
     branches:
+      - main
       - develop
     paths:
       - "apps/sm-onboarding-fn/**"
+      - ".github/workflows/onboarding-fn-ci.yaml"
+      - "package.json"
+      - "yarn.lock"
+      - "turbo.json"
+      - ".yarnrc.yml"
+      - ".yarn/releases/**"
 
 permissions:
   contents: read

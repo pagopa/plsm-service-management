@@ -1,7 +1,3 @@
-data "azurerm_subscription" "current" {}
-
-data "azurerm_client_config" "current" {}
-
 data "azuread_group" "admins" {
   display_name = local.adgroups.admins_name
 }
@@ -26,11 +22,6 @@ data "azurerm_key_vault" "common_kv" {
 data "azurerm_container_app_environment" "runner" {
   name                = "plsm-d-itn-github-runner-cae-01"
   resource_group_name = "plsm-d-itn-github-runner-rg-01"
-}
-
-data "azurerm_virtual_network" "vnet" {
-  name                = "plsm-d-itn-common-vnet-01"
-  resource_group_name = "plsm-d-itn-network-rg-01"
 }
 
 data "azurerm_resource_group" "network_rg" {

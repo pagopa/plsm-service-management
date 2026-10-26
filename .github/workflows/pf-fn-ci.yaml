@@ -4,16 +4,27 @@ on:
   workflow_dispatch:
   push:
     branches:
-      # - develop
-      # - feature/**
       - '**'
     paths:
       - "apps/sm-pf-fn/**"
+      - ".github/workflows/pf-fn-ci.yaml"
+      - "package.json"
+      - "yarn.lock"
+      - "turbo.json"
+      - ".yarnrc.yml"
+      - ".yarn/releases/**"
   pull_request:
     branches:
+      - main
       - develop
     paths:
       - "apps/sm-pf-fn/**"
+      - ".github/workflows/pf-fn-ci.yaml"
+      - "package.json"
+      - "yarn.lock"
+      - "turbo.json"
+      - ".yarnrc.yml"
+      - ".yarn/releases/**"
 
 permissions:
   contents: read

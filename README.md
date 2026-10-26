@@ -76,6 +76,7 @@ Comprehensive documentation is available in the `docs/monorepo/` directory:
 - **[Monorepo Overview](docs/monorepo/overview.md)** — Architecture, applications, tech stack, and Turborepo pipelines
 - **[Infrastructure Overview](docs/monorepo/infra/overview.md)** — Azure resources, Terraform environments, naming conventions, and deployment
 - **[Environment Configuration](docs/monorepo/infra/configurazione-ambienti.md)** — YAML-based configuration management
+- **[Releasing](docs/RELEASING.md)** — Conventional PR titles, automated versioning, GitHub Releases, and deployment from tags
 
 ### Application-Specific Guides
 
@@ -114,6 +115,7 @@ We welcome contributions! Please ensure your code follows the established conven
 - Follow the naming convention: `sm-{domain}-{type}`
 - Write tests for new features
 - Update documentation when adding new applications or features
+- Use Conventional Commit PR titles, e.g. `fix(sm-auth-fn): [SMION-907] correct session renewal`, and preserve the title when squash-merging into `main` (see [Releasing](docs/RELEASING.md))
 
 ---
 
