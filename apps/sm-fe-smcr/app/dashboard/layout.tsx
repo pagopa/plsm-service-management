@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { PermissionsProvider } from "@/context/permissionsProvider";
 import { dashboardNavigation } from "@/lib/dashboard-navigation";
 import {
   filterDashboardNavigation,
@@ -22,7 +23,9 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
 
       <SidebarInset className="!m-0 min-w-0">
         <main className="min-w-0 flex-1 bg-bg-dashboard px-1 pb-10 md:px-0 md:pb-12">
-          {children}
+          <PermissionsProvider permissionCodes={[...permissionCodes]}>
+            {children}
+          </PermissionsProvider>
         </main>
       </SidebarInset>
     </SidebarProvider>

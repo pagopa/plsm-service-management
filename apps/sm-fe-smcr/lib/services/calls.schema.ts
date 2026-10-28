@@ -133,7 +133,8 @@ export const listCallsQuerySchema = z
       ctx.addIssue({
         code: "custom",
         path: ["dateFrom"],
-        message: "La data iniziale deve essere precedente o uguale alla data finale",
+        message:
+          "La data iniziale deve essere precedente o uguale alla data finale",
       });
     }
 
@@ -211,3 +212,32 @@ export type MonitoringCall = z.infer<typeof monitoringCallSchema>;
 export type ListCallsResult =
   | { success: true; data: MonitoringCall[]; count: number }
   | { success: false; message: string; fields?: CallFieldError[] };
+
+export type CallsSummaryInput = {
+  /** Formato GG/MM/AAAA, incluso. */
+  dateFrom?: string;
+  /** Formato GG/MM/AAAA, incluso. */
+  dateTo?: string;
+};
+
+export const callsSummarySchema = z.object({
+  totalCalls: z.number(),
+  roster: z.array(
+    z.object({
+      productId: z.string(),
+      calls: z.number(),
+      position: z.number(),
+    }),
+  ),
+});
+
+export const callsSummaryResponseSchema = z.object({
+  success: z.literal(true),
+  data: callsSummarySchema,
+});
+
+export type CallsSummary = z.infer<typeof callsSummarySchema>;
+
+export type CallsSummaryResult =
+  | { success: true; data: CallsSummary }
+  | { success: false; message: string };

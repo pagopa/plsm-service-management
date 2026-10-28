@@ -5,13 +5,18 @@ import { it } from "date-fns/locale";
 
 import { ChartPie } from "@/components/dashboard/chart";
 import TextAnalytics from "@/components/dashboard/text-analytics";
+import { TopCalls } from "@/components/dashboard/top-calls";
+import { hasCurrentPermission } from "@/lib/auth/dashboard-access";
 import { getOnboardingProducts } from "@/lib/services/product.service";
 import { PRODUCT_CARDS } from "@/lib/constants/dashboard-products";
 
 export default async function DashboardPage() {
   const dateRanges = buildDateRanges();
   const analytics = [];
-  const products = await getOnboardingProducts();
+  const [products, canReadCalls] = await Promise.all([
+    getOnboardingProducts(),
+    hasCurrentPermission("call.management.read").catch(() => false),
+  ]);
 
   if (products.error) {
     return (
@@ -47,34 +52,39 @@ export default async function DashboardPage() {
         ))}
       </section>
 
-      <section className="w-full">
-        <ChartPie
-          period={`${format(parseISO(dateRanges.current.from), "MMMM", { locale: it })} - ${format(parseISO(dateRanges.current.to), "MMMM", { locale: it })}`}
-          chartData={(() => {
-            const total =
-              analytics.reduce(
-                (sum, analytic) => sum + analytic.currentCount,
-                0,
-              ) || 1;
-            return analytics.map((analytic) => ({
-              product: analytic.label,
-              count: Number(((analytic.currentCount / total) * 100).toFixed(2)), // percentage
-              fill:
-                PRODUCT_CARDS.find((c) => c.label === analytic.label)?.color ||
-                "gray",
-            }));
-          })()}
-          chartConfig={analytics.reduce(
-            (acc, analytic) => {
-              acc[analytic.label as string] = {
-                label: analytic.label as string,
-                color: "var(--color-primary)",
-              };
-              return acc;
-            },
-            {} as Record<string, { label: string; color: string }>,
-          )}
-        />
+      <section className="grid w-full grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className={canReadCalls ? "lg:col-span-2" : "lg:col-span-3"}>
+          <ChartPie
+            period={`${format(parseISO(dateRanges.current.from), "MMMM", { locale: it })} - ${format(parseISO(dateRanges.current.to), "MMMM", { locale: it })}`}
+            chartData={(() => {
+              const total =
+                analytics.reduce(
+                  (sum, analytic) => sum + analytic.currentCount,
+                  0,
+                ) || 1;
+              return analytics.map((analytic) => ({
+                product: analytic.label,
+                count: Number(
+                  ((analytic.currentCount / total) * 100).toFixed(2),
+                ),
+                fill:
+                  PRODUCT_CARDS.find((c) => c.label === analytic.label)
+                    ?.color || "gray",
+              }));
+            })()}
+            chartConfig={analytics.reduce(
+              (acc, analytic) => {
+                acc[analytic.label as string] = {
+                  label: analytic.label as string,
+                  color: "var(--color-primary)",
+                };
+                return acc;
+              },
+              {} as Record<string, { label: string; color: string }>,
+            )}
+          />
+        </div>
+        {canReadCalls && <TopCalls />}
       </section>
     </main>
   );
