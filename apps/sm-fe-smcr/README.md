@@ -40,7 +40,15 @@ yarn workspace sm-fe-smcr db:migrate
 yarn workspace sm-fe-smcr db:seed
 ```
 
-Database migrations are run manually; the deploy workflow does not execute them.
+To apply migrations through GitHub Actions, run **SM-FE-SMCR - Migrate**, select
+`app-dev` or `app-prod`, and enter `migrate` to confirm. The workflow uses the
+private runner for the selected environment and runs the existing `db:migrate`
+command. Configure the `DATABASE_URL` secret in the corresponding GitHub
+environment (`app-dev-cd` or `app-prod-cd`) with the same connection URL as the app.
+Runs targeting the same environment are serialized.
+
+Run migrations before deploying code that depends on them. The deploy workflow
+does not execute migrations.
 
 ## Learn More
 
