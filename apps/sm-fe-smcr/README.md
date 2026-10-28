@@ -47,6 +47,9 @@ command. Configure the `DATABASE_URL` secret in the corresponding GitHub
 environment (`app-dev-cd` or `app-prod-cd`) with the same connection URL as the app.
 Runs targeting the same environment are serialized.
 
+For `app-prod`, select the `main` branch: other branches and tags are rejected
+before checkout. For `app-dev`, any branch or tag can be selected.
+
 Run migrations before deploying code that depends on them. The deploy workflow
 does not execute migrations.
 

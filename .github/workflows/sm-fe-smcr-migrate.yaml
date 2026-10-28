@@ -44,6 +44,14 @@ jobs:
             exit 1
           fi
 
+      - name: In prod solo da main
+        if: inputs.environment == 'app-prod' && github.ref != 'refs/heads/main'
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          echo "::error::Le migrazioni su app-prod si lanciano solo da main (riferimento selezionato: $REF_NAME)."
+          exit 1
+
       - uses: actions/checkout@v5
 
       - name: Setup Node.js
