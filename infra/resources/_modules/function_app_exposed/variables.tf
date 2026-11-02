@@ -41,7 +41,7 @@ variable "health_check_path" {
 
 variable "node_version" {
   type        = number
-  default     = 20
+  default     = 22
   description = "Versione di Node.js da utilizzare per la Function App."
 }
 
