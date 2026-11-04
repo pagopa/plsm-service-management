@@ -40,6 +40,10 @@ const chartConfig = {
     label: "ERROR",
     color: "var(--color-red-500)",
   },
+  fatal: {
+    label: "FATAL",
+    color: "var(--color-violet-600)",
+  },
 } satisfies ChartConfig;
 
 type Props = {
@@ -57,6 +61,7 @@ export default function VolumeChart({ data }: Props) {
             <span className="font-mono text-blue-500">[INFO]</span>
             <span className="font-mono text-amber-500">[WARNING]</span>
             <span className="font-mono text-red-500">[ERROR]</span>
+            <span className="font-mono text-violet-600">[FATAL]</span>
           </div>
         </div>
       </CardHeader>
@@ -135,6 +140,15 @@ export default function VolumeChart({ data }: Props) {
                   }}
                 />
               )}
+            />
+            <Bar
+              dataKey="fatal"
+              stackId="logs"
+              fill="var(--color-fatal)"
+              radius={[4, 4, 0, 0]}
+              activeBar={
+                <Rectangle radius={[4, 4, 0, 0]} fill="var(--color-fatal)" />
+              }
             />
           </BarChart>
         </ChartContainer>

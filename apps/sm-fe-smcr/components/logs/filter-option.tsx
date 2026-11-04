@@ -20,6 +20,8 @@ const filterOptionVariants = cva(
         warn: "has-[[aria-checked=true]]:text-amber-500 has-[[aria-checked=true]]:border-amber-500 has-[[aria-checked=true]]:bg-amber-50",
         error:
           "has-[[aria-checked=true]]:text-red-500 has-[[aria-checked=true]]:border-red-500 has-[[aria-checked=true]]:bg-red-50",
+        fatal:
+          "has-[[aria-checked=true]]:text-violet-600 has-[[aria-checked=true]]:border-violet-600 has-[[aria-checked=true]]:bg-violet-50",
       },
     },
     defaultVariants: {
@@ -39,6 +41,8 @@ const filterOptionCheckboxVariants = cva("transition-colors", {
       warn: "data-[state=checked]:border-amber-500 data-[state=checked]:bg-amber-500 data-[state=checked]:text-white",
       error:
         "data-[state=checked]:border-red-500 data-[state=checked]:bg-red-500 data-[state=checked]:text-white",
+      fatal:
+        "data-[state=checked]:border-violet-600 data-[state=checked]:bg-violet-600 data-[state=checked]:text-white",
     },
   },
   defaultVariants: {

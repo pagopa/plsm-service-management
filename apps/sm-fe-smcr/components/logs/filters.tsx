@@ -109,6 +109,15 @@ export default function Filters() {
                 onCheckedChange={(value) => handleLevelChange(value, "ERROR")}
               />
             </FilterOption>
+
+            <FilterOption variant="fatal">
+              <FilterOptionCheckbox
+                variant="fatal"
+                label="Fatal"
+                checked={levels?.includes("FATAL") || false}
+                onCheckedChange={(value) => handleLevelChange(value, "FATAL")}
+              />
+            </FilterOption>
           </div>
         </div>
 
