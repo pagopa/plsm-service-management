@@ -22,6 +22,7 @@ export const PRODUCT_MAP: Record<string, string> = {
   "prod-pagopa": "Piattaforma pagoPA",
   "prod-pn": "SEND",
   "prod-fd-garantito": "Fidejussioni ditali G",
+  "prod-ced": "Carta Europea della Disabilità",
 } as const;
 
 type Props = {

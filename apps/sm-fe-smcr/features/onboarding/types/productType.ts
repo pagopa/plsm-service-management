@@ -27,6 +27,11 @@ type ProdIoPremium = {
   value: string;
 };
 
+type ProdCed = {
+  tag: "prod-ced";
+  value: string;
+};
+
 type ProdFdGarantito = {
   tag: "prod-fd-garantito";
   value: string;
@@ -39,5 +44,6 @@ export type ProductOptions = Array<
   | ProdIo
   | ProdIoSign
   | ProdIoPremium
+  | ProdCed
   | ProdFdGarantito
 >;
