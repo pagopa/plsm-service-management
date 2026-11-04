@@ -155,6 +155,7 @@ export function CallsView() {
   }, [search]);
 
   const onPaginationChange: OnChangeFn<PaginationState> = (updater) => {
+    if (isPending) return;
     const nextPagination =
       typeof updater === "function" ? updater(pagination) : updater;
     search(appliedForm, nextPagination);
