@@ -1,6 +1,6 @@
 module "azurerm_linux_function_app_exposed" {
   source  = "pagopa-dx/azure-function-app-exposed/azurerm"
-  version = "1.0.1"
+  version = "~> 6.0"
 
   environment         = var.environment
   resource_group_name = var.resource_group_name
@@ -11,6 +11,6 @@ module "azurerm_linux_function_app_exposed" {
   node_version        = var.node_version
 
 
-  tier = "l"
+  use_case = "default"
 
 }
