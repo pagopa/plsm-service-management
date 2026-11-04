@@ -60,6 +60,7 @@ function getLevelBadge(level: LogLevel) {
     INFO: "text-blue-500",
     WARN: "text-amber-500",
     ERROR: "text-red-500",
+    FATAL: "text-neutral-500",
   }[level];
 
   return (

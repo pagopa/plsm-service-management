@@ -20,6 +20,7 @@ const LEVEL_LABELS: Record<keyof Omit<LogVolume, "date">, string> = {
   info: "INFO",
   warn: "WARNING",
   error: "ERROR",
+  fatal: "FATAL",
 };
 
 const chartConfig = {
