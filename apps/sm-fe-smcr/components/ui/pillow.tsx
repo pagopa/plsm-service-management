@@ -11,6 +11,7 @@ const pillowVariants = cva("w-full h-full rounded-sm", {
       info: "bg-blue-500",
       warn: "bg-amber-500",
       error: "bg-red-500",
+      fatal: "bg-violet-600",
     },
   },
   defaultVariants: {

@@ -1,6 +1,6 @@
 import { toLogError, toLogMetadata } from "@/lib/logger/logger.utils";
 
-type ClientLogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
+type ClientLogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR" | "FATAL";
 
 type ClientLogContext = {
   requestId?: string;
@@ -64,6 +64,8 @@ const clientLogger = {
     sendClientLog("WARN", input, message),
   error: (input: string | ClientLogContext, message?: string) =>
     sendClientLog("ERROR", input, message),
+  fatal: (input: string | ClientLogContext, message?: string) =>
+    sendClientLog("FATAL", input, message),
 };
 
 export default clientLogger;

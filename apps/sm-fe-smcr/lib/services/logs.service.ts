@@ -35,7 +35,7 @@ function formatInternalLogError(error: unknown): string {
   }
 }
 
-export const logLevelSchema = z.enum(["DEBUG", "INFO", "WARN", "ERROR"]);
+export const logLevelSchema = z.enum(["DEBUG", "INFO", "WARN", "ERROR", "FATAL"]);
 export type LogLevel = z.infer<typeof logLevelSchema>;
 
 export const logServiceSchema = z.enum(["SMCR", "AMA"]);
@@ -57,6 +57,7 @@ export const logVolumeSchema = z.object({
   info: z.number(),
   warn: z.number(),
   error: z.number(),
+  fatal: z.number(),
 });
 export type LogVolume = z.infer<typeof logVolumeSchema>;
 
@@ -195,6 +196,7 @@ function buildEmptyLogVolume(days: number): Array<LogVolume> {
     info: 0,
     warn: 0,
     error: 0,
+    fatal: 0,
   }));
 }
 
@@ -203,6 +205,7 @@ const LOG_VOLUME_LEVEL_KEYS: Record<LogLevel, keyof Omit<LogVolume, "date">> = {
   INFO: "info",
   WARN: "warn",
   ERROR: "error",
+  FATAL: "fatal",
 };
 
 export async function saveLog(
