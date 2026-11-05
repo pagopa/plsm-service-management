@@ -61,7 +61,7 @@ resource "github_repository_environment" "envs" {
 
 module "azure-github-environment-bootstrap" {
   source      = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version     = "6.2.3"
+  version     = "7.1.1"
   environment = local.environment
 
   terraform_storage_account = {
