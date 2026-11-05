@@ -120,6 +120,18 @@ export const listCallsQuerySchema = z
       });
     }
 
+    if (
+      dateFromMs !== undefined &&
+      !Number.isNaN(dateFromMs) &&
+      dateFromMs > Date.now()
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["dateFrom"],
+        message: "La data iniziale non può essere successiva a quella odierna",
+      });
+    }
+
     if (dateTo && Number.isNaN(dateToMs)) {
       ctx.addIssue({
         code: "custom",

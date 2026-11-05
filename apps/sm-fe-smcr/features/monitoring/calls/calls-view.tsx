@@ -250,6 +250,7 @@ export function CallsView() {
                 <DateTimeFilter
                   id="calls-date-from"
                   boundary="from"
+                  disableFuture
                   value={form.dateFrom}
                   disabled={isPending}
                   invalid={Boolean(errorFor("dateFrom"))}
