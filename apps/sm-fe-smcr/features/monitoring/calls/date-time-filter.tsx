@@ -23,9 +23,15 @@ type DateTimeFilterProps = {
   boundary: Boundary;
   disabled?: boolean;
   invalid?: boolean;
+  disableFuture?: boolean;
 };
 
-function applyTime(date: Date, hours: number, minutes: number, boundary: Boundary) {
+function applyTime(
+  date: Date,
+  hours: number,
+  minutes: number,
+  boundary: Boundary,
+) {
   const next = new Date(date);
   if (boundary === "to") {
     next.setHours(hours, minutes, 59, 999);
@@ -38,12 +44,26 @@ function applyTime(date: Date, hours: number, minutes: number, boundary: Boundar
 export function DateTimeFilter({
   id,
   value,
-  onChange,
+  onChange: onChangeProp,
   boundary,
   disabled,
   invalid,
+  disableFuture,
 }: DateTimeFilterProps) {
   const [open, setOpen] = useState(false);
+
+  const onChange = (next: Date | undefined) => {
+    if (next && disableFuture) {
+      const now = new Date();
+      if (next > now) {
+        onChangeProp(
+          applyTime(now, now.getHours(), now.getMinutes(), boundary),
+        );
+        return;
+      }
+    }
+    onChangeProp(next);
+  };
 
   const handleDaySelect = (selected: Date | undefined) => {
     if (!selected) {
@@ -58,9 +78,7 @@ export function DateTimeFilter({
     setOpen(false);
   };
 
-  const handleTimeChange: ChangeEventHandler<HTMLInputElement> = (
-    event,
-  ) => {
+  const handleTimeChange: ChangeEventHandler<HTMLInputElement> = (event) => {
     if (!value) {
       return;
     }
@@ -91,7 +109,9 @@ export function DateTimeFilter({
             {value ? (
               format(value, "d MMM yyyy, HH:mm", { locale: it })
             ) : (
-              <span className="text-muted-foreground">Seleziona data e ora</span>
+              <span className="text-muted-foreground">
+                Seleziona data e ora
+              </span>
             )}
           </Button>
         </PopoverTrigger>
@@ -101,6 +121,7 @@ export function DateTimeFilter({
             locale={it}
             selected={value}
             onSelect={handleDaySelect}
+            disabled={disableFuture ? { after: new Date() } : undefined}
           />
         </PopoverContent>
       </Popover>
