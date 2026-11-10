@@ -1,5 +1,6 @@
 "use client";
 
+import type { OnChangeFn, PaginationState } from "@tanstack/react-table";
 import { Search, X } from "lucide-react";
 import {
   FormEvent,
@@ -30,8 +31,7 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   CALL_PRODUCT_IDS,
   CALL_PRODUCT_LABELS,
-  CALLS_LIMIT_DEFAULT,
-  CALLS_LIMIT_MAX,
+  CALLS_PAGE_SIZE_DEFAULT,
   type CallFieldError,
   type ListCallsInput,
   type MonitoringCall,
@@ -45,13 +45,24 @@ import { callsColumns, CallsTable } from "./table";
 const ALL_PRODUCTS = "all";
 const fmtNum = new Intl.NumberFormat("it-IT");
 
+const INITIAL_PAGINATION: PaginationState = {
+  pageIndex: 0,
+  pageSize: CALLS_PAGE_SIZE_DEFAULT,
+};
+
 type FormState = {
   productId: string;
   institutionId: string;
   dateFrom: Date | undefined;
   dateTo: Date | undefined;
-  limit: string;
 };
+
+const FORM_FIELDS = new Set<string>([
+  "productId",
+  "institutionId",
+  "dateFrom",
+  "dateTo",
+]);
 
 function createInitialForm(): FormState {
   return {
@@ -59,17 +70,20 @@ function createInitialForm(): FormState {
     institutionId: "",
     dateFrom: undefined,
     dateTo: undefined,
-    limit: String(CALLS_LIMIT_DEFAULT),
   };
 }
 
-function toListCallsInput(form: FormState): ListCallsInput {
+function toListCallsInput(
+  form: FormState,
+  pagination: PaginationState,
+): ListCallsInput {
   return {
     productId: form.productId === ALL_PRODUCTS ? undefined : form.productId,
     institutionId: form.institutionId.trim() || undefined,
     dateFrom: form.dateFrom ? form.dateFrom.toISOString() : undefined,
     dateTo: form.dateTo ? form.dateTo.toISOString() : undefined,
-    limit: form.limit.trim() || undefined,
+    page: pagination.pageIndex + 1,
+    size: pagination.pageSize,
   };
 }
 
@@ -78,15 +92,17 @@ function isDefaultForm(form: FormState) {
     form.productId === ALL_PRODUCTS &&
     form.institutionId.trim() === "" &&
     !form.dateFrom &&
-    !form.dateTo &&
-    form.limit.trim() === String(CALLS_LIMIT_DEFAULT)
+    !form.dateTo
   );
 }
 
 export function CallsView() {
   const [form, setForm] = useState<FormState>(createInitialForm);
+  const [appliedForm, setAppliedForm] = useState<FormState>(createInitialForm);
+  const [pagination, setPagination] =
+    useState<PaginationState>(INITIAL_PAGINATION);
   const [rows, setRows] = useState<MonitoringCall[]>([]);
-  const [count, setCount] = useState(0);
+  const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<CallFieldError[]>([]);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -94,13 +110,15 @@ export function CallsView() {
   const requestId = useRef(0);
 
   const search = useCallback(
-    (nextForm: FormState) => {
+    (nextForm: FormState, nextPagination: PaginationState) => {
       const id = ++requestId.current;
       setError(null);
       setFieldErrors([]);
 
       startTransition(async () => {
-        const result = await listCalls(toListCallsInput(nextForm));
+        const result = await listCalls(
+          toListCallsInput(nextForm, nextPagination),
+        );
         if (requestId.current !== id) {
           return;
         }
@@ -108,15 +126,24 @@ export function CallsView() {
         setHasLoaded(true);
         if (result.success) {
           setRows(result.data);
-          setCount(result.count);
+          setTotal(result.pagination.total);
+          setAppliedForm(nextForm);
+          setPagination({
+            pageIndex: result.pagination.page - 1,
+            pageSize: result.pagination.size,
+          });
           setError(null);
           setFieldErrors([]);
           return;
         }
 
-        setFieldErrors(result.fields ?? []);
+        const fields = result.fields ?? [];
+        setFieldErrors(fields);
+        // Gli errori su page/size non hanno un campo del form dove comparire.
         setError(
-          result.fields && result.fields.length > 0 ? null : result.message,
+          fields.some((item) => FORM_FIELDS.has(item.field))
+            ? null
+            : result.message,
         );
       });
     },
@@ -124,8 +151,15 @@ export function CallsView() {
   );
 
   useEffect(() => {
-    search(createInitialForm());
+    search(createInitialForm(), INITIAL_PAGINATION);
   }, [search]);
+
+  const onPaginationChange: OnChangeFn<PaginationState> = (updater) => {
+    if (isPending) return;
+    const nextPagination =
+      typeof updater === "function" ? updater(pagination) : updater;
+    search(appliedForm, nextPagination);
+  };
 
   const errorFor = (field: string) =>
     fieldErrors.find((item) => item.field === field)?.message;
@@ -138,13 +172,13 @@ export function CallsView() {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    search(form);
+    search(form, { ...pagination, pageIndex: 0 });
   };
 
   const clearFilters = () => {
     const nextForm = createInitialForm();
     setForm(nextForm);
-    search(nextForm);
+    search(nextForm, { ...pagination, pageIndex: 0 });
   };
 
   const hasFieldErrors = fieldErrors.length > 0;
@@ -216,6 +250,7 @@ export function CallsView() {
                 <DateTimeFilter
                   id="calls-date-from"
                   boundary="from"
+                  disableFuture
                   value={form.dateFrom}
                   disabled={isPending}
                   invalid={Boolean(errorFor("dateFrom"))}
@@ -241,28 +276,6 @@ export function CallsView() {
                   Limite superiore incluso, ora locale.
                 </FieldDescription>
                 <FieldError>{errorFor("dateTo")}</FieldError>
-              </Field>
-
-              <Field data-invalid={Boolean(errorFor("limit"))}>
-                <FieldLabel htmlFor="calls-limit">Limite</FieldLabel>
-                <Input
-                  id="calls-limit"
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={CALLS_LIMIT_MAX}
-                  step={1}
-                  value={form.limit}
-                  disabled={isPending}
-                  aria-invalid={Boolean(errorFor("limit")) || undefined}
-                  onChange={(event) =>
-                    updateForm({ limit: event.target.value })
-                  }
-                />
-                <FieldDescription>
-                  Da 1 a {CALLS_LIMIT_MAX}. Predefinito {CALLS_LIMIT_DEFAULT}.
-                </FieldDescription>
-                <FieldError>{errorFor("limit")}</FieldError>
               </Field>
             </div>
 
@@ -306,14 +319,17 @@ export function CallsView() {
                 <>
                   <div className="text-muted-foreground text-sm">
                     <span className="text-foreground font-semibold tabular-nums">
-                      {fmtNum.format(count)}
+                      {fmtNum.format(total)}
                     </span>{" "}
-                    {count === 1 ? "risultato" : "risultati"}
+                    {total === 1 ? "risultato" : "risultati"}
                   </div>
                   <div className={cn(isPending && "opacity-60")}>
                     <CallsTable
                       columns={callsColumns}
                       data={rows}
+                      total={total}
+                      pagination={pagination}
+                      onPaginationChange={onPaginationChange}
                       isEmpty={hasLoaded && rows.length === 0 && !error}
                     />
                   </div>

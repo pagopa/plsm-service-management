@@ -173,7 +173,12 @@ export async function listCalls(
             event: "monitoring.calls.list.invalid-payload",
             actor: "smcr-ui",
             subject: "listCalls",
-            metadata: {},
+            metadata: {
+              issues: body.error.issues.map((issue) => ({
+                path: issue.path.join("."),
+                message: issue.message,
+              })),
+            },
           },
         },
         "listCalls received an unexpected payload",
@@ -187,7 +192,7 @@ export async function listCalls(
     return {
       success: true,
       data: body.data.data,
-      count: body.data.count,
+      pagination: body.data.pagination,
     };
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));

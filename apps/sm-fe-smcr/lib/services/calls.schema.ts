@@ -32,22 +32,25 @@ export const CALL_PRODUCT_LABELS: Record<CallProductId, string> = {
   "prod-rtp": "RTP",
 };
 
-export const CALLS_LIMIT_DEFAULT = 50;
-export const CALLS_LIMIT_MAX = 200;
+export const CALLS_PAGE_SIZE_DEFAULT = 10;
+export const CALLS_PAGE_SIZE_MAX = 200;
 
 const CALL_PRODUCT_ID_SET = new Set<string>(CALL_PRODUCT_IDS);
 
 const UUID_PATTERN =
   /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-const LIMIT_MESSAGE = `Il limite deve essere un numero intero tra 1 e ${CALLS_LIMIT_MAX}`;
+const PAGE_MESSAGE = "La pagina deve essere un numero intero maggiore di 0";
+const SIZE_MESSAGE = `La dimensione della pagina deve essere un numero intero tra 1 e ${CALLS_PAGE_SIZE_MAX}`;
 
 export type ListCallsInput = {
   productId?: string;
   institutionId?: string;
   dateFrom?: string;
   dateTo?: string;
-  limit?: string;
+  /** Parte da 1. */
+  page?: number;
+  size?: number;
 };
 
 export type ListCallsQuery = {
@@ -55,7 +58,8 @@ export type ListCallsQuery = {
   institutionId?: string;
   dateFrom?: string;
   dateTo?: string;
-  limit?: number;
+  page?: number;
+  size?: number;
 };
 
 export type CallFieldError = {
@@ -81,7 +85,8 @@ export const listCallsQuerySchema = z
     institutionId: z.string().optional(),
     dateFrom: z.string().optional(),
     dateTo: z.string().optional(),
-    limit: z.string().optional(),
+    page: z.number().optional(),
+    size: z.number().optional(),
   })
   .superRefine((data, ctx) => {
     const productId = blankToUndefined(data.productId);
@@ -115,6 +120,18 @@ export const listCallsQuerySchema = z
       });
     }
 
+    if (
+      dateFromMs !== undefined &&
+      !Number.isNaN(dateFromMs) &&
+      dateFromMs > Date.now()
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["dateFrom"],
+        message: "La data iniziale non può essere successiva a quella odierna",
+      });
+    }
+
     if (dateTo && Number.isNaN(dateToMs)) {
       ctx.addIssue({
         code: "custom",
@@ -138,16 +155,28 @@ export const listCallsQuerySchema = z
       });
     }
 
-    const rawLimit = blankToUndefined(data.limit);
-    if (rawLimit) {
-      const limit = Number(rawLimit);
-      if (!Number.isInteger(limit) || limit < 1 || limit > CALLS_LIMIT_MAX) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["limit"],
-          message: LIMIT_MESSAGE,
-        });
-      }
+    if (
+      data.page !== undefined &&
+      (!Number.isSafeInteger(data.page) || data.page < 1)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["page"],
+        message: PAGE_MESSAGE,
+      });
+    }
+
+    if (
+      data.size !== undefined &&
+      (!Number.isInteger(data.size) ||
+        data.size < 1 ||
+        data.size > CALLS_PAGE_SIZE_MAX)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["size"],
+        message: SIZE_MESSAGE,
+      });
     }
   })
   .transform((data): ListCallsQuery => {
@@ -155,14 +184,14 @@ export const listCallsQuerySchema = z
     const institutionId = blankToUndefined(data.institutionId);
     const dateFrom = blankToUndefined(data.dateFrom);
     const dateTo = blankToUndefined(data.dateTo);
-    const rawLimit = blankToUndefined(data.limit);
 
     return {
       productId: productId as CallProductId | undefined,
       institutionId,
       dateFrom,
       dateTo,
-      limit: rawLimit ? Number(rawLimit) : undefined,
+      page: data.page,
+      size: data.size,
     };
   });
 
@@ -181,8 +210,11 @@ export function buildCallsSearchParams(query: ListCallsQuery) {
   if (query.dateTo) {
     params.set("dateTo", query.dateTo);
   }
-  if (query.limit !== undefined) {
-    params.set("limit", String(query.limit));
+  if (query.page !== undefined) {
+    params.set("page", String(query.page));
+  }
+  if (query.size !== undefined) {
+    params.set("size", String(query.size));
   }
 
   return params;
@@ -201,16 +233,25 @@ export const monitoringCallSchema = z.object({
   updatedAt: z.string(),
 });
 
+export const callsPaginationSchema = z.object({
+  page: z.number(),
+  size: z.number(),
+  total: z.number(),
+  totalPages: z.number(),
+});
+
 export const listCallsResponseSchema = z.object({
   success: z.literal(true),
-  count: z.number(),
   data: z.array(monitoringCallSchema),
+  pagination: callsPaginationSchema,
 });
 
 export type MonitoringCall = z.infer<typeof monitoringCallSchema>;
 
+export type CallsPagination = z.infer<typeof callsPaginationSchema>;
+
 export type ListCallsResult =
-  | { success: true; data: MonitoringCall[]; count: number }
+  | { success: true; data: MonitoringCall[]; pagination: CallsPagination }
   | { success: false; message: string; fields?: CallFieldError[] };
 
 export type CallsSummaryInput = {
