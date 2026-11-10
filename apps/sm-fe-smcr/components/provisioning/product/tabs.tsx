@@ -47,12 +47,18 @@ export default async function TabsSection({
     (groups?.error != null ||
       !groups?.data ||
       groups.data.content.some((item) => item.productId === product));
+  const showServices = product === "prod-io";
+  const showDelegations = product === "prod-pagopa";
 
   return (
     <section className="flex h-[calc(100vh-64px)] flex-col min-h-0">
       <Tabs
-        // Remount when the groups tab toggles, so a hidden tab is never left selected.
-        key={showGroups ? "with-groups" : "without-groups"}
+        // Remount when a conditional tab toggles, so a hidden tab is never left selected.
+        key={[
+          showGroups ? "groups" : "no-groups",
+          showServices ? "services" : "no-services",
+          showDelegations ? "delegations" : "no-delegations",
+        ].join("|")}
         defaultValue={showGroups ? TABS.GROUPS : TABS.USERS}
         className="flex flex-1 min-h-0 flex-col"
       >
@@ -94,7 +100,7 @@ export default async function TabsSection({
               Onboarding
             </TabsTrigger>
 
-            {product === "prod-io" && (
+            {showServices && (
               <TabsTrigger
                 value={TABS.SERVICES}
                 className="group bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-500 data-[state=active]:bg-blue-500 data-[state=active]:text-white"
@@ -106,7 +112,7 @@ export default async function TabsSection({
                 Servizi
               </TabsTrigger>
             )}
-            {product === "prod-pagopa" && (
+            {showDelegations && (
               <TabsTrigger
                 value={TABS.DELEGATIONS}
                 className="group bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-500 data-[state=active]:bg-red-500 data-[state=active]:text-white"
@@ -159,7 +165,7 @@ export default async function TabsSection({
         >
           <OnboardingTab taxCode={taxCode} subunitCode={subunitCode} />
         </TabsContent>
-        {product === "prod-io" && (
+        {showServices && (
           <TabsContent
             value={TABS.SERVICES}
             className="flex flex-1 min-h-0 flex-col"
@@ -170,15 +176,17 @@ export default async function TabsSection({
             />
           </TabsContent>
         )}
-        <TabsContent
-          value={TABS.DELEGATIONS}
-          className="flex flex-1 min-h-0 flex-col"
-        >
-          <DelegationsTab
-            institutionId={institution}
-            institutionName={institutionDescription}
-          />
-        </TabsContent>
+        {showDelegations && (
+          <TabsContent
+            value={TABS.DELEGATIONS}
+            className="flex flex-1 min-h-0 flex-col"
+          >
+            <DelegationsTab
+              institutionId={institution}
+              institutionName={institutionDescription}
+            />
+          </TabsContent>
+        )}
       </Tabs>
     </section>
   );
