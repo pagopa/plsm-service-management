@@ -55,8 +55,8 @@ export default function DownloadConctract({ filename: customFileName }: Props) {
 
   return (
     <Button
-      variant="secondary"
-      size="sm"
+      variant="pagopaprimary"
+      className="cursor-pointer active:scale-[0.98]"
       onClick={handleClick}
       disabled={isPending}
     >

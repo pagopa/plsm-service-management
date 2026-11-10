@@ -10,20 +10,23 @@ type Props = {
   subunitCode?: string;
 };
 
+// Backend timestamps are UTC
+const HAS_TZ_DESIGNATOR = /(Z|[+-]\d{2}:?\d{2})$/i;
+
 function formatDate(value: string | undefined) {
   if (!value) return "—";
-  try {
-    const d = new Date(value);
-    return d.toLocaleDateString("it-IT", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return value;
-  }
+  const needsUtcSuffix = value.includes("T") && !HAS_TZ_DESIGNATOR.test(value);
+  const d = new Date(needsUtcSuffix ? `${value}Z` : value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString("it-IT", {
+    timeZone: "Europe/Rome",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
 }
 
 function StatusBadge({ status }: { status: string }) {
