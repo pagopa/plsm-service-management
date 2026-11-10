@@ -13,6 +13,7 @@ import OnboardingTab from "./onboarding/onboarding-tab";
 import ServicesTab from "./services/services-tab";
 import UsersTab from "./users/users-tab";
 import DelegationsTab from "./delegations/delegations-tab";
+import { getUserGroups } from "@/lib/services/institution.service";
 enum TABS {
   GROUPS = "groups",
   USERS = "users",
@@ -30,7 +31,7 @@ type Props = {
   subunitCode?: string;
   isPNPG?: boolean;
 };
-export default function TabsSection({
+export default async function TabsSection({
   taxCode,
   institution,
   institutionDescription,
@@ -39,15 +40,25 @@ export default function TabsSection({
   subunitCode,
   isPNPG = false,
 }: Props) {
+  // On fetch error keep the tab visible so GroupsTab can surface the error.
+  const groups = isPNPG ? null : await getUserGroups({ institution });
+  const showGroups =
+    !isPNPG &&
+    (groups?.error != null ||
+      !groups?.data ||
+      groups.data.content.some((item) => item.productId === product));
+
   return (
     <section className="flex h-[calc(100vh-64px)] flex-col min-h-0">
       <Tabs
-        defaultValue={isPNPG ? TABS.USERS : TABS.GROUPS}
+        // Remount when the groups tab toggles, so a hidden tab is never left selected.
+        key={showGroups ? "with-groups" : "without-groups"}
+        defaultValue={showGroups ? TABS.GROUPS : TABS.USERS}
         className="flex flex-1 min-h-0 flex-col"
       >
         <ScrollArea>
           <TabsList className="mb-3">
-            {!isPNPG && (
+            {showGroups && (
               <TabsTrigger value={TABS.GROUPS}>
                 <LayoutDashboardIcon
                   className="size-3.5 -ms-0.5 me-1.5 opacity-60"
@@ -111,7 +122,7 @@ export default function TabsSection({
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
 
-        {!isPNPG && (
+        {showGroups && (
           <TabsContent value={TABS.GROUPS} className="h-full">
             <GroupsTab institution={institution} product={product} />
           </TabsContent>
