@@ -1,0 +1,1 @@
+ALTER TABLE "logs" DROP CONSTRAINT "logs_level_check", ADD CONSTRAINT "logs_level_check" CHECK ((level = ANY (ARRAY['DEBUG'::text, 'INFO'::text, 'WARN'::text, 'ERROR'::text, 'FATAL'::text])));

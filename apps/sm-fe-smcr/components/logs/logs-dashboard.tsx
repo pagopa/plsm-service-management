@@ -31,6 +31,7 @@ const LOG_VOLUME_LEVEL_KEYS: Record<LogLevel, keyof Omit<LogVolume, "date">> = {
   INFO: "info",
   WARN: "warn",
   ERROR: "error",
+  FATAL: "fatal",
 };
 
 function incrementLogVolume(

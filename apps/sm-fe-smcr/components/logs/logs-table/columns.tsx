@@ -56,6 +56,8 @@ export const columns: ColumnDef<Log>[] = [
             return <Pillow variant="warn" />;
           case "ERROR":
             return <Pillow variant="error" />;
+          case "FATAL":
+            return <Pillow variant="fatal" />;
           default:
             return <Pillow />;
         }
@@ -100,6 +102,8 @@ export const columns: ColumnDef<Log>[] = [
           return <span className="font-mono text-amber-500">[WARNING]</span>;
         case "ERROR":
           return <span className="font-mono text-red-500">[ERROR]</span>;
+        case "FATAL":
+          return <span className="font-mono text-violet-600">[FATAL]</span>;
         default:
           return value;
       }
