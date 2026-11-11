@@ -1,7 +1,10 @@
 import { logInputSchema, readLogs, saveLog } from "@/lib/services/logs.service";
 import { z } from "zod";
+import { checkLogReadAccess } from "@/lib/auth/logs";
 
 export async function GET(request: Request) {
+  const denied = await checkLogReadAccess();
+  if (denied) return denied;
   const { searchParams } = new URL(request.url);
   const limit = Number(searchParams.get("limit"));
   const before = searchParams.get("before");

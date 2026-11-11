@@ -1,7 +1,10 @@
 import { subscribeLogEvets } from "@/lib/services/logs.service";
+import { checkLogReadAccess } from "@/lib/auth/logs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  const denied = await checkLogReadAccess();
+  if (denied) return denied;
   const encoder = new TextEncoder();
   let intervalId: ReturnType<typeof setInterval> | null = null;
   let unsubscribe: null | (() => void) = null;

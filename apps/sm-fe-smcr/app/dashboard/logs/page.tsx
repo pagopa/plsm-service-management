@@ -2,8 +2,11 @@ export const dynamic = "force-dynamic";
 
 import { LogsDashboard } from "@/components/logs/logs-dashboard";
 import { readLogs, readLogVolume } from "@/lib/services/logs.service";
+import { hasCurrentPermission } from "@/lib/auth/dashboard-access";
+import { redirect } from "next/navigation";
 
 export default async function Page() {
+  if (!(await hasCurrentPermission("logs.read"))) redirect("/dashboard");
   const [logsResult, volumeResult] = await Promise.all([
     readLogs({ limit: 100 }),
     readLogVolume({ days: 30 }),
