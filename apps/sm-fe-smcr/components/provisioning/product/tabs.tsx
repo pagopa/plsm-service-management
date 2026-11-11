@@ -13,6 +13,7 @@ import OnboardingTab from "./onboarding/onboarding-tab";
 import ServicesTab from "./services/services-tab";
 import UsersTab from "./users/users-tab";
 import DelegationsTab from "./delegations/delegations-tab";
+import { getUserGroups } from "@/lib/services/institution.service";
 enum TABS {
   GROUPS = "groups",
   USERS = "users",
@@ -30,7 +31,7 @@ type Props = {
   subunitCode?: string;
   isPNPG?: boolean;
 };
-export default function TabsSection({
+export default async function TabsSection({
   taxCode,
   institution,
   institutionDescription,
@@ -39,15 +40,31 @@ export default function TabsSection({
   subunitCode,
   isPNPG = false,
 }: Props) {
+  // On fetch error keep the tab visible so GroupsTab can surface the error.
+  const groups = isPNPG ? null : await getUserGroups({ institution });
+  const showGroups =
+    !isPNPG &&
+    (groups?.error != null ||
+      !groups?.data ||
+      groups.data.content.some((item) => item.productId === product));
+  const showServices = product === "prod-io";
+  const showDelegations = product === "prod-pagopa";
+
   return (
     <section className="flex h-[calc(100vh-64px)] flex-col min-h-0">
       <Tabs
-        defaultValue={isPNPG ? TABS.USERS : TABS.GROUPS}
+        // Remount when a conditional tab toggles, so a hidden tab is never left selected.
+        key={[
+          showGroups ? "groups" : "no-groups",
+          showServices ? "services" : "no-services",
+          showDelegations ? "delegations" : "no-delegations",
+        ].join("|")}
+        defaultValue={showGroups ? TABS.GROUPS : TABS.USERS}
         className="flex flex-1 min-h-0 flex-col"
       >
         <ScrollArea>
           <TabsList className="mb-3">
-            {!isPNPG && (
+            {showGroups && (
               <TabsTrigger value={TABS.GROUPS}>
                 <LayoutDashboardIcon
                   className="size-3.5 -ms-0.5 me-1.5 opacity-60"
@@ -83,7 +100,7 @@ export default function TabsSection({
               Onboarding
             </TabsTrigger>
 
-            {product === "prod-io" && (
+            {showServices && (
               <TabsTrigger
                 value={TABS.SERVICES}
                 className="group bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-500 data-[state=active]:bg-blue-500 data-[state=active]:text-white"
@@ -95,7 +112,7 @@ export default function TabsSection({
                 Servizi
               </TabsTrigger>
             )}
-            {product === "prod-pagopa" && (
+            {showDelegations && (
               <TabsTrigger
                 value={TABS.DELEGATIONS}
                 className="group bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-500 data-[state=active]:bg-red-500 data-[state=active]:text-white"
@@ -111,7 +128,7 @@ export default function TabsSection({
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
 
-        {!isPNPG && (
+        {showGroups && (
           <TabsContent value={TABS.GROUPS} className="h-full">
             <GroupsTab institution={institution} product={product} />
           </TabsContent>
@@ -148,7 +165,7 @@ export default function TabsSection({
         >
           <OnboardingTab taxCode={taxCode} subunitCode={subunitCode} />
         </TabsContent>
-        {product === "prod-io" && (
+        {showServices && (
           <TabsContent
             value={TABS.SERVICES}
             className="flex flex-1 min-h-0 flex-col"
@@ -159,15 +176,17 @@ export default function TabsSection({
             />
           </TabsContent>
         )}
-        <TabsContent
-          value={TABS.DELEGATIONS}
-          className="flex flex-1 min-h-0 flex-col"
-        >
-          <DelegationsTab
-            institutionId={institution}
-            institutionName={institutionDescription}
-          />
-        </TabsContent>
+        {showDelegations && (
+          <TabsContent
+            value={TABS.DELEGATIONS}
+            className="flex flex-1 min-h-0 flex-col"
+          >
+            <DelegationsTab
+              institutionId={institution}
+              institutionName={institutionDescription}
+            />
+          </TabsContent>
+        )}
       </Tabs>
     </section>
   );
