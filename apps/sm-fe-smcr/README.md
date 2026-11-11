@@ -53,25 +53,6 @@ before checkout. For `app-dev`, any branch or tag can be selected.
 Run migrations before deploying code that depends on them. The deploy workflow
 does not execute migrations.
 
-## FATAL log notifications
-
-The server-only `notifyFatalLog()` helper in `lib/services/logs-slack.service.ts`
-provides a best-effort Slack notification for a saved `FATAL` log. It is not yet
-connected to the log ingestion flow.
-
-Notifications require `NODE_ENV=production` and the optional server-only setting
-`FE_SMCR_API_SLACK_FATAL_LOGS_HOOK` (the dedicated Slack incoming webhook).
-Configure the webhook only in production; leave it unset or empty elsewhere to
-disable notifications. A local `next build && next start` also uses production
-mode, so do not configure the webhook locally. Infrastructure wiring will be
-added when the webhook is available.
-
-Messages include the environment, service, timestamp, log ID, request ID, and
-message, but not the error stack, request details, or metadata. Dynamic content
-uses plain text and is truncated to Slack's section limits. There is one attempt
-per call, with a five-second timeout and no retries. Failures are reported only
-to `stderr`, without the webhook URL or response body.
-
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
