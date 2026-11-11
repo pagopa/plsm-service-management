@@ -37,8 +37,6 @@ export async function getWalletReport(): Promise<{
       {
         info: {
           event: "wallet.config_missing",
-          actor: "smcr-ui",
-          subject: "getWalletReport",
           metadata: {
             hint: "FE_SMCR_AZURE_STORAGE_CONNECTION_STRING + FE_SMCR_AZURE_STORAGE_CONTAINER_WALLET + FE_SMCR_AZURE_STORAGE_WALLET_BLOB_PREFIX",
           },
@@ -79,8 +77,6 @@ export async function getWalletReport(): Promise<{
         {
           info: {
             event: "wallet.no_blob",
-            actor: "smcr-ui",
-            subject: "getWalletReport",
             metadata: { prefix: blobPrefix.trim() },
           },
         },
@@ -97,8 +93,6 @@ export async function getWalletReport(): Promise<{
         {
           info: {
             event: "wallet.empty_blob",
-            actor: "smcr-ui",
-            subject: "getWalletReport",
             metadata: { blobName: downloaded.blobName },
           },
         },
@@ -122,9 +116,6 @@ export async function getWalletReport(): Promise<{
         {
           info: {
             event: "wallet.empty_blob",
-            actor: "smcr-ui",
-            subject: "getWalletReport",
-            metadata: {},
           },
         },
         "Blob report wallet senza contenuto",
@@ -143,9 +134,6 @@ export async function getWalletReport(): Promise<{
         },
         info: {
           event: "wallet.fetch_error",
-          actor: "smcr-ui",
-          subject: "getWalletReport",
-          metadata: {},
         },
       },
       "getWalletReport: Azure Storage / parse error",

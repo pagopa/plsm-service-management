@@ -4,6 +4,7 @@ import { logs } from "@/db/schema";
 import z from "zod";
 import EventEmitter from "events";
 import { addDays, format, startOfDay, subDays } from "date-fns";
+import { compactLogFields } from "@/lib/logger/logger.utils";
 
 const logsEventBus = new EventEmitter();
 const LOGS_EVENT_BUS = "logs" as const;
@@ -35,7 +36,13 @@ function formatInternalLogError(error: unknown): string {
   }
 }
 
-export const logLevelSchema = z.enum(["DEBUG", "INFO", "WARN", "ERROR", "FATAL"]);
+export const logLevelSchema = z.enum([
+  "DEBUG",
+  "INFO",
+  "WARN",
+  "ERROR",
+  "FATAL",
+]);
 export type LogLevel = z.infer<typeof logLevelSchema>;
 
 export const logServiceSchema = z.enum(["SMCR", "AMA"]);
@@ -61,32 +68,30 @@ export const logVolumeSchema = z.object({
 });
 export type LogVolume = z.infer<typeof logVolumeSchema>;
 
-export const logRequestSchema = z.object({
-  method: z.string().optional().nullable(),
-  path: z.string().optional().nullable(),
-  statusCode: z.number().int().optional().nullable(),
-  durationMs: z.number().int().optional().nullable(),
-  environment: z.string().optional().nullable(),
-  host: z.string().optional().nullable(),
-  ip: z.string().optional().nullable(),
-  traceId: z.string().optional().nullable(),
-  userAgent: z.string().optional().nullable(),
-});
+export const logRequestSchema = z
+  .object({
+    method: z.string().optional().nullable(),
+    path: z.string().optional().nullable(),
+    statusCode: z.number().int().optional().nullable(),
+  })
+  .transform((request) => compactLogFields(request));
 export type LogRequest = z.infer<typeof logRequestSchema>;
 
-export const logErrorSchema = z.object({
-  name: z.string().optional().nullable(),
-  message: z.string().optional().nullable(),
-  stack: z.string().optional().nullable(),
-});
+export const logErrorSchema = z
+  .object({
+    name: z.string().optional().nullable(),
+    message: z.string().optional().nullable(),
+    stack: z.string().optional().nullable(),
+  })
+  .transform((error) => compactLogFields(error));
 export type LogError = z.infer<typeof logErrorSchema>;
 
-export const logInfoSchema = z.object({
-  event: z.string().optional().nullable(),
-  actor: z.string().optional().nullable(),
-  subject: z.string().optional().nullable(),
-  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
-});
+export const logInfoSchema = z
+  .object({
+    event: z.string().optional().nullable(),
+    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+  })
+  .transform((info) => compactLogFields(info));
 export type LogInfo = z.infer<typeof logInfoSchema>;
 
 export const logContextSchema = z.object({
@@ -111,21 +116,8 @@ export const logInputSchema = logSchema.omit({ id: true }).extend({
 export type LogInput = z.infer<typeof logInputSchema>;
 
 function buildLogContext(input: LogInput): LogContext | null {
-  const context: LogContext = {};
-
-  if (input.request) {
-    context.request = input.request;
-  }
-
-  if (input.error) {
-    context.error = input.error;
-  }
-
-  if (input.info) {
-    context.info = input.info;
-  }
-
-  return Object.keys(context).length > 0 ? context : null;
+  // Parse here too so direct callers cannot persist retired or empty fields.
+  return compactLogFields(logContextSchema.parse(input)) ?? null;
 }
 
 function parseLogContext(raw: unknown): LogContext | null {
@@ -220,7 +212,7 @@ export async function saveLog(
         level: input.level,
         service: input.service,
         message: input.message,
-        request: input.requestId,
+        request: input.requestId?.trim() ? input.requestId : null,
         context,
       })
       .returning({ ...logFields, context: logs.context });

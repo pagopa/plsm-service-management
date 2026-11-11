@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { formatLogTimestamp } from "@/lib/log-dates";
+import { compactLogFields } from "@/lib/logger/logger.utils";
 import type { Log, LogDetail, LogLevel } from "@/lib/services/logs.service";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,16 +22,10 @@ import { cn } from "@/lib/utils";
 import {
   ActivityIcon,
   AlertTriangleIcon,
-  CalendarIcon,
-  GlobeIcon,
-  HashIcon,
   InfoIcon,
   LayoutDashboardIcon,
-  Link2Icon,
   MessageSquareIcon,
   RouteIcon,
-  ServerIcon,
-  TimerIcon,
 } from "lucide-react";
 
 type Props = {
@@ -87,14 +82,6 @@ function getServiceBadge(service: string) {
     default:
       return <Badge>{service}</Badge>;
   }
-}
-
-function formatOptional(value: string | number | null | undefined): string {
-  if (value === null || value === undefined || value === "") {
-    return "Non presente";
-  }
-
-  return String(value);
 }
 
 export function LogDetailSheet({ log, open, onOpenChange }: Props) {
@@ -172,9 +159,16 @@ export function LogDetailSheet({ log, open, onOpenChange }: Props) {
     return null;
   }
 
-  const request = detail?.request ?? null;
-  const error = detail?.error ?? null;
-  const info = detail?.info ?? null;
+  const request = compactLogFields({
+    method: detail?.request?.method,
+    path: detail?.request?.path,
+    statusCode: detail?.request?.statusCode,
+  });
+  const error = compactLogFields(detail?.error);
+  const info = compactLogFields({
+    event: detail?.info?.event,
+    metadata: detail?.info?.metadata,
+  });
   const infoPayload = info?.metadata
     ? JSON.stringify(info.metadata, null, 2)
     : null;
@@ -204,14 +198,7 @@ export function LogDetailSheet({ log, open, onOpenChange }: Props) {
               >
                 {log.requestId}
               </Badge>
-            ) : (
-              <Badge
-                variant="outline"
-                className="font-mono font-normal bg-muted"
-              >
-                Nessun requestId
-              </Badge>
-            )}
+            ) : null}
           </div>
         </SheetHeader>
 
@@ -227,88 +214,29 @@ export function LogDetailSheet({ log, open, onOpenChange }: Props) {
             <div className="text-sm text-red-500">{loadError}</div>
           ) : null}
 
-          <div className="flex flex-col gap-2">
-            <h2 className="font-medium">Dettagli log</h2>
-            <div className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 gap-4 flex flex-col w-full">
-              <CardRow label="ID" value={log.id}>
-                <HashIcon />
-              </CardRow>
-              <CardRow
-                label="Data e ora"
-                value={formatLogTimestamp(log.timestamp)}
-              >
-                <CalendarIcon />
-              </CardRow>
-              <CardRow label="Livello" value={log.level}>
-                <ActivityIcon />
-              </CardRow>
-              <CardRow label="Servizio" value={log.service}>
-                <ServerIcon />
-              </CardRow>
-              <CardRow
-                label="ID richiesta"
-                value={log.requestId ?? "Non presente"}
-              >
-                <Link2Icon />
-              </CardRow>
-              <CardRow label="Messaggio" value={log.message}>
-                <MessageSquareIcon />
-              </CardRow>
+          {request ? (
+            <div className="flex flex-col gap-2">
+              <h2 className="font-medium">Richiesta</h2>
+              <div className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 gap-4 flex flex-col w-full">
+                {request.method ? (
+                  <CardRow label="Metodo" value={request.method}>
+                    <RouteIcon />
+                  </CardRow>
+                ) : null}
+                {request.path ? (
+                  <CardRow label="Path" value={request.path}>
+                    <RouteIcon />
+                  </CardRow>
+                ) : null}
+                {request.statusCode !== undefined &&
+                request.statusCode !== null ? (
+                  <CardRow label="Status" value={String(request.statusCode)}>
+                    <ActivityIcon />
+                  </CardRow>
+                ) : null}
+              </div>
             </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <h2 className="font-medium">Richiesta</h2>
-            <div className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 gap-4 flex flex-col w-full">
-              <CardRow label="Metodo" value={formatOptional(request?.method)}>
-                <RouteIcon />
-              </CardRow>
-              <CardRow label="Path" value={formatOptional(request?.path)}>
-                <RouteIcon />
-              </CardRow>
-              <CardRow
-                label="Status"
-                value={formatOptional(request?.statusCode)}
-              >
-                <ActivityIcon />
-              </CardRow>
-              <CardRow
-                label="Durata"
-                value={
-                  request?.durationMs !== null &&
-                  request?.durationMs !== undefined
-                    ? `${request.durationMs} ms`
-                    : "Non presente"
-                }
-              >
-                <TimerIcon />
-              </CardRow>
-              <CardRow
-                label="Ambiente"
-                value={formatOptional(request?.environment)}
-              >
-                <GlobeIcon />
-              </CardRow>
-              <CardRow label="Host" value={formatOptional(request?.host)}>
-                <ServerIcon />
-              </CardRow>
-              <CardRow label="IP" value={formatOptional(request?.ip)}>
-                <GlobeIcon />
-              </CardRow>
-              <CardRow
-                label="Trace ID"
-                value={formatOptional(request?.traceId)}
-              >
-                <HashIcon />
-              </CardRow>
-              <CardRow
-                label="User agent"
-                value={formatOptional(request?.userAgent)}
-              >
-                <ActivityIcon />
-              </CardRow>
-            </div>
-          </div>
+          ) : null}
 
           {error ? (
             <div className="flex flex-col gap-2">
@@ -317,21 +245,26 @@ export function LogDetailSheet({ log, open, onOpenChange }: Props) {
                 <h2 className="font-medium">Errore</h2>
               </div>
               <div className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 gap-4 flex flex-col w-full">
-                <CardRow label="Tipo" value={formatOptional(error.name)}>
-                  <AlertTriangleIcon />
-                </CardRow>
-                <CardRow
-                  label="Messaggio tecnico"
-                  value={formatOptional(error.message)}
-                >
-                  <MessageSquareIcon />
-                </CardRow>
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm text-muted-foreground">Stack</p>
-                  <pre className="text-xs font-mono whitespace-pre-wrap break-words bg-neutral-100 border border-neutral-200 rounded-lg p-3 text-neutral-700">
-                    {formatOptional(error.stack)}
-                  </pre>
-                </div>
+                {error.name ? (
+                  <CardRow label="Tipo" value={error.name}>
+                    <AlertTriangleIcon />
+                  </CardRow>
+                ) : null}
+                {error.message ? (
+                  <CardRow label="Messaggio tecnico" value={error.message}>
+                    <MessageSquareIcon />
+                  </CardRow>
+                ) : null}
+                {error.stack ? (
+                  <details>
+                    <summary className="cursor-pointer text-sm text-muted-foreground">
+                      Stack
+                    </summary>
+                    <pre className="mt-2 text-xs font-mono whitespace-pre-wrap break-words bg-neutral-100 border border-neutral-200 rounded-lg p-3 text-neutral-700">
+                      {error.stack}
+                    </pre>
+                  </details>
+                ) : null}
               </div>
             </div>
           ) : null}
@@ -340,18 +273,14 @@ export function LogDetailSheet({ log, open, onOpenChange }: Props) {
             <div className="flex flex-col gap-2">
               <div className="inline-flex items-center gap-2">
                 <InfoIcon className="size-4 text-blue-500" />
-                <h2 className="font-medium">Evento</h2>
+                <h2 className="font-medium">Contesto</h2>
               </div>
               <div className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 gap-4 flex flex-col w-full">
-                <CardRow label="Nome" value={formatOptional(info.event)}>
-                  <InfoIcon />
-                </CardRow>
-                <CardRow label="Attore" value={formatOptional(info.actor)}>
-                  <ActivityIcon />
-                </CardRow>
-                <CardRow label="Risorsa" value={formatOptional(info.subject)}>
-                  <RouteIcon />
-                </CardRow>
+                {info.event ? (
+                  <CardRow label="Evento" value={info.event}>
+                    <InfoIcon />
+                  </CardRow>
+                ) : null}
                 {infoPayload ? (
                   <div className="flex flex-col gap-2">
                     <p className="text-sm text-muted-foreground">Metadata</p>

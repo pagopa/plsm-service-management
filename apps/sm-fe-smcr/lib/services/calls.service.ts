@@ -94,9 +94,6 @@ export async function listCalls(
       {
         info: {
           event: "monitoring.calls.missing-env",
-          actor: "smcr-ui",
-          subject: "listCalls",
-          metadata: {},
         },
       },
       "FE_SMCR_CRM_API_URL not set",
@@ -141,8 +138,6 @@ export async function listCalls(
           request: { method: "GET", path: url, statusCode: response.status },
           info: {
             event: "monitoring.calls.list.failed",
-            actor: "smcr-ui",
-            subject: "listCalls",
             metadata: {
               productId: parsed.data.productId,
               hasInstitutionId: Boolean(parsed.data.institutionId),
@@ -171,8 +166,6 @@ export async function listCalls(
           request: { method: "GET", path: url, statusCode: response.status },
           info: {
             event: "monitoring.calls.list.invalid-payload",
-            actor: "smcr-ui",
-            subject: "listCalls",
             metadata: {
               issues: body.error.issues.map((issue) => ({
                 path: issue.path.join("."),
@@ -201,9 +194,6 @@ export async function listCalls(
         error: { name: err.name, message: err.message },
         info: {
           event: "monitoring.calls.list.error",
-          actor: "smcr-ui",
-          subject: "listCalls",
-          metadata: {},
         },
       },
       "listCalls error",
@@ -240,9 +230,6 @@ export async function getCallsSummary(
       {
         info: {
           event: "monitoring.calls.missing-env",
-          actor: "smcr-ui",
-          subject: "getCallsSummary",
-          metadata: {},
         },
       },
       "FE_SMCR_CRM_API_URL not set",
@@ -286,8 +273,6 @@ export async function getCallsSummary(
           request: { method: "GET", path: url, statusCode: response.status },
           info: {
             event: "monitoring.calls.summary.failed",
-            actor: "smcr-ui",
-            subject: "getCallsSummary",
             metadata: { dateFrom: input.dateFrom, dateTo: input.dateTo },
           },
         },
@@ -319,9 +304,6 @@ export async function getCallsSummary(
           request: { method: "GET", path: url, statusCode: response.status },
           info: {
             event: "monitoring.calls.summary.invalid-payload",
-            actor: "smcr-ui",
-            subject: "getCallsSummary",
-            metadata: {},
           },
         },
         "getCallsSummary received an unexpected payload",
@@ -340,9 +322,6 @@ export async function getCallsSummary(
         error: { name: err.name, message: err.message },
         info: {
           event: "monitoring.calls.summary.error",
-          actor: "smcr-ui",
-          subject: "getCallsSummary",
-          metadata: {},
         },
       },
       "getCallsSummary error",

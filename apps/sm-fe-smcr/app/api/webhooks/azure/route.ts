@@ -57,13 +57,10 @@ function isAuthenticated(
 }
 
 export async function POST(request: Request) {
-  const requestLogger = logger.child(
-    {
-      requestId: randomUUID(),
-      request: { method: request.method, path: "/api/webhooks/azure" },
-    },
-    { formatters: { log: (object) => object } },
-  );
+  const requestLogger = logger.child({
+    requestId: randomUUID(),
+    request: { method: request.method, path: "/api/webhooks/azure" },
+  });
 
   if (!isAuthenticated(request, requestLogger)) {
     const configured = Boolean(serverEnv.FE_SMCR_API_KEY_SERVICES);
