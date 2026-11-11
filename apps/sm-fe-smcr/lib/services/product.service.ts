@@ -94,8 +94,6 @@ export async function getOnboardingProducts(): Promise<{
       {
         info: {
           event: "product.onboarding.config_missing",
-          actor: "smcr-ui",
-          subject: "getOnboardingProducts",
           metadata: {
             hint: "FE_SMCR_AZURE_STORAGE_CONNECTION_STRING + CONTAINER + ONBOARDING_PRODUCTS_BLOB oppure ONBOARDING_PRODUCTS_BLOB come URL completo",
           },
@@ -128,8 +126,6 @@ export async function getOnboardingProducts(): Promise<{
         {
           info: {
             event: "product.onboarding.no_blob",
-            actor: "smcr-ui",
-            subject: "getOnboardingProducts",
             metadata: { prefix: blobPrefix },
           },
         },
@@ -155,8 +151,6 @@ export async function getOnboardingProducts(): Promise<{
         {
           info: {
             event: "product.onboarding.empty_blob",
-            actor: "smcr-ui",
-            subject: "getOnboardingProducts",
             metadata: { blobName },
           },
         },
@@ -176,9 +170,6 @@ export async function getOnboardingProducts(): Promise<{
         },
         info: {
           event: "product.onboarding.fetch_error",
-          actor: "smcr-ui",
-          subject: "getOnboardingProducts",
-          metadata: {},
         },
       },
       "getOnboardingProducts: Azure Storage / parse error",

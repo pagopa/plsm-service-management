@@ -1,4 +1,15 @@
-import { format, isValid, parseISO } from "date-fns";
+import { isValid, parseISO } from "date-fns";
+
+const logTimestampFormatter = new Intl.DateTimeFormat("it-IT", {
+  timeZone: "UTC",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
 
 export function parseLogTimestamp(value: string | number): Date {
   if (typeof value === "number") {
@@ -16,5 +27,5 @@ export function formatLogTimestamp(value: unknown): string {
   }
 
   const date = parseLogTimestamp(value);
-  return isValid(date) ? format(date, "HH:mm:ss dd-MM-yyyy") : String(value);
+  return isValid(date) ? logTimestampFormatter.format(date) : String(value);
 }

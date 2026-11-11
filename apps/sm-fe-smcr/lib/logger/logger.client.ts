@@ -1,4 +1,8 @@
-import { toLogError, toLogMetadata } from "@/lib/logger/logger.utils";
+import {
+  compactLogFields,
+  toLogError,
+  toLogMetadata,
+} from "@/lib/logger/logger.utils";
 
 type ClientLogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR" | "FATAL";
 
@@ -8,8 +12,6 @@ type ClientLogContext = {
   error?: unknown;
   info?: {
     event?: string;
-    actor?: string;
-    subject?: string;
     metadata?: unknown;
   };
 };
@@ -20,7 +22,8 @@ async function sendClientLog(
   fallbackMessage?: string,
 ) {
   const context = typeof input === "string" ? {} : input;
-  const message = typeof input === "string" ? input : fallbackMessage || input.message;
+  const message =
+    typeof input === "string" ? input : fallbackMessage || input.message;
 
   if (!message) {
     return;
@@ -31,16 +34,12 @@ async function sendClientLog(
     level,
     service: "SMCR",
     message,
-    requestId: context.requestId || crypto.randomUUID(),
+    requestId: context.requestId || undefined,
     error: context.error ? toLogError(context.error) : undefined,
-    info: context.info
-      ? {
-          ...context.info,
-          metadata: context.info.metadata
-            ? toLogMetadata(context.info.metadata)
-            : undefined,
-        }
-      : undefined,
+    info: compactLogFields({
+      event: context.info?.event,
+      metadata: toLogMetadata(context.info?.metadata),
+    }),
   };
 
   try {
