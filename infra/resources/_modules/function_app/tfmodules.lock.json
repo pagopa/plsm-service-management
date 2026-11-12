@@ -1,8 +1,8 @@
 {
   "azurerm_linux_function_app": {
-    "hash": "6608332ae6fdbc1afb802f21a4dda41168c3abda8d4f50e1e24ae814ffd98149",
-    "version": "7.1.0",
+    "hash": "8271a85cfa51a9f41e4c9647cb179a6d7cf6d69833234415451179b2a4a9348c",
+    "version": "7.1.1",
     "name": "unknown",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.1"
   }
 }
