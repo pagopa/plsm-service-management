@@ -235,7 +235,7 @@ plsm-{env_short}-itn-{resource_type}-{name}-{instance}
 | Resource Group            | Scopo               | Risorse Contenute                                                                                         |
 | ------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------- |
 | `plsm-p-itn-fn-rg-01`     | Function Apps       | Tutte le Azure Function del progetto (certificati, onboarding, CRM, auth, portale fatturazione) |
-| `plsm-p-itn-apps-rg-01`   | App Services        | App Service per frontend (FE SMCR) e backend                                                              |
+| `plsm-p-itn-apps-rg-01`   | App Services        | App Service del frontend (FE SMCR)                                                                        |
 | `plsm-p-itn-ext-rg-01`    | Risorse esterne     | Risorse condivise o integrazioni esterne                                                                  |
 | `plsm-p-itn-common-rg-01` | Core Infrastructure | VNet, Key Vault, Application Insights, DNS Zone (gestito da modulo DX)                                    |
 
