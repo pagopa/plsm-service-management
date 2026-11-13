@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-09-24 15:36
+# Generato il: 2026-11-12 23:11
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -289,16 +289,6 @@ locals {
   yaml_pf_func_slot_app_settings = local.yaml_pf_func_app_settings
 
   yaml_pf_func_sticky_app_setting_names = []
-
-  # ────────────────────────────────────────────────────────────
-  # backend_smcr
-  # ────────────────────────────────────────────────────────────
-
-  yaml_backend_app_settings = {}
-
-  yaml_backend_slot_app_settings = local.yaml_backend_app_settings
-
-  yaml_backend_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────
   # crm_function
