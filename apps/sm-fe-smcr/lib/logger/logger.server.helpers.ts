@@ -1,5 +1,9 @@
 import logger from "@/lib/logger/logger.server";
-import { toLogError, toLogMetadata } from "@/lib/logger/logger.utils";
+import {
+  compactLogFields,
+  toLogError,
+  toLogMetadata,
+} from "@/lib/logger/logger.utils";
 
 export function logServerError(
   error: unknown,
@@ -9,20 +13,15 @@ export function logServerError(
   logger.error(
     {
       error: toLogError(error),
-      info: metadata ? { metadata: toLogMetadata(metadata) } : undefined,
+      info: compactLogFields({ metadata: toLogMetadata(metadata) }),
     },
     message,
   );
 }
 
 export function logServerInfo(message: string, metadata?: unknown) {
-  if (!metadata) {
-    logger.info(message);
-    return;
-  }
-
   logger.info(
-    { info: { metadata: toLogMetadata(metadata) } },
+    { info: compactLogFields({ metadata: toLogMetadata(metadata) }) },
     message,
   );
 }

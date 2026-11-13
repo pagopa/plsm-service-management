@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { readLogDetail } from "@/lib/services/logs.service";
+import { checkLogReadAccess } from "@/lib/auth/logs";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ logId: string }> },
 ) {
+  const denied = await checkLogReadAccess();
+  if (denied) return denied;
   const { logId } = await params;
 
   if (!logId) {

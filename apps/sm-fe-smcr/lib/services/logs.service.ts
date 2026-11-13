@@ -1,9 +1,30 @@
-import { asc, desc, eq, gte, lt, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lt,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
 import { getDb } from "@/db";
 import { logs } from "@/db/schema";
 import z from "zod";
 import EventEmitter from "events";
-import { addDays, format, startOfDay, subDays } from "date-fns";
+import { compactLogFields } from "@/lib/logger/logger.utils";
+import {
+  getLogWindow,
+  LOG_LEVELS,
+  LOG_RANGES,
+  LOG_SERVICES,
+  LOGS_PAGE_SIZE,
+  type LogFilters,
+  type LogView,
+} from "@/lib/log-filters";
 
 const logsEventBus = new EventEmitter();
 const LOGS_EVENT_BUS = "logs" as const;
@@ -35,10 +56,10 @@ function formatInternalLogError(error: unknown): string {
   }
 }
 
-export const logLevelSchema = z.enum(["DEBUG", "INFO", "WARN", "ERROR"]);
+export const logLevelSchema = z.enum(LOG_LEVELS);
 export type LogLevel = z.infer<typeof logLevelSchema>;
 
-export const logServiceSchema = z.enum(["SMCR", "AMA"]);
+export const logServiceSchema = z.enum(LOG_SERVICES);
 export type LogService = z.infer<typeof logServiceSchema>;
 
 export const logSchema = z.object({
@@ -57,35 +78,34 @@ export const logVolumeSchema = z.object({
   info: z.number(),
   warn: z.number(),
   error: z.number(),
+  fatal: z.number(),
 });
 export type LogVolume = z.infer<typeof logVolumeSchema>;
 
-export const logRequestSchema = z.object({
-  method: z.string().optional().nullable(),
-  path: z.string().optional().nullable(),
-  statusCode: z.number().int().optional().nullable(),
-  durationMs: z.number().int().optional().nullable(),
-  environment: z.string().optional().nullable(),
-  host: z.string().optional().nullable(),
-  ip: z.string().optional().nullable(),
-  traceId: z.string().optional().nullable(),
-  userAgent: z.string().optional().nullable(),
-});
+export const logRequestSchema = z
+  .object({
+    method: z.string().optional().nullable(),
+    path: z.string().optional().nullable(),
+    statusCode: z.number().int().optional().nullable(),
+  })
+  .transform((request) => compactLogFields(request));
 export type LogRequest = z.infer<typeof logRequestSchema>;
 
-export const logErrorSchema = z.object({
-  name: z.string().optional().nullable(),
-  message: z.string().optional().nullable(),
-  stack: z.string().optional().nullable(),
-});
+export const logErrorSchema = z
+  .object({
+    name: z.string().optional().nullable(),
+    message: z.string().optional().nullable(),
+    stack: z.string().optional().nullable(),
+  })
+  .transform((error) => compactLogFields(error));
 export type LogError = z.infer<typeof logErrorSchema>;
 
-export const logInfoSchema = z.object({
-  event: z.string().optional().nullable(),
-  actor: z.string().optional().nullable(),
-  subject: z.string().optional().nullable(),
-  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
-});
+export const logInfoSchema = z
+  .object({
+    event: z.string().optional().nullable(),
+    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+  })
+  .transform((info) => compactLogFields(info));
 export type LogInfo = z.infer<typeof logInfoSchema>;
 
 export const logContextSchema = z.object({
@@ -110,21 +130,8 @@ export const logInputSchema = logSchema.omit({ id: true }).extend({
 export type LogInput = z.infer<typeof logInputSchema>;
 
 function buildLogContext(input: LogInput): LogContext | null {
-  const context: LogContext = {};
-
-  if (input.request) {
-    context.request = input.request;
-  }
-
-  if (input.error) {
-    context.error = input.error;
-  }
-
-  if (input.info) {
-    context.info = input.info;
-  }
-
-  return Object.keys(context).length > 0 ? context : null;
+  // Parse here too so direct callers cannot persist retired or empty fields.
+  return compactLogFields(logContextSchema.parse(input)) ?? null;
 }
 
 function parseLogContext(raw: unknown): LogContext | null {
@@ -185,17 +192,43 @@ function normalizeLogLimit(limit?: number | null): number {
   return Math.min(Math.max(Math.trunc(limit), 1), MAX_LOGS_LIMIT);
 }
 
-function buildEmptyLogVolume(days: number): Array<LogVolume> {
-  const safeDays = Math.max(Math.trunc(days), 1);
-  const startDate = subDays(startOfDay(new Date()), safeDays - 1);
+type ReadLogsOptions = Partial<LogFilters> & {
+  limit?: number;
+  before?: string | null;
+  beforeId?: string;
+  until?: string;
+};
 
-  return Array.from({ length: safeDays }, (_, index) => ({
-    date: format(addDays(startDate, index), "yyyy-MM-dd"),
-    debug: 0,
-    info: 0,
-    warn: 0,
-    error: 0,
-  }));
+function logConditions(options: ReadLogsOptions) {
+  const query = options.q?.trim();
+  // Treat SQL wildcard characters as literal search text.
+  const pattern = query ? `%${query.replace(/[\\%_]/g, "\\$&")}%` : undefined;
+  const window = options.range
+    ? getLogWindow(options.range, options.until)
+    : null;
+
+  return and(
+    window ? gte(logs.timestamp, window.start) : undefined,
+    window ? lte(logs.timestamp, window.end) : undefined,
+    options.level?.length ? inArray(logs.level, options.level) : undefined,
+    options.service?.length
+      ? inArray(logs.service, options.service)
+      : undefined,
+    pattern
+      ? or(ilike(logs.message, pattern), ilike(logs.request, pattern))
+      : undefined,
+    options.before
+      ? or(
+          lt(logs.timestamp, new Date(options.before)),
+          options.beforeId
+            ? and(
+                eq(logs.timestamp, new Date(options.before)),
+                lt(logs.id, options.beforeId),
+              )
+            : undefined,
+        )
+      : undefined,
+  );
 }
 
 const LOG_VOLUME_LEVEL_KEYS: Record<LogLevel, keyof Omit<LogVolume, "date">> = {
@@ -203,6 +236,7 @@ const LOG_VOLUME_LEVEL_KEYS: Record<LogLevel, keyof Omit<LogVolume, "date">> = {
   INFO: "info",
   WARN: "warn",
   ERROR: "error",
+  FATAL: "fatal",
 };
 
 export async function saveLog(
@@ -217,7 +251,7 @@ export async function saveLog(
         level: input.level,
         service: input.service,
         message: input.message,
-        request: input.requestId,
+        request: input.requestId?.trim() ? input.requestId : null,
         context,
       })
       .returning({ ...logFields, context: logs.context });
@@ -241,19 +275,15 @@ export async function saveLog(
 }
 
 export async function readLogs(
-  options: { limit?: number; before?: string | null } = {},
+  options: ReadLogsOptions = {},
 ): Promise<{ data: Array<Log>; error: null } | { data: null; error: string }> {
   try {
     const limit = normalizeLogLimit(options.limit);
     const rows = await getDb()
       .select(logFields)
       .from(logs)
-      .where(
-        options.before
-          ? lt(logs.timestamp, new Date(options.before))
-          : undefined,
-      )
-      .orderBy(desc(logs.timestamp))
+      .where(logConditions(options))
+      .orderBy(desc(logs.timestamp), desc(logs.id))
       .limit(limit);
 
     return { data: rows.map(mapLog), error: null };
@@ -264,26 +294,39 @@ export async function readLogs(
 }
 
 export async function readLogVolume(
-  options: { days?: number } = {},
+  options: LogFilters & { until: string },
 ): Promise<
   { data: Array<LogVolume>; error: null } | { data: null; error: string }
 > {
   try {
-    const days = Math.max(Math.trunc(options.days ?? 30), 1);
-    const startDate = subDays(startOfDay(new Date()), days - 1);
-    const volume = buildEmptyLogVolume(days);
+    const { start, end } = getLogWindow(options.range, options.until);
+    const bucketMs = LOG_RANGES[options.range].bucket;
+    const firstBucket = Math.floor(start.getTime() / bucketMs) * bucketMs;
+    const lastBucket = Math.floor(end.getTime() / bucketMs) * bucketMs;
+    const volume: LogVolume[] = Array.from(
+      { length: (lastBucket - firstBucket) / bucketMs + 1 },
+      (_, index) => ({
+        date: new Date(firstBucket + index * bucketMs).toISOString(),
+        debug: 0,
+        info: 0,
+        warn: 0,
+        error: 0,
+        fatal: 0,
+      }),
+    );
     const volumeByDate = new Map(volume.map((item) => [item.date, item]));
-    const day = sql`date_trunc('day', ${logs.timestamp}::timestamptz)`;
-    const date = sql<string>`to_char(${day}, 'YYYY-MM-DD')`.as("date");
+    // UTC epoch buckets keep SQL and UI boundaries identical across timezones/DST.
+    const bucket = sql`floor(extract(epoch from ${logs.timestamp}) / ${bucketMs / 1000}) * ${bucketMs}`;
+    const date = sql<number>`${bucket}`.mapWith(Number).as("date");
     const rows = await getDb()
       .select({ date, level: logs.level, count: sql`count(*)`.mapWith(Number) })
       .from(logs)
-      .where(gte(logs.timestamp, startDate))
-      .groupBy(day, logs.level)
+      .where(logConditions(options))
+      .groupBy(sql`"date"`, logs.level)
       .orderBy(asc(date));
 
     for (const row of rows) {
-      const item = volumeByDate.get(row.date);
+      const item = volumeByDate.get(new Date(row.date).toISOString());
       if (!item) {
         continue;
       }
@@ -296,6 +339,31 @@ export async function readLogVolume(
     writeInternalLogError("readLogVolume - database error", error);
     return { data: null, error: "Error reading log volume." };
   }
+}
+
+export async function readLogView(
+  filters: LogFilters,
+): Promise<{ data: LogView; error: null } | { data: null; error: string }> {
+  const until = new Date().toISOString();
+  const [list, volume] = await Promise.all([
+    readLogs({ ...filters, until, limit: LOGS_PAGE_SIZE + 1 }),
+    readLogVolume({ ...filters, until }),
+  ]);
+
+  if (!list.data || !volume.data) {
+    return { data: null, error: "Impossibile caricare i log. Riprova." };
+  }
+
+  return {
+    data: {
+      logs: list.data.slice(0, LOGS_PAGE_SIZE),
+      volume: volume.data,
+      from: getLogWindow(filters.range, until).start.toISOString(),
+      until,
+      hasMore: list.data.length > LOGS_PAGE_SIZE,
+    },
+    error: null,
+  };
 }
 
 export async function readLogDetail(

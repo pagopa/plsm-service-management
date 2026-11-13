@@ -41,8 +41,6 @@ export async function onSubmitFormData(state: any, formData: FormData) {
         {
           info: {
             event: "onboarding.formData.parseError",
-            actor: "smcr-ui",
-            subject: "onboarding",
             metadata: { errors },
           },
         },
@@ -73,12 +71,11 @@ export async function onSubmitFormData(state: any, formData: FormData) {
       {
         info: {
           event: "onboarding.upload.response",
-          actor: "smcr-ui",
-          subject: "onboarding",
           metadata: {
             hasData: !!data,
             output,
-            payload: generatePayload(dataFromUIParsed),
+            taxcode: dataFromUIParsed.taxcode,
+            productId: dataFromUIParsed.productId,
           },
         },
       },
@@ -94,8 +91,6 @@ export async function onSubmitFormData(state: any, formData: FormData) {
           },
           info: {
             event: "onboarding.upload.error",
-            actor: "smcr-ui",
-            subject: "onboarding",
             metadata: {
               status: error.status,
               statusText: error.statusText,
@@ -137,8 +132,6 @@ export async function onSubmitFormData(state: any, formData: FormData) {
         {
           info: {
             event: "onboarding.getStatus.response",
-            actor: "smcr-ui",
-            subject: "onboarding",
             metadata: {
               hasData: !!dataStatus,
               dataLength: dataStatus?.length ?? 0,
@@ -154,8 +147,6 @@ export async function onSubmitFormData(state: any, formData: FormData) {
           {
             info: {
               event: "onboarding.getStatus.error",
-              actor: "smcr-ui",
-              subject: "onboarding",
               metadata: {
                 status: errorStatus.status,
                 message: errorStatus.message,
@@ -187,8 +178,6 @@ export async function onSubmitFormData(state: any, formData: FormData) {
         {
           info: {
             event: "onboarding.getStatus.data",
-            actor: "smcr-ui",
-            subject: "onboarding",
             metadata: {
               dataLength: dataStatus?.length ?? 0,
               productId: dataFromUIParsed.productId,
@@ -224,8 +213,6 @@ export async function onSubmitFormData(state: any, formData: FormData) {
         {
           info: {
             event: "onboarding.submit.completed",
-            actor: "smcr-ui",
-            subject: "onboarding",
             metadata: {
               dataTableLength: dataTable?.length ?? 0,
               productId: dataFromUIParsed.productId,
@@ -280,8 +267,6 @@ export async function onSubmitFormData(state: any, formData: FormData) {
           },
           info: {
             event: "onboarding.getStatus.exception",
-            actor: "smcr-ui",
-            subject: "onboarding",
             metadata: { taxcode: dataFromUIParsed.taxcode },
           },
         },
@@ -303,9 +288,6 @@ export async function onSubmitFormData(state: any, formData: FormData) {
         },
         info: {
           event: "onboarding.submit.exception",
-          actor: "smcr-ui",
-          subject: "onboarding",
-          metadata: {},
         },
       },
       "Onboarding submit failed",

@@ -47,8 +47,6 @@ export async function getEserviceTemplates(): Promise<{
       {
         info: {
           event: "eservice_templates.config_missing",
-          actor: "smcr-ui",
-          subject: "getEserviceTemplates",
           metadata: { missing: missingConfig.join(", ") },
         },
       },
@@ -80,8 +78,6 @@ export async function getEserviceTemplates(): Promise<{
           {
             info: {
               event: "eservice_templates.request_failed",
-              actor: "smcr-ui",
-              subject: "getEserviceTemplates",
               metadata: { status: response.status, offset, body },
             },
           },
@@ -110,8 +106,6 @@ export async function getEserviceTemplates(): Promise<{
         {
           info: {
             event: "eservice_templates.truncated",
-            actor: "smcr-ui",
-            subject: "getEserviceTemplates",
             metadata: { fetched: templates.length, totalCount },
           },
         },
@@ -134,9 +128,6 @@ export async function getEserviceTemplates(): Promise<{
         },
         info: {
           event: "eservice_templates.fetch_error",
-          actor: "smcr-ui",
-          subject: "getEserviceTemplates",
-          metadata: {},
         },
       },
       "getEserviceTemplates: PDND / parse error",
