@@ -4,6 +4,7 @@ import {
   ClipboardListIcon,
   FileTextIcon,
   LayoutDashboardIcon,
+  NetworkIcon,
   ServerIcon,
   UsersIcon,
 } from "lucide-react";
@@ -13,6 +14,7 @@ import OnboardingTab from "./onboarding/onboarding-tab";
 import ServicesTab from "./services/services-tab";
 import UsersTab from "./users/users-tab";
 import DelegationsTab from "./delegations/delegations-tab";
+import AggregatesTab from "./aggregates/aggregates-tab";
 import { getUserGroups } from "@/lib/services/institution.service";
 enum TABS {
   GROUPS = "groups",
@@ -21,6 +23,7 @@ enum TABS {
   ONBOARDING = "onboarding",
   SERVICES = "services",
   DELEGATIONS = "delegactions",
+  AGGREGATES = "aggregates",
 }
 type Props = {
   taxCode: string;
@@ -30,6 +33,7 @@ type Props = {
   onboarding: string;
   subunitCode?: string;
   isPNPG?: boolean;
+  isAggregator?: boolean;
 };
 export default async function TabsSection({
   taxCode,
@@ -39,6 +43,7 @@ export default async function TabsSection({
   onboarding,
   subunitCode,
   isPNPG = false,
+  isAggregator = false,
 }: Props) {
   // On fetch error keep the tab visible so GroupsTab can surface the error.
   const groups = isPNPG ? null : await getUserGroups({ institution });
@@ -49,6 +54,7 @@ export default async function TabsSection({
       groups.data.content.some((item) => item.productId === product));
   const showServices = product === "prod-io";
   const showDelegations = product === "prod-pagopa";
+  const showAggregates = isAggregator;
 
   return (
     <section className="flex h-[calc(100vh-64px)] flex-col min-h-0">
@@ -58,6 +64,7 @@ export default async function TabsSection({
           showGroups ? "groups" : "no-groups",
           showServices ? "services" : "no-services",
           showDelegations ? "delegations" : "no-delegations",
+          showAggregates ? "aggregates" : "no-aggregates",
         ].join("|")}
         defaultValue={showGroups ? TABS.GROUPS : TABS.USERS}
         className="flex flex-1 min-h-0 flex-col"
@@ -124,6 +131,15 @@ export default async function TabsSection({
                 Deleghe
               </TabsTrigger>
             )}
+            {showAggregates && (
+              <TabsTrigger value={TABS.AGGREGATES} className="group">
+                <NetworkIcon
+                  className="size-3.5 -ms-0.5 me-1.5 opacity-60"
+                  aria-hidden="true"
+                />
+                Enti Aggregati
+              </TabsTrigger>
+            )}
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
@@ -185,6 +201,14 @@ export default async function TabsSection({
               institutionId={institution}
               institutionName={institutionDescription}
             />
+          </TabsContent>
+        )}
+        {showAggregates && (
+          <TabsContent
+            value={TABS.AGGREGATES}
+            className="flex flex-1 min-h-0 flex-col"
+          >
+            <AggregatesTab institutionId={institution} product={product} />
           </TabsContent>
         )}
       </Tabs>
