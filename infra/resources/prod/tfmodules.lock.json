@@ -1,10 +1,4 @@
 {
-  "azure_app_service_backend_smcr.azure_app_service": {
-    "hash": "0a2876b61564b68e3c6e096c10834c8d154db6726bab965c2b0dbc2895c0166c",
-    "version": "5.1.0",
-    "name": "unknown",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-app-service/azurerm/5.1.0"
-  },
   "azure_core_infra": {
     "hash": "468dc84574e61459125895650da6d6d8a75bc038a5888e9667248f5770e27a64",
     "version": "6.0.7",

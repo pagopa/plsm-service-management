@@ -449,7 +449,7 @@ graph TB
         PRODTF --> COREPROD[Core Infra Module<br/>VNet, KV, VPN, AppInsights]
         PRODTF --> RGPROD[Resource Groups<br/>fn-rg, apps-rg, ext-rg]
         PRODTF --> FUNCPROD[Function Apps<br/>certificati, onboarding, crm, auth, pf]
-        PRODTF --> APPPROD[App Services<br/>fe-smcr, backend-smcr]
+        PRODTF --> APPPROD[App Service<br/>fe-smcr]
         PRODTF --> DNSPROD[DNS & Networking<br/>Private DNS, Custom Domain]
     end
 
