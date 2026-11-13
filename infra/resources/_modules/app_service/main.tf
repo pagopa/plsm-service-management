@@ -2,7 +2,7 @@
 
 module "azure_app_service" {
   source  = "pagopa-dx/azure-app-service/azurerm"
-  version = "~> 1.0.1"
+  version = "~> 5.1"
 
 
   environment = {
@@ -14,7 +14,7 @@ module "azure_app_service" {
     instance_number = var.environment.instance_number
   }
 
-  tier                = var.tier
+  use_case            = "default"
   resource_group_name = var.resource_group_name
   node_version        = var.node_version
 
