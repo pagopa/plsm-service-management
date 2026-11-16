@@ -37,12 +37,6 @@ portale_fatturazione:
   STORAGE_ACCOUNT_NAME: "kv:storage_pf_name"
   CONTAINER_NAME: "kv:container_pf_name"
 
-# ─── Backend SMCR ─────────────────────────────────────────────────────────────
-# Nessun app setting al momento
-
-backend_smcr:
-  __local: yaml_backend
-
 # ─── Frontend FE-SMCR (Next.js) ───────────────────────────────────────────────
 # Shared: tutti i settings tranne gli URL pubblici
 # Slot-specifici: NEXT_PUBLIC_* (URL diversi tra production e staging)

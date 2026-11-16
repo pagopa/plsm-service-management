@@ -1,10 +1,4 @@
 {
-  "azure_app_service_backend_smcr.azure_app_service": {
-    "hash": "1578c3d974a6e23784264e334d4a5fc51fc11bb42e73d650d7f6ff335346184c",
-    "version": "1.0.1",
-    "name": "azure_app_service",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-app-service/azurerm/1.0.1"
-  },
   "azure_core_infra": {
     "hash": "468dc84574e61459125895650da6d6d8a75bc038a5888e9667248f5770e27a64",
     "version": "6.0.7",
@@ -12,34 +6,34 @@
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/6.0.7"
   },
   "azure_fe_app_service_smcr.azure_app_service": {
-    "hash": "1578c3d974a6e23784264e334d4a5fc51fc11bb42e73d650d7f6ff335346184c",
-    "version": "1.0.1",
-    "name": "azure_app_service",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-app-service/azurerm/1.0.1"
+    "hash": "0a2876b61564b68e3c6e096c10834c8d154db6726bab965c2b0dbc2895c0166c",
+    "version": "5.1.0",
+    "name": "unknown",
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-app-service/azurerm/5.1.0"
   },
   "certifica_function.azurerm_linux_function_app": {
-    "hash": "6608332ae6fdbc1afb802f21a4dda41168c3abda8d4f50e1e24ae814ffd98149",
-    "version": "7.1.0",
+    "hash": "8271a85cfa51a9f41e4c9647cb179a6d7cf6d69833234415451179b2a4a9348c",
+    "version": "7.1.1",
     "name": "unknown",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.1"
   },
   "crm_function.azurerm_linux_function_app": {
-    "hash": "6608332ae6fdbc1afb802f21a4dda41168c3abda8d4f50e1e24ae814ffd98149",
-    "version": "7.1.0",
+    "hash": "8271a85cfa51a9f41e4c9647cb179a6d7cf6d69833234415451179b2a4a9348c",
+    "version": "7.1.1",
     "name": "unknown",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.1"
   },
   "onboarding_function.azurerm_linux_function_app": {
-    "hash": "6608332ae6fdbc1afb802f21a4dda41168c3abda8d4f50e1e24ae814ffd98149",
-    "version": "7.1.0",
+    "hash": "8271a85cfa51a9f41e4c9647cb179a6d7cf6d69833234415451179b2a4a9348c",
+    "version": "7.1.1",
     "name": "unknown",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.1"
   },
   "portalefatturazione_function.azurerm_linux_function_app": {
-    "hash": "6608332ae6fdbc1afb802f21a4dda41168c3abda8d4f50e1e24ae814ffd98149",
-    "version": "7.1.0",
+    "hash": "8271a85cfa51a9f41e4c9647cb179a6d7cf6d69833234415451179b2a4a9348c",
+    "version": "7.1.1",
     "name": "unknown",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.1"
   },
   "postgres_apps.postgres": {
     "hash": "9777adb9f883f60142c4607a503d2500f6b179356bb63ee75c442caf938a9a49",
@@ -48,16 +42,16 @@
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-postgres-server/azurerm/1.0.7"
   },
   "auth_function.azurerm_linux_function_app": {
-    "hash": "6608332ae6fdbc1afb802f21a4dda41168c3abda8d4f50e1e24ae814ffd98149",
-    "version": "7.1.0",
+    "hash": "8271a85cfa51a9f41e4c9647cb179a6d7cf6d69833234415451179b2a4a9348c",
+    "version": "7.1.1",
     "name": "unknown",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.1"
   },
   "signature_function.azurerm_linux_function_app": {
-    "hash": "6608332ae6fdbc1afb802f21a4dda41168c3abda8d4f50e1e24ae814ffd98149",
-    "version": "7.1.0",
+    "hash": "8271a85cfa51a9f41e4c9647cb179a6d7cf6d69833234415451179b2a4a9348c",
+    "version": "7.1.1",
     "name": "unknown",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.1"
   },
   "azure_core_infra.custom_roles.dx_app_cd_resource_group_deploy": {
     "hash": "d6e42e81be534682e1acb153732886a3a6274b382b2380e6aba270f66441abcc",
