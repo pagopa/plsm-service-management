@@ -208,7 +208,11 @@ export default async function TabsSection({
             value={TABS.AGGREGATES}
             className="flex flex-1 min-h-0 flex-col"
           >
-            <AggregatesTab institutionId={institution} product={product} />
+            <AggregatesTab
+              key={`${institution}:${product}`}
+              institutionId={institution}
+              product={product}
+            />
           </TabsContent>
         )}
       </Tabs>

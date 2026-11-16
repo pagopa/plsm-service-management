@@ -8,6 +8,7 @@ import {
 } from "../actions/delegation.action";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 import { serverEnv } from "@/config/env";
+import { hasCurrentPermission } from "@/lib/auth/dashboard-access";
 
 const delegationSchema = z
   .object({
@@ -95,10 +96,11 @@ export async function deleteDelegation(input: DeleteDelegationInput) {
 
 const aggregateDelegationSchema = z.object({
   id: z.string(),
-  institutionId: z.string(),
-  institutionName: z.string().optional(),
-  institutionType: z.string().optional(),
-  taxCode: z.string().optional(),
+  // The paginated response exposes the aggregated institution in broker* fields.
+  brokerId: z.string(),
+  brokerName: z.string().optional(),
+  brokerType: z.string().optional(),
+  brokerTaxCode: z.string().optional(),
   productId: z.string().optional(),
   type: z.string().optional(),
   status: z.string().optional(),
@@ -121,8 +123,6 @@ const delegationsWithPaginationSchema = z.object({
 export type AggregateDelegation = z.infer<typeof aggregateDelegationSchema>;
 
 const AGGREGATES_PAGE_SIZE = 100;
-// Safety cap on pages fetched (100 x 50 = 5000 aggregated entities).
-const AGGREGATES_MAX_PAGES = 50;
 
 export async function getAggregatedInstitutions(
   brokerId: string,
@@ -131,9 +131,16 @@ export async function getAggregatedInstitutions(
   | { data: Array<AggregateDelegation>; error: null }
   | { data: []; error: string }
 > {
+  if (!(await hasCurrentPermission("overview.read"))) {
+    return {
+      data: [],
+      error: "Non sei autorizzato a visualizzare gli enti aggregati",
+    };
+  }
+
   const delegations: Array<AggregateDelegation> = [];
 
-  for (let page = 0; page < AGGREGATES_MAX_PAGES; page++) {
+  for (let page = 0; ; page++) {
     const params = new URLSearchParams({
       brokerId,
       productId,

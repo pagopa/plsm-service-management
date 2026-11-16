@@ -28,9 +28,9 @@ import { FormEvent, ReactNode, useMemo, useState } from "react";
 const TAX_CODE_REGEX = /^(\d{11}|[A-Z0-9]{16})$/;
 
 const columns: ColumnDef<AggregateDelegation>[] = [
-  { accessorKey: "taxCode", header: "Codice Fiscale" },
-  { accessorKey: "institutionName", header: "Denominazione" },
-  { accessorKey: "institutionType", header: "Tipologia ente" },
+  { accessorKey: "brokerTaxCode", header: "Codice Fiscale" },
+  { accessorKey: "brokerName", header: "Denominazione" },
+  { accessorKey: "brokerType", header: "Tipologia ente" },
   {
     accessorKey: "status",
     header: "Stato",
@@ -75,7 +75,9 @@ export function AggregatesTable({ data }: Props) {
   const filteredData = useMemo(
     () =>
       searchedTaxCode
-        ? data.filter((item) => item.taxCode?.toUpperCase() === searchedTaxCode)
+        ? data.filter(
+            (item) => item.brokerTaxCode?.toUpperCase() === searchedTaxCode,
+          )
         : data,
     [data, searchedTaxCode],
   );
