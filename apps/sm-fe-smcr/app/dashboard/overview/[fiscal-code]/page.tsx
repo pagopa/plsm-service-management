@@ -84,6 +84,11 @@ export default async function Page({
           product={product}
           onboarding={onboarding?.tokenId || ""}
           subunitCode={selectedInstitution?.subunitCode}
+          isAggregator={
+            selectedInstitution?.onboarding.find(
+              (item) => item.productId === product,
+            )?.isAggregator ?? false
+          }
         />
       )}
     </div>

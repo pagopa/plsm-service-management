@@ -8,6 +8,7 @@ import {
 } from "../actions/delegation.action";
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 import { serverEnv } from "@/config/env";
+import { hasCurrentPermission } from "@/lib/auth/dashboard-access";
 
 const delegationSchema = z
   .object({
@@ -37,7 +38,8 @@ export async function getDelegations(institutionId: string) {
     {
       output: z.array(delegationSchema),
       headers: {
-        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key":
+          serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
       },
     },
   );
@@ -52,7 +54,8 @@ export async function addDelegation(input: AddDelegationInput) {
       method: "POST",
       body: JSON.stringify(input),
       headers: {
-        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key":
+          serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
         "Content-Type": "application/json",
       },
       output: z.any(),
@@ -77,7 +80,8 @@ export async function deleteDelegation(input: DeleteDelegationInput) {
     {
       method: "DELETE",
       headers: {
-        "Ocp-Apim-Subscription-Key": serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
+        "Ocp-Apim-Subscription-Key":
+          serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
       },
     },
   );
@@ -88,4 +92,91 @@ export async function deleteDelegation(input: DeleteDelegationInput) {
   }
 
   return { data, error: null };
+}
+
+const aggregateDelegationSchema = z.object({
+  id: z.string(),
+  // The paginated response exposes the aggregated institution in broker* fields.
+  brokerId: z.string(),
+  brokerName: z.string().optional(),
+  brokerType: z.string().optional(),
+  brokerTaxCode: z.string().optional(),
+  productId: z.string().optional(),
+  type: z.string().optional(),
+  status: z.string().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+const delegationsWithPaginationSchema = z.object({
+  delegations: z.array(aggregateDelegationSchema),
+  pageInfo: z
+    .object({
+      pageNo: z.number(),
+      pageSize: z.number(),
+      totalElements: z.number(),
+      totalPages: z.number(),
+    })
+    .optional(),
+});
+
+export type AggregateDelegation = z.infer<typeof aggregateDelegationSchema>;
+
+const AGGREGATES_PAGE_SIZE = 100;
+
+export async function getAggregatedInstitutions(
+  brokerId: string,
+  productId: string,
+): Promise<
+  | { data: Array<AggregateDelegation>; error: null }
+  | { data: []; error: string }
+> {
+  if (!(await hasCurrentPermission("overview.read"))) {
+    return {
+      data: [],
+      error: "Non sei autorizzato a visualizzare gli enti aggregati",
+    };
+  }
+
+  const delegations: Array<AggregateDelegation> = [];
+
+  for (let page = 0; ; page++) {
+    const params = new URLSearchParams({
+      brokerId,
+      productId,
+      page: String(page),
+      size: String(AGGREGATES_PAGE_SIZE),
+      type: "EA",
+    });
+
+    const { data, error } = await betterFetch(
+      `https://api.selfcare.pagopa.it/external/support/v1/delegations/delegations-with-pagination?${params}`,
+      {
+        output: delegationsWithPaginationSchema,
+        headers: {
+          "Ocp-Apim-Subscription-Key":
+            serverEnv.FE_SMCR_API_KEY_INSTITUTION as string,
+        },
+      },
+    );
+
+    if (error || !data) {
+      logServerError(error, "getAggregatedInstitutions - fetch error");
+      return { data: [], error: "Errore nel recupero degli enti aggregati" };
+    }
+
+    delegations.push(...data.delegations);
+
+    const totalPages = data.pageInfo?.totalPages;
+    const isLastPage =
+      totalPages != null
+        ? page + 1 >= totalPages
+        : data.delegations.length < AGGREGATES_PAGE_SIZE;
+
+    if (isLastPage) {
+      break;
+    }
+  }
+
+  return { data: delegations, error: null };
 }
