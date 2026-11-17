@@ -188,7 +188,7 @@ export function CallsView() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">Calls</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Diario delle call</h1>
       </header>
 
       <Card className="gap-0 overflow-hidden border py-0 shadow-sm">

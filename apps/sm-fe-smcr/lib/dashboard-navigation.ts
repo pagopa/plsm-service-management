@@ -124,7 +124,7 @@ export const dashboardNavigation: DashboardNavigationSection[] = [
         icon: "monitor",
         children: [
           {
-            label: "Calls",
+            label: "Diario delle call",
             href: "/dashboard/monitoring/calls",
             permission: "call.management.read",
           },
