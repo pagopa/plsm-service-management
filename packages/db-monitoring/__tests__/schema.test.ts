@@ -48,6 +48,9 @@ describe("calls schema", () => {
       "prod-io-premium",
       "prod-io-sign",
       "prod-rtp",
+      "IO-FIMS",
+      "IT-WALLET",
+      "EUDI-WALLET",
     ]);
   });
 
