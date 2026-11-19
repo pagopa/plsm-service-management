@@ -44,6 +44,7 @@ export const columns: ColumnDef<Service>[] = [
   {
     accessorKey: "isVisible",
     header: "Visibilità",
+    filterFn: "equals",
     cell: ({ row }) => {
       const isVisible = row.original.isVisible;
 

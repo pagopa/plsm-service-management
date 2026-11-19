@@ -2,6 +2,7 @@
 
 import {
   ColumnDef,
+  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -9,9 +10,17 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
+import { TabWrapper } from "@/components/layout/tab-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -38,37 +47,71 @@ export function ServicesTable<TData, TValue>({
   data,
 }: DataTableProps<TData, TValue>) {
   const [globalFilter, setGlobalFilter] = useState("");
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     state: {
       globalFilter,
+      columnFilters,
     },
   });
+  const visibilityFilter = table.getColumn("isVisible")?.getFilterValue();
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-background gap-4">
-      <div className="flex items-center justify-between w-full">
+    <TabWrapper>
+      <div className="flex flex-wrap items-center justify-between gap-4 w-full">
         <div className="inline-flex items-center gap-4">
           <p className="font-medium text-lg">Servizi IO</p>
           <Badge variant="secondary">{data.length} servizi totali</Badge>
         </div>
 
-        <div className="inline-flex gap-4 items-center">
+        <div className="inline-flex flex-wrap gap-4 items-center">
           <ExportServices
             institution={institution}
             items={data as Array<Service>}
           />
 
+          <Select
+            value={
+              visibilityFilter === undefined
+                ? "all"
+                : visibilityFilter
+                  ? "visible"
+                  : "hidden"
+            }
+            onValueChange={(value) => {
+              table
+                .getColumn("isVisible")
+                ?.setFilterValue(
+                  value === "all" ? undefined : value === "visible",
+                );
+              table.resetPageIndex();
+            }}
+          >
+            <SelectTrigger className="w-44" aria-label="Visibilità dei servizi">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutti</SelectItem>
+              <SelectItem value="visible">Visibili</SelectItem>
+              <SelectItem value="hidden">Non visibili</SelectItem>
+            </SelectContent>
+          </Select>
+
           <div className="relative">
             <Input
               placeholder="Cerca per nome o ID..."
               value={globalFilter}
-              onChange={(event) => table.setGlobalFilter(event.target.value)}
+              onChange={(event) => {
+                table.setGlobalFilter(event.target.value);
+                table.resetPageIndex();
+              }}
               className="w-80 peer ps-9"
             />
             <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
@@ -146,8 +189,11 @@ export function ServicesTable<TData, TValue>({
       </div>
 
       <div>
-        <Pagination table={table} itemsLength={data.length} />
+        <Pagination
+          table={table}
+          itemsLength={table.getFilteredRowModel().rows.length}
+        />
       </div>
-    </div>
+    </TabWrapper>
   );
 }

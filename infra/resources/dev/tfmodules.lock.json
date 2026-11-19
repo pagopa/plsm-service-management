@@ -1,13 +1,13 @@
 {
   "auth_function.azurerm_linux_function_app": {
     "hash": "8271a85cfa51a9f41e4c9647cb179a6d7cf6d69833234415451179b2a4a9348c",
-    "version": "7.1.1",
+    "version": "unknown",
     "name": "unknown",
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/7.1.1"
   },
   "azure_fe_app_service_smcr.azure_app_service": {
     "hash": "0a2876b61564b68e3c6e096c10834c8d154db6726bab965c2b0dbc2895c0166c",
-    "version": "5.1.0",
+    "version": "unknown",
     "name": "unknown",
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-app-service/azurerm/5.1.0"
   },
