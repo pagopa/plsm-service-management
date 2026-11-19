@@ -25,6 +25,9 @@ export const PRODUCT_IDS = [
   "prod-io-premium",
   "prod-io-sign",
   "prod-rtp",
+  "IO-FIMS",
+  "IT-WALLET",
+  "EUDI-WALLET",
 ] as const;
 
 export type ProductId = (typeof PRODUCT_IDS)[number];

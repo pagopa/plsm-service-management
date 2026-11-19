@@ -68,9 +68,27 @@ export const BASE_URLS: Record<Environment, string> = {
 // -----------------------------------------------------------------------------
 
 /**
+ * Cerca il GUID di un prodotto nella mappa senza distinguere maiuscole e minuscole
+ * (es. la chiave "io-fims" nel segreto KV vale per il productId "IO-FIMS").
+ * La corrispondenza esatta ha la precedenza.
+ */
+export function findProductGuid(
+  map: Record<string, string>,
+  productId: string,
+): string | undefined {
+  if (Object.prototype.hasOwnProperty.call(map, productId)) {
+    return map[productId];
+  }
+  const wanted = productId.toLowerCase();
+  const key = Object.keys(map).find((k) => k.toLowerCase() === wanted);
+  return key === undefined ? undefined : map[key];
+}
+
+/**
  * Restituisce il GUID CRM del prodotto per l'ambiente specificato.
  * Il valore viene letto dalla env var KV (CRM_PRODUCTS_MAP_UAT / CRM_PRODUCTS_MAP_PROD),
  * obbligatoria a runtime — configurata via Key Vault a deploy-time.
+ * Le chiavi della mappa sono confrontate senza distinguere maiuscole e minuscole.
  *
  * @param productId - ID Selfcare del prodotto
  * @param environment - Ambiente Dynamics (UAT | PROD)
@@ -84,7 +102,7 @@ export function getProductGuid(
   const map = environment === "UAT"
     ? config.CRM_PRODUCTS_MAP_UAT
     : config.CRM_PRODUCTS_MAP_PROD;
-  const guid = map[productId];
+  const guid = findProductGuid(map, productId);
   if (!guid) {
     console.warn(`[mappings] Prodotto ${productId} non trovato nella mappa KV per ${environment}`);
     return null;

@@ -117,6 +117,23 @@ describe("createCallHandler", () => {
     );
   });
 
+  it.each(["IO-FIMS", "IT-WALLET", "EUDI-WALLET"])(
+    "accetta il nuovo prodotto %s",
+    async (productId) => {
+      mockedUpsertCall.mockResolvedValue("33333333-3333-3333-3333-333333333333");
+
+      const response = await createCallHandler(
+        makePostRequest({ ...validBody, productId }) as never,
+        makeContext() as never,
+      );
+
+      expect(response.status).toBe(201);
+      expect(mockedUpsertCall).toHaveBeenCalledWith(
+        expect.objectContaining({ productId }),
+      );
+    },
+  );
+
   it("registra la call come UAT se l'header x-dynamics-environment è UAT", async () => {
     mockedUpsertCall.mockResolvedValue("33333333-3333-3333-3333-333333333333");
 
