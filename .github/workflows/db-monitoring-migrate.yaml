@@ -52,8 +52,15 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
+      # Sul runner self-hosted (Container App Job) l'install dell'intero monorepo
+      # muore in silenzio nel Fetch step: installiamo solo il workspace che serve.
       - name: Install dependencies
-        run: yarn install --immutable
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: "true"
+        run: |
+          df -h . | tail -1
+          free -m | sed -n 2p || true
+          yarn workspaces focus "$WORKSPACE_NAME"
 
       - name: Componi la connection string
         env:
