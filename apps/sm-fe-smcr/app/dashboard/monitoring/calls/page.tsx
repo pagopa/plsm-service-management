@@ -32,7 +32,7 @@ export default function MonitoringCallsPage() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Calls</BreadcrumbPage>
+              <BreadcrumbPage>Diario delle call</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
