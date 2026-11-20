@@ -23,7 +23,8 @@ export function UploadCell({ row }: ActionCellProps) {
       | "prod-io"
       | "prod-pn"
       | "prod-interop"
-      | "prod-io-sign";
+      | "prod-io-sign"
+      | "prod-ced";
     const productId = row.getValue("id") as string;
 
     return (
