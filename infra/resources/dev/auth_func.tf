@@ -23,6 +23,9 @@ module "auth_function" {
   subnet_pep_id = data.azurerm_subnet.pep_snet.id
   subnet_cidr   = dx_available_subnet_cidr.auth_fa_subnet_cidr.cidr_block
 
+  # SMION-955: ospitata sul piano del FE SMCR invece che su un piano dedicato
+  app_service_plan_id = module.azure_fe_app_service_smcr.app_service.plan.id
+
   health_check_path = "/api/v1/health"
   node_version      = 22
   app_settings      = merge(local.common_app_settings, local.auth_func_app_settings)
