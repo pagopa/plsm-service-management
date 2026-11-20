@@ -101,12 +101,33 @@ jobs:
       - name: Applica le migrazioni
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TARGET_ENVIRONMENT: ${{ inputs.environment }}
         run: |
           set -euo pipefail
           if [ -z "$DATABASE_URL" ]; then
             echo "::error::Secret DATABASE_URL non configurato nell'environment selezionato."
             exit 1
           fi
+
+          # Il secret di app-dev ha puntato per errore al DB di prod: ci fermiamo
+          # se l'host non appartiene all'ambiente scelto (plsm-d-* / plsm-p-*).
+          DB_HOST=$(node -e 'console.log(new URL(process.env.DATABASE_URL).hostname)')
+          case "$TARGET_ENVIRONMENT" in
+            app-dev) EXPECTED_PREFIX="plsm-d-" ;;
+            app-prod) EXPECTED_PREFIX="plsm-p-" ;;
+            *)
+              echo "::error::Ambiente non previsto: $TARGET_ENVIRONMENT"
+              exit 1
+              ;;
+          esac
+          case "$DB_HOST" in
+            "$EXPECTED_PREFIX"*) echo "Destinazione: $DB_HOST" ;;
+            *)
+              echo "::error::DATABASE_URL di $TARGET_ENVIRONMENT punta a $DB_HOST, atteso un host $EXPECTED_PREFIX*."
+              exit 1
+              ;;
+          esac
+
           cd "$MIGRATOR_DIR"
           # La prima migrazione è una baseline non eseguibile: su un DB che ha già
           # lo schema va solo registrata come applicata (idempotente).
