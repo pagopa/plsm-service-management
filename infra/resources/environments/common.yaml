@@ -81,7 +81,7 @@ onboarding:
   SLACK_WEBHOOK_ONBOARDING_INTEROP: "kv:slack_webhook_onboarding_interop"
   SLACK_WEBHOOK_ONBOARDING_PAGOPA: "kv:slack_webhook_onboarding_pagopa"
   OCP_APIM_SUBSCRIPTION_KEY: "kv:ocp_apim_subscription_key"
-  # Staging ha 2 extra rispetto a production
+  # Staging ha 1 extra rispetto a production
   staging:
     CONTRACTS_TOPIC_CONSUMER_GROUP: "$Default"
     CONTRACTS_TOPIC_NAME: "sc-contracts"
@@ -93,7 +93,6 @@ onboarding:
     SLACK_WEBHOOK_ONBOARDING_PN: "kv:slack_webhook_onboarding_pn"
     SLACK_WEBHOOK_ONBOARDING_INTEROP: "kv:slack_webhook_onboarding_interop"
     SLACK_WEBHOOK_ONBOARDING_PAGOPA: "kv:slack_webhook_onboarding_pagopa"
-    APPINSIGHTS_INSTRUMENTATIONKEY: "kv:appinsights_instrumentationkey"
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY: "kv:FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY"
 
 # ─── Auth Function ─────────────────────────────────────────────────────
