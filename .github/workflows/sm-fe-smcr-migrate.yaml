@@ -59,25 +59,56 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      # Sul runner self-hosted (Container App Job) l'install dell'intero monorepo
-      # muore in silenzio nel Fetch step: installiamo solo il workspace che serve.
-      - name: Install dependencies
-        env:
-          YARN_ENABLE_IMMUTABLE_INSTALLS: "true"
-        run: yarn workspaces focus "$WORKSPACE_NAME"
+      # Le dipendenze del FE (Next.js & co.) sono troppo pesanti per il runner
+      # self-hosted (Container App Job): anche `yarn workspaces focus` viene ucciso
+      # nel Fetch step (exit 137). Per migrare servono solo drizzle-kit e pochi
+      # pacchetti: li installiamo, alle stesse versioni del FE e senza script di
+      # install, in una cartella a parte con configurazione e migrazioni.
+      - name: Prepara l'ambiente di migrazione
+        run: |
+          set -euo pipefail
+          MIGRATOR_DIR="$RUNNER_TEMP/fe-migrator"
+          mkdir -p "$MIGRATOR_DIR"
+          APP_DIR="apps/$WORKSPACE_NAME"
+          cp -R "$APP_DIR/drizzle.config.ts" "$APP_DIR/db" "$APP_DIR/scripts" "$MIGRATOR_DIR/"
+          # Versioni esatte prese dal yarn.lock (stesse del FE), non i range del package.json.
+          SPECS=$(node -e '
+            const fs = require("fs");
+            const [pkgPath, lockPath] = process.argv.slice(1);
+            const p = require(pkgPath);
+            const deps = { ...p.dependencies, ...p.devDependencies };
+            const blocks = fs.readFileSync(lockPath, "utf8").split(/\n\n+/);
+            const names = ["drizzle-kit", "drizzle-orm", "pg", "tsx", "dotenv"];
+            console.log(names.map((n) => {
+              if (!deps[n]) throw new Error(`dipendenza ${n} assente nel package.json del FE`);
+              const wanted = `${n}@npm:${deps[n]}`;
+              const block = blocks.find((b) => {
+                const header = b.split("\n")[0].replace(/:$/, "").replace(/"/g, "");
+                return header.split(", ").includes(wanted);
+              });
+              const version = block && /^  version: (\S+)$/m.exec(block)?.[1];
+              if (!version) throw new Error(`${wanted} non trovato nel yarn.lock`);
+              return `${n}@${version}`;
+            }).join(" "));
+          ' "$PWD/$APP_DIR/package.json" "$PWD/yarn.lock")
+          echo "Pacchetti: $SPECS"
+          cd "$MIGRATOR_DIR"
+          printf '{"name":"fe-migrator","private":true,"type":"module"}\n' > package.json
+          # shellcheck disable=SC2086
+          npm install --no-audit --no-fund --ignore-scripts $SPECS
+          echo "MIGRATOR_DIR=$MIGRATOR_DIR" >> "$GITHUB_ENV"
 
       - name: Applica le migrazioni
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          set -euo pipefail
           if [ -z "$DATABASE_URL" ]; then
             echo "::error::Secret DATABASE_URL non configurato nell'environment selezionato."
             exit 1
           fi
+          cd "$MIGRATOR_DIR"
           # La prima migrazione è una baseline non eseguibile: su un DB che ha già
           # lo schema va solo registrata come applicata (idempotente).
-          yarn workspace "$WORKSPACE_NAME" db:baseline
-          yarn workspace "$WORKSPACE_NAME" db:migrate
+          npx --no-install tsx scripts/db-baseline.ts
+          npx --no-install drizzle-kit migrate
