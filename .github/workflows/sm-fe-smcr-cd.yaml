@@ -122,6 +122,20 @@ jobs:
             cp -R $PUBLIC_SRC $BUILD_DIR/
           fi
 
+      # Senza startup command App Service lancia `npm start`: nel bundle
+      # standalone `next start` non esiste, l'avvio corretto è `node server.js`.
+      - name: Set Standalone Start Script
+        run: |
+          test -f "$BUILD_DIR/server.js" || { echo "::error::server.js assente nel bundle"; exit 1; }
+          node -e '
+            const fs = require("fs");
+            const file = process.argv[1];
+            const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+            pkg.scripts = { ...pkg.scripts, start: "node server.js" };
+            fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + "\n");
+          ' "$BUILD_DIR/package.json"
+          echo "start: $(node -p 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).scripts.start' "$BUILD_DIR/package.json")"
+
       - name: Create Deployment ZIP
         run: |
           BROKEN=$(find "$BUILD_DIR" -type l ! -exec test -e {} \; -print)
