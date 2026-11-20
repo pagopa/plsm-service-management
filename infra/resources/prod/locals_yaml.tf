@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-11-12 23:11
+# Generato il: 2026-11-20 21:43
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env prod
 # =============================================================================
 
@@ -80,7 +80,6 @@ locals {
     SLACK_WEBHOOK_ONBOARDING_INTEROP      = data.azurerm_key_vault_secret.slack_webhook_onboarding_interop.value
     SLACK_WEBHOOK_ONBOARDING_PAGOPA       = data.azurerm_key_vault_secret.slack_webhook_onboarding_pagopa.value
     OCP_APIM_SUBSCRIPTION_KEY             = data.azurerm_key_vault_secret.ocp_apim_subscription_key.value
-    APPINSIGHTS_INSTRUMENTATIONKEY        = data.azurerm_key_vault_secret.appinsights_instrumentationkey.value
     FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY     = data.azurerm_key_vault_secret.FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY.value
   }
 
