@@ -10,6 +10,10 @@ import { Client } from "pg";
 
 const BASELINE_NAME = "20260804123426_whole_shadowcat";
 const MIGRATIONS_FOLDER = "./db/migrations";
+// Tabelle create dalla baseline che nessuna migrazione successiva elimina:
+// se ci sono tutte lo schema della baseline è presente, se ne manca solo
+// qualcuna il DB è in uno stato parziale e ci si ferma.
+const BASELINE_TABLES = ["ama_access", "logs", "members"];
 
 // Stessa DDL che usa drizzle-orm (pg-core migrate) per un DB nuovo.
 const CREATE_MIGRATIONS_TABLE = `
@@ -43,12 +47,20 @@ async function main() {
   await client.connect();
 
   try {
-    const schema = await client.query<{ exists: boolean }>(
-      "select to_regclass('public.members') is not null as exists",
+    const schema = await client.query<{ table: string; exists: boolean }>(
+      `select t as table, to_regclass('public.' || t) is not null as exists
+       from unnest($1::text[]) as t`,
+      [BASELINE_TABLES],
     );
-    if (!schema.rows[0]?.exists) {
-      log("schema applicativo assente (manca public.members): niente da registrare.");
+    const missing = schema.rows.filter((row) => !row.exists).map((row) => row.table);
+    if (missing.length === BASELINE_TABLES.length) {
+      log("schema applicativo assente: niente da registrare.");
       return;
+    }
+    if (missing.length > 0) {
+      throw new Error(
+        `Schema parziale (mancano ${missing.join(", ")}): non registro la baseline, serve un controllo manuale.`,
+      );
     }
 
     const table = await client.query<{ column_name: string }>(
