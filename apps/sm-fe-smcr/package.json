@@ -1,6 +1,6 @@
 {
   "name": "sm-fe-smcr",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "packageManager": "yarn@4.10.3",
   "type": "module",
   "private": true,
