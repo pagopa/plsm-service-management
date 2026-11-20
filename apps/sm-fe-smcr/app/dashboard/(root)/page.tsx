@@ -6,6 +6,10 @@ import { it } from "date-fns/locale";
 import { ChartPie } from "@/components/dashboard/chart";
 import TextAnalytics from "@/components/dashboard/text-analytics";
 import { TopCalls } from "@/components/dashboard/top-calls";
+import {
+  buildOnboardedInstitutionsHref,
+  currentMonthRange,
+} from "@/features/onboarding/onboarded-institutions/filters";
 import { hasCurrentPermission } from "@/lib/auth/dashboard-access";
 import { getOnboardingProducts } from "@/lib/services/product.service";
 import { PRODUCT_CARDS } from "@/lib/constants/dashboard-products";
@@ -13,10 +17,12 @@ import { PRODUCT_CARDS } from "@/lib/constants/dashboard-products";
 export default async function DashboardPage() {
   const dateRanges = buildDateRanges();
   const analytics = [];
-  const [products, canReadCalls] = await Promise.all([
+  const [products, canReadCalls, canReadOnboarding] = await Promise.all([
     getOnboardingProducts(),
     hasCurrentPermission("call.management.read").catch(() => false),
+    hasCurrentPermission("onboarding.read").catch(() => false),
   ]);
+  const onboardedRange = currentMonthRange();
 
   if (products.error) {
     return (
@@ -48,6 +54,14 @@ export default async function DashboardPage() {
             previousCount={card.previousCount}
             bgColor={card.color}
             variationPercentage={card.variationPercentage}
+            href={
+              canReadOnboarding
+                ? buildOnboardedInstitutionsHref({
+                    product: card.productId,
+                    ...onboardedRange,
+                  })
+                : undefined
+            }
           />
         ))}
       </section>
