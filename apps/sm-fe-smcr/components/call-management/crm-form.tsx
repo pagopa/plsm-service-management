@@ -23,11 +23,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { PRODUCT_CARDS } from "@/lib/constants/dashboard-products";
 import type { Institution } from "@/lib/services/institution.service";
 import { LoaderCircleIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 import {
+  CALL_FORM_PRODUCTS,
   getCrmFormDefaultValues,
   crmFormSchema,
   oggettoDelContattoOptions,
@@ -291,7 +291,7 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {PRODUCT_CARDS.map(({ label, productId: id }) => (
+                      {CALL_FORM_PRODUCTS.map(({ label, productId: id }) => (
                         <SelectItem key={id} value={id}>
                           {label} ({id})
                         </SelectItem>
