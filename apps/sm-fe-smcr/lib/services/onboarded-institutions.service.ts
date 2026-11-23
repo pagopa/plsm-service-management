@@ -57,7 +57,14 @@ export async function getOnboardedInstitutions(): Promise<{
     );
     const buffer = await downloadAzureBlobAsBuffer(containerClient, BLOB_NAME);
 
-    const raw = JSON.parse(buffer.toString("utf-8")) as unknown;
+    const content = buffer.toString("utf-8").trim();
+    if (!content) {
+      const emptyBlobError = new Error("Blob has no content");
+      emptyBlobError.name = "AzureBlobEmptyBody";
+      throw emptyBlobError;
+    }
+
+    const raw = JSON.parse(content) as unknown;
     const parsed = reportSchema.parse(raw);
 
     const data = parsed
