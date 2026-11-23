@@ -28,60 +28,8 @@ module "azure_fe_app_service_smcr" {
   depends_on = [module.azure_core_infra]
 }
 
-# -----------------------------------------------------------------------------
-# Startup Command
-# Il modulo DX non supporta app_command_line, quindi usiamo azapi
-# -----------------------------------------------------------------------------
-
-# -----------------------------------------------------------------------------
-# Startup Command (il modulo DX non supporta app_command_line)
-# -----------------------------------------------------------------------------
-
-resource "terraform_data" "fe_smcr_startup_trigger" {
-  input = timestamp()
-}
-
-resource "azapi_update_resource" "fe_smcr_startup_command" {
-  type        = "Microsoft.Web/sites@2023-12-01"
-  resource_id = module.azure_fe_app_service_smcr.web_app_id
-
-  body = {
-    properties = {
-      siteConfig = {
-        appCommandLine = "node server.js"
-      }
-    }
-  }
-
-  lifecycle {
-    replace_triggered_by = [
-      terraform_data.fe_smcr_startup_trigger
-    ]
-  }
-
-  depends_on = [module.azure_fe_app_service_smcr]
-}
-
-resource "azapi_update_resource" "fe_smcr_slot_startup_command" {
-  type        = "Microsoft.Web/sites/slots@2023-12-01"
-  resource_id = "${module.azure_fe_app_service_smcr.web_app_id}/slots/staging"
-
-  body = {
-    properties = {
-      siteConfig = {
-        appCommandLine = "node server.js"
-      }
-    }
-  }
-
-  lifecycle {
-    replace_triggered_by = [
-      terraform_data.fe_smcr_startup_trigger
-    ]
-  }
-
-  depends_on = [module.azure_fe_app_service_smcr]
-}
+# Nessuno startup command: App Service lancia `npm start`, che il CD riscrive
+# in `node server.js` nel package.json del bundle standalone.
 
 # -----------------------------------------------------------------------------
 # Role Assignments

@@ -22,7 +22,9 @@ module "portalefatturazione_function" {
   }
 
   subnet_pep_id = module.azure_core_infra.common_pep_snet.id
-  subnet_cidr   = dx_available_subnet_cidr.pf_fa_subnet_cidr.cidr_block
+  # SMION-955: ospitata sul piano e sulla subnet della function certificati
+  app_service_plan_id = module.certifica_function.func_details.function_app.function_app.plan.id
+  subnet_id           = module.certifica_function.func_details.function_app.subnet.id
 
   health_check_path = "/api/v1/health"
   node_version      = 22
