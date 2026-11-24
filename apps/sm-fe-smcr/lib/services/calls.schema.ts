@@ -15,6 +15,9 @@ export const CALL_PRODUCT_IDS = [
   "prod-io-premium",
   "prod-io-sign",
   "prod-rtp",
+  "IO-FIMS",
+  "IT-WALLET",
+  "EUDI-WALLET",
 ] as const;
 
 export type CallProductId = (typeof CALL_PRODUCT_IDS)[number];
@@ -30,6 +33,9 @@ export const CALL_PRODUCT_LABELS: Record<CallProductId, string> = {
   "prod-io-premium": "IO Premium",
   "prod-io-sign": "Firma con IO",
   "prod-rtp": "RTP",
+  "IO-FIMS": "IO FIMS",
+  "IT-WALLET": "IT Wallet",
+  "EUDI-WALLET": "EUDI Wallet",
 };
 
 export const CALLS_PAGE_SIZE_DEFAULT = 10;

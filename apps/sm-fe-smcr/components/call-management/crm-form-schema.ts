@@ -1,13 +1,21 @@
 import { format } from "date-fns";
 import { z } from "zod";
 
-const productIds = [
-  "prod-io",
-  "prod-interop",
-  "prod-pn",
-  "prod-pagopa",
-  "prod-io-sign",
+export const CALL_FORM_PRODUCTS = [
+  { label: "IO", productId: "prod-io" },
+  { label: "Interop", productId: "prod-interop" },
+  { label: "Send", productId: "prod-pn" },
+  { label: "PagoPA", productId: "prod-pagopa" },
+  { label: "Firma con IO", productId: "prod-io-sign" },
+  { label: "IO FIMS", productId: "IO-FIMS" },
+  { label: "IT Wallet", productId: "IT-WALLET" },
+  { label: "EUDI Wallet", productId: "EUDI-WALLET" },
 ] as const;
+
+const productIds = CALL_FORM_PRODUCTS.map(({ productId }) => productId) as [
+  (typeof CALL_FORM_PRODUCTS)[number]["productId"],
+  ...(typeof CALL_FORM_PRODUCTS)[number]["productId"][],
+];
 
 export const tipologiaReferenteValues = [
   "APICALE",
