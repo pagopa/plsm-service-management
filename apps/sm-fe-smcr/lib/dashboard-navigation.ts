@@ -103,9 +103,19 @@ export const dashboardNavigation: DashboardNavigationSection[] = [
       },
       {
         label: "Onboarding",
-        href: "/dashboard/onboarding",
         icon: "text-input",
-        permission: "onboarding.read",
+        children: [
+          {
+            label: "Gestione onboarding",
+            href: "/dashboard/onboarding",
+            permission: "onboarding.read",
+          },
+          {
+            label: "Enti onboardati",
+            href: "/dashboard/onboarding/enti",
+            permission: "onboarding.read",
+          },
+        ],
       },
       {
         label: "PDA",
