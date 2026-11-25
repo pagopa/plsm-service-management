@@ -1,6 +1,8 @@
 module "postgres" {
   source  = "pagopa-dx/azure-postgres-server/azurerm"
-  version = "~> 1.0.7"
+  version = "~> 6.1"
+
+  use_case = "low_load"
 
   resource_group_name = var.resource_group_name
 
@@ -16,10 +18,9 @@ module "postgres" {
   subnet_pep_id                        = var.subnet_pep_id
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name
 
-  administrator_credentials = {
-    name     = var.postgres_username
-    password = var.postgres_password
-  }
+  admin_username         = var.postgres_username
+  admin_password         = var.postgres_password
+  admin_password_version = 1
 
   tags = var.tags
 }
