@@ -20,4 +20,7 @@ export const PRODUCT_MAP: Record<string, string> = {
   "prod-pn-pg": "prod-pn-pg",
   "prod-fd-garantito": "Fidejussioni ditali G",
   "prod-idpay-merchant": "prod-idpay-merchant",
+  "IO-FIMS": "IO FIMS",
+  "IT-WALLET": "IT Wallet",
+  "EUDI-WALLET": "EUDI Wallet",
 } as const;
