@@ -53,6 +53,47 @@ before checkout. For `app-dev`, any branch or tag can be selected.
 Run migrations before deploying code that depends on them. The deploy workflow
 does not execute migrations.
 
+### Log retention (pg_cron)
+
+The `smcr-log-retention` job runs daily at **03:00 UTC**. It deletes rows from
+`public.logs` whose event `timestamp` is strictly older than 30 days at the start
+of the run, across all services and levels. Each batch of up to 5,000 deletions
+is committed separately. Rows that expire between runs remain until the next run.
+
+**One-time setup per environment**, separate from app deployments and Drizzle
+migrations:
+
+1. On the Azure PostgreSQL Flexible Server, verify that `pg_cron` is allowed in
+   `azure.extensions` and loaded via `shared_preload_libraries`. Preserve existing
+   entries if changing either setting; a preload change requires a server restart.
+   Verify that the cron scheduler uses UTC/GMT (`cron.timezone` on versions that
+   expose it).
+2. As a database administrator, run `CREATE EXTENSION IF NOT EXISTS pg_cron;` in
+   the cron metadata database (`postgres` by default), **not** in the SMCR DB.
+3. From the repo root, set `CRON_DATABASE_URL` to a connection URL for that
+   metadata database. Use a job owner with permission to schedule jobs there
+   and to connect to the target DB and `SELECT`/`DELETE` on `public.logs`.
+   Confirm that `logs_db` is the database named in the app's `DATABASE_URL`:
+
+   ```sh
+   psql "$CRON_DATABASE_URL" -X -v ON_ERROR_STOP=1 -v logs_db=dbsmcr \
+     -f apps/sm-fe-smcr/scripts/schedule-log-retention.sql
+   ```
+
+Registration does not delete rows immediately. Re-running the script as the
+same owner updates the named job rather than creating a duplicate. To check the
+schedule and recent outcomes in the metadata database:
+
+```sql
+SELECT jobid, schedule, database, active FROM cron.job WHERE jobname = 'smcr-log-retention';
+SELECT start_time, end_time, status, return_message FROM cron.job_run_details
+WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'smcr-log-retention')
+ORDER BY start_time DESC LIMIT 5;
+```
+
+To stop future runs, execute `SELECT cron.unschedule('smcr-log-retention');`
+there as the job owner. This does not restore previously deleted logs.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
