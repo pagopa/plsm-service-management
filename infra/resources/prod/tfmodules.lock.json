@@ -37,7 +37,7 @@
   },
   "postgres_apps.postgres": {
     "hash": "e3d9880e4b96c48d3dd0c8d768b103f89d4de4dd496743a2e01ea17d6d3b8d97",
-    "version": "unknown",
+    "version": "6.1.0",
     "name": "unknown",
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-postgres-server/azurerm/6.1.0"
   },
