@@ -1,6 +1,6 @@
 module "azurerm_linux_function_app" {
   source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 3.0.0"
+  version = "~> 7.1"
 
   environment         = var.environment
   resource_group_name = var.resource_group_name
@@ -14,9 +14,11 @@ module "azurerm_linux_function_app" {
     name                = var.virtual_network.name
     resource_group_name = var.virtual_network.resource_group_name
   }
-  subnet_pep_id = var.subnet_pep_id
-  subnet_cidr   = var.subnet_cidr
-  tier          = "l"
+  subnet_pep_id       = var.subnet_pep_id
+  subnet_cidr         = var.subnet_cidr
+  subnet_id           = var.subnet_id
+  app_service_plan_id = var.app_service_plan_id
+  use_case            = "default"
 
   # Application Insights
   application_insights_connection_string   = var.application_insights_connection_string

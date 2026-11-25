@@ -16,11 +16,6 @@ variable "resource_group_name" {
   description = "Resource group to deploy resources to"
 }
 
-variable "tier" {
-  type    = string
-  default = "l"
-}
-
 variable "virtual_network" {
   type = object({
     name                = string
@@ -64,6 +59,6 @@ variable "tags" {
 
 variable "node_version" {
   type        = number
-  default     = 20
+  default     = 22
   description = "Versione di Node.js da utilizzare per la Function App."
 }

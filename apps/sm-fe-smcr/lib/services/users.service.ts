@@ -98,7 +98,11 @@ export async function createUser(input: {
     ],
   };
 
-  logServerInfo("createUser - request payload", payload);
+  logServerInfo("createUser - request", {
+    institutionId: payload.institutionId,
+    productId: payload.productId,
+    usersCount: payload.users.length,
+  });
 
   const { data, error } = await betterFetch(
     "https://api.selfcare.pagopa.it/external/support/v1/onboarding/users",

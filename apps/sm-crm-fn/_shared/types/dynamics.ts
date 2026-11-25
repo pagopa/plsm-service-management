@@ -284,6 +284,9 @@ export type ProductIdSelfcare =
   | "prod-interop"
   | "prod-io-premium"
   | "prod-io-sign"
-  | "prod-rtp";
+  | "prod-rtp"
+  | "IO-FIMS"
+  | "IT-WALLET"
+  | "EUDI-WALLET";
 
 export type Environment = "UAT" | "PROD";

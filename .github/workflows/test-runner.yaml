@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Login to Azure using OIDC
-        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           # Usa i segreti configurati nell'ambiente GitHub di ci
           client-id: ${{ secrets.ARM_CLIENT_ID }}

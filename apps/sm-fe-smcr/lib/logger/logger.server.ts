@@ -1,7 +1,7 @@
-import { randomUUID } from "crypto";
 import { createRequire } from "node:module";
 import pino from "pino";
 import { serverEnv } from "@/config/env";
+import { compactLogFields } from "@/lib/logger/logger.utils";
 
 export function createLocalStream(): pino.DestinationStream {
   if (
@@ -17,7 +17,9 @@ export function createLocalStream(): pino.DestinationStream {
         ? __filename
         : `${process.cwd()}/logger.server.ts`,
     );
-    const pinoPretty = requireFromHere("pino-pretty") as typeof import("pino-pretty");
+    const pinoPretty = requireFromHere(
+      "pino-pretty",
+    ) as typeof import("pino-pretty");
     return pinoPretty({ colorize: true, translateTime: "HH:MM:ss" });
   } catch {
     return process.stdout;
@@ -65,16 +67,13 @@ const logger = pino(
       service: "SMCR",
     },
     timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
+    serializers: {
+      request: compactLogFields,
+      info: compactLogFields,
+    },
     formatters: {
       level(label) {
         return { level: label.toUpperCase() };
-      },
-
-      log(object) {
-        return {
-          ...object,
-          requestId: object.requestId ?? randomUUID(),
-        };
       },
     },
   },

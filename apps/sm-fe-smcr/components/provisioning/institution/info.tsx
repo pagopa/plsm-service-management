@@ -475,6 +475,10 @@ export default function InstitutionInfo({
   );
 }
 
+// Applied when the dropdown has more than one option, so it doesn't look disabled.
+const ACTIVE_SELECT_TRIGGER_CLASS =
+  "bg-white text-foreground data-[placeholder]:text-foreground border-pagopa-primary/60! cursor-pointer hover:bg-pagopa-secondary/20 hover:border-pagopa-primary! [&>svg]:opacity-100 [&_svg:not([class*='text-'])]:text-pagopa-primary";
+
 function InstitutionSelect({
   institutions,
   currentInstitution,
@@ -486,6 +490,8 @@ function InstitutionSelect({
   setCurrentInstitution: Dispatch<SetStateAction<Institution | null>>;
   onUpdateProduct: (product: Product) => void;
 }) {
+  const isInteractive = institutions.length > 1;
+
   return (
     <Select
       onValueChange={(value) => {
@@ -497,7 +503,13 @@ function InstitutionSelect({
         }
       }}
     >
-      <SelectTrigger className="shadow-none p-0 focus-visible:ring-0 bg-neutral-100 px-3 border border-neutral-200!">
+      <SelectTrigger
+        className={cn(
+          "shadow-none p-0 focus-visible:ring-0 bg-neutral-100 px-3 border border-neutral-200!",
+          isInteractive && ACTIVE_SELECT_TRIGGER_CLASS,
+        )}
+        disabled={!isInteractive}
+      >
         <p className="text-lg max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis">
           {currentInstitution?.description}
         </p>
@@ -527,6 +539,8 @@ function ProductSelect({
   setCurrentProduct: Dispatch<SetStateAction<Product | null>>;
   isPending?: boolean;
 }) {
+  const isInteractive = products.length > 1;
+
   return (
     <Select
       onValueChange={(value) => {
@@ -542,9 +556,10 @@ function ProductSelect({
       <SelectTrigger
         className={cn(
           "shadow-none p-0 focus-visible:ring-0 bg-neutral-100 px-2 border border-neutral-200! min-w-[170px]",
+          isInteractive && ACTIVE_SELECT_TRIGGER_CLASS,
           isPending && "[&>svg:nth-of-type(2)]:hidden",
         )}
-        disabled={isPending}
+        disabled={isPending || !isInteractive}
       >
         <p className="text-base">
           {currentProduct?.productId

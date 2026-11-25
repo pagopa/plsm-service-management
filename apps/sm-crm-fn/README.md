@@ -391,6 +391,9 @@ Content-Type: application/json
 | `prod-io-premium`     | IO Premium       | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` |
 | `prod-io-sign`        | Firma con IO     | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` |
 | `prod-rtp`            | Request To Pay   | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | -                                      |
+| `IO-FIMS`             | IO FIMS          | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` |
+| `IT-WALLET`           | IT Wallet        | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` |
+| `EUDI-WALLET`         | EUDI Wallet      | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` | `xxxxxxxx-xxxxx-xxxx-xxxxx-xxxxxxxxxx` |
 
 ### Tipologia Referente
 

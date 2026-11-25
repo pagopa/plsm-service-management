@@ -46,7 +46,8 @@ variable "subnet_pep_id" {
 
 variable "subnet_cidr" {
   type        = string
-  description = "L'ID della subnet per i Private Endpoint."
+  description = "CIDR della subnet dedicata alla VNet integration. Alternativo a subnet_id."
+  default     = null
 }
 
 variable "health_check_path" {
@@ -57,7 +58,7 @@ variable "health_check_path" {
 
 variable "node_version" {
   type        = number
-  default     = 20
+  default     = 22
   description = "Versione di Node.js da utilizzare per la Function App."
 }
 
@@ -79,4 +80,17 @@ variable "application_insights_sampling_percentage" {
   type        = number
   description = "Percentuale di sampling per Application Insights. Default: 5"
   default     = 5
+}
+
+# Piano e subnet condivisi (SMION-955)
+variable "app_service_plan_id" {
+  type        = string
+  description = "ID di un App Service Plan esistente su cui ospitare la Function App. Se null il modulo DX crea un piano dedicato."
+  default     = null
+}
+
+variable "subnet_id" {
+  type        = string
+  description = "ID di una subnet esistente per la VNet integration. Alternativo a subnet_cidr."
+  default     = null
 }

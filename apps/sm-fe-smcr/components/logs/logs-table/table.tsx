@@ -1,14 +1,11 @@
 "use client";
 
 import {
-  ColumnDef,
-  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   TableBody,
   TableCell,
@@ -16,107 +13,134 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useState } from "react";
-import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
-import { Log } from "@/lib/services/logs.service";
+import { Button } from "@/components/ui/button";
+import type { Log } from "@/lib/services/logs.service";
 import { LogDetailSheet } from "@/components/logs/log-detail-sheet";
+import { getLogColumns } from "./columns";
 
-interface LogsTableProps {
-  columns: ColumnDef<Log>[];
+type Props = {
   data: Log[];
-}
+  filtered: boolean;
+  onReset: () => void;
+  onInspect: () => void;
+};
 
-export function LogsTable({ columns, data }: LogsTableProps) {
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [levels] = useQueryState("level", parseAsArrayOf(parseAsString));
-  const [services] = useQueryState("service", parseAsArrayOf(parseAsString));
-  const [detailOpen, setDetailOpen] = useState(false);
+export function LogsTable({ data, filtered, onReset, onInspect }: Props) {
   const [selectedLog, setSelectedLog] = useState<Log | null>(null);
+  const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLElement | null>(null);
+  const region = useRef<HTMLDivElement | null>(null);
 
+  const openLog = useCallback(
+    (log: Log, element: HTMLElement) => {
+      trigger.current = element;
+      onInspect();
+      setSelectedLog(log);
+      setOpen(true);
+    },
+    [onInspect],
+  );
+
+  // Stable cell renderers preserve DOM/focus when live data or the sheet changes.
+  const columns = useMemo(() => getLogColumns(openLog), [openLog]);
   const table = useReactTable({
     data,
     columns,
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
+    getRowId: (log) => log.id,
     getCoreRowModel: getCoreRowModel(),
-    state: {
-      columnFilters,
-    },
   });
 
-  useEffect(() => {
-    table.getColumn("level")?.setFilterValue(levels);
-  }, [levels, table]);
-
-  useEffect(() => {
-    table.getColumn("service")?.setFilterValue(services);
-  }, [services, table]);
-
-  const handleOpenChange = (open: boolean) => {
-    setDetailOpen(open);
-  };
-
-  const handleRowClick = (log: Log) => {
-    setSelectedLog(log);
-    setDetailOpen(true);
-  };
-
   return (
-    <div className="h-full min-h-0 overflow-auto">
+    <>
       <LogDetailSheet
         log={selectedLog}
-        open={detailOpen}
-        onOpenChange={handleOpenChange}
+        open={open}
+        onOpenChange={setOpen}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          const target = trigger.current?.isConnected
+            ? trigger.current
+            : (region.current?.querySelector<HTMLElement>(
+                `[data-log-id="${CSS.escape(selectedLog?.id ?? "")}"]`,
+              ) ?? region.current);
+          target?.focus({ preventScroll: true });
+        }}
       />
-      <table className="w-full caption-bottom text-sm border-separate border-spacing-0">
-        <TableHeader className="bg-neutral-100 [&_tr]:border-b-0">
-          {table.getHeaderGroups().map((headerGroup, headerGroupIndex) => (
-            <TableRow key={headerGroup.id} className="border-b-0">
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead
-                    key={header.id}
-                    className="sticky z-10 bg-neutral-100 font-normal text-muted-foreground text-sm px-3 h-9 border-b border-r border-neutral-200"
-                    style={{ top: headerGroupIndex * 36 }}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-
-        <TableBody className="[&_tr:last-child>td]:border-b-0">
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => {
-              const log = row.original;
-              const isSelected = selectedLog?.id === log.id;
-
-              return (
+      <div
+        ref={region}
+        role="region"
+        aria-label="Elenco dei log"
+        tabIndex={0}
+        className="relative h-full min-h-0 overflow-auto overscroll-contain rounded-b-xl outline-offset-[-3px] focus-visible:outline-2 focus-visible:outline-foreground"
+        onScroll={(event) => {
+          if (
+            event.currentTarget.scrollTop > 16 ||
+            event.currentTarget.scrollLeft > 16
+          )
+            onInspect();
+        }}
+        onFocusCapture={(event) => {
+          if ((event.target as HTMLElement).closest("[data-log-trigger]"))
+            onInspect();
+        }}
+      >
+        {data.length ? (
+          <table className="relative w-full min-w-[640px] table-fixed border-separate border-spacing-0 text-sm">
+            <caption className="sr-only">
+              Log dal più recente. Apri un messaggio per consultarne il
+              dettaglio.
+            </caption>
+            <colgroup>
+              {columns.map((column, index) => (
+                <col
+                  key={index}
+                  style={column.size ? { width: column.size } : undefined}
+                />
+              ))}
+            </colgroup>
+            <TableHeader>
+              {table.getHeaderGroups().map((group) => (
+                <TableRow key={group.id} className="hover:bg-transparent">
+                  {group.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      scope="col"
+                      className="sticky top-0 z-10 h-9 border-b bg-muted px-3 text-xs font-medium text-foreground/75"
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={isSelected && "selected"}
-                  className="border-b-0 cursor-pointer"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => handleRowClick(log)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      handleRowClick(log);
-                    }
+                  data-state={
+                    open && selectedLog?.id === row.id ? "selected" : undefined
+                  }
+                  className="cursor-pointer"
+                  onClick={(event) => {
+                    if (
+                      (event.target as HTMLElement).closest("button") ||
+                      window.getSelection()?.toString()
+                    )
+                      return;
+                    const button =
+                      event.currentTarget.querySelector<HTMLElement>(
+                        "[data-log-trigger]",
+                      );
+                    if (button) openLog(row.original, button);
                   }}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className="px-3 h-9 py-0 border-b border-r border-neutral-100"
+                      className="border-b border-border/60 px-3 py-1 align-middle whitespace-normal"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -125,17 +149,34 @@ export function LogsTable({ columns, data }: LogsTableProps) {
                     </TableCell>
                   ))}
                 </TableRow>
-              );
-            })
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </table>
-    </div>
+              ))}
+            </TableBody>
+          </table>
+        ) : (
+          <div className="px-4 py-10 text-center text-sm" role="status">
+            <p className="font-medium">
+              {filtered
+                ? "Nessun log corrisponde ai filtri"
+                : "Nessun log nel periodo selezionato"}
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              {filtered
+                ? "Modifica la ricerca o rimuovi un filtro."
+                : "Prova a selezionare un periodo più ampio."}
+            </p>
+            {filtered ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={onReset}
+              >
+                Azzera filtri
+              </Button>
+            ) : null}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

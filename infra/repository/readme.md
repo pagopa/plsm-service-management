@@ -23,3 +23,13 @@ Le sue responsabilità principali includono:
 Questa configurazione deve essere eseguita **una sola volta e manualmente da un ambiente locale** da un utente con i permessi necessari. Serve a creare il repository stesso, che ospiterà poi tutto il codice, inclusa questa configurazione.
 
 Una volta che il repository è stato creato, questa configurazione può essere archiviata e non dovrebbe essere eseguita di nuovo, a meno che non sia necessario modificare le impostazioni di base del repository.
+
+## ⚠️ Attenzione: apply solo mirati (dal modulo 3.0.1, SMION-891)
+
+Il modulo fissa alcune regole che nel repo abbiamo cambiato a mano e che non si possono impostare dagli input:
+
+* protezione di `main`: 1 approvazione obbligatoria + review dei code owner (oggi: 0 approvazioni);
+* reviewer degli environment `app-prod-cd` e `infra-prod-cd`: solo i team (oggi ci sono anche utenti singoli);
+* policy di deploy `main` su `app-prod-cd` (si porta dietro la modifica dei reviewer).
+
+Un `terraform apply` **completo** riporterebbe tutto ai valori del modulo. Finché il team non decide di allinearsi, usare solo apply con `-target` sulle risorse da creare e controllare il plan riga per riga.

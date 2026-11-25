@@ -265,6 +265,9 @@ Products use string identifiers in Selfcare that must be mapped to Dynamics GUID
 | `prod-io-premium`     | IO Premium       | ✅ All environments    |
 | `prod-io-sign`        | Firma con IO     | ✅ All environments    |
 | `prod-rtp`            | Request To Pay   | ⚠️ UAT only            |
+| `IO-FIMS`             | IO FIMS          | ✅ All environments    |
+| `IT-WALLET`           | IT Wallet        | ✅ All environments    |
+| `EUDI-WALLET`         | EUDI Wallet      | ✅ All environments    |
 
 #### Example Mapping (UAT Environment)
 
@@ -456,7 +459,8 @@ flowchart TD
 
 ```
 prod-pn | prod-io | prod-pagopa | prod-idpay | prod-idpay-merchant |
-prod-checkiban | prod-interop | prod-io-premium | prod-io-sign | prod-rtp
+prod-checkiban | prod-interop | prod-io-premium | prod-io-sign | prod-rtp |
+IO-FIMS | IT-WALLET | EUDI-WALLET
 ```
 
 **How it works**:
@@ -1384,7 +1388,8 @@ GET /api/data/v9.2/accounts?$filter=pgp_identificativoselfcare eq '{uuid}'
 1. Use valid product IDs from the list:
    ```
    prod-pn, prod-io, prod-pagopa, prod-idpay, prod-idpay-merchant,
-   prod-checkiban, prod-interop, prod-io-premium, prod-io-sign, prod-rtp
+   prod-checkiban, prod-interop, prod-io-premium, prod-io-sign, prod-rtp,
+   IO-FIMS, IT-WALLET, EUDI-WALLET
    ```
 2. Check environment-specific availability
 3. Verify spelling exactly matches (case-sensitive)

@@ -22,9 +22,6 @@ export async function getCertificates(): Promise<GetCertificatesResult> {
       {
         info: {
           event: "certificates.get.missing_api_key",
-          actor: "smcr-ui",
-          subject: "getCertificates",
-          metadata: {},
         },
       },
       "Chiave API certificati non configurata (FE_SMCR_API_KEY_CERTIFICATI)",
@@ -70,9 +67,6 @@ export async function getCertificates(): Promise<GetCertificatesResult> {
             },
         info: {
           event: "certificates.list.error",
-          actor: "smcr-ui",
-          subject: "getCertificates",
-          metadata: {},
         },
       },
       "getCertificates: errore recupero elenco certificati",

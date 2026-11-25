@@ -1,13 +1,12 @@
 "use client";
 
-import * as React from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { AlertTriangleIcon, InfoIcon, RouteIcon } from "lucide-react";
 import { formatLogTimestamp } from "@/lib/log-dates";
-import type { Log, LogDetail, LogLevel } from "@/lib/services/logs.service";
+import { compactLogFields } from "@/lib/logger/logger.utils";
+import type { Log, LogDetail } from "@/lib/services/logs.service";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CardRow } from "@/components/core/card-row";
-import { Pillow } from "@/components/ui/pillow";
-import { Spinner } from "@/components/ui/spinner";
 import {
   Sheet,
   SheetClose,
@@ -17,357 +16,333 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
-import {
-  ActivityIcon,
-  AlertTriangleIcon,
-  CalendarIcon,
-  GlobeIcon,
-  HashIcon,
-  InfoIcon,
-  LayoutDashboardIcon,
-  Link2Icon,
-  MessageSquareIcon,
-  RouteIcon,
-  ServerIcon,
-  TimerIcon,
-} from "lucide-react";
+import { CopyLogValue } from "./copy-log-value";
+import { LogLevelBadge, LogServiceBadge } from "./log-badges";
 
 type Props = {
   log: Log | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCloseAutoFocus?: (event: Event) => void;
 };
 
-function getPillowVariant(level: LogLevel) {
-  switch (level) {
-    case "DEBUG":
-      return "debug";
-    case "INFO":
-      return "info";
-    case "WARN":
-      return "warn";
-    case "ERROR":
-      return "error";
-    default:
-      return "default";
-  }
-}
+export function LogDetailSheet({
+  log,
+  open,
+  onOpenChange,
+  onCloseAutoFocus,
+}: Props) {
+  const [result, setResult] = useState<{
+    id: string;
+    detail: LogDetail | null;
+    error: string | null;
+    loading: boolean;
+  } | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
-function getLevelBadge(level: LogLevel) {
-  const colorClass = {
-    DEBUG: "text-neutral-500",
-    INFO: "text-blue-500",
-    WARN: "text-amber-500",
-    ERROR: "text-red-500",
-  }[level];
-
-  return (
-    <Badge
-      variant="outline"
-      className={cn("font-mono font-normal", colorClass)}
-    >
-      [{level}]
-    </Badge>
-  );
-}
-
-function getServiceBadge(service: string) {
-  switch (service) {
-    case "SMCR":
-      return (
-        <Badge variant="outline" className="bg-secondary font-normal">
-          <LayoutDashboardIcon className="opacity-60" />
-          SMCR
-        </Badge>
-      );
-    default:
-      return <Badge>{service}</Badge>;
-  }
-}
-
-function formatOptional(value: string | number | null | undefined): string {
-  if (value === null || value === undefined || value === "") {
-    return "Non presente";
-  }
-
-  return String(value);
-}
-
-export function LogDetailSheet({ log, open, onOpenChange }: Props) {
-  const [detail, setDetail] = React.useState<LogDetail | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [loadError, setLoadError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (!open) {
-      setDetail(null);
-      setLoadError(null);
-      setIsLoading(false);
-      return;
-    }
-
-    if (!log?.id) {
-      return;
-    }
-
+  useEffect(() => {
+    if (!open || !log?.id) return;
+    const id = log.id;
     const controller = new AbortController();
-    let isActive = true;
-
-    const loadDetail = async () => {
-      setIsLoading(true);
-      setLoadError(null);
-      setDetail(null);
-
+    setResult({ id, detail: null, error: null, loading: true });
+    async function load() {
       try {
         const response = await fetch(
-          `/api/monitoring/logs/${encodeURIComponent(log.id)}`,
-          {
-            signal: controller.signal,
-          },
+          `/api/monitoring/logs/${encodeURIComponent(id)}`,
+          { signal: controller.signal, cache: "no-store" },
         );
-
-        if (!response.ok) {
-          const payload = await response.json().catch(() => null);
-          const message =
-            payload?.message ?? "Errore nel caricamento del dettaglio.";
-          throw new Error(message);
-        }
-
-        const data = (await response.json()) as LogDetail;
-        if (isActive) {
-          setDetail(data);
-        }
-      } catch (error) {
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        if (isActive) {
-          setLoadError(
-            error instanceof Error
-              ? error.message
-              : "Errore nel caricamento del dettaglio.",
+        if (!response.ok)
+          throw new Error(
+            response.status === 404
+              ? "Questo log non è più disponibile."
+              : "Impossibile caricare il dettaglio.",
           );
-        }
-      } finally {
-        if (isActive) {
-          setIsLoading(false);
-        }
+        const detail = (await response.json()) as LogDetail;
+        if (!controller.signal.aborted)
+          setResult({ id, detail, error: null, loading: false });
+      } catch (error) {
+        if (!controller.signal.aborted)
+          setResult({
+            id,
+            detail: null,
+            error:
+              error instanceof Error
+                ? error.message
+                : "Impossibile caricare il dettaglio.",
+            loading: false,
+          });
       }
-    };
+    }
+    void load();
+    return () => controller.abort();
+  }, [open, log?.id, attempt]);
 
-    loadDetail();
-
-    return () => {
-      isActive = false;
-      controller.abort();
-    };
-  }, [open, log?.id]);
-
-  if (!log) {
-    return null;
-  }
-
-  const request = detail?.request ?? null;
-  const error = detail?.error ?? null;
-  const info = detail?.info ?? null;
-  const infoPayload = info?.metadata
-    ? JSON.stringify(info.metadata, null, 2)
-    : null;
+  if (!log) return null;
+  const current = result?.id === log.id ? result : null;
+  const detail = current?.detail;
+  const error = compactLogFields(detail?.error);
+  const request = compactLogFields({
+    method: detail?.request?.method,
+    path: detail?.request?.path,
+    statusCode: detail?.request?.statusCode,
+  });
+  const info = compactLogFields(detail?.info);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-xl">
-        <SheetHeader>
-          <SheetTitle className="flex items-start gap-2">
-            <span className="mt-1">
-              <Pillow variant={getPillowVariant(log.level)} />
-            </span>
-            <span className="text-base leading-snug break-words">
-              {log.message}
-            </span>
-          </SheetTitle>
-          <SheetDescription className="font-mono text-xs">
-            {formatLogTimestamp(log.timestamp)} - {log.id}
+      <SheetContent
+        closeLabel="Chiudi dettaglio"
+        onCloseAutoFocus={onCloseAutoFocus}
+        className="w-full gap-0 sm:max-w-xl motion-reduce:animate-none motion-reduce:transition-none data-[state=open]:duration-200 data-[state=closed]:duration-150"
+      >
+        <SheetHeader className="shrink-0 border-b pr-12">
+          <SheetTitle>Dettaglio log</SheetTitle>
+          <SheetDescription className="font-mono text-xs tabular-nums">
+            <time dateTime={log.timestamp}>
+              {formatLogTimestamp(log.timestamp)} UTC
+            </time>
           </SheetDescription>
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            {getLevelBadge(log.level)}
-            {getServiceBadge(log.service)}
-            {log.requestId ? (
-              <Badge
-                variant="outline"
-                className="font-mono font-normal bg-muted"
-              >
-                {log.requestId}
-              </Badge>
-            ) : (
-              <Badge
-                variant="outline"
-                className="font-mono font-normal bg-muted"
-              >
-                Nessun requestId
-              </Badge>
-            )}
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            <LogLevelBadge level={log.level} />
+            <LogServiceBadge service={log.service} />
           </div>
         </SheetHeader>
-
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-4 flex flex-col gap-6">
-          {isLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Spinner className="size-3.5" />
-              Caricamento dettaglio...
+        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain p-4">
+          <section aria-label="Messaggio" className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-medium">Messaggio</h2>
+              <CopyLogValue label="Copia messaggio" value={log.message} />
+            </div>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed wrap-anywhere">
+              {log.message}
+            </p>
+          </section>
+          {!current || current.loading ? (
+            <div
+              role="status"
+              className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground"
+            >
+              Caricamento dettaglio…
             </div>
           ) : null}
-
-          {loadError ? (
-            <div className="text-sm text-red-500">{loadError}</div>
+          {current?.error ? (
+            <div
+              role="alert"
+              className="space-y-2 rounded-lg border p-3 text-sm"
+            >
+              <p>{current.error} Puoi riprovare il caricamento.</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAttempt((value) => value + 1)}
+              >
+                Riprova
+              </Button>
+            </div>
           ) : null}
-
-          <div className="flex flex-col gap-2">
-            <h2 className="font-medium">Dettagli log</h2>
-            <div className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 gap-4 flex flex-col w-full">
-              <CardRow label="ID" value={log.id}>
-                <HashIcon />
-              </CardRow>
-              <CardRow
-                label="Data e ora"
-                value={formatLogTimestamp(log.timestamp)}
-              >
-                <CalendarIcon />
-              </CardRow>
-              <CardRow label="Livello" value={log.level}>
-                <ActivityIcon />
-              </CardRow>
-              <CardRow label="Servizio" value={log.service}>
-                <ServerIcon />
-              </CardRow>
-              <CardRow
-                label="ID richiesta"
-                value={log.requestId ?? "Non presente"}
-              >
-                <Link2Icon />
-              </CardRow>
-              <CardRow label="Messaggio" value={log.message}>
-                <MessageSquareIcon />
-              </CardRow>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <h2 className="font-medium">Richiesta</h2>
-            <div className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 gap-4 flex flex-col w-full">
-              <CardRow label="Metodo" value={formatOptional(request?.method)}>
-                <RouteIcon />
-              </CardRow>
-              <CardRow label="Path" value={formatOptional(request?.path)}>
-                <RouteIcon />
-              </CardRow>
-              <CardRow
-                label="Status"
-                value={formatOptional(request?.statusCode)}
-              >
-                <ActivityIcon />
-              </CardRow>
-              <CardRow
-                label="Durata"
-                value={
-                  request?.durationMs !== null &&
-                  request?.durationMs !== undefined
-                    ? `${request.durationMs} ms`
-                    : "Non presente"
-                }
-              >
-                <TimerIcon />
-              </CardRow>
-              <CardRow
-                label="Ambiente"
-                value={formatOptional(request?.environment)}
-              >
-                <GlobeIcon />
-              </CardRow>
-              <CardRow label="Host" value={formatOptional(request?.host)}>
-                <ServerIcon />
-              </CardRow>
-              <CardRow label="IP" value={formatOptional(request?.ip)}>
-                <GlobeIcon />
-              </CardRow>
-              <CardRow
-                label="Trace ID"
-                value={formatOptional(request?.traceId)}
-              >
-                <HashIcon />
-              </CardRow>
-              <CardRow
-                label="User agent"
-                value={formatOptional(request?.userAgent)}
-              >
-                <ActivityIcon />
-              </CardRow>
-            </div>
-          </div>
-
           {error ? (
-            <div className="flex flex-col gap-2">
-              <div className="inline-flex items-center gap-2">
-                <AlertTriangleIcon className="size-4 text-red-500" />
-                <h2 className="font-medium">Errore</h2>
-              </div>
-              <div className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 gap-4 flex flex-col w-full">
-                <CardRow label="Tipo" value={formatOptional(error.name)}>
-                  <AlertTriangleIcon />
-                </CardRow>
-                <CardRow
-                  label="Messaggio tecnico"
-                  value={formatOptional(error.message)}
-                >
-                  <MessageSquareIcon />
-                </CardRow>
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm text-muted-foreground">Stack</p>
-                  <pre className="text-xs font-mono whitespace-pre-wrap break-words bg-neutral-100 border border-neutral-200 rounded-lg p-3 text-neutral-700">
-                    {formatOptional(error.stack)}
-                  </pre>
-                </div>
-              </div>
-            </div>
+            <DetailSection
+              title="Errore"
+              icon={
+                <AlertTriangleIcon
+                  className="size-4 text-destructive"
+                  aria-hidden="true"
+                />
+              }
+            >
+              <dl className="space-y-3">
+                {error.name ? (
+                  <DetailField label="Tipo" value={error.name} />
+                ) : null}
+                {error.message ? (
+                  <DetailField
+                    label="Messaggio tecnico"
+                    value={error.message}
+                  />
+                ) : null}
+              </dl>
+              {error.stack ? (
+                <CodeDisclosure
+                  label="Stack"
+                  value={error.stack}
+                  copyLabel="Copia stack"
+                />
+              ) : null}
+            </DetailSection>
           ) : null}
-
-          {info ? (
-            <div className="flex flex-col gap-2">
-              <div className="inline-flex items-center gap-2">
-                <InfoIcon className="size-4 text-blue-500" />
-                <h2 className="font-medium">Evento</h2>
-              </div>
-              <div className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 gap-4 flex flex-col w-full">
-                <CardRow label="Nome" value={formatOptional(info.event)}>
-                  <InfoIcon />
-                </CardRow>
-                <CardRow label="Attore" value={formatOptional(info.actor)}>
-                  <ActivityIcon />
-                </CardRow>
-                <CardRow label="Risorsa" value={formatOptional(info.subject)}>
-                  <RouteIcon />
-                </CardRow>
-                {infoPayload ? (
-                  <div className="flex flex-col gap-2">
-                    <p className="text-sm text-muted-foreground">Metadata</p>
-                    <pre className="text-xs font-mono whitespace-pre-wrap break-words bg-neutral-100 border border-neutral-200 rounded-lg p-3 text-neutral-700">
-                      {infoPayload}
-                    </pre>
-                  </div>
+          {request ? (
+            <DetailSection
+              title="Richiesta"
+              icon={<RouteIcon className="size-4" aria-hidden="true" />}
+            >
+              <div className="flex flex-wrap items-start gap-2 font-mono text-xs">
+                {request.method ? (
+                  <Badge variant="outline" className="font-mono">
+                    {request.method}
+                  </Badge>
+                ) : null}
+                {request.path ? (
+                  <code className="min-w-0 flex-1 py-0.5 leading-relaxed wrap-anywhere">
+                    {request.path}
+                  </code>
+                ) : null}
+                {request.statusCode != null ? (
+                  <Badge
+                    variant="outline"
+                    className="font-mono"
+                    aria-label={`Stato HTTP ${request.statusCode}`}
+                  >
+                    {request.statusCode}
+                  </Badge>
                 ) : null}
               </div>
-            </div>
+            </DetailSection>
           ) : null}
+          {info ? (
+            <DetailSection
+              title="Contesto"
+              icon={<InfoIcon className="size-4" aria-hidden="true" />}
+            >
+              {info.event ? (
+                <dl>
+                  <DetailField label="Evento" value={info.event} />
+                </dl>
+              ) : null}
+              {info.metadata ? (
+                <dl className="space-y-3">
+                  {Object.entries(info.metadata).map(([key, value]) =>
+                    value !== null && typeof value === "object" ? (
+                      <div key={key}>
+                        <dt className="sr-only">{key}</dt>
+                        <dd>
+                          <CodeDisclosure
+                            label={key}
+                            value={value}
+                            copyLabel={`Copia ${key}`}
+                          />
+                        </dd>
+                      </div>
+                    ) : (
+                      <DetailField
+                        key={key}
+                        label={key}
+                        value={value === "" ? '""' : String(value)}
+                      />
+                    ),
+                  )}
+                </dl>
+              ) : null}
+            </DetailSection>
+          ) : null}
+          <section className="space-y-2" aria-label="Riferimenti">
+            <h2 className="text-sm font-medium">Riferimenti</h2>
+            <dl className="space-y-3">
+              <DetailField
+                label="ID log"
+                value={log.id}
+                copyLabel="Copia ID log"
+              />
+              {log.requestId ? (
+                <DetailField
+                  label="ID richiesta"
+                  value={log.requestId}
+                  copyLabel="Copia ID richiesta"
+                />
+              ) : null}
+            </dl>
+          </section>
         </div>
-
-        <SheetFooter className="flex flex-row justify-end">
+        <SheetFooter className="shrink-0 border-t">
           <SheetClose asChild>
             <Button variant="outline">Chiudi</Button>
           </SheetClose>
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function DetailSection({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-2" aria-label={title}>
+      <h2 className="flex items-center gap-2 text-sm font-medium">
+        {icon}
+        {title}
+      </h2>
+      <div className="space-y-3 rounded-lg border bg-muted/40 p-3">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function DetailField({
+  label,
+  value,
+  copyLabel,
+}: {
+  label: string;
+  value: string;
+  copyLabel?: string;
+}) {
+  return (
+    <div className="grid min-w-0 gap-1 sm:grid-cols-[minmax(0,7rem)_minmax(0,1fr)] sm:gap-3">
+      <dt className="py-1 text-xs text-muted-foreground wrap-anywhere">
+        {label}
+      </dt>
+      <dd className="flex min-w-0 items-start gap-1 text-sm">
+        <span
+          className={`min-w-0 flex-1 py-0.5 whitespace-pre-wrap wrap-anywhere ${copyLabel ? "font-mono text-xs leading-relaxed" : ""}`}
+        >
+          {value}
+        </span>
+        {copyLabel ? <CopyLogValue label={copyLabel} value={value} /> : null}
+      </dd>
+    </div>
+  );
+}
+
+function CodeDisclosure({
+  label,
+  value,
+  copyLabel,
+}: {
+  label: string;
+  value: unknown;
+  copyLabel: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const content = expanded
+    ? typeof value === "string"
+      ? value
+      : JSON.stringify(value, null, 2)
+    : "";
+  return (
+    <details
+      onToggle={(event) => setExpanded(event.currentTarget.open)}
+      className="min-w-0"
+    >
+      <summary className="cursor-pointer rounded-sm text-sm wrap-anywhere outline-offset-2 focus-visible:outline-2 focus-visible:outline-foreground">
+        {label}
+      </summary>
+      {expanded ? (
+        <div className="mt-2 min-w-0 rounded-md border bg-background p-2">
+          <div className="flex justify-end">
+            <CopyLogValue label={copyLabel} value={content ?? "null"} />
+          </div>
+          <pre className="whitespace-pre-wrap font-mono text-xs leading-relaxed wrap-anywhere">
+            {content}
+          </pre>
+        </div>
+      ) : null}
+    </details>
   );
 }

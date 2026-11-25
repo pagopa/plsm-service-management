@@ -30,7 +30,9 @@ module "crm_function" {
     resource_group_name = module.azure_core_infra.network_resource_group_name
   }
   subnet_pep_id = module.azure_core_infra.common_pep_snet.id
-  subnet_cidr   = dx_available_subnet_cidr.crm_fa_subnet_cidr.cidr_block
+  # SMION-955: ospitata sul piano e sulla subnet della function auth
+  app_service_plan_id = module.auth_function.func_details.function_app.function_app.plan.id
+  subnet_id           = module.auth_function.func_details.function_app.subnet.id
 
   health_check_path = "/api/v1/health"
   node_version      = 22

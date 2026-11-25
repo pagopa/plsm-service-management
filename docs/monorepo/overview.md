@@ -21,7 +21,6 @@ plsm-service-management/
 ├── apps/                           # Applicazioni del monorepo
 │   ├── sm-fe-smcr/                # 🎨 Frontend - Service Manager Control Room (Next.js 15 + React 19)
 │   ├── sm-auth-fn/                # 🔐 Function - Autenticazione (MSAL/OAuth2 PKCE)
-│   ├── sm-be-smcr/                # 🔧 Backend - SMCR (in sviluppo)
 │   ├── sm-certification-fn/       # 📜 Function - Certificazione XML (PostgreSQL)
 │   ├── sm-crm-fn/                 # 📞 Function - Integrazione CRM (Dynamics 365)
 │   ├── sm-onboarding-fn/          # 📋 Function - Onboarding contratti (Kafka/Avro)
@@ -52,7 +51,6 @@ plsm-service-management/
 | **sm-crm-fn**           | Azure Function | Integrazione con Dynamics 365 CRM per la gestione delle relazioni con i clienti                    | Azure Identity, Azure Storage Blob, Azure Functions v4                       | Documentazione WIP                        |
 | **sm-onboarding-fn**    | Azure Function | Flusso di onboarding contratti con event streaming Kafka e serializzazione Avro                    | Kafka, Avro, fp-ts, io-ts, Azure Functions v3                                | Documentazione WIP                        |
 | **sm-pf-fn**            | Azure Function | Gestione dati delle Persone Fisiche con archiviazione sicura                                       | Azure Identity, Azure Storage Blob, Azure Functions v4                       | Documentazione WIP                        |
-| **sm-be-smcr**          | Backend        | API backend per SMCR (in sviluppo)                                                                 | -                                                                            | -                                         |
 
 ---
 

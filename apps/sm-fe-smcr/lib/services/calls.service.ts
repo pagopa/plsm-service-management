@@ -6,9 +6,12 @@ import logger from "@/lib/logger/logger.server";
 
 import {
   buildCallsSearchParams,
+  callsSummaryResponseSchema,
   listCallsQuerySchema,
   listCallsResponseSchema,
   type CallFieldError,
+  type CallsSummaryInput,
+  type CallsSummaryResult,
   type ListCallsInput,
   type ListCallsResult,
 } from "./calls.schema";
@@ -91,9 +94,6 @@ export async function listCalls(
       {
         info: {
           event: "monitoring.calls.missing-env",
-          actor: "smcr-ui",
-          subject: "listCalls",
-          metadata: {},
         },
       },
       "FE_SMCR_CRM_API_URL not set",
@@ -138,8 +138,6 @@ export async function listCalls(
           request: { method: "GET", path: url, statusCode: response.status },
           info: {
             event: "monitoring.calls.list.failed",
-            actor: "smcr-ui",
-            subject: "listCalls",
             metadata: {
               productId: parsed.data.productId,
               hasInstitutionId: Boolean(parsed.data.institutionId),
@@ -168,9 +166,12 @@ export async function listCalls(
           request: { method: "GET", path: url, statusCode: response.status },
           info: {
             event: "monitoring.calls.list.invalid-payload",
-            actor: "smcr-ui",
-            subject: "listCalls",
-            metadata: {},
+            metadata: {
+              issues: body.error.issues.map((issue) => ({
+                path: issue.path.join("."),
+                message: issue.message,
+              })),
+            },
           },
         },
         "listCalls received an unexpected payload",
@@ -184,7 +185,7 @@ export async function listCalls(
     return {
       success: true,
       data: body.data.data,
-      count: body.data.count,
+      pagination: body.data.pagination,
     };
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
@@ -193,9 +194,6 @@ export async function listCalls(
         error: { name: err.name, message: err.message },
         info: {
           event: "monitoring.calls.list.error",
-          actor: "smcr-ui",
-          subject: "listCalls",
-          metadata: {},
         },
       },
       "listCalls error",
@@ -203,6 +201,134 @@ export async function listCalls(
     return {
       success: false,
       message: "Errore durante il recupero delle call",
+    };
+  }
+}
+
+export async function getCallsSummary(
+  input: CallsSummaryInput = {},
+): Promise<CallsSummaryResult> {
+  let allowed = false;
+  try {
+    allowed = await hasPermission("call.management.read");
+  } catch {
+    return {
+      success: false,
+      message: "Errore durante la verifica dei permessi.",
+    };
+  }
+  if (!allowed) {
+    return {
+      success: false,
+      message: "Non hai i permessi per consultare le call.",
+    };
+  }
+
+  const baseUrl = serverEnv.FE_SMCR_CRM_API_URL?.replace(/\/$/, "");
+  if (!baseUrl) {
+    logger.warn(
+      {
+        info: {
+          event: "monitoring.calls.missing-env",
+        },
+      },
+      "FE_SMCR_CRM_API_URL not set",
+    );
+    return { success: false, message: "API CRM non configurata." };
+  }
+
+  const params = new URLSearchParams();
+  if (input.dateFrom) {
+    params.set("dateFrom", input.dateFrom);
+  }
+  if (input.dateTo) {
+    params.set("dateTo", input.dateTo);
+  }
+  const query = params.toString();
+  const url = query
+    ? `${baseUrl}/calls/summary?${query}`
+    : `${baseUrl}/calls/summary`;
+  const headers: Record<string, string> = {};
+  if (serverEnv.FE_SMCR_CRM_API_KEY) {
+    headers["x-functions-key"] = serverEnv.FE_SMCR_CRM_API_KEY;
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+      cache: "no-store",
+    });
+    const responseText = await response.text().catch(() => "");
+    let payload: unknown = null;
+    try {
+      payload = responseText ? JSON.parse(responseText) : null;
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      logger.error(
+        {
+          request: { method: "GET", path: url, statusCode: response.status },
+          info: {
+            event: "monitoring.calls.summary.failed",
+            metadata: { dateFrom: input.dateFrom, dateTo: input.dateTo },
+          },
+        },
+        "getCallsSummary failed",
+      );
+
+      if (response.status === 400) {
+        return {
+          success: false,
+          message: readMessage(payload) ?? "Errore di validazione",
+        };
+      }
+      if (response.status === 401 || response.status === 403) {
+        return {
+          success: false,
+          message: "Accesso all'API CRM non autorizzato.",
+        };
+      }
+      return {
+        success: false,
+        message: "Errore durante il recupero della sintesi delle call",
+      };
+    }
+
+    const body = callsSummaryResponseSchema.safeParse(payload);
+    if (!body.success) {
+      logger.error(
+        {
+          request: { method: "GET", path: url, statusCode: response.status },
+          info: {
+            event: "monitoring.calls.summary.invalid-payload",
+          },
+        },
+        "getCallsSummary received an unexpected payload",
+      );
+      return {
+        success: false,
+        message: "Errore durante il recupero della sintesi delle call",
+      };
+    }
+
+    return { success: true, data: body.data.data };
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(
+      {
+        error: { name: err.name, message: err.message },
+        info: {
+          event: "monitoring.calls.summary.error",
+        },
+      },
+      "getCallsSummary error",
+    );
+    return {
+      success: false,
+      message: "Errore durante il recupero della sintesi delle call",
     };
   }
 }

@@ -4,7 +4,8 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
+  type OnChangeFn,
+  type PaginationState,
   useReactTable,
 } from "@tanstack/react-table";
 
@@ -22,21 +23,32 @@ import { cn } from "@/lib/utils";
 
 type CallsTableProps = {
   columns: ColumnDef<MonitoringCall>[];
+  /** Solo le call della pagina corrente: la paginazione è fatta da GET /calls. */
   data: MonitoringCall[];
+  /** Totale delle call che soddisfano i filtri, su tutte le pagine. */
+  total: number;
+  pagination: PaginationState;
+  onPaginationChange: OnChangeFn<PaginationState>;
   isEmpty: boolean;
 };
 
-export function CallsTable({ columns, data, isEmpty }: CallsTableProps) {
+export function CallsTable({
+  columns,
+  data,
+  total,
+  pagination,
+  onPaginationChange,
+  isEmpty,
+}: CallsTableProps) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getRowId: (row) => row.id,
-    autoResetPageIndex: true,
-    initialState: {
-      pagination: { pageSize: 10 },
-    },
+    manualPagination: true,
+    rowCount: total,
+    state: { pagination },
+    onPaginationChange,
   });
 
   return (
@@ -97,9 +109,7 @@ export function CallsTable({ columns, data, isEmpty }: CallsTableProps) {
           </p>
         )}
       </div>
-      {data.length > 0 && (
-        <Pagination table={table} itemsLength={data.length} />
-      )}
+      {total > 0 && <Pagination table={table} itemsLength={total} />}
     </div>
   );
 }

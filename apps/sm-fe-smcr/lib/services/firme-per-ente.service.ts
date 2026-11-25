@@ -32,8 +32,6 @@ export async function getFirmePerEnteReport(): Promise<{
       {
         info: {
           event: "firme_per_ente.config_missing",
-          actor: "smcr-ui",
-          subject: "getFirmePerEnteReport",
           metadata: {
             hint: "FE_SMCR_AZURE_STORAGE_CONNECTION_STRING + FE_SMCR_AZURE_STORAGE_CONTAINER_FIRMA_CON_IO + FE_SMCR_AZURE_STORAGE_FIRMA_CON_IO_BLOB_PREFIX",
           },
@@ -75,8 +73,6 @@ export async function getFirmePerEnteReport(): Promise<{
         {
           info: {
             event: "firme_per_ente.no_blob",
-            actor: "smcr-ui",
-            subject: "getFirmePerEnteReport",
             metadata: { prefix: blobPrefix.trim() },
           },
         },
@@ -99,9 +95,6 @@ export async function getFirmePerEnteReport(): Promise<{
         {
           info: {
             event: "firme_per_ente.empty_blob",
-            actor: "smcr-ui",
-            subject: "getFirmePerEnteReport",
-            metadata: {},
           },
         },
         "Blob report firme per ente senza contenuto",
@@ -120,9 +113,6 @@ export async function getFirmePerEnteReport(): Promise<{
         },
         info: {
           event: "firme_per_ente.fetch_error",
-          actor: "smcr-ui",
-          subject: "getFirmePerEnteReport",
-          metadata: {},
         },
       },
       "getFirmePerEnteReport: Azure Storage / parse error",

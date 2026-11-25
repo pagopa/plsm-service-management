@@ -1,6 +1,7 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
+import { cache } from "react";
 import { getDb } from "@/db";
 import {
   memberTeams,
@@ -16,37 +17,43 @@ import type {
 import { logServerError } from "@/lib/logger/logger.server.helpers";
 import { getOrCreateCurrentAppUser } from "./server";
 
-export async function getCurrentPermissionCodes(): Promise<Set<string>> {
-  try {
-    const currentUser = await getOrCreateCurrentAppUser();
+// cache: layout e pagina della stessa richiesta condividono un'unica query
+export const getCurrentPermissionCodes = cache(
+  async (): Promise<Set<string>> => {
+    try {
+      const currentUser = await getOrCreateCurrentAppUser();
 
-    if (!currentUser) {
-      return new Set();
+      if (!currentUser) {
+        return new Set();
+      }
+
+      const db = getDb();
+      const permissionRows = await db
+        .selectDistinct({ code: permissions.code })
+        .from(members)
+        .innerJoin(memberTeams, eq(members.id, memberTeams.memberId))
+        .innerJoin(teams, eq(memberTeams.teamId, teams.id))
+        .innerJoin(teamPermissions, eq(teams.id, teamPermissions.teamId))
+        .innerJoin(
+          permissions,
+          eq(teamPermissions.permissionId, permissions.id),
+        )
+        .where(
+          and(
+            eq(members.id, Number(currentUser.user.id)),
+            eq(members.status, "active"),
+            eq(teams.status, "active"),
+            eq(permissions.status, "active"),
+          ),
+        );
+
+      return new Set(permissionRows.map((permission) => permission.code));
+    } catch (error) {
+      logServerError(error, "getCurrentPermissionCodes - database error");
+      throw error;
     }
-
-    const db = getDb();
-    const permissionRows = await db
-      .selectDistinct({ code: permissions.code })
-      .from(members)
-      .innerJoin(memberTeams, eq(members.id, memberTeams.memberId))
-      .innerJoin(teams, eq(memberTeams.teamId, teams.id))
-      .innerJoin(teamPermissions, eq(teams.id, teamPermissions.teamId))
-      .innerJoin(permissions, eq(teamPermissions.permissionId, permissions.id))
-      .where(
-        and(
-          eq(members.id, Number(currentUser.user.id)),
-          eq(members.status, "active"),
-          eq(teams.status, "active"),
-          eq(permissions.status, "active"),
-        ),
-      );
-
-    return new Set(permissionRows.map((permission) => permission.code));
-  } catch (error) {
-    logServerError(error, "getCurrentPermissionCodes - database error");
-    throw error;
-  }
-}
+  },
+);
 
 export async function hasCurrentPermission(
   permissionCode: string,

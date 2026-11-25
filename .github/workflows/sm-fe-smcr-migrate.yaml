@@ -1,0 +1,135 @@
+name: SM-FE-SMCR - Migrate
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Ambiente su cui applicare le migrazioni
+        type: choice
+        required: true
+        default: app-dev
+        options:
+          - app-dev
+          - app-prod
+      confirm:
+        description: 'Scrivi "migrate" per confermare'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sm-fe-smcr-migrate-${{ inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+  WORKSPACE_NAME: sm-fe-smcr
+
+jobs:
+  migrate:
+    name: Migrazioni su ${{ inputs.environment }}
+    # Il database è privato: usa il runner nella VNet dell'ambiente selezionato.
+    runs-on: ${{ inputs.environment == 'app-prod' && 'prod' || 'dev' }}
+    environment: ${{ inputs.environment }}-cd
+
+    steps:
+      - name: Verifica la conferma
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [ "$CONFIRM" != "migrate" ]; then
+            echo "::error::Conferma mancante: scrivi esattamente 'migrate' per procedere."
+            exit 1
+          fi
+
+      - name: Verifica il branch per le migrazioni in produzione
+        if: inputs.environment == 'app-prod' && github.ref != 'refs/heads/main'
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          echo "::error::Le migrazioni su app-prod si lanciano solo da main (riferimento selezionato: $REF_NAME)."
+          exit 1
+
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Le dipendenze del FE (Next.js & co.) sono troppo pesanti per il runner
+      # self-hosted (Container App Job): anche `yarn workspaces focus` viene ucciso
+      # nel Fetch step (exit 137). Per migrare servono solo drizzle-kit e pochi
+      # pacchetti: li installiamo, alle stesse versioni del FE e senza script di
+      # install, in una cartella a parte con configurazione e migrazioni.
+      - name: Prepara l'ambiente di migrazione
+        run: |
+          set -euo pipefail
+          MIGRATOR_DIR="$RUNNER_TEMP/fe-migrator"
+          mkdir -p "$MIGRATOR_DIR"
+          APP_DIR="apps/$WORKSPACE_NAME"
+          cp -R "$APP_DIR/drizzle.config.ts" "$APP_DIR/db" "$APP_DIR/scripts" "$MIGRATOR_DIR/"
+          # Versioni esatte prese dal yarn.lock (stesse del FE), non i range del package.json.
+          SPECS=$(node -e '
+            const fs = require("fs");
+            const [pkgPath, lockPath] = process.argv.slice(1);
+            const p = require(pkgPath);
+            const deps = { ...p.dependencies, ...p.devDependencies };
+            const blocks = fs.readFileSync(lockPath, "utf8").split(/\n\n+/);
+            const names = ["drizzle-kit", "drizzle-orm", "pg", "tsx", "dotenv"];
+            console.log(names.map((n) => {
+              if (!deps[n]) throw new Error(`dipendenza ${n} assente nel package.json del FE`);
+              const wanted = `${n}@npm:${deps[n]}`;
+              const block = blocks.find((b) => {
+                const header = b.split("\n")[0].replace(/:$/, "").replace(/"/g, "");
+                return header.split(", ").includes(wanted);
+              });
+              const version = block && /^  version: (\S+)$/m.exec(block)?.[1];
+              if (!version) throw new Error(`${wanted} non trovato nel yarn.lock`);
+              return `${n}@${version}`;
+            }).join(" "));
+          ' "$PWD/$APP_DIR/package.json" "$PWD/yarn.lock")
+          echo "Pacchetti: $SPECS"
+          cd "$MIGRATOR_DIR"
+          printf '{"name":"fe-migrator","private":true,"type":"module"}\n' > package.json
+          # shellcheck disable=SC2086
+          npm install --no-audit --no-fund --ignore-scripts $SPECS
+          echo "MIGRATOR_DIR=$MIGRATOR_DIR" >> "$GITHUB_ENV"
+
+      - name: Applica le migrazioni
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TARGET_ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Secret DATABASE_URL non configurato nell'environment selezionato."
+            exit 1
+          fi
+
+          # Il secret di app-dev ha puntato per errore al DB di prod: ci fermiamo
+          # se l'host non appartiene all'ambiente scelto (plsm-d-* / plsm-p-*).
+          DB_HOST=$(node -e 'console.log(new URL(process.env.DATABASE_URL).hostname)')
+          case "$TARGET_ENVIRONMENT" in
+            app-dev) EXPECTED_PREFIX="plsm-d-" ;;
+            app-prod) EXPECTED_PREFIX="plsm-p-" ;;
+            *)
+              echo "::error::Ambiente non previsto: $TARGET_ENVIRONMENT"
+              exit 1
+              ;;
+          esac
+          case "$DB_HOST" in
+            "$EXPECTED_PREFIX"*) echo "Destinazione: $DB_HOST" ;;
+            *)
+              echo "::error::DATABASE_URL di $TARGET_ENVIRONMENT punta a $DB_HOST, atteso un host $EXPECTED_PREFIX*."
+              exit 1
+              ;;
+          esac
+
+          cd "$MIGRATOR_DIR"
+          # La prima migrazione è una baseline non eseguibile: su un DB che ha già
+          # lo schema va solo registrata come applicata (idempotente).
+          npx --no-install tsx scripts/db-baseline.ts
+          npx --no-install drizzle-kit migrate

@@ -32,7 +32,9 @@ export default function SearchInstitution({
         }}
       >
         <Input
-          placeholder="Codice fiscale"
+          placeholder={
+            isPNPG ? "Codice fiscale" : "Codice fiscale o Partita IVA"
+          }
           className="w-full"
           value={query}
           onChange={(event) => {

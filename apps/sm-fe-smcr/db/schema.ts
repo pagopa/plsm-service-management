@@ -68,7 +68,7 @@ export const logs = pgTable(
     ),
     check(
       "logs_level_check",
-      sql`(level = ANY (ARRAY['DEBUG'::text, 'INFO'::text, 'WARN'::text, 'ERROR'::text]))`,
+      sql`(level = ANY (ARRAY['DEBUG'::text, 'INFO'::text, 'WARN'::text, 'ERROR'::text, 'FATAL'::text]))`,
     ),
     check(
       "logs_service_check",

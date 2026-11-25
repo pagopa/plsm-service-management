@@ -58,8 +58,6 @@ export async function uploadContract(state: any, formData: FormData) {
         {
           info: {
             event: "onboarding.uploadContract.failed",
-            actor: "smcr-ui",
-            subject: "onboarding",
             metadata: { status: response.status, message, id, output },
           },
         },
@@ -72,8 +70,6 @@ export async function uploadContract(state: any, formData: FormData) {
       {
         info: {
           event: "onboarding.uploadContract.success",
-          actor: "smcr-ui",
-          subject: "onboarding",
           metadata: { id, output },
         },
       },
@@ -94,8 +90,6 @@ export async function uploadContract(state: any, formData: FormData) {
         },
         info: {
           event: "onboarding.uploadContract.exception",
-          actor: "smcr-ui",
-          subject: "onboarding",
           metadata: { id, output },
         },
       },

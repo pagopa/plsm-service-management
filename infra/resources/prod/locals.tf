@@ -59,10 +59,6 @@ locals {
   onboarding_func_app_settings      = local.yaml_onboarding_func_app_settings
   onboarding_slot_func_app_settings = local.yaml_onboarding_func_slot_app_settings
 
-  # 4. Backend SMCR App Service
-  backend_app_settings      = local.yaml_backend_app_settings
-  backend_slot_app_settings = local.yaml_backend_slot_app_settings
-
   # 5. Frontend FE-SMCR App Service
   fe_smcr_app_settings      = local.yaml_fe_smcr_app_settings
   fe_smcr_slot_app_settings = local.yaml_fe_smcr_slot_app_settings
