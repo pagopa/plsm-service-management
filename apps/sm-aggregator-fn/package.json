@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "func start",
     "watch": "tsc --watch",
+    "lint": "tsc -p tsconfig.lint.json",
     "test": "jest"
   },
   "author": "PagoPA - Service Management Team",
