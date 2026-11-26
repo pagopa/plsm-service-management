@@ -1,6 +1,6 @@
 # sm-aggregator-fn
 
-Azure Function (Node 22, `@azure/functions` v4) per l'increment degli enti aggregati verso Selfcare.
+Azure Function (Node 22, `@azure/functions` v4) per l'incremento degli enti aggregati verso Selfcare (API `onboarding/aggregation/increment`).
 Epica SMION-781, storia SMION-923. Sostituisce lo script locale `increment_finale.py`.
 
 ## Endpoint

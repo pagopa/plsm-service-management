@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "main": "dist/**/*/index.js",
-  "description": "Increment degli enti aggregati verso Selfcare (SMION-781)",
+  "description": "Incremento degli enti aggregati verso Selfcare (SMION-781)",
   "scripts": {
     "build": "tsc",
     "start": "func start",
