@@ -19,7 +19,10 @@ describe("health", () => {
     };
     const res = await handler(request, context);
     expect(res.status).toBe(200);
-    expect(res.jsonBody).toMatchObject({ status: "healthy", incrementMode: "mock" });
+    expect(res.jsonBody).toMatchObject({
+      status: "healthy",
+      incrementMode: "mock",
+    });
     expect(JSON.stringify(res.jsonBody)).not.toContain("chiave-segreta");
   });
 
@@ -27,6 +30,25 @@ describe("health", () => {
     process.env = {};
     const res = await handler(request, context);
     expect(res.status).toBe(200);
-    expect(res.jsonBody).toMatchObject({ status: "degraded" });
+    expect(res.jsonBody).toMatchObject({
+      status: "degraded",
+      invalidConfig: [],
+    });
+  });
+
+  it("riporta le variabili non valide senza esporne il valore", async () => {
+    process.env = {
+      ...originalEnv,
+      SELC_AGGREGATION_INCREMENT_URL: "https://example.test/increment",
+      SELC_AGGREGATION_INCREMENT_API_KEY: "chiave-segreta",
+      AGGREGATOR_INCREMENT_MODE: "prod",
+    };
+    const res = await handler(request, context);
+    expect(res.jsonBody).toMatchObject({
+      status: "degraded",
+      missingConfig: [],
+      invalidConfig: ["AGGREGATOR_INCREMENT_MODE"],
+    });
+    expect(JSON.stringify(res.jsonBody)).not.toContain("chiave-segreta");
   });
 });

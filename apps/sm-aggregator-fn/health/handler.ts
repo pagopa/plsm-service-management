@@ -10,12 +10,14 @@ export type HealthResponse = {
   timestamp: string;
   incrementMode?: "mock" | "live";
   missingConfig?: string[];
+  invalidConfig?: string[];
 };
 
 /**
  * Health check usato da Azure (health_check_path = /api/v1/health) e dal warmup
  * dello slot. Risponde sempre 200, come auth-fn: lo stato reale è nel body.
- * Non espone mai valori di configurazione, solo i nomi delle variabili mancanti.
+ * Non espone mai valori di configurazione, solo i nomi delle variabili mancanti
+ * (da aggiungere) o non valide (da correggere).
  */
 export async function handler(
   _request: HttpRequest,
@@ -32,10 +34,19 @@ export async function handler(
     };
     return { status: 200, jsonBody: body };
   } catch (error) {
-    const missingConfig =
-      error instanceof ConfigError ? error.missing : ["unknown"];
-    context.warn(`Health degraded, config mancante: ${missingConfig.join(", ")}`);
-    const body: HealthResponse = { status: "degraded", timestamp, missingConfig };
+    const missingConfig = error instanceof ConfigError ? error.missing : [];
+    const invalidConfig = error instanceof ConfigError ? error.invalid : [];
+    context.warn(
+      error instanceof ConfigError
+        ? error.message
+        : "Health degraded: errore inatteso",
+    );
+    const body: HealthResponse = {
+      status: "degraded",
+      timestamp,
+      missingConfig,
+      invalidConfig,
+    };
     return { status: 200, jsonBody: body };
   }
 }

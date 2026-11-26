@@ -18,19 +18,34 @@ export type AggregatorConfig = {
 };
 
 export class ConfigError extends Error {
-  constructor(public readonly missing: string[]) {
-    super(`Configurazione non valida: ${missing.join(", ")}`);
+  constructor(
+    /** Variabili assenti o vuote: vanno aggiunte. */
+    public readonly missing: string[],
+    /** Variabili presenti ma con un valore non valido: vanno corrette. */
+    public readonly invalid: string[],
+  ) {
+    const parts = [
+      missing.length ? `mancanti: ${missing.join(", ")}` : "",
+      invalid.length ? `non valide: ${invalid.join(", ")}` : "",
+    ].filter(Boolean);
+    super(`Configurazione non valida (${parts.join("; ")})`);
     this.name = "ConfigError";
   }
 }
 
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): AggregatorConfig {
+export function loadConfig(
+  env: NodeJS.ProcessEnv = process.env,
+): AggregatorConfig {
   const parsed = ConfigSchema.safeParse(env);
   if (!parsed.success) {
-    const missing = [
+    const keys = [
       ...new Set(parsed.error.issues.map((issue) => String(issue.path[0]))),
     ];
-    throw new ConfigError(missing);
+    const isMissing = (key: string) => !env[key];
+    throw new ConfigError(
+      keys.filter(isMissing),
+      keys.filter((key) => !isMissing(key)),
+    );
   }
   return {
     incrementUrl: parsed.data.SELC_AGGREGATION_INCREMENT_URL,
