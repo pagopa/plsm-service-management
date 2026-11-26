@@ -1,0 +1,27 @@
+{
+  "name": "sm-aggregator-fn",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/**/*/index.js",
+  "description": "Incremento degli enti aggregati verso Selfcare (SMION-781)",
+  "scripts": {
+    "build": "tsc",
+    "start": "func start",
+    "watch": "tsc --watch",
+    "lint": "tsc -p tsconfig.lint.json",
+    "test": "jest"
+  },
+  "author": "PagoPA - Service Management Team",
+  "license": "ISC",
+  "dependencies": {
+    "@azure/functions": "^4.10.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.1.2",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5",
+    "typescript": "^5.9.3"
+  }
+}
