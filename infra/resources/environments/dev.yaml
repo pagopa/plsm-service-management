@@ -168,3 +168,15 @@ auth_func:
     JWT_AUDIENCE: "plsm-fe-smcr-dev-staging"
     NODE_ENV: "development"
     WEBSITE_RUN_FROM_PACKAGE: "1"
+
+# ─── Aggregator Function (SMION-923) ──────────────────────────────────────────
+# Increment degli enti aggregati verso Selfcare. In dev l'invio è sempre mock:
+# il segreto in dev contiene un valore finto, la chiave vera esiste solo in prod.
+
+aggregator_func:
+  __local: yaml_aggregator_func
+  SELC_AGGREGATION_INCREMENT_URL: "https://api.selfcare.pagopa.it/external/internal/v1/onboarding/aggregation/increment"
+  SELC_AGGREGATION_INCREMENT_API_KEY: "kv:fa_aggregator_api_key_aggregation_increment"
+  AGGREGATOR_INCREMENT_MODE: "mock"
+  NODE_ENV: "development"
+  WEBSITE_RUN_FROM_PACKAGE: "1"

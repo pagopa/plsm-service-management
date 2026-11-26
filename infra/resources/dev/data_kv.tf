@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-10-01 16:03
+# Generato il: 2026-11-26 08:33
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -21,6 +21,11 @@ data "azurerm_key_vault_secret" "auth_msal_tenant_id_dev" {
 
 data "azurerm_key_vault_secret" "database_url" {
   name         = "database-url"
+  key_vault_id = data.azurerm_key_vault.common_kv.id
+}
+
+data "azurerm_key_vault_secret" "fa_aggregator_api_key_aggregation_increment" {
+  name         = "fa-aggregator-api-key-aggregation-increment"
   key_vault_id = data.azurerm_key_vault.common_kv.id
 }
 

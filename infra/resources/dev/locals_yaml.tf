@@ -1,6 +1,6 @@
 # =============================================================================
 # AUTO-GENERATED — NON modificare manualmente.
-# Generato il: 2026-10-01 16:03
+# Generato il: 2026-11-26 08:33
 # Per aggiornare: python3 infra/scripts/generate_locals.py --env dev
 # =============================================================================
 
@@ -185,6 +185,22 @@ locals {
   }
 
   yaml_fe_smcr_sticky_app_setting_names = []
+
+  # ────────────────────────────────────────────────────────────
+  # aggregator_func
+  # ────────────────────────────────────────────────────────────
+
+  yaml_aggregator_func_app_settings = {
+    SELC_AGGREGATION_INCREMENT_URL     = "https://api.selfcare.pagopa.it/external/internal/v1/onboarding/aggregation/increment"
+    SELC_AGGREGATION_INCREMENT_API_KEY = data.azurerm_key_vault_secret.fa_aggregator_api_key_aggregation_increment.value
+    AGGREGATOR_INCREMENT_MODE          = "mock"
+    NODE_ENV                           = "development"
+    WEBSITE_RUN_FROM_PACKAGE           = "1"
+  }
+
+  yaml_aggregator_func_slot_app_settings = local.yaml_aggregator_func_app_settings
+
+  yaml_aggregator_func_sticky_app_setting_names = []
 
   # ────────────────────────────────────────────────────────────────
   # Metadati ambiente

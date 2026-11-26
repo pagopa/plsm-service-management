@@ -43,4 +43,8 @@ locals {
   # Auth Function
   auth_func_app_settings      = local.yaml_auth_func_app_settings
   auth_slot_func_app_settings = local.yaml_auth_func_slot_app_settings
+
+  # Aggregator Function (SMION-923)
+  aggregator_func_app_settings      = local.yaml_aggregator_func_app_settings
+  aggregator_slot_func_app_settings = local.yaml_aggregator_func_slot_app_settings
 }
