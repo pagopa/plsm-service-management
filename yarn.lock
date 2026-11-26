@@ -16843,6 +16843,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sm-aggregator-fn@workspace:apps/sm-aggregator-fn":
+  version: 0.0.0-use.local
+  resolution: "sm-aggregator-fn@workspace:apps/sm-aggregator-fn"
+  dependencies:
+    "@azure/functions": "npm:^4.10.0"
+    "@types/jest": "npm:^30.0.0"
+    "@types/node": "npm:^24.1.2"
+    jest: "npm:^30.2.0"
+    ts-jest: "npm:^29.4.5"
+    typescript: "npm:^5.9.3"
+    zod: "npm:^4.1.13"
+  languageName: unknown
+  linkType: soft
+
 "sm-auth-fn@workspace:apps/sm-auth-fn":
   version: 0.0.0-use.local
   resolution: "sm-auth-fn@workspace:apps/sm-auth-fn"

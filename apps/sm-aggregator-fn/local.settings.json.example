@@ -1,0 +1,10 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "SELC_AGGREGATION_INCREMENT_URL": "https://api.selfcare.pagopa.it/external/internal/v1/onboarding/aggregation/increment",
+    "SELC_AGGREGATION_INCREMENT_API_KEY": "mock-locale",
+    "AGGREGATOR_INCREMENT_MODE": "mock"
+  }
+}
