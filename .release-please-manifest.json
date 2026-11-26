@@ -1,4 +1,5 @@
 {
+  "apps/sm-aggregator-fn": "0.1.0",
   "apps/sm-auth-fn": "1.0.0",
   "apps/sm-certification-fn": "1.0.0",
   "apps/sm-crm-fn": "1.0.0",
