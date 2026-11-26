@@ -77,7 +77,7 @@ jobs:
       always() &&
       needs.check_branch.outputs.allowed == 'true' &&
       (github.event_name == 'push' || needs.check_confirm.result == 'success')
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@dea3cc35e4d6a26cc8aa3b08ab22d48c0f958f77 # main
     name: Apply Infrastructure - prod
     secrets: inherit
     with:
@@ -90,7 +90,7 @@ jobs:
   apply_dev:
     needs: check_confirm
     if: github.event.inputs.target_env == 'dev'
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@dea3cc35e4d6a26cc8aa3b08ab22d48c0f958f77 # main
     name: Apply Infrastructure - dev
     secrets: inherit
     with:
@@ -103,7 +103,7 @@ jobs:
   apply_dev_base:
     needs: check_confirm
     if: github.event.inputs.target_env == 'dev-base'
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@dea3cc35e4d6a26cc8aa3b08ab22d48c0f958f77 # main
     name: Apply Infrastructure - dev-base
     secrets: inherit
     with:
