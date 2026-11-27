@@ -1,0 +1,10 @@
+# Changelog
+
+## 0.1.0 (2026-11-27)
+
+
+### Features
+
+* **sm-crm-fn:** [SMION-837] aggiunge paginazione e ordinamento a GET /calls ([#404](https://github.com/pagopa/plsm-service-management/issues/404)) ([ba32be8](https://github.com/pagopa/plsm-service-management/commit/ba32be82f15f006c7daf895696caf976bc9314a0))
+* **sm-crm-fn:** [SMION-927] aggiunge i prodotti IO-FIMS, IT-WALLET ed EUDI-WALLET alle call ([#432](https://github.com/pagopa/plsm-service-management/issues/432)) ([92162f8](https://github.com/pagopa/plsm-service-management/commit/92162f8bdbcc8dd0cbf27fe8339a6a5224f8883e))
+* **sm-fe-smcr:** [SMION-847] add database migration workflow ([#417](https://github.com/pagopa/plsm-service-management/issues/417)) ([985f6b7](https://github.com/pagopa/plsm-service-management/commit/985f6b7488d22695d01f37384c7309302180d0c2))
