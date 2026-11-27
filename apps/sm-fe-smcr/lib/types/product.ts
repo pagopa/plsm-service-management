@@ -19,6 +19,7 @@ export const PRODUCT_MAP: Record<string, string> = {
   "prod-pn": "SEND",
   "prod-pn-pg": "prod-pn-pg",
   "prod-fd-garantito": "Fidejussioni ditali G",
+  "prod-ced": "Carta Europea della Disabilità",
   "prod-idpay-merchant": "prod-idpay-merchant",
   "IO-FIMS": "IO FIMS",
   "IT-WALLET": "IT Wallet",
