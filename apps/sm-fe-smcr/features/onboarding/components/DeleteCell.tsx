@@ -17,6 +17,7 @@ import { LoaderCircle } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { setDeleteStatus } from "../actions/setDeleteStatus";
+import { useFormContext } from "../context/FormContext";
 import { useStepOneContext } from "../context/StepOneContext";
 import { ApiOptionsApicale } from "../types/apiOptionsType";
 import { ProductStatus } from "../types/productStatus";
@@ -30,6 +31,7 @@ type ActionCellProps = {
 export function DeleteCell({ row }: ActionCellProps) {
   const { formRef, form, handleSubunitOption, handleApiOption, isDeleteOn } =
     useStepOneContext();
+  const { environment } = useFormContext();
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,6 +121,12 @@ export function DeleteCell({ row }: ActionCellProps) {
                     productsMap.get(row.getValue("product")) as string,
                   );
                   formData.append("inputValue", inputValue);
+                  formData.append(
+                    "environment",
+                    subunit === "AOO" || subunit === "UO"
+                      ? "prod"
+                      : environment,
+                  );
                   resetInput();
 
                   return action(formData);

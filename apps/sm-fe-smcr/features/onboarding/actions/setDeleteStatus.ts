@@ -1,7 +1,14 @@
 "use server";
 
-import { $fetch } from "@/lib/fetch";
-import { FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY, UPLOAD } from "./config/env";
+import { betterFetch } from "@better-fetch/fetch";
+import {
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY,
+  FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT,
+  ONBOARDING_BASE_PATH,
+  ONBOARDING_BASE_PATH_UAT,
+  UPLOAD,
+} from "./config/env";
+import { Environment } from "../utils/constants";
 import {
   logServerError,
   logServerInfo,
@@ -11,6 +18,14 @@ export async function setDeleteStatus(state: any, formData: FormData) {
   const id = formData.get("id") as string;
   const inputValue = formData.get("inputValue") as string;
   const product = formData.get("product") as string;
+  const environment =
+    (formData.get("environment") as Environment | null) ?? "prod";
+
+  const isUat = environment === "uat";
+  const baseURL = isUat ? ONBOARDING_BASE_PATH_UAT : ONBOARDING_BASE_PATH;
+  const subscriptionKey = isUat
+    ? FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY_UAT
+    : FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY;
 
   const isWhiteSpacesAfterOrBeforeInputValue = inputValue !== inputValue.trim();
 
@@ -28,19 +43,24 @@ export async function setDeleteStatus(state: any, formData: FormData) {
   }
 
   try {
-    const { data, error } = await $fetch(`${UPLOAD}:${id}`, {
+    const { data, error } = await betterFetch(`${baseURL}${UPLOAD}/${id}`, {
       method: "DELETE",
       headers: {
-        "Ocp-Apim-Subscription-Key": `${FE_SMCR_OCP_APIM_SUBSCRIPTION_KEY}`,
+        "Ocp-Apim-Subscription-Key": `${subscriptionKey}`,
       },
     });
     if (error) {
+      logServerError(error, "setDeleteStatus - fetch error");
       return {
         success: false,
-        message: error.message,
+        message: error.message ?? "Qualcosa è andato storto",
       };
     }
-    logServerInfo("setDeleteStatus - onboarding deleted", { id, data });
+    logServerInfo("setDeleteStatus - onboarding deleted", {
+      id,
+      environment,
+      data,
+    });
 
     return {
       success: true,
@@ -49,7 +69,7 @@ export async function setDeleteStatus(state: any, formData: FormData) {
     logServerError(error, "setDeleteStatus - unexpected error");
     return {
       success: false,
-      message: "Qualcosa è andato storto",
+      message: "Qualcosa è andato storto",
     };
   }
 }
