@@ -68,9 +68,9 @@ export default function Page() {
             <InfoIcon className="size-4 mt-0.5 shrink-0" />
             <p>
               Se l&apos;ente è presente su SelfCare potrai registrare
-              l&apos;appuntamento sul CRM e inviare il messaggio su Slack. In
-              caso contrario, si tratterà di una call di Integrazione e il
-              messaggio potrà essere inviato solo su Slack.
+              l&apos;appuntamento sul CRM e, se vuoi, inviare il messaggio su
+              Slack. In caso contrario, si tratterà di una call di Integrazione
+              e il messaggio potrà essere inviato solo su Slack.
             </p>
           </div>
           <div className="flex gap-2 items-end">
@@ -117,12 +117,11 @@ export default function Page() {
         {state.status === "found" && (
           <div className="flex flex-col gap-4 bg-white rounded-xl border shadow-sm p-6">
             <div className="text-center space-y-1">
-              <h1 className="font-medium text-lg">
-                Crea appuntamento CRM e invia su Slack
-              </h1>
+              <h1 className="font-medium text-lg">Crea appuntamento CRM</h1>
               <p className="text-sm text-muted-foreground">
                 Ente trovato su SelfCare. Compila il form per registrare
-                l&apos;appuntamento sul CRM e inviare il messaggio su Slack.
+                l&apos;appuntamento sul CRM. L&apos;invio del messaggio su Slack
+                è facoltativo e si può disattivare dal form.
               </p>
             </div>
             <CRMForm

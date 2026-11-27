@@ -74,6 +74,8 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
     name: "partecipanti",
   });
 
+  const sendSlackNotification = form.watch("sendSlackNotification");
+
   const addParticipant = () => {
     append({
       nome: "",
@@ -124,6 +126,10 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
       toast.success(crmResult.message ?? "Appuntamento creato con successo");
     } else {
       toast.error(crmResult.error, { description: affectedFieldsText });
+    }
+
+    if (!values.sendSlackNotification) {
+      return;
     }
 
     const slackTarget = values.dynamicsEnvironment === "PROD" ? "prod" : "test";
@@ -537,6 +543,30 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
 
             <FormField
               control={form.control}
+              name="sendSlackNotification"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Switch
+                      id="sendSlackNotification"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-0.5 leading-none">
+                    <FormLabel
+                      htmlFor="sendSlackNotification"
+                      className="cursor-pointer"
+                    >
+                      Invia notifica Slack
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
@@ -656,7 +686,9 @@ export default function CRMForm({ taxCode, institutions }: CRMFormProps) {
           {form.formState.isSubmitting ? (
             <LoaderCircleIcon className="size-4 animate-spin" />
           ) : null}
-          Crea appuntamento CRM e invia su Slack
+          {sendSlackNotification
+            ? "Crea appuntamento CRM e invia su Slack"
+            : "Crea appuntamento CRM"}
         </Button>
       </form>
     </Form>
