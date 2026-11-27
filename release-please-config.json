@@ -14,6 +14,9 @@
   ],
   "plugins": ["node-workspace"],
   "packages": {
+    "apps/sm-aggregator-fn": {
+      "component": "sm-aggregator-fn"
+    },
     "apps/sm-auth-fn": {
       "component": "sm-auth-fn"
     },
