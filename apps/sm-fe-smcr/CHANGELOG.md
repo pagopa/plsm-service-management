@@ -1,5 +1,25 @@
 # Changelog — sm-fe-smcr
 
+## [0.10.0](https://github.com/pagopa/plsm-service-management/compare/sm-fe-smcr-v0.9.1...sm-fe-smcr-v0.10.0) (2026-11-27)
+
+
+### Features
+
+* **call-management:** [SMION-1006] Come DEV voglio aggiungere un flag per scegliere se inviare il messaggio su slack alla creazione di una call ([#448](https://github.com/pagopa/plsm-service-management/issues/448)) ([4b19ff2](https://github.com/pagopa/plsm-service-management/commit/4b19ff2501a7ff9a40c4dfbc37dbc01102f8ddf0))
+* **call-management:** [SMION-947] Come DEV voglio aggiungere un nuovo prodotto FIMS, EUDI WALLET e IT WALLET nella creazione di una call lato FE ([#443](https://github.com/pagopa/plsm-service-management/issues/443)) ([13c27ba](https://github.com/pagopa/plsm-service-management/commit/13c27ba2ab5cdbbcb14feb377609c6c02174fca7))
+* **onboarding:** [SMION-949] Errore in onboarding: disattivazione ente non completata. ([#450](https://github.com/pagopa/plsm-service-management/issues/450)) ([fa5d869](https://github.com/pagopa/plsm-service-management/commit/fa5d869927b4f46f67625fd54ea0d86f07183c43))
+* **sm-fe-smcr:** [SMION-820] Creazione Tab dedicato per cercare e visualizzare i miei enti aggregati ([#429](https://github.com/pagopa/plsm-service-management/issues/429)) ([ef79ff8](https://github.com/pagopa/plsm-service-management/commit/ef79ff83fcf41804946ce5104cedc6bd080f4505))
+* **sm-fe-smcr:** [SMION-846] Come Frontend voglio creare uno specchietto in Dashboard delle Calls ([#414](https://github.com/pagopa/plsm-service-management/issues/414)) ([8054458](https://github.com/pagopa/plsm-service-management/commit/80544589c77b8f169fea734f42f058ebbc7c016c))
+* **sm-fe-smcr:** [SMION-847] add database migration workflow ([#417](https://github.com/pagopa/plsm-service-management/issues/417)) ([985f6b7](https://github.com/pagopa/plsm-service-management/commit/985f6b7488d22695d01f37384c7309302180d0c2))
+* **sm-fe-smcr:** [SMION-847] add database migration workflow ([#417](https://github.com/pagopa/plsm-service-management/issues/417)) ([bbf4201](https://github.com/pagopa/plsm-service-management/commit/bbf4201648857dd36e4b6feb8b32b3e412c89850))
+* **sm-fe-smcr:** [SMION-929] Come DEV voglio aggiungere la paginazione lato FE delle calls in linea con l'api ([#421](https://github.com/pagopa/plsm-service-management/issues/421)) ([f816ce3](https://github.com/pagopa/plsm-service-management/commit/f816ce322c6e84924c7f1036e3134fe9f04298ae))
+* **sm-fe-smcr:** [SMION-937] Come SM voglio creare una pagina sugli onboarding per Data e prodotto ([#436](https://github.com/pagopa/plsm-service-management/issues/436)) ([9e3b5a3](https://github.com/pagopa/plsm-service-management/commit/9e3b5a3ecac9198f1141d07e08cf6ee64b91370b))
+* **sm-fe-smcr:** [SMION-941] add daily cleanup for logs older than 30 days ([#444](https://github.com/pagopa/plsm-service-management/issues/444)) ([84d6c90](https://github.com/pagopa/plsm-service-management/commit/84d6c9040bf552e24f7dae5b49c7d5516e6a7417))
+* **sm-fe-smcr:** [SMION-943] support FATAL logs and add Slack notifier ([#424](https://github.com/pagopa/plsm-service-management/issues/424)) ([43abd65](https://github.com/pagopa/plsm-service-management/commit/43abd656f32d686e4e3e33961c8be25347db08b2))
+* **sm-fe-smcr:** [SMION-946] Come fe voglio aggiungere un filtro ai servizi  ([#431](https://github.com/pagopa/plsm-service-management/issues/431)) ([bb836c5](https://github.com/pagopa/plsm-service-management/commit/bb836c51058d3cc21b0e9079d417f5acb8630f3f))
+* **sm-fe-smcr:** improve log monitoring and structured logging ([#426](https://github.com/pagopa/plsm-service-management/issues/426)) ([216ace1](https://github.com/pagopa/plsm-service-management/commit/216ace1a09c8bdc0dbeb081a6abc28ac20e7d137))
+* **sm-fe-smcr:** Ottimizzazione fuso orario Onboarding e stile pulsante download Contratto e dropdown superiore ([#425](https://github.com/pagopa/plsm-service-management/issues/425)) ([1a003fd](https://github.com/pagopa/plsm-service-management/commit/1a003fdb8ffbc08c4d42741c1ee5b778c910a909))
+
 ## [0.9.1](https://github.com/pagopa/plsm-service-management/compare/sm-fe-smcr-v0.9.0...sm-fe-smcr-v0.9.1) (2026-10-21)
 
 
